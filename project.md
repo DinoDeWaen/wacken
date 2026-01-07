@@ -348,3 +348,8 @@ CI is green
 
 No architectural shortcuts were taken
 
+
+## 15. Delivery Discipline
+
+- Keep commits small, focused, and pushed frequently to GitHub for review transparency.
+- Maintain a README that always includes project context, basic functionality, architecture overview, and setup/run instructions reflecting the current state of the app.
