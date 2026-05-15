@@ -16,6 +16,8 @@
 - Dependencies point inward only; UI never contains business logic.
 - ADR: [`0001-initial-android-clean-architecture-scaffold.md`](backlog/decisions/0001-initial-android-clean-architecture-scaffold.md).
 - ADR: [`0003-github-actions-ci-and-apk-artifact.md`](backlog/decisions/0003-github-actions-ci-and-apk-artifact.md).
+- ADR: [`0005-food-and-stage-repository-ports-for-csv-import.md`](backlog/decisions/0005-food-and-stage-repository-ports-for-csv-import.md).
+- CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
 
 ### Module Map
 
@@ -42,6 +44,8 @@ Current modules:
 | `application` | Java library | Use cases and ports. Depends on `domain`; must not depend on Android. |
 | `infrastructure` | Java library | Technical adapters. Depends inward on `application` and `domain`. |
 | `app` | Android application | Android UI/bootstrap and APK packaging. |
+
+Current import repositories cover bands, stages, performances, stage distances, food options, and ratings.
 
 ### Technologies
 - Language: Java
