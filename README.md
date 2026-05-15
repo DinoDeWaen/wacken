@@ -14,6 +14,33 @@
 - Clean Architecture with DDD boundaries: domain, application, infrastructure, and Android UI modules.
 - Business rules live in the domain; application orchestrates use cases; infrastructure provides adapters (e.g., CSV, persistence); Android module handles presentation only.
 - Dependencies point inward only; UI never contains business logic.
+- ADR: [`0001-initial-android-clean-architecture-scaffold.md`](backlog/decisions/0001-initial-android-clean-architecture-scaffold.md).
+
+### Module Map
+
+```mermaid
+flowchart LR
+    app["app\nAndroid UI/bootstrap"]
+    infrastructure["infrastructure\nAdapters"]
+    application["application\nUse cases and ports"]
+    domain["domain\nBusiness rules and model"]
+
+    app --> infrastructure
+    app --> application
+    app --> domain
+    infrastructure --> application
+    infrastructure --> domain
+    application --> domain
+```
+
+Current modules:
+
+| Module | Type | Responsibility |
+| --- | --- | --- |
+| `domain` | Java library | Business concepts and rules. Must not depend on Android. |
+| `application` | Java library | Use cases and ports. Depends on `domain`; must not depend on Android. |
+| `infrastructure` | Java library | Technical adapters. Depends inward on `application` and `domain`. |
+| `app` | Android application | Android UI/bootstrap and APK packaging. |
 
 ### Technologies
 - Language: Java
@@ -63,9 +90,21 @@ C4Container
 
 ## Setup and Run
 1. Clone: `git clone git@github.com:DinoDeWaen/wacken.git` and `cd wacken`.
-2. Ensure Java/Android SDK and Gradle wrapper are available.
-3. Run tests: `./gradlew test` (include QA suite task when available).
-4. Build debug APK: `./gradlew assembleDebug` (artifact in `app/build/outputs/apk/debug/`).
+2. Ensure JDK 17+ and Android SDK are installed. The current local validation used JDK 21 and Android SDK 36.
+3. Create `local.properties` if needed:
+
+   ```properties
+   sdk.dir=/absolute/path/to/Android/sdk
+   ```
+
+4. Run tests: `./gradlew test` (include QA suite task when available).
+5. Build debug APK: `./gradlew assembleDebug` (artifact in `app/build/outputs/apk/debug/`).
+
+Useful module checks:
+
+```bash
+./gradlew :domain:compileJava :application:compileJava
+```
 
 ## Development Notes
 - Follow TDD: write failing tests, implement, refactor.
