@@ -64,9 +64,11 @@ C4Context
         System(mobile, "Android App", "Band listing, ratings, schedule")
     }
     System_Ext(csvSource, "Festival CSV Files", "Bands, stages, performances, distances, food")
+    System_Ext(wackenSite, "Wacken Line-Up Website", "Band list and artist metadata")
     Rel(attendee, mobile, "Rates bands, views lineup and schedule")
     Rel(admin, mobile, "Imports validated CSV datasets")
     Rel(csvSource, mobile, "Provides festival datasets", "CSV")
+    Rel(wackenSite, mobile, "Provides initial band metadata", "JSON/user-reviewed import")
 ```
 
 ### C4: Level 2 (Container)
@@ -76,13 +78,15 @@ C4Container
     title Wacken Planner 2026 - Container View
     Person(attendee, "Attendee")
     Person(admin, "Admin")
+    System_Ext(csvSource, "Festival CSV Files", "Validated master data")
+    System_Ext(wackenSite, "Wacken Line-Up JSON", "Initial band metadata")
 
     System_Boundary(app, "Wacken Planner 2026") {
-        Container(ui, "Android UI", "Kotlin/Java", "Screens for band list, ratings, schedule")
+        Container(ui, "Android UI", "Java", "Screens for band list, ratings, imports, schedule")
         Container(appsvc, "Application Layer", "Java", "Use cases for listing, rating, imports")
         Container(domain, "Domain", "Java", "Entities, value objects, decision rules")
-        Container(infra, "Infrastructure", "Java", "Adapters: CSV import, persistence fakes/impls")
-        ContainerDb(data, "Festival Data (Files/Store)", "CSV / Persistence", "Imported datasets")
+        Container(infra, "Infrastructure", "Java", "Adapters: repositories and import support")
+        ContainerDb(data, "In-App Data Store", "In-memory MVP / future persistence", "Imported festival data and ratings")
     }
 
     Rel(attendee, ui, "Rates bands, views lineup")
@@ -90,7 +94,9 @@ C4Container
     Rel(ui, appsvc, "Invokes use cases")
     Rel(appsvc, domain, "Uses domain rules and models")
     Rel(appsvc, infra, "Accesses adapters")
-    Rel(infra, data, "Reads/Writes festival data")
+    Rel(infra, data, "Reads/writes repository data")
+    Rel(csvSource, infra, "Supplies validated import files", "CSV")
+    Rel(wackenSite, infra, "Supplies proposed band metadata", "JSON")
 ```
 
 ## Setup and Run
