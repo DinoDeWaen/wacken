@@ -103,7 +103,7 @@ C4Container
 
 ## Setup and Run
 1. Clone: `git clone git@github.com:DinoDeWaen/wacken.git` and `cd wacken`.
-2. Ensure JDK 17+ and Android SDK are installed. The current local validation used JDK 21 and Android SDK 36.
+2. Ensure JDK 21 and Android SDK are installed. The current Gradle and Android plugin stack is validated with JDK 21 and Android SDK 36.
 3. Create `local.properties` if needed:
 
    ```properties
@@ -117,6 +117,14 @@ C4Container
 Useful module checks:
 
 ```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew test
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew qaTest
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew assembleDebug
+```
+
+Useful focused checks:
+
+```bash
 ./gradlew :domain:compileJava :application:compileJava
 ./gradlew :domain:test :application:test
 ./gradlew :domain:jacocoTestCoverageVerification :application:jacocoTestCoverageVerification
@@ -127,6 +135,24 @@ Coverage gates:
 
 - `domain`: 80% minimum instruction coverage.
 - `application`: 70% minimum instruction coverage.
+
+## Troubleshooting
+
+If Gradle fails while creating `:application:test` with `Type T not present`, check the active Java version:
+
+```bash
+java -version
+```
+
+This project is currently validated with JDK 21. On macOS, run Gradle with JDK 21 explicitly:
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew test
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew qaTest
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew assembleDebug
+```
+
+The failure has been reproduced with Java 25 as the launcher JVM.
 
 ## CI
 
