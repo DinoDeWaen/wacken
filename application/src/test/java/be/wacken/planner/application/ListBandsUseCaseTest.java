@@ -28,8 +28,8 @@ class ListBandsUseCaseTest {
 
         assertEquals(
                 List.of(
-                        new BandListItem("Earlier Band", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", Optional.empty()),
-                        new BandListItem("Later Band", "Harder Stage", "2026-07-30T21:00", "2026-07-30T22:00", Optional.empty())
+                        new BandListItem("Earlier Band", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", 1, true),
+                        new BandListItem("Later Band", "Harder Stage", "2026-07-30T21:00", "2026-07-30T22:00", 1, true)
                 ),
                 useCase.listBands()
         );
@@ -43,7 +43,7 @@ class ListBandsUseCaseTest {
     }
 
     @Test
-    void includesStoredRatingForCurrentUser() {
+    void includesStoredRatingForCurrentUserAsExplicit() {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
         Performance performance = performance("5th Avenue", "Faster Stage", 18, 0, 19, 0);
@@ -52,7 +52,28 @@ class ListBandsUseCaseTest {
         ListBandsUseCase useCase = new ListBandsUseCase(performances, ratings, "dino");
 
         assertEquals(
-                List.of(new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", Optional.of(3))),
+                List.of(new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", 3, false)),
+                useCase.listBands()
+        );
+    }
+
+    @Test
+    void savedRatingReplacesDefaultForFutureBandReads() {
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Performance performance = performance("5th Avenue", "Faster Stage", 18, 0, 19, 0);
+        performances.save(performance);
+        ListBandsUseCase useCase = new ListBandsUseCase(performances, ratings, "dino");
+
+        assertEquals(
+                List.of(new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", 1, true)),
+                useCase.listBands()
+        );
+
+        new RateBandUseCase(ratings).rateBand("dino", performance.band(), 2);
+
+        assertEquals(
+                List.of(new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", 2, false)),
                 useCase.listBands()
         );
     }
