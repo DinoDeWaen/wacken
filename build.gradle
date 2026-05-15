@@ -1,3 +1,8 @@
 plugins {
     id "com.android.application" version "8.9.3" apply false
 }
+
+ext {
+    junitVersion = "5.11.4"
+    mockitoVersion = "5.15.2"
+}

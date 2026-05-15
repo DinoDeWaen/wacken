@@ -45,7 +45,7 @@ Current modules:
 ### Technologies
 - Language: Java
 - Build: Gradle (Android)
-- Testing: JUnit 5, Mockito/fakes; dedicated QA scenario suite planned
+- Testing: JUnit 5, Mockito/fakes, JaCoCo coverage gates; dedicated QA scenario suite planned
 - Output: Debug APK via `./gradlew assembleDebug`
 
 ### C4: Level 1 (System Context)
@@ -104,7 +104,14 @@ Useful module checks:
 
 ```bash
 ./gradlew :domain:compileJava :application:compileJava
+./gradlew :domain:test :application:test
+./gradlew :domain:jacocoTestCoverageVerification :application:jacocoTestCoverageVerification
 ```
+
+Coverage gates:
+
+- `domain`: 80% minimum instruction coverage.
+- `application`: 70% minimum instruction coverage.
 
 ## Development Notes
 - Follow TDD: write failing tests, implement, refactor.
