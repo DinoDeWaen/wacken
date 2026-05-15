@@ -32,6 +32,9 @@ public final class MainActivity extends Activity {
                     .append(band.startTime())
                     .append(" - ")
                     .append(band.endTime())
+                    .append('\n')
+                    .append("Rating: ")
+                    .append(band.rating().map(String::valueOf).orElse("not rated"))
                     .append("\n\n");
         }
         return list.toString().trim();
