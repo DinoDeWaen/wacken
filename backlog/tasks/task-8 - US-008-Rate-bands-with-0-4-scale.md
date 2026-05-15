@@ -4,8 +4,15 @@ title: 'US-008: Rate bands with 0-4 scale'
 status: To Do
 assignee: []
 created_date: '2026-01-06 16:57'
-labels: []
-dependencies: []
+updated_date: '2026-05-15 06:34'
+labels:
+  - rating
+  - mvp1
+dependencies:
+  - task-4
+  - task-5
+  - task-7
+priority: high
 ---
 
 ## Description
