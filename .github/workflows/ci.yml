@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-and-build:
+    name: Test and build debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Run tests and coverage gates
+        run: ./gradlew test
+
+      - name: Run QA suite
+        run: |
+          echo "Dedicated QA suite is planned in task-9; ./gradlew test is the current executable QA path."
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Publish debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: wacken-planner-0.1.${{ github.run_number }}-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

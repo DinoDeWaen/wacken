@@ -15,6 +15,7 @@
 - Business rules live in the domain; application orchestrates use cases; infrastructure provides adapters (e.g., CSV, persistence); Android module handles presentation only.
 - Dependencies point inward only; UI never contains business logic.
 - ADR: [`0001-initial-android-clean-architecture-scaffold.md`](backlog/decisions/0001-initial-android-clean-architecture-scaffold.md).
+- ADR: [`0003-github-actions-ci-and-apk-artifact.md`](backlog/decisions/0003-github-actions-ci-and-apk-artifact.md).
 
 ### Module Map
 
@@ -112,6 +113,18 @@ Coverage gates:
 
 - `domain`: 80% minimum instruction coverage.
 - `application`: 70% minimum instruction coverage.
+
+## CI
+
+GitHub Actions runs on push and pull request.
+
+The CI workflow:
+
+- Sets up JDK 21 and the Android SDK.
+- Runs `./gradlew test`, including the current JUnit 5 tests and JaCoCo coverage gates.
+- Leaves an explicit QA-suite step for `task-9`; until then, `./gradlew test` is the executable QA path.
+- Runs `./gradlew assembleDebug`.
+- Publishes `app/build/outputs/apk/debug/app-debug.apk` as a versioned artifact named `wacken-planner-0.1.<run-number>-debug-apk`.
 
 ## Development Notes
 - Follow TDD: write failing tests, implement, refactor.
