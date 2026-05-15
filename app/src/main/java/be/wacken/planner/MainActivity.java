@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;
 
-import be.wacken.planner.infrastructure.InfrastructureBoundary;
+import java.util.List;
+
+import be.wacken.planner.application.BandListItem;
 
 public final class MainActivity extends Activity {
     @Override
@@ -12,7 +14,26 @@ public final class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         TextView content = new TextView(this);
-        content.setText(getString(R.string.app_name) + "\n" + InfrastructureBoundary.name());
+        content.setText(renderBandList(List.of()));
         setContentView(content);
+    }
+
+    private String renderBandList(List<BandListItem> bands) {
+        if (bands.isEmpty()) {
+            return getString(R.string.empty_band_list);
+        }
+
+        StringBuilder list = new StringBuilder();
+        for (BandListItem band : bands) {
+            list.append(band.bandName())
+                    .append('\n')
+                    .append(band.stageName())
+                    .append(" | ")
+                    .append(band.startTime())
+                    .append(" - ")
+                    .append(band.endTime())
+                    .append("\n\n");
+        }
+        return list.toString().trim();
     }
 }

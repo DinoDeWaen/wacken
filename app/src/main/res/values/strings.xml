@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Wacken Planner 2026</string>
+    <string name="empty_band_list">No bands imported yet.</string>
 </resources>
