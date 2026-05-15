@@ -50,7 +50,7 @@ Current import repositories cover bands, stages, performances, stage distances, 
 ### Technologies
 - Language: Java
 - Build: Gradle (Android)
-- Testing: JUnit 5, Mockito/fakes, JaCoCo coverage gates; dedicated QA scenario suite planned
+- Testing: JUnit 5, Mockito/fakes, JaCoCo coverage gates, and a dedicated `qaTest` scenario suite
 - Output: Debug APK via `./gradlew assembleDebug`
 
 ### C4: Level 1 (System Context)
@@ -135,3 +135,8 @@ The CI workflow:
 ## Development Notes
 - Follow TDD: write failing tests, implement, refactor.
 - Keep commits small and focused; push incrementally for review visibility.
+- Ways of working: [`development-ways-of-working.md`](backlog/docs/development-ways-of-working.md).
+- Testing strategy: [`testing-strategy.md`](backlog/docs/testing-strategy.md).
+- Architecture guidelines: [`architecture-guidelines.md`](backlog/docs/architecture-guidelines.md).
+- ADR rules: [`architecture-decision-rules.md`](backlog/docs/architecture-decision-rules.md).
+- Diagramming guidelines: [`diagramming-guidelines.md`](backlog/docs/diagramming-guidelines.md).
