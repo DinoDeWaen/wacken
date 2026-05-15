@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class FileBackedRatingRepository implements RatingRepository {
     private final FileBackedStorage storage;
@@ -22,8 +23,8 @@ public final class FileBackedRatingRepository implements RatingRepository {
         Map<RatingKey, RatingEntry> ratingsByKey = loadRatingsByKey();
         ratingsByKey.put(new RatingKey(userName, band.name()), new RatingEntry(userName, band.name(), rating));
         storage.writeRows(ratingsByKey.values().stream()
-                .map(entry -> List.of(entry.userName(), entry.bandName(), Integer.toString(entry.rating().value())))
-                .toList());
+                .map(entry -> java.util.Arrays.asList(entry.userName(), entry.bandName(), Integer.toString(entry.rating().value())))
+                .collect(Collectors.toList()));
     }
 
     @Override

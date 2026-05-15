@@ -6,6 +6,7 @@ import be.wacken.planner.domain.FoodOptionRepository;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class FileBackedFoodOptionRepository implements FoodOptionRepository {
     private final FileBackedStorage storage;
@@ -19,14 +20,14 @@ public final class FileBackedFoodOptionRepository implements FoodOptionRepositor
         List<FoodOption> foodOptions = new ArrayList<>(findAll());
         foodOptions.add(foodOption);
         storage.writeRows(foodOptions.stream()
-                .map(savedFoodOption -> List.of(savedFoodOption.name()))
-                .toList());
+                .map(savedFoodOption -> java.util.Collections.singletonList(savedFoodOption.name()))
+                .collect(Collectors.toList()));
     }
 
     @Override
     public List<FoodOption> findAll() {
         return storage.readRows().stream()
                 .map(row -> new FoodOption(row.get(0)))
-                .toList();
+                .collect(Collectors.toList());
     }
 }

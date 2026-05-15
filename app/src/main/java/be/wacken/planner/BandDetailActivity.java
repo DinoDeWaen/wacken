@@ -113,7 +113,14 @@ public final class BandDetailActivity extends Activity {
     }
 
     private String starsFor(int rating) {
-        return "★".repeat(rating) + "☆".repeat(4 - rating);
+        StringBuilder stars = new StringBuilder();
+        for (int selected = 0; selected < rating; selected++) {
+            stars.append("★");
+        }
+        for (int unselected = rating; unselected < 4; unselected++) {
+            stars.append("☆");
+        }
+        return stars.toString();
     }
 
     private void seedExplicitRating() {

@@ -18,6 +18,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class ImportFestivalCsvUseCase {
     private final BandRepository bands;
@@ -92,7 +94,7 @@ public final class ImportFestivalCsvUseCase {
                         row.required("start_at"),
                         row.required("end_at")
                 ))
-                .toList();
+                .collect(Collectors.toList());
 
         List<DistanceRow> distanceRows = parseCsv(files.distancesCsv())
                 .stream()
@@ -102,7 +104,7 @@ public final class ImportFestivalCsvUseCase {
                         row.required("to_stage_id"),
                         row.required("walking_minutes")
                 ))
-                .toList();
+                .collect(Collectors.toList());
 
         List<FoodRow> foodRows = parseCsv(files.foodCsv())
                 .stream()
@@ -112,7 +114,7 @@ public final class ImportFestivalCsvUseCase {
                         row.required("name"),
                         row.value("near_stage_id")
                 ))
-                .toList();
+                .collect(Collectors.toList());
 
         return new ParsedData(bandsById, stagesById, performanceRows, distanceRows, foodRows);
     }
@@ -189,9 +191,9 @@ public final class ImportFestivalCsvUseCase {
     private List<CsvRow> parseCsv(String csv) {
         List<String> lines = csv.lines()
                 .filter(line -> !line.isBlank())
-                .toList();
+                .collect(Collectors.toList());
         if (lines.isEmpty()) {
-            return List.of();
+            return java.util.Collections.emptyList();
         }
 
         List<String> headers = splitLine(lines.get(0));
@@ -227,14 +229,14 @@ public final class ImportFestivalCsvUseCase {
         return values;
     }
 
-    private java.util.Optional<String> optional(String value) {
+    private Optional<String> optional(String value) {
         if (value == null || value.isBlank()) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
-        return java.util.Optional.of(value);
+        return Optional.of(value);
     }
 
-    private java.util.Optional<String> spotifyUrl(String spotifyArtistId) {
+    private Optional<String> spotifyUrl(String spotifyArtistId) {
         return optional(spotifyArtistId).map(id -> "https://open.spotify.com/artist/" + id);
     }
 

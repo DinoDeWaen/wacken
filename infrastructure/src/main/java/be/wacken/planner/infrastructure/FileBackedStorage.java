@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 final class FileBackedStorage {
     private static final String COLUMN_SEPARATOR = "\t";
@@ -18,14 +21,14 @@ final class FileBackedStorage {
 
     List<List<String>> readRows() {
         if (Files.notExists(file)) {
-            return List.of();
+            return Collections.emptyList();
         }
         try {
             return Files.readAllLines(file, StandardCharsets.UTF_8)
                     .stream()
                     .filter(line -> !line.isBlank())
                     .map(this::decodeRow)
-                    .toList();
+                    .collect(Collectors.toList());
         } catch (IOException error) {
             throw new IllegalStateException("Could not read MVP local storage.", error);
         }
@@ -36,7 +39,7 @@ final class FileBackedStorage {
             Files.createDirectories(file.getParent());
             Files.write(
                     file,
-                    rows.stream().map(this::encodeRow).toList(),
+                    rows.stream().map(this::encodeRow).collect(Collectors.toList()),
                     StandardCharsets.UTF_8
             );
         } catch (IOException error) {
@@ -52,10 +55,10 @@ final class FileBackedStorage {
     }
 
     private List<String> decodeRow(String row) {
-        return List.of(row.split(COLUMN_SEPARATOR, -1))
+        return Arrays.asList(row.split(COLUMN_SEPARATOR, -1))
                 .stream()
                 .map(FileBackedStorage::decode)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private static String encode(String value) {

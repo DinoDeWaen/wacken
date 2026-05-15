@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class FileBackedStageDistanceRepository implements StageDistanceRepository {
     private final FileBackedStorage storage;
@@ -22,12 +23,12 @@ public final class FileBackedStageDistanceRepository implements StageDistanceRep
         Map<StagePair, StageDistance> distancesByStagePair = loadDistancesByStagePair();
         distancesByStagePair.put(new StagePair(distance.from(), distance.to()), distance);
         storage.writeRows(distancesByStagePair.values().stream()
-                .map(savedDistance -> List.of(
+                .map(savedDistance -> java.util.Arrays.asList(
                         savedDistance.from().name(),
                         savedDistance.to().name(),
                         Integer.toString(savedDistance.walkingMinutes())
                 ))
-                .toList());
+                .collect(Collectors.toList()));
     }
 
     @Override

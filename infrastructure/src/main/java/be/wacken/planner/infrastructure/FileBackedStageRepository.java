@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class FileBackedStageRepository implements StageRepository {
     private final FileBackedStorage storage;
@@ -21,8 +22,8 @@ public final class FileBackedStageRepository implements StageRepository {
         Map<String, Stage> stagesByName = loadStagesByName();
         stagesByName.put(stage.name(), stage);
         storage.writeRows(stagesByName.values().stream()
-                .map(savedStage -> List.of(savedStage.name()))
-                .toList());
+                .map(savedStage -> java.util.Collections.singletonList(savedStage.name()))
+                .collect(Collectors.toList()));
     }
 
     @Override
@@ -32,7 +33,7 @@ public final class FileBackedStageRepository implements StageRepository {
 
     @Override
     public List<Stage> findAll() {
-        return loadStagesByName().values().stream().toList();
+        return loadStagesByName().values().stream().collect(Collectors.toList());
     }
 
     private Map<String, Stage> loadStagesByName() {

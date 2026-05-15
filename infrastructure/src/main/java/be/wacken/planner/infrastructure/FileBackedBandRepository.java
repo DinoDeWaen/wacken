@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class FileBackedBandRepository implements BandRepository {
     private final FileBackedStorage storage;
@@ -21,12 +22,12 @@ public final class FileBackedBandRepository implements BandRepository {
         Map<String, Band> bandsByName = loadBandsByName();
         bandsByName.put(band.name(), band);
         storage.writeRows(bandsByName.values().stream()
-                .map(savedBand -> List.of(
+                .map(savedBand -> java.util.Arrays.asList(
                         savedBand.name(),
                         savedBand.youtubeUrl().orElse(""),
                         savedBand.spotifyUrl().orElse("")
                 ))
-                .toList());
+                .collect(Collectors.toList()));
     }
 
     @Override
@@ -36,7 +37,7 @@ public final class FileBackedBandRepository implements BandRepository {
 
     @Override
     public List<Band> findAll() {
-        return loadBandsByName().values().stream().toList();
+        return loadBandsByName().values().stream().collect(Collectors.toList());
     }
 
     private Map<String, Band> loadBandsByName() {

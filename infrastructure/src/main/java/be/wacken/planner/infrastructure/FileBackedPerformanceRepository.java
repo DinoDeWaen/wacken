@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class FileBackedPerformanceRepository implements PerformanceRepository {
     private final FileBackedStorage storage;
@@ -22,13 +23,13 @@ public final class FileBackedPerformanceRepository implements PerformanceReposit
         List<Performance> performances = new ArrayList<>(findAll());
         performances.add(performance);
         storage.writeRows(performances.stream()
-                .map(savedPerformance -> List.of(
+                .map(savedPerformance -> java.util.Arrays.asList(
                         savedPerformance.band().name(),
                         savedPerformance.stage().name(),
                         savedPerformance.start().toString(),
                         savedPerformance.end().toString()
                 ))
-                .toList());
+                .collect(Collectors.toList()));
     }
 
     @Override
@@ -40,6 +41,6 @@ public final class FileBackedPerformanceRepository implements PerformanceReposit
                         LocalDateTime.parse(row.get(2)),
                         LocalDateTime.parse(row.get(3))
                 ))
-                .toList();
+                .collect(Collectors.toList());
     }
 }

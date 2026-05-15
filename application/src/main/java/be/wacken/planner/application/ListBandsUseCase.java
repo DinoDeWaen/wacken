@@ -7,6 +7,7 @@ import be.wacken.planner.domain.RatingRepository;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public final class ListBandsUseCase {
     private final PerformanceRepository performances;
@@ -24,7 +25,7 @@ public final class ListBandsUseCase {
                 .stream()
                 .sorted(Comparator.comparing(Performance::start))
                 .map(this::toBandListItem)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private BandListItem toBandListItem(Performance performance) {
