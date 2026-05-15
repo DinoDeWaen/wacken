@@ -17,6 +17,7 @@
 - ADR: [`0001-initial-android-clean-architecture-scaffold.md`](backlog/decisions/0001-initial-android-clean-architecture-scaffold.md).
 - ADR: [`0003-github-actions-ci-and-apk-artifact.md`](backlog/decisions/0003-github-actions-ci-and-apk-artifact.md).
 - ADR: [`0005-food-and-stage-repository-ports-for-csv-import.md`](backlog/decisions/0005-food-and-stage-repository-ports-for-csv-import.md).
+- ADR: [`0006-mvp-file-backed-local-persistence.md`](backlog/decisions/0006-mvp-file-backed-local-persistence.md).
 - CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
 
 ### Module Map
@@ -45,7 +46,7 @@ Current modules:
 | `infrastructure` | Java library | Technical adapters. Depends inward on `application` and `domain`. |
 | `app` | Android application | Android UI/bootstrap and APK packaging. |
 
-Current import repositories cover bands, stages, performances, stage distances, food options, and ratings.
+Current import repositories cover bands, stages, performances, stage distances, food options, and ratings. MVP local persistence uses file-backed adapters in `infrastructure`; Android wiring supplies the app-private storage directory.
 
 ### Technologies
 - Language: Java
@@ -85,8 +86,8 @@ C4Container
         Container(ui, "Android UI", "Java", "Screens for band list, ratings, imports, schedule")
         Container(appsvc, "Application Layer", "Java", "Use cases for listing, rating, imports")
         Container(domain, "Domain", "Java", "Entities, value objects, decision rules")
-        Container(infra, "Infrastructure", "Java", "Adapters: repositories and import support")
-        ContainerDb(data, "In-App Data Store", "In-memory MVP / future persistence", "Imported festival data and ratings")
+        Container(infra, "Infrastructure", "Java", "Adapters: repositories, file-backed persistence, and import support")
+        ContainerDb(data, "In-App Data Store", "App-private files", "Imported festival data and ratings")
     }
 
     Rel(attendee, ui, "Rates bands, views lineup")

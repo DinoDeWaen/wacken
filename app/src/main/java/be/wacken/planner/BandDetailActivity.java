@@ -20,8 +20,8 @@ import be.wacken.planner.application.RateBandUseCase;
 import be.wacken.planner.application.ShowBandDetailUseCase;
 import be.wacken.planner.domain.Band;
 import be.wacken.planner.domain.Rating;
-import be.wacken.planner.infrastructure.InMemoryBandRepository;
-import be.wacken.planner.infrastructure.InMemoryRatingRepository;
+import be.wacken.planner.domain.BandRepository;
+import be.wacken.planner.domain.RatingRepository;
 
 public final class BandDetailActivity extends Activity {
     public static final String EXTRA_BAND_NAME = "be.wacken.planner.BAND_NAME";
@@ -32,15 +32,18 @@ public final class BandDetailActivity extends Activity {
 
     private static final String CURRENT_USER = "my group";
 
-    private final InMemoryBandRepository bands = new InMemoryBandRepository();
-    private final InMemoryRatingRepository ratings = new InMemoryRatingRepository();
-
+    private BandRepository bands;
+    private RatingRepository ratings;
     private Band selectedBand;
     private TextView validationMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        AppRepositories repositories = new AppRepositories(this);
+        bands = repositories.bands();
+        ratings = repositories.ratings();
 
         selectedBand = new Band(getIntent().getStringExtra(EXTRA_BAND_NAME));
         bands.save(selectedBand);

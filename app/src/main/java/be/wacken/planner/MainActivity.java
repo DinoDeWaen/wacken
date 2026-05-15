@@ -7,14 +7,24 @@ import android.widget.TextView;
 import java.util.List;
 
 import be.wacken.planner.application.BandListItem;
+import be.wacken.planner.application.ListBandsUseCase;
 
 public final class MainActivity extends Activity {
+    private static final String CURRENT_USER = "my group";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        AppRepositories repositories = new AppRepositories(this);
+        List<BandListItem> bands = new ListBandsUseCase(
+                repositories.performances(),
+                repositories.ratings(),
+                CURRENT_USER
+        ).listBands();
+
         TextView content = new TextView(this);
-        content.setText(renderBandList(List.of()));
+        content.setText(renderBandList(bands));
         setContentView(content);
     }
 
