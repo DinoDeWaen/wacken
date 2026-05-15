@@ -1,5 +1,7 @@
 package be.wacken.planner.application;
 
+import be.wacken.planner.domain.Band;
+import be.wacken.planner.domain.BandRepository;
 import be.wacken.planner.domain.Performance;
 import be.wacken.planner.domain.PerformanceRepository;
 import be.wacken.planner.domain.RatingRepository;
@@ -10,21 +12,34 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public final class ListBandsUseCase {
+    private static final String UNSCHEDULED_STAGE = "Not scheduled yet";
+    private static final String UNSCHEDULED_TIME = "TBA";
+
+    private final BandRepository bands;
     private final PerformanceRepository performances;
     private final EffectiveRatingResolver ratings;
     private final String userName;
 
-    public ListBandsUseCase(PerformanceRepository performances, RatingRepository ratings, String userName) {
+    public ListBandsUseCase(BandRepository bands, PerformanceRepository performances, RatingRepository ratings, String userName) {
+        this.bands = Objects.requireNonNull(bands, "bands must not be null");
         this.performances = Objects.requireNonNull(performances, "performances must not be null");
         this.ratings = new EffectiveRatingResolver(ratings);
         this.userName = Objects.requireNonNull(userName, "userName must not be null");
     }
 
     public List<BandListItem> listBands() {
-        return performances.findAll()
+        List<Performance> importedPerformances = performances.findAll();
+        if (!importedPerformances.isEmpty()) {
+            return importedPerformances
                 .stream()
                 .sorted(Comparator.comparing(Performance::start))
                 .map(this::toBandListItem)
+                .collect(Collectors.toList());
+        }
+
+        return bands.findAll()
+                .stream()
+                .map(this::toUnscheduledBandListItem)
                 .collect(Collectors.toList());
     }
 
@@ -42,5 +57,17 @@ public final class ListBandsUseCase {
 
     private EffectiveRating ratingFor(Performance performance) {
         return ratings.resolve(userName, performance.band());
+    }
+
+    private BandListItem toUnscheduledBandListItem(Band band) {
+        EffectiveRating rating = ratings.resolve(userName, band);
+        return new BandListItem(
+                band.name(),
+                UNSCHEDULED_STAGE,
+                UNSCHEDULED_TIME,
+                UNSCHEDULED_TIME,
+                rating.value(),
+                !rating.explicit()
+        );
     }
 }

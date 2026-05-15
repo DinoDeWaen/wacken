@@ -1,6 +1,7 @@
 package be.wacken.planner.application;
 
 import be.wacken.planner.domain.Band;
+import be.wacken.planner.domain.BandRepository;
 import be.wacken.planner.domain.Performance;
 import be.wacken.planner.domain.PerformanceRepository;
 import be.wacken.planner.domain.Rating;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,8 +23,10 @@ class ListingAndRatingQaScenarioTest {
     @Test
     void attendeeListsBandsSetsRatingAndSeesItWhenReopeningList() {
         FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeBandRepository bands = new FakeBandRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
         Band band = new Band("5th Avenue");
+        bands.save(band);
         performances.save(new Performance(
                 band,
                 new Stage("Faster"),
@@ -30,7 +34,7 @@ class ListingAndRatingQaScenarioTest {
                 LocalDateTime.parse("2026-07-30T19:00:00")
         ));
 
-        ListBandsUseCase firstOpen = new ListBandsUseCase(performances, ratings, "dino");
+        ListBandsUseCase firstOpen = new ListBandsUseCase(bands, performances, ratings, "dino");
         assertEquals(
                 List.of(new BandListItem("5th Avenue", "Faster", "2026-07-30T18:00", "2026-07-30T19:00", 1, true)),
                 firstOpen.listBands()
@@ -39,7 +43,7 @@ class ListingAndRatingQaScenarioTest {
         RateBandResult ratingResult = new RateBandUseCase(ratings).rateBand("dino", band, 4);
         assertEquals(RateBandResult.stored(), ratingResult);
 
-        ListBandsUseCase reopened = new ListBandsUseCase(performances, ratings, "dino");
+        ListBandsUseCase reopened = new ListBandsUseCase(bands, performances, ratings, "dino");
         assertEquals(
                 List.of(new BandListItem("5th Avenue", "Faster", "2026-07-30T18:00", "2026-07-30T19:00", 4, false)),
                 reopened.listBands()
@@ -49,8 +53,10 @@ class ListingAndRatingQaScenarioTest {
     @Test
     void invalidRatingInputIsRejectedAndExistingListRatingRemainsDefault() {
         FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeBandRepository bands = new FakeBandRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
         Band band = new Band("5th Avenue");
+        bands.save(band);
         performances.save(new Performance(
                 band,
                 new Stage("Faster"),
@@ -63,8 +69,27 @@ class ListingAndRatingQaScenarioTest {
         assertEquals(RateBandResult.failure("Rating must be between 0 and 4."), ratingResult);
         assertEquals(
                 List.of(new BandListItem("5th Avenue", "Faster", "2026-07-30T18:00", "2026-07-30T19:00", 1, true)),
-                new ListBandsUseCase(performances, ratings, "dino").listBands()
+                new ListBandsUseCase(bands, performances, ratings, "dino").listBands()
         );
+    }
+
+    private static final class FakeBandRepository implements BandRepository {
+        private final Map<String, Band> bandsByName = new LinkedHashMap<>();
+
+        @Override
+        public void save(Band band) {
+            bandsByName.put(band.name(), band);
+        }
+
+        @Override
+        public Optional<Band> findByName(String name) {
+            return Optional.ofNullable(bandsByName.get(name));
+        }
+
+        @Override
+        public List<Band> findAll() {
+            return new ArrayList<>(bandsByName.values());
+        }
     }
 
     private static final class FakePerformanceRepository implements PerformanceRepository {

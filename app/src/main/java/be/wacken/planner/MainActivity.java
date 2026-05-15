@@ -49,6 +49,7 @@ public final class MainActivity extends Activity {
 
         AppRepositories repositories = new AppRepositories(this);
         List<BandListItem> bands = new ListBandsUseCase(
+                repositories.bands(),
                 repositories.performances(),
                 repositories.ratings(),
                 CURRENT_USER

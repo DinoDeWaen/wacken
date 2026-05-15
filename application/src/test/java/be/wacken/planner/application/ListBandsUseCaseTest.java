@@ -1,6 +1,7 @@
 package be.wacken.planner.application;
 
 import be.wacken.planner.domain.Band;
+import be.wacken.planner.domain.BandRepository;
 import be.wacken.planner.domain.Performance;
 import be.wacken.planner.domain.PerformanceRepository;
 import be.wacken.planner.domain.Rating;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,10 +23,11 @@ class ListBandsUseCaseTest {
     @Test
     void returnsBandsWithStageAndTimeSortedByStartTime() {
         FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeBandRepository bands = new FakeBandRepository();
         performances.save(performance("Later Band", "Harder Stage", 21, 0, 22, 0));
         performances.save(performance("Earlier Band", "Faster Stage", 18, 0, 19, 0));
 
-        ListBandsUseCase useCase = new ListBandsUseCase(performances, new FakeRatingRepository(), "dino");
+        ListBandsUseCase useCase = new ListBandsUseCase(bands, performances, new FakeRatingRepository(), "dino");
 
         assertEquals(
                 List.of(
@@ -36,20 +39,42 @@ class ListBandsUseCaseTest {
     }
 
     @Test
-    void returnsEmptyListWhenNoPerformancesAreImported() {
-        ListBandsUseCase useCase = new ListBandsUseCase(new FakePerformanceRepository(), new FakeRatingRepository(), "dino");
+    void returnsEmptyListWhenNoBandsOrPerformancesAreImported() {
+        ListBandsUseCase useCase = new ListBandsUseCase(
+                new FakeBandRepository(),
+                new FakePerformanceRepository(),
+                new FakeRatingRepository(),
+                "dino"
+        );
 
         assertEquals(List.of(), useCase.listBands());
     }
 
     @Test
+    void returnsBandsWithoutPerformancesAsUnscheduled() {
+        FakeBandRepository bands = new FakeBandRepository();
+        bands.save(new Band("5th Avenue"));
+        bands.save(new Band("Midnight Skyline"));
+        ListBandsUseCase useCase = new ListBandsUseCase(bands, new FakePerformanceRepository(), new FakeRatingRepository(), "dino");
+
+        assertEquals(
+                List.of(
+                        new BandListItem("5th Avenue", "Not scheduled yet", "TBA", "TBA", 1, true),
+                        new BandListItem("Midnight Skyline", "Not scheduled yet", "TBA", "TBA", 1, true)
+                ),
+                useCase.listBands()
+        );
+    }
+
+    @Test
     void includesStoredRatingForCurrentUserAsExplicit() {
+        FakeBandRepository bands = new FakeBandRepository();
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
         Performance performance = performance("5th Avenue", "Faster Stage", 18, 0, 19, 0);
         performances.save(performance);
         ratings.save("dino", performance.band(), Rating.of(3));
-        ListBandsUseCase useCase = new ListBandsUseCase(performances, ratings, "dino");
+        ListBandsUseCase useCase = new ListBandsUseCase(bands, performances, ratings, "dino");
 
         assertEquals(
                 List.of(new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", 3, false)),
@@ -59,11 +84,12 @@ class ListBandsUseCaseTest {
 
     @Test
     void savedRatingReplacesDefaultForFutureBandReads() {
+        FakeBandRepository bands = new FakeBandRepository();
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
         Performance performance = performance("5th Avenue", "Faster Stage", 18, 0, 19, 0);
         performances.save(performance);
-        ListBandsUseCase useCase = new ListBandsUseCase(performances, ratings, "dino");
+        ListBandsUseCase useCase = new ListBandsUseCase(bands, performances, ratings, "dino");
 
         assertEquals(
                 List.of(new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", 1, true)),
@@ -78,6 +104,21 @@ class ListBandsUseCaseTest {
         );
     }
 
+    @Test
+    void includesStoredRatingForUnscheduledBand() {
+        FakeBandRepository bands = new FakeBandRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Band band = new Band("5th Avenue");
+        bands.save(band);
+        ratings.save("dino", band, Rating.of(4));
+        ListBandsUseCase useCase = new ListBandsUseCase(bands, new FakePerformanceRepository(), ratings, "dino");
+
+        assertEquals(
+                List.of(new BandListItem("5th Avenue", "Not scheduled yet", "TBA", "TBA", 4, false)),
+                useCase.listBands()
+        );
+    }
+
     private static Performance performance(String bandName, String stageName, int startHour, int startMinute, int endHour, int endMinute) {
         return new Performance(
                 new Band(bandName),
@@ -85,6 +126,25 @@ class ListBandsUseCaseTest {
                 LocalDateTime.of(2026, 7, 30, startHour, startMinute),
                 LocalDateTime.of(2026, 7, 30, endHour, endMinute)
         );
+    }
+
+    private static final class FakeBandRepository implements BandRepository {
+        private final Map<String, Band> bandsByName = new LinkedHashMap<>();
+
+        @Override
+        public void save(Band band) {
+            bandsByName.put(band.name(), band);
+        }
+
+        @Override
+        public Optional<Band> findByName(String name) {
+            return Optional.ofNullable(bandsByName.get(name));
+        }
+
+        @Override
+        public List<Band> findAll() {
+            return new ArrayList<>(bandsByName.values());
+        }
     }
 
     private static final class FakePerformanceRepository implements PerformanceRepository {
