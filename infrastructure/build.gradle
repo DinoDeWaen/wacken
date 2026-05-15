@@ -10,4 +10,11 @@ java {
 dependencies {
     implementation project(":application")
     implementation project(":domain")
+    testImplementation platform("org.junit:junit-bom:${rootProject.junitVersion}")
+    testImplementation "org.junit.jupiter:junit-jupiter"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+test {
+    useJUnitPlatform()
 }
