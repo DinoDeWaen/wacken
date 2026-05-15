@@ -103,7 +103,8 @@ C4Container
    ```
 
 4. Run tests: `./gradlew test` (include QA suite task when available).
-5. Build debug APK: `./gradlew assembleDebug` (artifact in `app/build/outputs/apk/debug/`).
+5. Run QA scenarios: `./gradlew qaTest`.
+6. Build debug APK: `./gradlew assembleDebug` (artifact in `app/build/outputs/apk/debug/`).
 
 Useful module checks:
 
@@ -111,6 +112,7 @@ Useful module checks:
 ./gradlew :domain:compileJava :application:compileJava
 ./gradlew :domain:test :application:test
 ./gradlew :domain:jacocoTestCoverageVerification :application:jacocoTestCoverageVerification
+./gradlew qaTest
 ```
 
 Coverage gates:
@@ -126,7 +128,7 @@ The CI workflow:
 
 - Sets up JDK 21 and the Android SDK.
 - Runs `./gradlew test`, including the current JUnit 5 tests and JaCoCo coverage gates.
-- Leaves an explicit QA-suite step for `task-9`; until then, `./gradlew test` is the executable QA path.
+- Runs `./gradlew qaTest` for MVP listing/rating scenario coverage.
 - Runs `./gradlew assembleDebug`.
 - Publishes `app/build/outputs/apk/debug/app-debug.apk` as a versioned artifact named `wacken-planner-0.1.<run-number>-debug-apk`.
 

@@ -1,0 +1,100 @@
+package be.wacken.planner.application;
+
+import be.wacken.planner.domain.Band;
+import be.wacken.planner.domain.Performance;
+import be.wacken.planner.domain.PerformanceRepository;
+import be.wacken.planner.domain.Rating;
+import be.wacken.planner.domain.RatingRepository;
+import be.wacken.planner.domain.Stage;
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class ListingAndRatingQaScenarioTest {
+    @Test
+    void attendeeListsBandsSetsRatingAndSeesItWhenReopeningList() {
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Band band = new Band("5th Avenue");
+        performances.save(new Performance(
+                band,
+                new Stage("Faster"),
+                LocalDateTime.parse("2026-07-30T18:00:00"),
+                LocalDateTime.parse("2026-07-30T19:00:00")
+        ));
+
+        ListBandsUseCase firstOpen = new ListBandsUseCase(performances, ratings, "dino");
+        assertEquals(
+                List.of(new BandListItem("5th Avenue", "Faster", "2026-07-30T18:00", "2026-07-30T19:00", 1, true)),
+                firstOpen.listBands()
+        );
+
+        RateBandResult ratingResult = new RateBandUseCase(ratings).rateBand("dino", band, 4);
+        assertEquals(RateBandResult.stored(), ratingResult);
+
+        ListBandsUseCase reopened = new ListBandsUseCase(performances, ratings, "dino");
+        assertEquals(
+                List.of(new BandListItem("5th Avenue", "Faster", "2026-07-30T18:00", "2026-07-30T19:00", 4, false)),
+                reopened.listBands()
+        );
+    }
+
+    @Test
+    void invalidRatingInputIsRejectedAndExistingListRatingRemainsDefault() {
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Band band = new Band("5th Avenue");
+        performances.save(new Performance(
+                band,
+                new Stage("Faster"),
+                LocalDateTime.parse("2026-07-30T18:00:00"),
+                LocalDateTime.parse("2026-07-30T19:00:00")
+        ));
+
+        RateBandResult ratingResult = new RateBandUseCase(ratings).rateBand("dino", band, 5);
+
+        assertEquals(RateBandResult.failure("Rating must be between 0 and 4."), ratingResult);
+        assertEquals(
+                List.of(new BandListItem("5th Avenue", "Faster", "2026-07-30T18:00", "2026-07-30T19:00", 1, true)),
+                new ListBandsUseCase(performances, ratings, "dino").listBands()
+        );
+    }
+
+    private static final class FakePerformanceRepository implements PerformanceRepository {
+        private final List<Performance> performances = new ArrayList<>();
+
+        @Override
+        public void save(Performance performance) {
+            performances.add(performance);
+        }
+
+        @Override
+        public List<Performance> findAll() {
+            return new ArrayList<>(performances);
+        }
+    }
+
+    private static final class FakeRatingRepository implements RatingRepository {
+        private final Map<Key, Rating> ratings = new HashMap<>();
+
+        @Override
+        public void save(String userName, Band band, Rating rating) {
+            ratings.put(new Key(userName, band), rating);
+        }
+
+        @Override
+        public Optional<Rating> findByUserAndBand(String userName, Band band) {
+            return Optional.ofNullable(ratings.get(new Key(userName, band)));
+        }
+
+        private record Key(String userName, Band band) {
+        }
+    }
+}

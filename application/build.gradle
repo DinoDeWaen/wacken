@@ -16,6 +16,19 @@ dependencies {
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
+sourceSets {
+    qaTest {
+        java.srcDir file("src/qaTest/java")
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+configurations {
+    qaTestImplementation.extendsFrom testImplementation
+    qaTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestCoverageVerification
@@ -43,4 +56,13 @@ jacocoTestCoverageVerification {
 
 check {
     dependsOn jacocoTestCoverageVerification
+}
+
+tasks.register("qaTest", Test) {
+    description = "Runs QA scenario tests for MVP flows."
+    group = "verification"
+    testClassesDirs = sourceSets.qaTest.output.classesDirs
+    classpath = sourceSets.qaTest.runtimeClasspath
+    useJUnitPlatform()
+    shouldRunAfter test
 }

@@ -29,8 +29,7 @@ jobs:
         run: ./gradlew test
 
       - name: Run QA suite
-        run: |
-          echo "Dedicated QA suite is planned in task-9; ./gradlew test is the current executable QA path."
+        run: ./gradlew qaTest
 
       - name: Build debug APK
         run: ./gradlew assembleDebug
