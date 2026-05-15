@@ -4,8 +4,10 @@ title: 'US-006: CSV import for festival data'
 status: To Do
 assignee: []
 created_date: '2026-01-06 16:57'
+updated_date: '2026-05-15 12:01'
 labels: []
-dependencies: []
+dependencies:
+  - task-16
 ---
 
 ## Description
