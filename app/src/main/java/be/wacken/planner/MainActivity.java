@@ -1,7 +1,11 @@
 package be.wacken.planner;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.util.List;
@@ -12,9 +16,33 @@ import be.wacken.planner.application.ListBandsUseCase;
 public final class MainActivity extends Activity {
     private static final String CURRENT_USER = "my group";
 
+    private TextView bandList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        LinearLayout screen = new LinearLayout(this);
+        screen.setOrientation(LinearLayout.VERTICAL);
+        int padding = 32;
+        screen.setPadding(padding, padding, padding, padding);
+
+        Button importButton = new Button(this);
+        importButton.setText("Import CSV");
+        importButton.setOnClickListener(view -> startActivity(new Intent(this, ImportCsvActivity.class)));
+        screen.addView(importButton);
+
+        bandList = new TextView(this);
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.addView(bandList);
+        screen.addView(scrollView);
+
+        setContentView(screen);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
         AppRepositories repositories = new AppRepositories(this);
         List<BandListItem> bands = new ListBandsUseCase(
@@ -22,10 +50,7 @@ public final class MainActivity extends Activity {
                 repositories.ratings(),
                 CURRENT_USER
         ).listBands();
-
-        TextView content = new TextView(this);
-        content.setText(renderBandList(bands));
-        setContentView(content);
+        bandList.setText(renderBandList(bands));
     }
 
     private String renderBandList(List<BandListItem> bands) {

@@ -5,7 +5,7 @@
 - Respects travel times between stages, lunch window, and veto rules when proposing timelines.
 
 ## Basic Functionality (MVP 1)
-- Import festival data (bands, stages, performances, distances, food) from validated CSV files.
+- Import festival data (bands, stages, performances, distances, food) from validated CSV files by pasting CSV content into the Android import screen.
 - List bands with stage and time information.
 - Let users rate bands on a 0–4 scale (0 = veto, 4 = must-see).
 - Prepare groundwork for group decision rules and printable timelines.

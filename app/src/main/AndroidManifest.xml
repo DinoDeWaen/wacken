@@ -11,6 +11,9 @@
             android:name=".BandDetailActivity"
             android:exported="false" />
         <activity
+            android:name=".ImportCsvActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
