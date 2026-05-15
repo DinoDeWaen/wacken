@@ -9,14 +9,16 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.util.List;
+import java.util.Optional;
 
 import be.wacken.planner.application.BandListItem;
 import be.wacken.planner.application.ListBandsUseCase;
+import be.wacken.planner.domain.Band;
 
 public final class MainActivity extends Activity {
     private static final String CURRENT_USER = "my group";
 
-    private TextView bandList;
+    private LinearLayout bandList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +34,8 @@ public final class MainActivity extends Activity {
         importButton.setOnClickListener(view -> startActivity(new Intent(this, ImportCsvActivity.class)));
         screen.addView(importButton);
 
-        bandList = new TextView(this);
+        bandList = new LinearLayout(this);
+        bandList.setOrientation(LinearLayout.VERTICAL);
         ScrollView scrollView = new ScrollView(this);
         scrollView.addView(bandList);
         screen.addView(scrollView);
@@ -50,17 +53,30 @@ public final class MainActivity extends Activity {
                 repositories.ratings(),
                 CURRENT_USER
         ).listBands();
-        bandList.setText(renderBandList(bands));
+        renderBandList(repositories, bands);
     }
 
-    private String renderBandList(List<BandListItem> bands) {
+    private void renderBandList(AppRepositories repositories, List<BandListItem> bands) {
+        bandList.removeAllViews();
         if (bands.isEmpty()) {
-            return getString(R.string.empty_band_list);
+            TextView emptyState = new TextView(this);
+            emptyState.setText(getString(R.string.empty_band_list));
+            bandList.addView(emptyState);
+            return;
         }
 
-        StringBuilder list = new StringBuilder();
         for (BandListItem band : bands) {
-            list.append(band.bandName())
+            Button row = new Button(this);
+            row.setAllCaps(false);
+            row.setText(rowText(band));
+            row.setOnClickListener(view -> openBandDetail(repositories, band));
+            bandList.addView(row);
+        }
+    }
+
+    private String rowText(BandListItem band) {
+        return new StringBuilder()
+                .append(band.bandName())
                     .append('\n')
                     .append(band.stageName())
                     .append(" | ")
@@ -71,8 +87,21 @@ public final class MainActivity extends Activity {
                     .append("Rating: ")
                     .append(band.rating())
                     .append(band.defaultRating() ? " (default)" : "")
-                    .append("\n\n");
-        }
-        return list.toString().trim();
+                    .toString();
+    }
+
+    private void openBandDetail(AppRepositories repositories, BandListItem band) {
+        Intent intent = new Intent(this, BandDetailActivity.class);
+        intent.putExtra(BandDetailActivity.EXTRA_BAND_NAME, band.bandName());
+        intent.putExtra(BandDetailActivity.EXTRA_RATING, band.rating());
+        intent.putExtra(BandDetailActivity.EXTRA_DEFAULT_RATING, band.defaultRating());
+
+        Optional<Band> storedBand = repositories.bands().findByName(band.bandName());
+        storedBand.flatMap(Band::youtubeUrl)
+                .ifPresent(url -> intent.putExtra(BandDetailActivity.EXTRA_YOUTUBE_URL, url));
+        storedBand.flatMap(Band::spotifyUrl)
+                .ifPresent(url -> intent.putExtra(BandDetailActivity.EXTRA_SPOTIFY_URL, url));
+
+        startActivity(intent);
     }
 }

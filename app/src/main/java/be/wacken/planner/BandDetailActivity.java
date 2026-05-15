@@ -46,7 +46,9 @@ public final class BandDetailActivity extends Activity {
         ratings = repositories.ratings();
 
         selectedBand = new Band(getIntent().getStringExtra(EXTRA_BAND_NAME));
-        bands.save(selectedBand);
+        if (bands.findByName(selectedBand.name()).isEmpty()) {
+            bands.save(selectedBand);
+        }
         seedExplicitRating();
 
         ShowBandDetailUseCase showBand = new ShowBandDetailUseCase(bands, ratings);

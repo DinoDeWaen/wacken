@@ -49,6 +49,30 @@ class ImportFestivalCsvUseCaseTest {
     }
 
     @Test
+    void importsBandMusicMetadataWhenAvailable() {
+        Repositories repositories = new Repositories();
+        ImportFestivalCsvUseCase useCase = repositories.useCase();
+
+        ImportFestivalCsvResult result = useCase.importCsv(new FestivalCsvFiles(
+                "band_id,name,youtube_url,spotify_artist_id\n5th-avenue,5th Avenue,https://youtube.example/5th,spotify-artist-5th\n",
+                "stage_id,name\nfaster,Faster\n",
+                "performance_id,band_id,stage_id,festival_day_id,start_at,end_at\np1,5th-avenue,faster,thu,2026-07-30T18:00:00,2026-07-30T19:00:00\n",
+                "from_stage_id,to_stage_id,walking_minutes\n",
+                "food_id,name,near_stage_id\n"
+        ));
+
+        assertEquals(ImportFestivalCsvResult.imported(), result);
+        assertEquals(
+                Optional.of(new Band(
+                        "5th Avenue",
+                        Optional.of("https://youtube.example/5th"),
+                        Optional.of("https://open.spotify.com/artist/spotify-artist-5th")
+                )),
+                repositories.bands.findByName("5th Avenue")
+        );
+    }
+
+    @Test
     void failsWhenPerformanceReferencesMissingBandAndUnknownStage() {
         Repositories repositories = new Repositories();
         ImportFestivalCsvUseCase useCase = repositories.useCase();

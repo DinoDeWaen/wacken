@@ -22,12 +22,21 @@ class FileBackedRepositoryPersistenceTest {
 
     @Test
     void persistsBandsAcrossRepositoryRecreation() {
-        new FileBackedBandRepository(storageDirectory).save(new Band("5th Avenue"));
+        new FileBackedBandRepository(storageDirectory).save(new Band(
+                "5th Avenue",
+                Optional.of("https://youtube.example/5th"),
+                Optional.of("https://open.spotify.com/artist/spotify-artist-5th")
+        ));
 
         FileBackedBandRepository reopened = new FileBackedBandRepository(storageDirectory);
 
-        assertEquals(Optional.of(new Band("5th Avenue")), reopened.findByName("5th Avenue"));
-        assertEquals(List.of(new Band("5th Avenue")), reopened.findAll());
+        Band expected = new Band(
+                "5th Avenue",
+                Optional.of("https://youtube.example/5th"),
+                Optional.of("https://open.spotify.com/artist/spotify-artist-5th")
+        );
+        assertEquals(Optional.of(expected), reopened.findByName("5th Avenue"));
+        assertEquals(List.of(expected), reopened.findAll());
     }
 
     @Test

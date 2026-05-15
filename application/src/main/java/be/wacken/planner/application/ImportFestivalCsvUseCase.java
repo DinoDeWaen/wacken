@@ -70,7 +70,11 @@ public final class ImportFestivalCsvUseCase {
     private ParsedData parse(FestivalCsvFiles files) {
         Map<String, Band> bandsById = new LinkedHashMap<>();
         for (CsvRow row : parseCsv(files.bandsCsv())) {
-            bandsById.put(row.required("band_id"), new Band(row.required("name")));
+            bandsById.put(row.required("band_id"), new Band(
+                    row.required("name"),
+                    optional(row.value("youtube_url")),
+                    spotifyUrl(row.value("spotify_artist_id"))
+            ));
         }
 
         Map<String, Stage> stagesById = new LinkedHashMap<>();
@@ -221,6 +225,17 @@ public final class ImportFestivalCsvUseCase {
         }
         values.add(current.toString());
         return values;
+    }
+
+    private java.util.Optional<String> optional(String value) {
+        if (value == null || value.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        return java.util.Optional.of(value);
+    }
+
+    private java.util.Optional<String> spotifyUrl(String spotifyArtistId) {
+        return optional(spotifyArtistId).map(id -> "https://open.spotify.com/artist/" + id);
     }
 
     private record ParsedData(
