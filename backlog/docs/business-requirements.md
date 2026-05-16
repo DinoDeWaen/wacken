@@ -27,7 +27,8 @@ Project-specific boundary notes:
 - Goal 3: Respect strong preferences, must-see ratings, vetoes, and lunch constraints when producing the schedule.
 - Goal 4: Make the final schedule clear enough to use during the festival and suitable for printing.
 - Goal 5: Get the band rating feature working first so the group can begin scoring the lineup before final stage times are available.
-- Goal 6: Support reliable festival data import so bands, stages, performances, distances, and food options can be planned from validated CSV files or proposed website-scraped changes.
+- Goal 6: Support reliable festival data import so bands, stages, performances, distances, and food options can be planned from validated file-based CSV uploads or proposed website-scraped changes.
+- Goal 7: Present the band overview with a Wacken-inspired visual style so early rating feels like a festival lineup experience rather than a technical data table.
 
 ## Product context
 
@@ -70,7 +71,7 @@ Existing integration:
 | System | Purpose | Direction | Notes |
 | --- | --- | --- | --- |
 | Wacken line-up website | Provides current band list and later detailed lineup data when available. | Inbound | Initial import may scrape the official band list and propose changes for user validation. The official pages inspected were the Wacken band list and artist detail URLs, but the dynamic artist-card data still needs schema investigation. |
-| Festival CSV files | Provide bands, stages, performances, distances, and food data. | Inbound | CSVs must be validated for missing references, overlaps, and unknown stages once final stage and time data is available. |
+| Festival CSV files | Provide bands, stages, performances, distances, and food data. | Inbound | CSVs are uploaded through Android file selection. They must be validated for missing references, overlaps, and unknown stages once final stage and time data is available. |
 | CI artifact storage | Stores downloadable APK artifacts. | Outbound | CI must produce a clearly versioned debug APK artifact. |
 
 ## Non-goals
@@ -110,10 +111,10 @@ Release assumptions:
 | Capability | Description | Priority | MVP |
 | --- | --- | --- | --- |
 | Band rating | Let users rate bands on the 0-4 preference scale. This is the first product priority. | Must | MVP 1 |
-| Band listing | Show bands with stage and time information. | Must | MVP 1 |
+| Band listing | Show bands in a Wacken-themed overview with rating, stage, and time information when available. | Must | MVP 1 |
 | Band detail view | Show band details in a style inspired by the official Wacken band detail screen, with rating stars and optional YouTube and Spotify links. | Must | MVP 1 |
-| Initial lineup import | Import or scrape the current Wacken band list before final stages and times are available. | Must | MVP 1 |
-| Festival data import | Import validated CSV files for bands, stages, performances, distances, and food options once final lineup data is available. | Must | MVP 1 |
+| Initial lineup import | Import or scrape the current Wacken band list before final stages and times are available. Band-only imports must be visible and rateable. | Must | MVP 1 |
+| Festival data import | Import validated CSV files for bands, stages, performances, distances, and food options through Android file upload once final lineup data is available. Re-import updates festival master data while preserving user ratings. | Must | MVP 1 |
 | Data review grid | Propose scraped or imported data changes in a user-validated data grid, with line-by-line validation. | Should | MVP 1 |
 | One-group planning | Combine ratings from one shared friend group into shared decisions. | Must | MVP 2 |
 | Friend invites | Allow friends to join the shared group through the most useful shareable invite format for Android. | Should | MVP 2 |
@@ -153,13 +154,14 @@ Out of scope:
 
 ### Workflow 1: Import or propose festival data
 
-An admin imports CSV files or asks the app to scrape the Wacken line-up website. The app proposes data changes in a grid so the user can validate updates line by line.
+An admin uploads CSV files or asks the app to scrape the Wacken line-up website. CSV file upload is the MVP import path. Later scraped or reviewed changes may be proposed in a grid so the user can validate updates line by line.
 
 ```gherkin
-Scenario: Review proposed festival data updates
-  Given the app has found lineup changes from CSV input or the Wacken website
-  When the admin reviews the proposed changes in a data grid
-  Then the admin can validate updates line by line before they affect planning
+Scenario: Import festival data from selected CSV files
+  Given the admin has selected CSV files for bands, stages, performances, distances, and food
+  When the import is started
+  Then the app validates the selected files before updating festival master data
+  And existing band ratings are preserved
 ```
 
 ### Workflow 2: Rate bands
@@ -184,7 +186,19 @@ Scenario: Review and rate a band
   Then the user sees band information, rating stars, and optional YouTube and Spotify links when available
 ```
 
-### Workflow 4: Compute a shared schedule
+### Workflow 4: Browse the Wacken-themed band overview
+
+A festival attendee browses the imported lineup in a visual overview inspired by Wacken styling.
+
+```gherkin
+Scenario: Browse imported bands
+  Given bands have been imported
+  When the user opens the band overview
+  Then each band is shown in a Wacken-themed card with its rating and schedule status
+  And the user can open band details from the card
+```
+
+### Workflow 5: Compute a shared schedule
 
 The app combines group ratings, conflicts, travel feasibility, and lunch constraints to produce a timeline.
 
@@ -196,7 +210,7 @@ Scenario: Generate a conflict-aware group schedule
   Then the timeline respects group decision rules, conflicts, travel feasibility, and lunch constraints
 ```
 
-### Workflow 5: Use the printable timeline
+### Workflow 6: Use the printable timeline
 
 The group reviews a clear per-day timeline for use during the festival.
 
@@ -250,12 +264,21 @@ Scenario: View printable festival timeline
 | BR-037 | The current version supports one shared group, not multiple independent groups. | All ratings belong to "my group" for now. | Must |
 | BR-038 | Multi-group support is deferred to next year. | Separate friend groups are not part of the current scope. | Must |
 | BR-039 | Printable timeline output must be PDF. | The generated festival plan can be exported as a PDF. | Must |
+| BR-040 | MVP CSV import must be file-upload based in Android, not paste-text based. | The user selects `bands.csv` and companion CSV files with the Android document picker. | Must |
+| BR-041 | The import screen must show which CSV files were selected before import. | After selecting `bands.csv`, the screen shows the chosen file name. | Must |
+| BR-042 | A successful CSV import updates festival master data for bands, stages, performances, distances, and food. | Re-importing a newer Wacken band list replaces the stored lineup data. | Must |
+| BR-043 | Re-importing festival master data must preserve existing ratings. | If a user rated 5th Avenue as `4`, importing updated CSV files must not erase that rating. | Must |
+| BR-044 | Ratings are user/group preference data, not festival master data. | Updating lineup CSVs must not clear or overwrite rating records. | Must |
+| BR-045 | Band-only imports must be visible in the band overview before performance times are available. | A Wacken lineup CSV without stages/times still shows bands for rating. | Must |
+| BR-046 | Bands without performance data must be clearly marked as not scheduled yet. | A band imported without a performance shows `Not scheduled yet` and `TBA`. | Must |
+| BR-047 | The band overview must use a Wacken-inspired visual style with dark presentation and amber/yellow emphasis where practical. | Band cards look festival-themed rather than like raw form controls. | Should |
+| BR-048 | The Wacken-themed band overview must keep the rating workflow reachable. | Tapping a band card opens the band detail/rating screen. | Must |
 
 ## Data and terminology
 
 | Concept | Description | Important fields | Invariants |
 | --- | --- | --- | --- |
-| Band | A musical act at Wacken Open Air 2026. | Name | Can be associated with one or more performances. |
+| Band | A musical act at Wacken Open Air 2026. | Name, optional music links, optional schedule status | Can be associated with one or more performances; can also exist before performances are known. |
 | Performance | A scheduled band appearance. | Band, stage, time range | Must reference known band and stage data. |
 | Stage | A festival podium or location where performances happen. | Name or identifier | Must be known before performances can reference it. |
 | Distance | Travel information between stages. | From stage, to stage, walking minutes by default | Used to determine travel feasibility. |
@@ -265,6 +288,9 @@ Scenario: View printable festival timeline
 | Food option | A food location or option used for lunch planning. | Location near stages is implied but not specified in detail | Used for suggestions near previous and next stages when nearby options exist. |
 | Schedule | A conflict-aware festival plan. | Day, slots, lunch block, selected performances, alternatives, travel time | Must respect decision rules, conflicts, travel feasibility, and lunch constraints. |
 | Timeline slot | One visible item in the daily schedule. | Selected band, stage, time range, travel time, lost alternative | Must be clear enough for timeline display and PDF export. |
+| Festival master data | Imported lineup data used for planning. | Bands, stages, performances, distances, food options | Can be replaced by a successful CSV re-import. Must not include user ratings. |
+| User rating data | Group preference data for bands. | User/group identity, band, rating value | Must be preserved when festival master data is updated. |
+| Band overview card | Visual representation of a band in the overview. | Band name, schedule status, effective rating | Must open band details and support the rating workflow. |
 
 ## Business object model
 
@@ -280,6 +306,8 @@ Scenario: View printable festival timeline
 | Schedule | Represents the selected day-by-day plan. | Contains timeline slots and lunch blocks; can be exported as PDF. |
 | Timeline Slot | Represents a selected schedule entry. | Shows performance, travel time, and the lost alternative. |
 | Food Option | Represents a lunch option. | Is suggested based on proximity to previous and next stages. |
+| Festival Master Data | Represents imported source data for the festival. | Is updated by CSV import; excludes ratings. |
+| Band Overview Card | Represents a visible, tappable band summary. | Opens band detail and displays effective rating plus schedule status. |
 
 ## Future domain events
 
@@ -312,13 +340,17 @@ The required output format is a clear, printable day-based PDF timeline.
 - CSV data contains missing references.
 - CSV data contains overlaps.
 - CSV data references unknown stages.
+- CSV re-import changes existing festival master data after ratings already exist.
+- CSV re-import removes a band that has an existing rating.
+- CSV file selection is incomplete or a selected file cannot be read.
+- Band import exists before any performances are available.
 - Scraped website data proposes a change that the user wants to reject.
 - Food options need to be found near both previous and next stages.
 - No food option is close to the previous or next stage.
 
 ## Open questions
 
-- What exact CSV schemas are required for bands, stages, performances, distances, and food? This needs investigation against the Wacken line-up website and later final running-order data.
+- What exact final running-order fields will Wacken publish for stages and performance times, and will they require schema changes beyond the current documented CSV contracts?
 - What exact fields can be scraped from the Wacken band list and band detail pages, and what are the legal/technical constraints for scraping those pages?
 - How should the proposed data grid be implemented in the Android app, and which validation states should each row support?
 - How are users identified inside the one current shared group, and where are their ratings stored or shared?
