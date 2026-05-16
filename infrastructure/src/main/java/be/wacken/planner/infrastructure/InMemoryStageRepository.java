@@ -18,6 +18,12 @@ public final class InMemoryStageRepository implements StageRepository {
     }
 
     @Override
+    public void replaceAll(List<Stage> stages) {
+        stagesByName.clear();
+        stages.forEach(this::save);
+    }
+
+    @Override
     public Optional<Stage> findByName(String name) {
         return Optional.ofNullable(stagesByName.get(name));
     }

@@ -1,24 +1,41 @@
 package be.wacken.planner;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
-import android.text.InputType;
+import android.provider.OpenableColumns;
+import android.view.Gravity;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 import be.wacken.planner.application.FestivalCsvFiles;
 import be.wacken.planner.application.ImportFestivalCsvResult;
 import be.wacken.planner.application.ImportFestivalCsvUseCase;
 
 public final class ImportCsvActivity extends Activity {
-    private EditText bandsCsv;
-    private EditText stagesCsv;
-    private EditText performancesCsv;
-    private EditText distancesCsv;
-    private EditText foodCsv;
+    private static final int REQUEST_BANDS = 100;
+    private static final int REQUEST_STAGES = 101;
+    private static final int REQUEST_PERFORMANCES = 102;
+    private static final int REQUEST_DISTANCES = 103;
+    private static final int REQUEST_FOOD = 104;
+
+    private final CsvSelection bandsCsv = new CsvSelection("bands.csv");
+    private final CsvSelection stagesCsv = new CsvSelection("stages.csv");
+    private final CsvSelection performancesCsv = new CsvSelection("performances.csv");
+    private final CsvSelection distancesCsv = new CsvSelection("distances.csv");
+    private final CsvSelection foodCsv = new CsvSelection("food.csv");
+
     private TextView resultMessage;
 
     @Override
@@ -27,45 +44,78 @@ public final class ImportCsvActivity extends Activity {
 
         LinearLayout form = new LinearLayout(this);
         form.setOrientation(LinearLayout.VERTICAL);
-        int padding = 32;
+        form.setBackgroundColor(Color.rgb(15, 15, 15));
+        int padding = dp(18);
         form.setPadding(padding, padding, padding, padding);
 
-        bandsCsv = csvInput("bands.csv");
-        stagesCsv = csvInput("stages.csv");
-        performancesCsv = csvInput("performances.csv");
-        distancesCsv = csvInput("distances.csv");
-        foodCsv = csvInput("food.csv");
+        TextView title = new TextView(this);
+        title.setText("Wacken CSV Import");
+        title.setTextColor(Color.rgb(255, 199, 44));
+        title.setTextSize(28);
+        title.setGravity(Gravity.CENTER_HORIZONTAL);
+        form.addView(title);
 
-        form.addView(label("bands.csv"));
-        form.addView(bandsCsv);
-        form.addView(label("stages.csv"));
-        form.addView(stagesCsv);
-        form.addView(label("performances.csv"));
-        form.addView(performancesCsv);
-        form.addView(label("distances.csv"));
-        form.addView(distancesCsv);
-        form.addView(label("food.csv"));
-        form.addView(foodCsv);
+        TextView subtitle = new TextView(this);
+        subtitle.setText("Select CSV files. Imported festival data is updated; existing ratings stay untouched.");
+        subtitle.setTextColor(Color.LTGRAY);
+        subtitle.setPadding(0, dp(8), 0, dp(16));
+        form.addView(subtitle);
 
-        Button importButton = new Button(this);
-        importButton.setText("Import");
+        form.addView(filePicker("Bands", bandsCsv, REQUEST_BANDS));
+        form.addView(filePicker("Stages", stagesCsv, REQUEST_STAGES));
+        form.addView(filePicker("Performances", performancesCsv, REQUEST_PERFORMANCES));
+        form.addView(filePicker("Distances", distancesCsv, REQUEST_DISTANCES));
+        form.addView(filePicker("Food", foodCsv, REQUEST_FOOD));
+
+        Button importButton = actionButton("Import selected files");
         importButton.setOnClickListener(view -> importCsv());
         form.addView(importButton);
 
-        Button backButton = new Button(this);
-        backButton.setText("Back to band list");
+        Button backButton = secondaryButton("Back to band list");
         backButton.setOnClickListener(view -> finish());
         form.addView(backButton);
 
         resultMessage = new TextView(this);
+        resultMessage.setTextColor(Color.WHITE);
+        resultMessage.setPadding(0, dp(16), 0, 0);
         form.addView(resultMessage);
 
         ScrollView scrollView = new ScrollView(this);
+        scrollView.setBackgroundColor(Color.rgb(15, 15, 15));
         scrollView.addView(form);
         setContentView(scrollView);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+            return;
+        }
+
+        CsvSelection selection = selectionFor(requestCode);
+        if (selection == null) {
+            return;
+        }
+
+        Uri uri = data.getData();
+        try {
+            selection.contents = readText(uri);
+            selection.fileName = displayName(uri);
+            selection.label.setText(selection.fileName);
+            selection.label.setTextColor(Color.WHITE);
+        } catch (IOException error) {
+            resultMessage.setText("Could not read " + selection.expectedName + ": " + error.getMessage());
+        }
+    }
+
     private void importCsv() {
+        if (bandsCsv.contents.isBlank()) {
+            resultMessage.setTextColor(Color.rgb(255, 115, 115));
+            resultMessage.setText("Select at least bands.csv before importing.");
+            return;
+        }
+
         AppRepositories repositories = new AppRepositories(this);
         ImportFestivalCsvUseCase importFestivalCsv = new ImportFestivalCsvUseCase(
                 repositories.bands(),
@@ -76,31 +126,129 @@ public final class ImportCsvActivity extends Activity {
         );
 
         ImportFestivalCsvResult result = importFestivalCsv.importCsv(new FestivalCsvFiles(
-                bandsCsv.getText().toString(),
-                stagesCsv.getText().toString(),
-                performancesCsv.getText().toString(),
-                distancesCsv.getText().toString(),
-                foodCsv.getText().toString()
+                bandsCsv.contents,
+                stagesCsv.contents,
+                performancesCsv.contents,
+                distancesCsv.contents,
+                foodCsv.contents
         ));
 
         if (result.success()) {
-            resultMessage.setText("Import successful.");
+            resultMessage.setTextColor(Color.rgb(255, 199, 44));
+            resultMessage.setText("Import successful. Existing ratings were preserved.");
         } else {
+            resultMessage.setTextColor(Color.rgb(255, 115, 115));
             resultMessage.setText(String.join("\n", result.errors()));
         }
     }
 
-    private TextView label(String text) {
-        TextView label = new TextView(this);
-        label.setText(text);
-        return label;
+    private LinearLayout filePicker(String title, CsvSelection selection, int requestCode) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.VERTICAL);
+        row.setPadding(0, dp(10), 0, dp(10));
+
+        Button button = secondaryButton("Choose " + title + " CSV");
+        button.setOnClickListener(view -> openCsvPicker(requestCode));
+        row.addView(button);
+
+        selection.label = new TextView(this);
+        selection.label.setText("No file selected (" + selection.expectedName + ")");
+        selection.label.setTextColor(Color.rgb(170, 170, 170));
+        selection.label.setPadding(dp(8), dp(6), dp(8), 0);
+        row.addView(selection.label);
+
+        return row;
     }
 
-    private EditText csvInput(String hint) {
-        EditText input = new EditText(this);
-        input.setHint(hint);
-        input.setMinLines(4);
-        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-        return input;
+    private void openCsvPicker(int requestCode) {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] {
+                "text/*",
+                "text/csv",
+                "application/csv",
+                "application/vnd.ms-excel"
+        });
+        startActivityForResult(intent, requestCode);
+    }
+
+    private CsvSelection selectionFor(int requestCode) {
+        if (requestCode == REQUEST_BANDS) {
+            return bandsCsv;
+        }
+        if (requestCode == REQUEST_STAGES) {
+            return stagesCsv;
+        }
+        if (requestCode == REQUEST_PERFORMANCES) {
+            return performancesCsv;
+        }
+        if (requestCode == REQUEST_DISTANCES) {
+            return distancesCsv;
+        }
+        if (requestCode == REQUEST_FOOD) {
+            return foodCsv;
+        }
+        return null;
+    }
+
+    private String readText(Uri uri) throws IOException {
+        StringBuilder text = new StringBuilder();
+        try (InputStream stream = getContentResolver().openInputStream(uri)) {
+            if (stream == null) {
+                throw new IOException("No readable stream returned by Android.");
+            }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                text.append(line).append('\n');
+            }
+        }
+        return text.toString();
+    }
+
+    private String displayName(Uri uri) {
+        try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (index >= 0) {
+                    return cursor.getString(index);
+                }
+            }
+        }
+        return uri.getLastPathSegment();
+    }
+
+    private Button actionButton(String text) {
+        Button button = new Button(this);
+        button.setAllCaps(false);
+        button.setText(text);
+        button.setTextColor(Color.BLACK);
+        button.setBackgroundColor(Color.rgb(255, 199, 44));
+        return button;
+    }
+
+    private Button secondaryButton(String text) {
+        Button button = new Button(this);
+        button.setAllCaps(false);
+        button.setText(text);
+        button.setTextColor(Color.WHITE);
+        button.setBackgroundColor(Color.rgb(45, 45, 45));
+        return button;
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density);
+    }
+
+    private static final class CsvSelection {
+        private final String expectedName;
+        private String contents = "";
+        private String fileName;
+        private TextView label;
+
+        private CsvSelection(String expectedName) {
+            this.expectedName = expectedName;
+        }
     }
 }

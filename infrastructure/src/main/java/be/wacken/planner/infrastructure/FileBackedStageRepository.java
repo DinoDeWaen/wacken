@@ -21,7 +21,16 @@ public final class FileBackedStageRepository implements StageRepository {
     public void save(Stage stage) {
         Map<String, Stage> stagesByName = loadStagesByName();
         stagesByName.put(stage.name(), stage);
-        storage.writeRows(stagesByName.values().stream()
+        writeStages(stagesByName.values().stream().collect(Collectors.toList()));
+    }
+
+    @Override
+    public void replaceAll(List<Stage> stages) {
+        writeStages(stages);
+    }
+
+    private void writeStages(List<Stage> stages) {
+        storage.writeRows(stages.stream()
                 .map(savedStage -> java.util.Collections.singletonList(savedStage.name()))
                 .collect(Collectors.toList()));
     }

@@ -22,7 +22,16 @@ public final class FileBackedStageDistanceRepository implements StageDistanceRep
     public void save(StageDistance distance) {
         Map<StagePair, StageDistance> distancesByStagePair = loadDistancesByStagePair();
         distancesByStagePair.put(new StagePair(distance.from(), distance.to()), distance);
-        storage.writeRows(distancesByStagePair.values().stream()
+        writeDistances(distancesByStagePair.values().stream().collect(Collectors.toList()));
+    }
+
+    @Override
+    public void replaceAll(List<StageDistance> distances) {
+        writeDistances(distances);
+    }
+
+    private void writeDistances(List<StageDistance> distances) {
+        storage.writeRows(distances.stream()
                 .map(savedDistance -> java.util.Arrays.asList(
                         savedDistance.from().name(),
                         savedDistance.to().name(),

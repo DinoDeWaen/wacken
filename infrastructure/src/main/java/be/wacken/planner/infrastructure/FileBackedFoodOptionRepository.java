@@ -19,6 +19,15 @@ public final class FileBackedFoodOptionRepository implements FoodOptionRepositor
     public void save(FoodOption foodOption) {
         List<FoodOption> foodOptions = new ArrayList<>(findAll());
         foodOptions.add(foodOption);
+        writeFoodOptions(foodOptions);
+    }
+
+    @Override
+    public void replaceAll(List<FoodOption> foodOptions) {
+        writeFoodOptions(foodOptions);
+    }
+
+    private void writeFoodOptions(List<FoodOption> foodOptions) {
         storage.writeRows(foodOptions.stream()
                 .map(savedFoodOption -> java.util.Collections.singletonList(savedFoodOption.name()))
                 .collect(Collectors.toList()));

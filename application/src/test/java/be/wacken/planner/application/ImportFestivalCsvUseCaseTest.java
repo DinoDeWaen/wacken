@@ -6,6 +6,8 @@ import be.wacken.planner.domain.FoodOption;
 import be.wacken.planner.domain.FoodOptionRepository;
 import be.wacken.planner.domain.Performance;
 import be.wacken.planner.domain.PerformanceRepository;
+import be.wacken.planner.domain.Rating;
+import be.wacken.planner.domain.RatingRepository;
 import be.wacken.planner.domain.Stage;
 import be.wacken.planner.domain.StageDistance;
 import be.wacken.planner.domain.StageDistanceRepository;
@@ -73,6 +75,35 @@ class ImportFestivalCsvUseCaseTest {
     }
 
     @Test
+    void reimportReplacesFestivalMasterDataWithoutTouchingRatings() {
+        Repositories repositories = new Repositories();
+        repositories.useCase().importCsv(validCsv());
+        repositories.ratings.save("dino", new Band("5th Avenue"), Rating.of(4));
+
+        ImportFestivalCsvResult result = repositories.useCase().importCsv(new FestivalCsvFiles(
+                "band_id,name\nnew-band,New Band\n",
+                "stage_id,name\nharder,Harder\n",
+                "performance_id,band_id,stage_id,festival_day_id,start_at,end_at\np-new,new-band,harder,thu,2026-07-30T20:00:00,2026-07-30T21:00:00\n",
+                "from_stage_id,to_stage_id,walking_minutes\n",
+                "food_id,name,near_stage_id\n"
+        ));
+
+        assertEquals(ImportFestivalCsvResult.imported(), result);
+        assertEquals(List.of(new Band("New Band")), repositories.bands.findAll());
+        assertEquals(Optional.empty(), repositories.bands.findByName("5th Avenue"));
+        assertEquals(
+                List.of(new Performance(
+                        new Band("New Band"),
+                        new Stage("Harder"),
+                        LocalDateTime.parse("2026-07-30T20:00:00"),
+                        LocalDateTime.parse("2026-07-30T21:00:00")
+                )),
+                repositories.performances.findAll()
+        );
+        assertEquals(Optional.of(Rating.of(4)), repositories.ratings.findByUserAndBand("dino", new Band("5th Avenue")));
+    }
+
+    @Test
     void failsWhenPerformanceReferencesMissingBandAndUnknownStage() {
         Repositories repositories = new Repositories();
         ImportFestivalCsvUseCase useCase = repositories.useCase();
@@ -137,6 +168,7 @@ class ImportFestivalCsvUseCaseTest {
         private final FakePerformanceRepository performances = new FakePerformanceRepository();
         private final FakeStageDistanceRepository distances = new FakeStageDistanceRepository();
         private final FakeFoodOptionRepository food = new FakeFoodOptionRepository();
+        private final FakeRatingRepository ratings = new FakeRatingRepository();
 
         private ImportFestivalCsvUseCase useCase() {
             return new ImportFestivalCsvUseCase(bands, stages, performances, distances, food);
@@ -149,6 +181,12 @@ class ImportFestivalCsvUseCaseTest {
         @Override
         public void save(Band band) {
             bandsByName.put(band.name(), band);
+        }
+
+        @Override
+        public void replaceAll(List<Band> bands) {
+            bandsByName.clear();
+            bands.forEach(this::save);
         }
 
         @Override
@@ -171,6 +209,12 @@ class ImportFestivalCsvUseCaseTest {
         }
 
         @Override
+        public void replaceAll(List<Stage> stages) {
+            stagesByName.clear();
+            stages.forEach(this::save);
+        }
+
+        @Override
         public Optional<Stage> findByName(String name) {
             return Optional.ofNullable(stagesByName.get(name));
         }
@@ -190,6 +234,12 @@ class ImportFestivalCsvUseCaseTest {
         }
 
         @Override
+        public void replaceAll(List<Performance> replacements) {
+            performances.clear();
+            performances.addAll(replacements);
+        }
+
+        @Override
         public List<Performance> findAll() {
             return new ArrayList<>(performances);
         }
@@ -201,6 +251,12 @@ class ImportFestivalCsvUseCaseTest {
         @Override
         public void save(StageDistance distance) {
             distances.put(new Key(distance.from(), distance.to()), distance);
+        }
+
+        @Override
+        public void replaceAll(List<StageDistance> replacements) {
+            distances.clear();
+            replacements.forEach(this::save);
         }
 
         @Override
@@ -221,8 +277,31 @@ class ImportFestivalCsvUseCaseTest {
         }
 
         @Override
+        public void replaceAll(List<FoodOption> replacements) {
+            foodOptions.clear();
+            foodOptions.addAll(replacements);
+        }
+
+        @Override
         public List<FoodOption> findAll() {
             return new ArrayList<>(foodOptions);
+        }
+    }
+
+    private static final class FakeRatingRepository implements RatingRepository {
+        private final Map<Key, Rating> ratings = new LinkedHashMap<>();
+
+        @Override
+        public void save(String userName, Band band, Rating rating) {
+            ratings.put(new Key(userName, band.name()), rating);
+        }
+
+        @Override
+        public Optional<Rating> findByUserAndBand(String userName, Band band) {
+            return Optional.ofNullable(ratings.get(new Key(userName, band.name())));
+        }
+
+        private record Key(String userName, String bandName) {
         }
     }
 }

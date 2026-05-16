@@ -29,17 +29,17 @@ Use `samples/mvp1/invalid-performances.csv` only for the invalid import feedback
 Expected result:
 
 - Before importing data, the band list shows `No bands imported yet.`
-- The `Import CSV` button is visible.
+- The `Import lineup CSV files` button is visible.
 
 ### 2. Valid Import
 
-1. Tap `Import CSV`.
-2. Paste each valid `samples/mvp1/*.csv` file into its matching field.
-3. Tap `Import`.
+1. Tap `Import lineup CSV files`.
+2. Choose each valid `samples/mvp1/*.csv` file with its matching file button.
+3. Tap `Import selected files`.
 
 Expected result:
 
-- The screen shows `Import successful.`
+- The screen shows `Import successful. Existing ratings were preserved.`
 - No validation errors are shown.
 
 ### 3. Imported Band List
@@ -92,10 +92,10 @@ Expected result:
 
 ### 7. Invalid Import Feedback
 
-1. Tap `Import CSV`.
-2. Keep valid `bands.csv`, `stages.csv`, `distances.csv`, and `food.csv`.
-3. Replace the performances field with `samples/mvp1/invalid-performances.csv`.
-4. Tap `Import`.
+1. Tap `Import lineup CSV files`.
+2. Choose valid `bands.csv`, `stages.csv`, `distances.csv`, and `food.csv`.
+3. Choose `samples/mvp1/invalid-performances.csv` for the performances file.
+4. Tap `Import selected files`.
 
 Expected result:
 

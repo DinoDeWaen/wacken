@@ -6,6 +6,8 @@ import java.util.Optional;
 public interface BandRepository {
     void save(Band band);
 
+    void replaceAll(List<Band> bands);
+
     Optional<Band> findByName(String name);
 
     List<Band> findAll();

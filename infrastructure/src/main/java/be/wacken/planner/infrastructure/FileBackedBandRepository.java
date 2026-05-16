@@ -21,7 +21,16 @@ public final class FileBackedBandRepository implements BandRepository {
     public void save(Band band) {
         Map<String, Band> bandsByName = loadBandsByName();
         bandsByName.put(band.name(), band);
-        storage.writeRows(bandsByName.values().stream()
+        writeBands(bandsByName.values().stream().collect(Collectors.toList()));
+    }
+
+    @Override
+    public void replaceAll(List<Band> bands) {
+        writeBands(bands);
+    }
+
+    private void writeBands(List<Band> bands) {
+        storage.writeRows(bands.stream()
                 .map(savedBand -> java.util.Arrays.asList(
                         savedBand.name(),
                         savedBand.youtubeUrl().orElse(""),

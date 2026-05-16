@@ -15,6 +15,12 @@ public final class InMemoryPerformanceRepository implements PerformanceRepositor
     }
 
     @Override
+    public void replaceAll(List<Performance> replacements) {
+        performances.clear();
+        performances.addAll(replacements);
+    }
+
+    @Override
     public List<Performance> findAll() {
         return new ArrayList<>(performances);
     }

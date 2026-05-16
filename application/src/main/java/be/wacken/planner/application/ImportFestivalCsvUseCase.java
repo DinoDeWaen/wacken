@@ -51,20 +51,26 @@ public final class ImportFestivalCsvUseCase {
             return ImportFestivalCsvResult.failure(errors);
         }
 
-        parsedData.bandsById().values().forEach(bands::save);
-        parsedData.stagesById().values().forEach(stages::save);
-        parsedData.performances().forEach(row -> performances.save(new Performance(
-                parsedData.bandsById().get(row.bandId()),
-                parsedData.stagesById().get(row.stageId()),
-                LocalDateTime.parse(row.startAt()),
-                LocalDateTime.parse(row.endAt())
-        )));
-        parsedData.distances().forEach(row -> distances.save(StageDistance.between(
-                parsedData.stagesById().get(row.fromStageId()),
-                parsedData.stagesById().get(row.toStageId()),
-                Integer.parseInt(row.walkingMinutes())
-        )));
-        parsedData.foodOptions().forEach(row -> foodOptions.save(new FoodOption(row.name())));
+        bands.replaceAll(new ArrayList<>(parsedData.bandsById().values()));
+        stages.replaceAll(new ArrayList<>(parsedData.stagesById().values()));
+        performances.replaceAll(parsedData.performances().stream()
+                .map(row -> new Performance(
+                        parsedData.bandsById().get(row.bandId()),
+                        parsedData.stagesById().get(row.stageId()),
+                        LocalDateTime.parse(row.startAt()),
+                        LocalDateTime.parse(row.endAt())
+                ))
+                .collect(Collectors.toList()));
+        distances.replaceAll(parsedData.distances().stream()
+                .map(row -> StageDistance.between(
+                        parsedData.stagesById().get(row.fromStageId()),
+                        parsedData.stagesById().get(row.toStageId()),
+                        Integer.parseInt(row.walkingMinutes())
+                ))
+                .collect(Collectors.toList()));
+        foodOptions.replaceAll(parsedData.foodOptions().stream()
+                .map(row -> new FoodOption(row.name()))
+                .collect(Collectors.toList()));
 
         return ImportFestivalCsvResult.imported();
     }

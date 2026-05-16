@@ -15,6 +15,12 @@ public final class InMemoryFoodOptionRepository implements FoodOptionRepository 
     }
 
     @Override
+    public void replaceAll(List<FoodOption> replacements) {
+        foodOptions.clear();
+        foodOptions.addAll(replacements);
+    }
+
+    @Override
     public List<FoodOption> findAll() {
         return new ArrayList<>(foodOptions);
     }

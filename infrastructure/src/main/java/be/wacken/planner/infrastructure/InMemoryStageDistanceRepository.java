@@ -5,6 +5,7 @@ import be.wacken.planner.domain.StageDistance;
 import be.wacken.planner.domain.StageDistanceRepository;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,6 +15,12 @@ public final class InMemoryStageDistanceRepository implements StageDistanceRepos
     @Override
     public void save(StageDistance distance) {
         distancesByStagePair.put(new StagePair(distance.from(), distance.to()), distance);
+    }
+
+    @Override
+    public void replaceAll(List<StageDistance> distances) {
+        distancesByStagePair.clear();
+        distances.forEach(this::save);
     }
 
     @Override

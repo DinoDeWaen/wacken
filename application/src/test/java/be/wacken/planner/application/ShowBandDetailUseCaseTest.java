@@ -94,6 +94,12 @@ class ShowBandDetailUseCaseTest {
         }
 
         @Override
+        public void replaceAll(List<Band> bands) {
+            bandsByName.clear();
+            bands.forEach(this::save);
+        }
+
+        @Override
         public Optional<Band> findByName(String name) {
             return Optional.ofNullable(bandsByName.get(name));
         }

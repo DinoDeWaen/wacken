@@ -22,6 +22,15 @@ public final class FileBackedPerformanceRepository implements PerformanceReposit
     public void save(Performance performance) {
         List<Performance> performances = new ArrayList<>(findAll());
         performances.add(performance);
+        writePerformances(performances);
+    }
+
+    @Override
+    public void replaceAll(List<Performance> performances) {
+        writePerformances(performances);
+    }
+
+    private void writePerformances(List<Performance> performances) {
         storage.writeRows(performances.stream()
                 .map(savedPerformance -> java.util.Arrays.asList(
                         savedPerformance.band().name(),
