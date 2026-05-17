@@ -48,6 +48,11 @@ public final class FileBackedStageDistanceRepository implements StageDistanceRep
         return Optional.ofNullable(loadDistancesByStagePair().get(new StagePair(from, to)));
     }
 
+    @Override
+    public List<StageDistance> findAll() {
+        return loadDistancesByStagePair().values().stream().collect(Collectors.toList());
+    }
+
     private Map<StagePair, StageDistance> loadDistancesByStagePair() {
         Map<StagePair, StageDistance> distancesByStagePair = new LinkedHashMap<>();
         for (List<String> row : storage.readRows()) {

@@ -61,7 +61,7 @@ The agent must always separate three concerns:
 - Use hexagonal architecture: domain/application inside, adapters outside.
 - Prefer the smallest design that preserves clean boundaries.
 - Do not make architecture-significant changes without explicit human approval.
-- Use multiple small commits when the environment allows commits.
+- Use multiple small commits when the environment allows commits, and commit completed tasks promptly before starting unrelated follow-up work.
 - Update `README.md` when setup, test commands, architecture, public behavior, troubleshooting, or diagrams change.
 - Use Mermaid in Markdown documentation when diagrams improve understanding. Use C4-style Mermaid diagrams for architecture.
 

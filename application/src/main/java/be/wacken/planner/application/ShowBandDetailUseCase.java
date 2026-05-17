@@ -22,10 +22,12 @@ public final class ShowBandDetailUseCase {
                     EffectiveRating rating = ratings.resolve(userName, band);
                     return new BandDetailItem(
                             band.name(),
+                            band.biography(),
+                            band.imageUrl(),
                             rating.value(),
                             !rating.explicit(),
-                            musicLinks.youtubeUrl(),
-                            musicLinks.spotifyUrl()
+                            band.youtubeUrl().or(() -> musicLinks.youtubeUrl()),
+                            band.spotifyUrl().or(() -> musicLinks.spotifyUrl())
                     );
                 });
     }

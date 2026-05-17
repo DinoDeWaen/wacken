@@ -31,6 +31,11 @@ public final class InMemoryStageDistanceRepository implements StageDistanceRepos
         return Optional.ofNullable(distancesByStagePair.get(new StagePair(from, to)));
     }
 
+    @Override
+    public List<StageDistance> findAll() {
+        return List.copyOf(distancesByStagePair.values());
+    }
+
     private record StagePair(Stage from, Stage to) {
     }
 }

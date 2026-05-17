@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by [`0007-room-local-cache-with-tsv-backend-source.md`](0007-room-local-cache-with-tsv-backend-source.md)
 
 ## Context
 

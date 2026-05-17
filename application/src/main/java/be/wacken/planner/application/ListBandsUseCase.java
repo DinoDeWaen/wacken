@@ -32,14 +32,15 @@ public final class ListBandsUseCase {
         if (!importedPerformances.isEmpty()) {
             return importedPerformances
                 .stream()
-                .sorted(Comparator.comparing(Performance::start))
                 .map(this::toBandListItem)
+                .sorted(Comparator.comparing(BandListItem::bandName, String.CASE_INSENSITIVE_ORDER))
                 .collect(Collectors.toList());
         }
 
         return bands.findAll()
                 .stream()
                 .map(this::toUnscheduledBandListItem)
+                .sorted(Comparator.comparing(BandListItem::bandName, String.CASE_INSENSITIVE_ORDER))
                 .collect(Collectors.toList());
     }
 

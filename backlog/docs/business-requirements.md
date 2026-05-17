@@ -29,6 +29,8 @@ Project-specific boundary notes:
 - Goal 5: Get the band rating feature working first so the group can begin scoring the lineup before final stage times are available.
 - Goal 6: Support reliable festival data import so bands, stages, performances, distances, and food options can be planned from validated file-based CSV uploads or proposed website-scraped changes.
 - Goal 7: Present the band overview with a Wacken-inspired visual style so early rating feels like a festival lineup experience rather than a technical data table.
+- Goal 8: Keep the rating workflow responsive and stateful so users understand when data is loading and can return to the same app context after switching apps or opening music links.
+- Goal 9: Keep persistence backend-replaceable by treating MVP TSV storage as a backend-like source and using a local device cache for fast app reads.
 
 ## Product context
 
@@ -72,6 +74,7 @@ Existing integration:
 | --- | --- | --- | --- |
 | Wacken line-up website | Provides current band list and later detailed lineup data when available. | Inbound | Initial import may scrape the official band list and propose changes for user validation. The official pages inspected were the Wacken band list and artist detail URLs, but the dynamic artist-card data still needs schema investigation. |
 | Festival CSV files | Provide bands, stages, performances, distances, and food data. | Inbound | CSVs are uploaded through Android file selection. They must be validated for missing references, overlaps, and unknown stages once final stage and time data is available. |
+| MVP TSV source | Acts as the current backend-like persistence source for imported festival data and ratings. | Internal source | The app caches data locally in Room and writes through to TSV files so the TSV source can later be replaced by a backend API without changing domain behavior. |
 | CI artifact storage | Stores downloadable APK artifacts. | Outbound | CI must produce a clearly versioned debug APK artifact. |
 
 ## Non-goals
@@ -111,9 +114,9 @@ Release assumptions:
 | Capability | Description | Priority | MVP |
 | --- | --- | --- | --- |
 | Band rating | Let users rate bands on the 0-4 preference scale. This is the first product priority. | Must | MVP 1 |
-| Band listing | Show bands in a Wacken-themed overview with rating, stage, and time information when available. | Must | MVP 1 |
-| Band detail view | Show band details in a style inspired by the official Wacken band detail screen, with rating stars and optional YouTube and Spotify links. | Must | MVP 1 |
-| Initial lineup import | Import or scrape the current Wacken band list before final stages and times are available. Band-only imports must be visible and rateable. | Must | MVP 1 |
+| Band listing | Show bands in a responsive Wacken-themed overview with alphabetical sorting by band name, rating, stage, time information when available, loading feedback when needed, and same-row music-link actions. | Must | MVP 1 |
+| Band detail view | Show band details in a style inspired by the official Wacken band detail screen, with English biography when available, image metadata when available, rating stars, schedule information, and optional YouTube and Spotify links. | Must | MVP 1 |
+| Initial lineup import | Import or scrape the current Wacken band list before final stages and times are available. Band-only imports must be visible and rateable. English biography and image metadata are meaningful UI inputs when available. | Must | MVP 1 |
 | Festival data import | Import validated CSV files for bands, stages, performances, distances, and food options through Android file upload once final lineup data is available. Re-import updates festival master data while preserving user ratings. | Must | MVP 1 |
 | Data review grid | Propose scraped or imported data changes in a user-validated data grid, with line-by-line validation. | Should | MVP 1 |
 | One-group planning | Combine ratings from one shared friend group into shared decisions. | Must | MVP 2 |
@@ -183,7 +186,7 @@ A festival attendee reviews band information in a detail screen inspired by the 
 Scenario: Review and rate a band
   Given a band is available in the lineup
   When a user opens the band detail screen
-  Then the user sees band information, rating stars, and optional YouTube and Spotify links when available
+  Then the user sees band information, English biography when available, image when available, rating stars, schedule status, and optional YouTube and Spotify links when available
 ```
 
 ### Workflow 4: Browse the Wacken-themed band overview
@@ -194,8 +197,21 @@ A festival attendee browses the imported lineup in a visual overview inspired by
 Scenario: Browse imported bands
   Given bands have been imported
   When the user opens the band overview
-  Then each band is shown in a Wacken-themed card with its rating and schedule status
-  And the user can open band details from the card
+  Then each band is shown in a responsive Wacken-themed overview sorted by band name
+  And the user can see loading feedback if the list is not ready immediately
+  And the user can open band details from the overview
+```
+
+### Workflow 4a: Return to the previous app context
+
+A festival attendee can leave the app, open music links, and return without losing the Wacken Planner screen they were using.
+
+```gherkin
+Scenario: Return to the previous Wacken Planner screen
+  Given the user is using the band overview or a band detail screen
+  When the user leaves the app and later returns
+  Then the same Wacken Planner screen is restored
+  And no unrelated browser or new-tab screen is shown as the app context
 ```
 
 ### Workflow 5: Compute a shared schedule
@@ -273,12 +289,19 @@ Scenario: View printable festival timeline
 | BR-046 | Bands without performance data must be clearly marked as not scheduled yet. | A band imported without a performance shows `Not scheduled yet` and `TBA`. | Must |
 | BR-047 | The band overview must use a Wacken-inspired visual style with dark presentation and amber/yellow emphasis where practical. | Band cards look festival-themed rather than like raw form controls. | Should |
 | BR-048 | The Wacken-themed band overview must keep the rating workflow reachable. | Tapping a band card opens the band detail/rating screen. | Must |
+| BR-049 | The band overview must feel responsive and must not leave the user staring at a blank or frozen screen. | If loading or rendering is not immediate, a loading indication appears quickly. | Must |
+| BR-050 | The band overview must sort bands alphabetically by band name unless the user explicitly chooses another sort later. | 5th Avenue appears before Airbourne regardless of import order or performance time. | Must |
+| BR-051 | Band detail biography should prefer English source text when available. | If `biography` and `biographyDe` both exist in imported source data, the detail screen shows the English text. | Must |
+| BR-052 | Band detail should show available band image metadata and must not show broken image placeholders. | If a band has an image URL, it is shown; if not, no broken image is displayed. | Must |
+| BR-053 | Band detail layout should place the image and primary band controls together, with the explanation below, while remaining usable on phone screens. | Image is left and rating/stage/time/actions are right when space allows; narrow screens stack cleanly. | Must |
+| BR-054 | Returning to the app must restore the user’s last Wacken Planner screen instead of showing an unrelated browser or new-tab state. | Returning from another app brings the user back to the same overview or detail screen. | Must |
+| BR-055 | External music links must not destroy or replace the app’s internal navigation state. | Opening YouTube or Spotify and returning restores the previous Wacken Planner context. | Must |
 
 ## Data and terminology
 
 | Concept | Description | Important fields | Invariants |
 | --- | --- | --- | --- |
-| Band | A musical act at Wacken Open Air 2026. | Name, optional music links, optional schedule status | Can be associated with one or more performances; can also exist before performances are known. |
+| Band | A musical act at Wacken Open Air 2026. | Name, optional English biography, optional image metadata, optional music links, optional schedule status | Can be associated with one or more performances; can also exist before performances are known. |
 | Performance | A scheduled band appearance. | Band, stage, time range | Must reference known band and stage data. |
 | Stage | A festival podium or location where performances happen. | Name or identifier | Must be known before performances can reference it. |
 | Distance | Travel information between stages. | From stage, to stage, walking minutes by default | Used to determine travel feasibility. |
@@ -290,7 +313,7 @@ Scenario: View printable festival timeline
 | Timeline slot | One visible item in the daily schedule. | Selected band, stage, time range, travel time, lost alternative | Must be clear enough for timeline display and PDF export. |
 | Festival master data | Imported lineup data used for planning. | Bands, stages, performances, distances, food options | Can be replaced by a successful CSV re-import. Must not include user ratings. |
 | User rating data | Group preference data for bands. | User/group identity, band, rating value | Must be preserved when festival master data is updated. |
-| Band overview card | Visual representation of a band in the overview. | Band name, schedule status, effective rating | Must open band details and support the rating workflow. |
+| Band overview row | Visual representation of a band in the overview. | Band name, schedule status, effective rating, optional music-link actions | Must open band details, support the rating workflow, and keep same-row actions clear. |
 
 ## Business object model
 
@@ -307,7 +330,7 @@ Scenario: View printable festival timeline
 | Timeline Slot | Represents a selected schedule entry. | Shows performance, travel time, and the lost alternative. |
 | Food Option | Represents a lunch option. | Is suggested based on proximity to previous and next stages. |
 | Festival Master Data | Represents imported source data for the festival. | Is updated by CSV import; excludes ratings. |
-| Band Overview Card | Represents a visible, tappable band summary. | Opens band detail and displays effective rating plus schedule status. |
+| Band Overview Row | Represents a visible, tappable band summary. | Opens band detail and displays effective rating, schedule status, and optional music-link actions. |
 
 ## Future domain events
 
@@ -344,6 +367,12 @@ The required output format is a clear, printable day-based PDF timeline.
 - CSV re-import removes a band that has an existing rating.
 - CSV file selection is incomplete or a selected file cannot be read.
 - Band import exists before any performances are available.
+- Band overview data loading or rendering takes longer than expected.
+- The user taps repeatedly while the band overview is still loading.
+- The user leaves the app and returns while on overview or detail.
+- The user opens YouTube or Spotify and then returns to Wacken Planner.
+- Imported band metadata contains English and German biography text.
+- Imported band metadata has no image, no biography, or missing music links.
 - Scraped website data proposes a change that the user wants to reject.
 - Food options need to be found near both previous and next stages.
 - No food option is close to the previous or next stage.

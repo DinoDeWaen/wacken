@@ -80,6 +80,8 @@ public final class ImportFestivalCsvUseCase {
         for (CsvRow row : parseCsv(files.bandsCsv())) {
             bandsById.put(row.required("band_id"), new Band(
                     row.required("name"),
+                    optional(plainText(preferredBiography(row))),
+                    optional(firstPresent(row.value("image_url"), row.value("thumbnail_url"))),
                     optional(row.value("youtube_url")),
                     spotifyUrl(row.value("spotify_artist_id"))
             ));
@@ -244,6 +246,31 @@ public final class ImportFestivalCsvUseCase {
 
     private Optional<String> spotifyUrl(String spotifyArtistId) {
         return optional(spotifyArtistId).map(id -> "https://open.spotify.com/artist/" + id);
+    }
+
+    private String plainText(String html) {
+        if (html == null || html.isBlank()) {
+            return "";
+        }
+        return html
+                .replaceAll("<[^>]+>", " ")
+                .replace("&nbsp;", " ")
+                .replace("&amp;", "&")
+                .replace("&quot;", "\"")
+                .replace("&#39;", "'")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    private String preferredBiography(CsvRow row) {
+        return firstPresent(row.value("biography"), row.value("biography_html"));
+    }
+
+    private String firstPresent(String first, String second) {
+        if (first != null && !first.isBlank()) {
+            return first;
+        }
+        return second == null ? "" : second;
     }
 
     private record ParsedData(

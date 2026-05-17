@@ -56,7 +56,7 @@ class ImportFestivalCsvUseCaseTest {
         ImportFestivalCsvUseCase useCase = repositories.useCase();
 
         ImportFestivalCsvResult result = useCase.importCsv(new FestivalCsvFiles(
-                "band_id,name,youtube_url,spotify_artist_id\n5th-avenue,5th Avenue,https://youtube.example/5th,spotify-artist-5th\n",
+                "band_id,name,biography,biography_html,image_url,youtube_url,spotify_artist_id\n5th-avenue,5th Avenue,\"<p>English &amp; Wacken rock band.</p>\",\"<p>German text.</p>\",https://images.example/5th.jpg,https://youtube.example/5th,spotify-artist-5th\n",
                 "stage_id,name\nfaster,Faster\n",
                 "performance_id,band_id,stage_id,festival_day_id,start_at,end_at\np1,5th-avenue,faster,thu,2026-07-30T18:00:00,2026-07-30T19:00:00\n",
                 "from_stage_id,to_stage_id,walking_minutes\n",
@@ -67,6 +67,8 @@ class ImportFestivalCsvUseCaseTest {
         assertEquals(
                 Optional.of(new Band(
                         "5th Avenue",
+                        Optional.of("English & Wacken rock band."),
+                        Optional.of("https://images.example/5th.jpg"),
                         Optional.of("https://youtube.example/5th"),
                         Optional.of("https://open.spotify.com/artist/spotify-artist-5th")
                 )),
@@ -262,6 +264,11 @@ class ImportFestivalCsvUseCaseTest {
         @Override
         public Optional<StageDistance> findBetween(Stage from, Stage to) {
             return Optional.ofNullable(distances.get(new Key(from, to)));
+        }
+
+        @Override
+        public List<StageDistance> findAll() {
+            return new ArrayList<>(distances.values());
         }
 
         private record Key(Stage from, Stage to) {

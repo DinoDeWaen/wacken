@@ -6,8 +6,10 @@
 
 ## Basic Functionality (MVP 1)
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
-- List bands with stage and time information.
-- Let users rate bands on a 0–4 scale (0 = veto, 4 = must-see).
+- List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.
+- Let users rate bands on a 0–4 scale (0 = veto, 4 = must-see) from the overview or detail screen.
+- Open available YouTube and Spotify links from overview rows and band detail screens.
+- Show imported English band biography/explanation and available band image metadata on the detail screen when `bands.csv` provides it.
 - Prepare groundwork for group decision rules and printable timelines.
 
 ## Architecture
@@ -17,7 +19,8 @@
 - ADR: [`0001-initial-android-clean-architecture-scaffold.md`](backlog/decisions/0001-initial-android-clean-architecture-scaffold.md).
 - ADR: [`0003-github-actions-ci-and-apk-artifact.md`](backlog/decisions/0003-github-actions-ci-and-apk-artifact.md).
 - ADR: [`0005-food-and-stage-repository-ports-for-csv-import.md`](backlog/decisions/0005-food-and-stage-repository-ports-for-csv-import.md).
-- ADR: [`0006-mvp-file-backed-local-persistence.md`](backlog/decisions/0006-mvp-file-backed-local-persistence.md).
+- ADR: [`0006-mvp-file-backed-local-persistence.md`](backlog/decisions/0006-mvp-file-backed-local-persistence.md) (superseded).
+- ADR: [`0007-room-local-cache-with-tsv-backend-source.md`](backlog/decisions/0007-room-local-cache-with-tsv-backend-source.md).
 - CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 
@@ -26,15 +29,18 @@
 ```mermaid
 flowchart LR
     app["app\nAndroid UI/bootstrap"]
-    infrastructure["infrastructure\nAdapters"]
+    infrastructure["infrastructure\nSource adapters and sync decorators"]
+    room["app persistence\nRoom cache adapters"]
     application["application\nUse cases and ports"]
     domain["domain\nBusiness rules and model"]
 
     app --> infrastructure
+    app --> room
     app --> application
     app --> domain
     infrastructure --> application
     infrastructure --> domain
+    room --> domain
     application --> domain
 ```
 
@@ -44,14 +50,15 @@ Current modules:
 | --- | --- | --- |
 | `domain` | Java library | Business concepts and rules. Must not depend on Android. |
 | `application` | Java library | Use cases and ports. Depends on `domain`; must not depend on Android. |
-| `infrastructure` | Java library | Technical adapters. Depends inward on `application` and `domain`. |
-| `app` | Android application | Android UI/bootstrap and APK packaging. |
+| `infrastructure` | Java library | TSV backend-like source adapters, in-memory test adapters, and sync/write-through decorators. Depends inward on `application` and `domain`. |
+| `app` | Android application | Android UI/bootstrap, APK packaging, and Room local-cache adapters. |
 
-Current import repositories cover bands, stages, performances, stage distances, food options, and ratings. MVP local persistence uses file-backed adapters in `infrastructure`; Android wiring supplies the app-private storage directory.
+Current import repositories cover bands, stages, performances, stage distances, food options, and ratings. MVP persistence treats app-private TSV files as the backend-like source and caches app reads in Room. Android wiring composes TSV source adapters, Room cache adapters, and sync/write-through decorators behind the existing domain repository ports.
 
 ### Technologies
 - Language: Java
 - Build: Gradle (Android)
+- Local cache: AndroidX Room
 - Testing: JUnit 5, Mockito/fakes, JaCoCo coverage gates, and a dedicated `qaTest` scenario suite
 - Output: Debug APK via `./gradlew assembleDebug`
 
@@ -87,16 +94,18 @@ C4Container
         Container(ui, "Android UI", "Java", "Screens for band list, ratings, imports, schedule")
         Container(appsvc, "Application Layer", "Java", "Use cases for listing, rating, imports")
         Container(domain, "Domain", "Java", "Entities, value objects, decision rules")
-        Container(infra, "Infrastructure", "Java", "Adapters: repositories, file-backed persistence, and import support")
-        ContainerDb(data, "In-App Data Store", "App-private files", "Imported festival data and ratings")
+        Container(infra, "Infrastructure", "Java", "Adapters: TSV backend-like source and sync decorators")
+        ContainerDb(cache, "Room Local Cache", "SQLite/Room", "Fast local app cache for imported data and ratings")
+        ContainerDb(tsv, "TSV Backend-Like Source", "App-private TSV files", "MVP source standing in for a future backend API")
     }
 
     Rel(attendee, ui, "Rates bands, views lineup")
     Rel(admin, ui, "Triggers CSV imports")
     Rel(ui, appsvc, "Invokes use cases")
     Rel(appsvc, domain, "Uses domain rules and models")
-    Rel(appsvc, infra, "Accesses adapters")
-    Rel(infra, data, "Reads/writes repository data")
+    Rel(appsvc, infra, "Accesses repository adapters")
+    Rel(infra, cache, "Reads from and writes through to local cache")
+    Rel(infra, tsv, "Syncs with backend-like source")
     Rel(csvSource, infra, "Supplies validated import files", "CSV")
     Rel(wackenSite, infra, "Supplies proposed band metadata", "JSON")
 ```

@@ -21,18 +21,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ListBandsUseCaseTest {
     @Test
-    void returnsBandsWithStageAndTimeSortedByStartTime() {
+    void returnsBandsWithStageAndTimeSortedByBandName() {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeBandRepository bands = new FakeBandRepository();
-        performances.save(performance("Later Band", "Harder Stage", 21, 0, 22, 0));
-        performances.save(performance("Earlier Band", "Faster Stage", 18, 0, 19, 0));
+        performances.save(performance("Zulu Band", "Harder Stage", 18, 0, 19, 0));
+        performances.save(performance("Alpha Band", "Faster Stage", 21, 0, 22, 0));
 
         ListBandsUseCase useCase = new ListBandsUseCase(bands, performances, new FakeRatingRepository(), "dino");
 
         assertEquals(
                 List.of(
-                        new BandListItem("Earlier Band", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", 1, true),
-                        new BandListItem("Later Band", "Harder Stage", "2026-07-30T21:00", "2026-07-30T22:00", 1, true)
+                        new BandListItem("Alpha Band", "Faster Stage", "2026-07-30T21:00", "2026-07-30T22:00", 1, true),
+                        new BandListItem("Zulu Band", "Harder Stage", "2026-07-30T18:00", "2026-07-30T19:00", 1, true)
                 ),
                 useCase.listBands()
         );
@@ -53,8 +53,8 @@ class ListBandsUseCaseTest {
     @Test
     void returnsBandsWithoutPerformancesAsUnscheduled() {
         FakeBandRepository bands = new FakeBandRepository();
-        bands.save(new Band("5th Avenue"));
         bands.save(new Band("Midnight Skyline"));
+        bands.save(new Band("5th Avenue"));
         ListBandsUseCase useCase = new ListBandsUseCase(bands, new FakePerformanceRepository(), new FakeRatingRepository(), "dino");
 
         assertEquals(
@@ -117,6 +117,19 @@ class ListBandsUseCaseTest {
                 List.of(new BandListItem("5th Avenue", "Not scheduled yet", "TBA", "TBA", 4, false)),
                 useCase.listBands()
         );
+    }
+
+    @Test
+    void exposesCompactOverviewDateTimeAndExplicitRatingState() {
+        BandListItem scheduled = new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:05", "2026-07-30T19:10", 4, false);
+        BandListItem unscheduled = new BandListItem("Midnight Skyline", "Not scheduled yet", "TBA", "TBA", 1, true);
+
+        assertEquals("2026-07-30", scheduled.displayDate());
+        assertEquals("18:05 - 19:10", scheduled.displayTime());
+        assertEquals(true, scheduled.explicitRating());
+        assertEquals("TBA", unscheduled.displayDate());
+        assertEquals("TBA", unscheduled.displayTime());
+        assertEquals(false, unscheduled.explicitRating());
     }
 
     private static Performance performance(String bandName, String stageName, int startHour, int startMinute, int endHour, int endMinute) {

@@ -24,6 +24,8 @@ class FileBackedRepositoryPersistenceTest {
     void persistsBandsAcrossRepositoryRecreation() {
         new FileBackedBandRepository(storageDirectory).save(new Band(
                 "5th Avenue",
+                Optional.of("Hamburg rock band."),
+                Optional.of("https://images.example/5th.jpg"),
                 Optional.of("https://youtube.example/5th"),
                 Optional.of("https://open.spotify.com/artist/spotify-artist-5th")
         ));
@@ -32,6 +34,8 @@ class FileBackedRepositoryPersistenceTest {
 
         Band expected = new Band(
                 "5th Avenue",
+                Optional.of("Hamburg rock band."),
+                Optional.of("https://images.example/5th.jpg"),
                 Optional.of("https://youtube.example/5th"),
                 Optional.of("https://open.spotify.com/artist/spotify-artist-5th")
         );

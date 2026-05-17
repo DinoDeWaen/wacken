@@ -24,4 +24,6 @@ dependencies {
     implementation project(":domain")
     implementation project(":application")
     implementation project(":infrastructure")
+    implementation "androidx.room:room-runtime:2.6.1"
+    annotationProcessor "androidx.room:room-compiler:2.6.1"
 }

@@ -33,6 +33,8 @@ public final class FileBackedBandRepository implements BandRepository {
         storage.writeRows(bands.stream()
                 .map(savedBand -> java.util.Arrays.asList(
                         savedBand.name(),
+                        savedBand.biography().orElse(""),
+                        savedBand.imageUrl().orElse(""),
                         savedBand.youtubeUrl().orElse(""),
                         savedBand.spotifyUrl().orElse("")
                 ))
@@ -52,14 +54,20 @@ public final class FileBackedBandRepository implements BandRepository {
     private Map<String, Band> loadBandsByName() {
         Map<String, Band> bandsByName = new LinkedHashMap<>();
         for (List<String> row : storage.readRows()) {
-            Band band = new Band(
-                    row.get(0),
-                    optionalColumn(row, 1),
-                    optionalColumn(row, 2)
-            );
+            Band band = bandFromRow(row);
             bandsByName.put(band.name(), band);
         }
         return bandsByName;
+    }
+
+    private Band bandFromRow(List<String> row) {
+        if (row.size() <= 3) {
+            return new Band(row.get(0), optionalColumn(row, 1), optionalColumn(row, 2));
+        }
+        if (row.size() == 4) {
+            return new Band(row.get(0), optionalColumn(row, 1), optionalColumn(row, 2), optionalColumn(row, 3));
+        }
+        return new Band(row.get(0), optionalColumn(row, 1), optionalColumn(row, 2), optionalColumn(row, 3), optionalColumn(row, 4));
     }
 
     private java.util.Optional<String> optionalColumn(List<String> row, int column) {

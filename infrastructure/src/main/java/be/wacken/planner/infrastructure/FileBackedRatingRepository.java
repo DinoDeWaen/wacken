@@ -3,6 +3,7 @@ package be.wacken.planner.infrastructure;
 import be.wacken.planner.domain.Band;
 import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.RatingRepository;
+import be.wacken.planner.domain.SavedRating;
 
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -31,6 +32,14 @@ public final class FileBackedRatingRepository implements RatingRepository {
     public Optional<Rating> findByUserAndBand(String userName, Band band) {
         return Optional.ofNullable(loadRatingsByKey().get(new RatingKey(userName, band.name())))
                 .map(RatingEntry::rating);
+    }
+
+    @Override
+    public List<SavedRating> findAll() {
+        return loadRatingsByKey().values()
+                .stream()
+                .map(entry -> new SavedRating(entry.userName(), new Band(entry.bandName()), entry.rating()))
+                .collect(Collectors.toList());
     }
 
     private Map<RatingKey, RatingEntry> loadRatingsByKey() {
