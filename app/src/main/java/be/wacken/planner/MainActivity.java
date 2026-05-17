@@ -43,11 +43,14 @@ public final class MainActivity extends Activity {
     private TextView subtitle;
     private AuthSessionStore sessionStore;
     private AuthSession currentSession;
+    private Button syncButton;
     private BandAdapter adapter;
     private List<BandListItem> cachedBands;
     private Map<String, Band> cachedBandsByName;
     private boolean loading;
     private boolean reloadNeeded = true;
+    private boolean syncAttempted;
+    private boolean syncInProgress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +68,7 @@ public final class MainActivity extends Activity {
         screen.setPadding(padding, padding, padding, padding);
 
         screen.addView(header());
-        screen.addView(importButton());
+        screen.addView(actionRow());
         screen.addView(tableHeader());
 
         status = new TextView(this);
@@ -132,6 +135,9 @@ public final class MainActivity extends Activity {
         reloadNeeded = false;
         status.setVisibility(cachedBands.isEmpty() ? View.VISIBLE : View.GONE);
         status.setText(cachedBands.isEmpty() ? getString(R.string.empty_band_list) : "");
+        if (cachedBands.isEmpty() && !syncAttempted) {
+            syncMasterDataFromSupabase();
+        }
     }
 
     private void showLoadingState() {
@@ -171,6 +177,16 @@ public final class MainActivity extends Activity {
         return header;
     }
 
+    private LinearLayout actionRow() {
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setGravity(Gravity.START);
+        actions.setPadding(0, 0, 0, dp(14));
+        actions.addView(importButton());
+        actions.addView(syncButton());
+        return actions;
+    }
+
     private Button importButton() {
         Button importButton = new Button(this);
         importButton.setAllCaps(false);
@@ -186,9 +202,55 @@ public final class MainActivity extends Activity {
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        layout.setMargins(0, 0, 0, dp(14));
+        layout.setMargins(0, 0, dp(8), 0);
         importButton.setLayoutParams(layout);
         return importButton;
+    }
+
+    private Button syncButton() {
+        syncButton = new Button(this);
+        syncButton.setAllCaps(false);
+        syncButton.setText("Sync from Supabase");
+        syncButton.setTextColor(Color.WHITE);
+        syncButton.setTypeface(Typeface.DEFAULT_BOLD);
+        syncButton.setBackgroundColor(Color.rgb(49, 56, 58));
+        syncButton.setOnClickListener(view -> syncMasterDataFromSupabase());
+        return syncButton;
+    }
+
+    private void syncMasterDataFromSupabase() {
+        if (syncInProgress) {
+            return;
+        }
+        syncAttempted = true;
+        syncInProgress = true;
+        if (syncButton != null) {
+            syncButton.setEnabled(false);
+        }
+        status.setVisibility(View.VISIBLE);
+        status.setText("Syncing latest festival data...");
+        new Thread(() -> {
+            try {
+                new AppRepositories(this).syncMasterDataFromSource();
+                runOnUiThread(() -> {
+                    syncInProgress = false;
+                    if (syncButton != null) {
+                        syncButton.setEnabled(true);
+                    }
+                    reloadNeeded = true;
+                    loadBandList();
+                });
+            } catch (Exception error) {
+                runOnUiThread(() -> {
+                    syncInProgress = false;
+                    if (syncButton != null) {
+                        syncButton.setEnabled(true);
+                    }
+                    status.setVisibility(View.VISIBLE);
+                    status.setText("Showing cached data. Supabase sync failed: " + error.getMessage());
+                });
+            }
+        }).start();
     }
 
     private LinearLayout tableHeader() {

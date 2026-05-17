@@ -31,6 +31,11 @@ import be.wacken.planner.persistence.RoomStageRepository;
 import be.wacken.planner.persistence.WackenDatabase;
 
 final class AppRepositories {
+    private enum SourceMode {
+        SUPABASE,
+        TSV_FALLBACK
+    }
+
     private final SyncedBandRepository bands;
     private final SyncedStageRepository stages;
     private final SyncedPerformanceRepository performances;
@@ -39,14 +44,17 @@ final class AppRepositories {
     private final SyncedRatingRepository ratings;
 
     AppRepositories(Context context) {
+        this(context, SourceMode.SUPABASE);
+    }
+
+    static AppRepositories tsvFallback(Context context) {
+        return new AppRepositories(context, SourceMode.TSV_FALLBACK);
+    }
+
+    private AppRepositories(Context context, SourceMode sourceMode) {
         Path storageDirectory = context.getFilesDir().toPath();
         WackenDatabase database = WackenDatabase.get(context);
 
-        FileBackedBandRepository bandSource = new FileBackedBandRepository(storageDirectory);
-        FileBackedStageRepository stageSource = new FileBackedStageRepository(storageDirectory);
-        FileBackedPerformanceRepository performanceSource = new FileBackedPerformanceRepository(storageDirectory);
-        FileBackedStageDistanceRepository distanceSource = new FileBackedStageDistanceRepository(storageDirectory);
-        FileBackedFoodOptionRepository foodSource = new FileBackedFoodOptionRepository(storageDirectory);
         FileBackedRatingRepository ratingSource = new FileBackedRatingRepository(storageDirectory);
 
         RoomBandRepository bandCache = new RoomBandRepository(database);
@@ -56,6 +64,26 @@ final class AppRepositories {
         RoomFoodOptionRepository foodCache = new RoomFoodOptionRepository(database);
         RoomRatingRepository ratingCache = new RoomRatingRepository(database);
 
+        BandRepository bandSource;
+        StageRepository stageSource;
+        PerformanceRepository performanceSource;
+        StageDistanceRepository distanceSource;
+        FoodOptionRepository foodSource;
+        if (sourceMode == SourceMode.SUPABASE) {
+            SupabaseMasterDataClient client = new SupabaseMasterDataClient(new AuthSessionStore(context).load());
+            bandSource = new SupabaseBandRepository(client);
+            stageSource = new SupabaseStageRepository(client);
+            performanceSource = new SupabasePerformanceRepository(client);
+            distanceSource = new SupabaseStageDistanceRepository(client);
+            foodSource = new SupabaseFoodOptionRepository(client);
+        } else {
+            bandSource = new FileBackedBandRepository(storageDirectory);
+            stageSource = new FileBackedStageRepository(storageDirectory);
+            performanceSource = new FileBackedPerformanceRepository(storageDirectory);
+            distanceSource = new FileBackedStageDistanceRepository(storageDirectory);
+            foodSource = new FileBackedFoodOptionRepository(storageDirectory);
+        }
+
         this.bands = new SyncedBandRepository(bandCache, bandSource);
         this.stages = new SyncedStageRepository(stageCache, stageSource);
         this.performances = new SyncedPerformanceRepository(performanceCache, performanceSource);
@@ -63,7 +91,9 @@ final class AppRepositories {
         this.foodOptions = new SyncedFoodOptionRepository(foodCache, foodSource);
         this.ratings = new SyncedRatingRepository(ratingCache, ratingSource);
 
-        seedCacheFromSourceIfNeeded(bandCache, stageCache, performanceCache, distanceCache, foodCache, ratingCache);
+        if (sourceMode == SourceMode.TSV_FALLBACK) {
+            seedCacheFromSourceIfNeeded(bandCache, stageCache, performanceCache, distanceCache, foodCache, ratingCache);
+        }
     }
 
     BandRepository bands() {
@@ -88,6 +118,14 @@ final class AppRepositories {
 
     RatingRepository ratings() {
         return ratings;
+    }
+
+    void syncMasterDataFromSource() {
+        bands.syncSourceToCache();
+        stages.syncSourceToCache();
+        performances.syncSourceToCache();
+        distances.syncSourceToCache();
+        foodOptions.syncSourceToCache();
     }
 
     private void seedCacheFromSourceIfNeeded(

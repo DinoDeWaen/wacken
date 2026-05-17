@@ -116,7 +116,7 @@ public final class ImportCsvActivity extends Activity {
             return;
         }
 
-        AppRepositories repositories = new AppRepositories(this);
+        AppRepositories repositories = AppRepositories.tsvFallback(this);
         ImportFestivalCsvUseCase importFestivalCsv = new ImportFestivalCsvUseCase(
                 repositories.bands(),
                 repositories.stages(),

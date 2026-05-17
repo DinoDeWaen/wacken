@@ -1,6 +1,7 @@
 package be.wacken.planner.infrastructure;
 
 import be.wacken.planner.domain.Band;
+import be.wacken.planner.domain.BandRepository;
 import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.SavedRating;
 import be.wacken.planner.domain.Stage;
@@ -9,6 +10,7 @@ import be.wacken.planner.domain.StageDistance;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,6 +40,21 @@ class SyncedRepositoryTest {
 
         assertEquals(List.of(new Band("Rated Soon")), cache.findAll());
         assertEquals(List.of(new Band("Rated Soon")), source.findAll());
+    }
+
+    @Test
+    void keepsExistingBandCacheWhenSourceSyncFails() {
+        InMemoryBandRepository cache = new InMemoryBandRepository();
+        cache.replaceAll(List.of(new Band("Cached Band")));
+        SyncedBandRepository repository = new SyncedBandRepository(cache, new FailingBandRepository());
+
+        try {
+            repository.syncSourceToCache();
+        } catch (IllegalStateException ignored) {
+            // Expected: the source failed before cache replacement could start.
+        }
+
+        assertEquals(List.of(new Band("Cached Band")), repository.findAll());
     }
 
     @Test
@@ -84,5 +101,27 @@ class SyncedRepositoryTest {
         assertEquals(Rating.of(3), repository.findByUserAndBand("dino", band).orElseThrow());
         assertEquals(List.of(new SavedRating("dino", band, Rating.of(3))), cache.findAll());
         assertTrue(repository.findAll().contains(new SavedRating("dino", band, Rating.of(3))));
+    }
+
+    private static final class FailingBandRepository implements BandRepository {
+        @Override
+        public void save(Band band) {
+            throw new IllegalStateException("source unavailable");
+        }
+
+        @Override
+        public void replaceAll(List<Band> bands) {
+            throw new IllegalStateException("source unavailable");
+        }
+
+        @Override
+        public Optional<Band> findByName(String name) {
+            throw new IllegalStateException("source unavailable");
+        }
+
+        @Override
+        public List<Band> findAll() {
+            throw new IllegalStateException("source unavailable");
+        }
     }
 }

@@ -6,6 +6,7 @@
 
 ## Basic Functionality (MVP 1)
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
+- Sync centrally managed festival master data from Supabase into the local Room cache.
 - List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.
 - Let users rate bands on a 0–4 scale (0 = veto, 4 = must-see) from the overview or detail screen.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
@@ -55,7 +56,7 @@ Current modules:
 | `infrastructure` | Java library | TSV backend-like source adapters, in-memory test adapters, and sync/write-through decorators. Depends inward on `application` and `domain`. |
 | `app` | Android application | Android UI/bootstrap, APK packaging, and Room local-cache adapters. |
 
-Current import repositories cover bands, stages, performances, stage distances, food options, and ratings. MVP persistence treats app-private TSV files as the backend-like source and caches app reads in Room. Android wiring composes TSV source adapters, Room cache adapters, and sync/write-through decorators behind the existing domain repository ports.
+Current repositories cover bands, stages, performances, stage distances, food options, and ratings. The app reads lineup data from Room. Supabase is the primary master-data source for bands and schedule metadata; the CSV/TSV path remains as an explicit fallback/import tool. Android wiring composes Supabase or TSV source adapters, Room cache adapters, and sync decorators behind the existing domain repository ports.
 
 ### Technologies
 - Language: Java
@@ -75,11 +76,13 @@ C4Context
     System_Boundary(app, "Wacken Planner 2026") {
         System(mobile, "Android App", "Band listing, ratings, schedule")
     }
-    System_Ext(csvSource, "Festival CSV Files", "Bands, stages, performances, distances, food")
+    System_Ext(supabase, "Supabase Postgres", "Central bands, schedule metadata, auth, groups, ratings")
+    System_Ext(csvSource, "Festival CSV Files", "Fallback import files for bands, stages, performances, distances, food")
     System_Ext(wackenSite, "Wacken Line-Up Website", "Band list and artist metadata")
     Rel(attendee, mobile, "Rates bands, views lineup and schedule")
-    Rel(admin, mobile, "Imports validated CSV datasets")
-    Rel(csvSource, mobile, "Provides festival datasets", "CSV")
+    Rel(admin, mobile, "Manages/imports validated festival datasets")
+    Rel(supabase, mobile, "Provides authenticated master-data sync", "HTTPS/PostgREST")
+    Rel(csvSource, mobile, "Provides fallback festival datasets", "CSV")
     Rel(wackenSite, mobile, "Provides initial band metadata", "JSON/user-reviewed import")
 ```
 
@@ -90,16 +93,17 @@ C4Container
     title Wacken Planner 2026 - Container View
     Person(attendee, "Attendee")
     Person(admin, "Admin")
-    System_Ext(csvSource, "Festival CSV Files", "Validated master data")
+    System_Ext(supabase, "Supabase Postgres", "Central master data and shared group data")
+    System_Ext(csvSource, "Festival CSV Files", "Validated fallback master data")
     System_Ext(wackenSite, "Wacken Line-Up JSON", "Initial band metadata")
 
     System_Boundary(app, "Wacken Planner 2026") {
         Container(ui, "Android UI", "Java", "Screens for band list, ratings, imports, schedule")
         Container(appsvc, "Application Layer", "Java", "Use cases for listing, rating, imports")
         Container(domain, "Domain", "Java", "Entities, value objects, decision rules")
-        Container(infra, "Infrastructure", "Java", "Adapters: TSV backend-like source and sync decorators")
+        Container(infra, "Infrastructure", "Java", "Adapters: Supabase source, TSV fallback source, and sync decorators")
         ContainerDb(cache, "Room Local Cache", "SQLite/Room", "Fast local app cache for imported data and ratings")
-        ContainerDb(tsv, "TSV Backend-Like Source", "App-private TSV files", "MVP source standing in for a future backend API")
+        ContainerDb(tsv, "TSV Fallback Source", "App-private TSV files", "Fallback import source")
     }
 
     Rel(attendee, ui, "Rates bands, views lineup")
@@ -108,8 +112,9 @@ C4Container
     Rel(appsvc, domain, "Uses domain rules and models")
     Rel(appsvc, infra, "Accesses repository adapters")
     Rel(infra, cache, "Reads from and writes through to local cache")
-    Rel(infra, tsv, "Syncs with backend-like source")
-    Rel(csvSource, infra, "Supplies validated import files", "CSV")
+    Rel(infra, supabase, "Syncs master data", "HTTPS/PostgREST")
+    Rel(infra, tsv, "Uses only for explicit fallback CSV import")
+    Rel(csvSource, infra, "Supplies fallback import files", "CSV")
     Rel(wackenSite, infra, "Supplies proposed band metadata", "JSON")
 ```
 
@@ -184,6 +189,13 @@ backend/flyway/verify-auth-setup.sh
 
 The band import is idempotent. Re-running it upserts the CSV rows and marks
 bands missing from the CSV as inactive rather than deleting rows.
+
+The Android band overview reads from Room. Use **Sync from Supabase** in the app
+to pull central bands, stages, performances, stage distances, and food options
+from Supabase into Room. If sync fails, existing cached Room data remains
+available and the app shows a stale-data message. The CSV import screen remains
+available for fallback/local import work and writes through the TSV fallback
+source plus Room cache; it is no longer the primary app data source.
 
 ### Supabase Auth
 
