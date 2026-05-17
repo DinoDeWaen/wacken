@@ -21,6 +21,7 @@
 - ADR: [`0005-food-and-stage-repository-ports-for-csv-import.md`](backlog/decisions/0005-food-and-stage-repository-ports-for-csv-import.md).
 - ADR: [`0006-mvp-file-backed-local-persistence.md`](backlog/decisions/0006-mvp-file-backed-local-persistence.md) (superseded).
 - ADR: [`0007-room-local-cache-with-tsv-backend-source.md`](backlog/decisions/0007-room-local-cache-with-tsv-backend-source.md).
+- ADR: [`0008-supabase-postgres-flyway-migrations.md`](backlog/decisions/0008-supabase-postgres-flyway-migrations.md).
 - CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 
@@ -59,6 +60,7 @@ Current import repositories cover bands, stages, performances, stage distances, 
 - Language: Java
 - Build: Gradle (Android)
 - Local cache: AndroidX Room
+- Backend database: Supabase Postgres, managed by Flyway SQL migrations
 - Testing: JUnit 5, Mockito/fakes, JaCoCo coverage gates, and a dedicated `qaTest` scenario suite
 - Output: Debug APK via `./gradlew assembleDebug`
 
@@ -139,6 +141,47 @@ Useful focused checks:
 ./gradlew :domain:jacocoTestCoverageVerification :application:jacocoTestCoverageVerification
 ./gradlew qaTest
 ```
+
+## Backend Database
+
+Supabase Postgres is the planned central backend for shared ratings and admin
+managed festival data. Flyway migrations live in:
+
+```text
+backend/flyway/sql
+```
+
+Local credentials must stay outside git. Create `.env.supabase.local` from the
+template:
+
+```bash
+cp backend/flyway/env.template .env.supabase.local
+```
+
+Fill in the local password in `.env.supabase.local`. This file is ignored by
+git. Do not commit database passwords, service-role keys, or other secrets.
+
+Run Flyway:
+
+```bash
+backend/flyway/run-flyway.sh info
+backend/flyway/run-flyway.sh migrate
+backend/flyway/run-flyway.sh info
+```
+
+The script uses locally installed `flyway` when available and falls back to
+Docker otherwise. Band import uses local `psql`; set `PSQL_BIN` if `psql` is
+installed but not on `PATH`.
+
+Upload the generated Wacken bands CSV to Supabase:
+
+```bash
+backend/flyway/import-bands.sh
+backend/flyway/verify-bands-import.sh
+```
+
+The band import is idempotent. Re-running it upserts the CSV rows and marks
+bands missing from the CSV as inactive rather than deleting rows.
 
 Coverage gates:
 

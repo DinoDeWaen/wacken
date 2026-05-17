@@ -75,6 +75,7 @@ Existing integration:
 | Wacken line-up website | Provides current band list and later detailed lineup data when available. | Inbound | Initial import may scrape the official band list and propose changes for user validation. The official pages inspected were the Wacken band list and artist detail URLs, but the dynamic artist-card data still needs schema investigation. |
 | Festival CSV files | Provide bands, stages, performances, distances, and food data. | Inbound | CSVs are uploaded through Android file selection. They must be validated for missing references, overlaps, and unknown stages once final stage and time data is available. |
 | MVP TSV source | Acts as the current backend-like persistence source for imported festival data and ratings. | Internal source | The app caches data locally in Room and writes through to TSV files so the TSV source can later be replaced by a backend API without changing domain behavior. |
+| Supabase Postgres | Central backend database for shared ratings and admin-managed festival data. | Backend | Schema is managed through Flyway migrations. Bands can be uploaded from the repository CSV through an idempotent backend import script. |
 | CI artifact storage | Stores downloadable APK artifacts. | Outbound | CI must produce a clearly versioned debug APK artifact. |
 
 ## Non-goals
