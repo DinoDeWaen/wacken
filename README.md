@@ -191,6 +191,29 @@ backend/flyway/verify-auth-setup.sh
 The band import is idempotent. Re-running it upserts the CSV rows and marks
 bands missing from the CSV as inactive rather than deleting rows.
 
+Admin master-data import for the full CSV set:
+
+```bash
+backend/flyway/import-master-data.sh
+```
+
+By default this imports:
+
+```text
+data/wacken-2026/bands.csv
+data/wacken-2026/stages.csv
+data/wacken-2026/performances.csv
+data/wacken-2026/distances.csv
+data/wacken-2026/food.csv
+```
+
+Override individual files with `BANDS_CSV`, `STAGES_CSV`,
+`PERFORMANCES_CSV`, `DISTANCES_CSV`, and `FOOD_CSV`. The importer records a
+row in `public.import_batches`, validates references, duplicate ids, invalid
+performance times, stage overlaps, negative walking minutes, and food/stage
+references, then applies the import in one transaction. Failed imports update
+their import batch to `failed` and leave existing master data unchanged.
+
 The Android band overview reads from Room. Use **Sync from Supabase** in the app
 to pull central bands, stages, performances, stage distances, and food options
 from Supabase into Room and to push/pull group ratings. Rating changes are
