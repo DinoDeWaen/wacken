@@ -9,6 +9,7 @@
 - Sync centrally managed festival master data from Supabase into the local Room cache.
 - List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.
 - Let users rate bands on a 0–4 scale (0 = veto, 4 = must-see) from the overview or detail screen.
+- Save rating changes locally immediately and sync pending/group ratings with Supabase when the app syncs.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show imported English band biography/explanation and available band image metadata on the detail screen when `bands.csv` provides it.
 - Sign in with Supabase Auth so ratings can be associated with a user and the shared Wacken planning group.
@@ -192,10 +193,13 @@ bands missing from the CSV as inactive rather than deleting rows.
 
 The Android band overview reads from Room. Use **Sync from Supabase** in the app
 to pull central bands, stages, performances, stage distances, and food options
-from Supabase into Room. If sync fails, existing cached Room data remains
-available and the app shows a stale-data message. The CSV import screen remains
-available for fallback/local import work and writes through the TSV fallback
-source plus Room cache; it is no longer the primary app data source.
+from Supabase into Room and to push/pull group ratings. Rating changes are
+stored locally first with pending sync metadata; when Supabase accepts the
+rating it is marked synced. If sync fails, existing cached Room data and pending
+ratings remain available and the app shows a stale-data message. The CSV import
+screen remains available for fallback/local import work and writes through the
+TSV fallback source plus Room cache; it is no longer the primary app data
+source.
 
 ### Supabase Auth
 
@@ -220,7 +224,9 @@ Group role data is stored in `public.group_members.role`. To promote a user for
 future admin workflows, update that user's membership role to `admin` or `owner`
 and, when platform-wide access is required, set `public.profiles.is_admin`.
 Ratings remain protected by RLS: an authenticated user can read/write private
-ratings only when they belong to the rating's group.
+ratings only when they belong to the rating's group. Rating inserts and updates
+also require `ratings.user_id = auth.uid()`, so a request cannot write another
+member's rating even when the caller belongs to the same group.
 
 Coverage gates:
 

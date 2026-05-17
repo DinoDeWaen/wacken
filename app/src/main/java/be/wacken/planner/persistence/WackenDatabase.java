@@ -3,8 +3,10 @@ package be.wacken.planner.persistence;
 import android.content.Context;
 
 import androidx.room.Database;
+import androidx.room.migration.Migration;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 @Database(
         entities = {
@@ -15,11 +17,18 @@ import androidx.room.RoomDatabase;
                 RoomFoodOption.class,
                 RoomRating.class
         },
-        version = 1,
+        version = 2,
         exportSchema = false
 )
 public abstract class WackenDatabase extends RoomDatabase {
     private static volatile WackenDatabase instance;
+    private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE ratings ADD COLUMN groupId TEXT NOT NULL DEFAULT 'local'");
+            database.execSQL("ALTER TABLE ratings ADD COLUMN syncStatus TEXT NOT NULL DEFAULT 'SYNCED'");
+        }
+    };
 
     public abstract RoomBandDao bands();
 
@@ -42,6 +51,7 @@ public abstract class WackenDatabase extends RoomDatabase {
                                     WackenDatabase.class,
                                     "wacken-cache.db"
                             )
+                            .addMigrations(MIGRATION_1_2)
                             .allowMainThreadQueries()
                             .build();
                 }

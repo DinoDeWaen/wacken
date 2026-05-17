@@ -231,7 +231,9 @@ public final class MainActivity extends Activity {
         status.setText("Syncing latest festival data...");
         new Thread(() -> {
             try {
-                new AppRepositories(this).syncMasterDataFromSource();
+                AppRepositories repositories = new AppRepositories(this);
+                repositories.syncMasterDataFromSource();
+                repositories.syncRatings();
                 runOnUiThread(() -> {
                     syncInProgress = false;
                     if (syncButton != null) {

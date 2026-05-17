@@ -13,13 +13,11 @@ import be.wacken.planner.domain.StageRepository;
 import be.wacken.planner.infrastructure.FileBackedBandRepository;
 import be.wacken.planner.infrastructure.FileBackedFoodOptionRepository;
 import be.wacken.planner.infrastructure.FileBackedPerformanceRepository;
-import be.wacken.planner.infrastructure.FileBackedRatingRepository;
 import be.wacken.planner.infrastructure.FileBackedStageDistanceRepository;
 import be.wacken.planner.infrastructure.FileBackedStageRepository;
 import be.wacken.planner.infrastructure.SyncedBandRepository;
 import be.wacken.planner.infrastructure.SyncedFoodOptionRepository;
 import be.wacken.planner.infrastructure.SyncedPerformanceRepository;
-import be.wacken.planner.infrastructure.SyncedRatingRepository;
 import be.wacken.planner.infrastructure.SyncedStageDistanceRepository;
 import be.wacken.planner.infrastructure.SyncedStageRepository;
 import be.wacken.planner.persistence.RoomBandRepository;
@@ -41,7 +39,8 @@ final class AppRepositories {
     private final SyncedPerformanceRepository performances;
     private final SyncedStageDistanceRepository distances;
     private final SyncedFoodOptionRepository foodOptions;
-    private final SyncedRatingRepository ratings;
+    private final RatingRepository ratings;
+    private final SyncingRatingRepository syncingRatings;
 
     AppRepositories(Context context) {
         this(context, SourceMode.SUPABASE);
@@ -54,8 +53,6 @@ final class AppRepositories {
     private AppRepositories(Context context, SourceMode sourceMode) {
         Path storageDirectory = context.getFilesDir().toPath();
         WackenDatabase database = WackenDatabase.get(context);
-
-        FileBackedRatingRepository ratingSource = new FileBackedRatingRepository(storageDirectory);
 
         RoomBandRepository bandCache = new RoomBandRepository(database);
         RoomStageRepository stageCache = new RoomStageRepository(database);
@@ -89,10 +86,20 @@ final class AppRepositories {
         this.performances = new SyncedPerformanceRepository(performanceCache, performanceSource);
         this.distances = new SyncedStageDistanceRepository(distanceCache, distanceSource);
         this.foodOptions = new SyncedFoodOptionRepository(foodCache, foodSource);
-        this.ratings = new SyncedRatingRepository(ratingCache, ratingSource);
+        if (sourceMode == SourceMode.SUPABASE) {
+            this.syncingRatings = new SyncingRatingRepository(
+                    ratingCache,
+                    new SupabaseRatingClient(),
+                    new AuthSessionStore(context).load()
+            );
+            this.ratings = syncingRatings;
+        } else {
+            this.syncingRatings = null;
+            this.ratings = ratingCache;
+        }
 
         if (sourceMode == SourceMode.TSV_FALLBACK) {
-            seedCacheFromSourceIfNeeded(bandCache, stageCache, performanceCache, distanceCache, foodCache, ratingCache);
+            seedCacheFromSourceIfNeeded(bandCache, stageCache, performanceCache, distanceCache, foodCache);
         }
     }
 
@@ -120,6 +127,18 @@ final class AppRepositories {
         return ratings;
     }
 
+    void syncRatings() {
+        if (syncingRatings == null) {
+            return;
+        }
+        try {
+            syncingRatings.syncPendingRatings();
+            syncingRatings.pullGroupRatings();
+        } catch (Exception error) {
+            throw new SupabaseSyncException(error.getMessage(), error);
+        }
+    }
+
     void syncMasterDataFromSource() {
         bands.syncSourceToCache();
         stages.syncSourceToCache();
@@ -133,8 +152,7 @@ final class AppRepositories {
             RoomStageRepository stageCache,
             RoomPerformanceRepository performanceCache,
             RoomStageDistanceRepository distanceCache,
-            RoomFoodOptionRepository foodCache,
-            RoomRatingRepository ratingCache
+            RoomFoodOptionRepository foodCache
     ) {
         if (bandCache.isEmpty()) {
             bands.syncSourceToCache();
@@ -150,9 +168,6 @@ final class AppRepositories {
         }
         if (foodCache.isEmpty()) {
             foodOptions.syncSourceToCache();
-        }
-        if (ratingCache.isEmpty()) {
-            ratings.syncSourceToCache();
         }
     }
 }
