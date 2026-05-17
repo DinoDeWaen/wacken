@@ -39,7 +39,6 @@ public final class BandDetailActivity extends Activity {
     public static final String EXTRA_DATE = "be.wacken.planner.DATE";
     public static final String EXTRA_TIME = "be.wacken.planner.TIME";
 
-    private static final String CURRENT_USER = "my group";
     private static final String TBA = "TBA";
     private static final int COLOR_BACKGROUND = Color.rgb(29, 36, 38);
     private static final int COLOR_PANEL = Color.rgb(32, 39, 41);
@@ -51,10 +50,17 @@ public final class BandDetailActivity extends Activity {
     private RatingRepository ratings;
     private Band selectedBand;
     private RatingStarsView ratingStars;
+    private AuthSession currentSession;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        currentSession = new AuthSessionStore(this).load();
+        if (!currentSession.isPresent()) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
 
         AppRepositories repositories = new AppRepositories(this);
         bands = repositories.bands();
@@ -67,9 +73,13 @@ public final class BandDetailActivity extends Activity {
         seedExplicitRating();
 
         ShowBandDetailUseCase showBand = new ShowBandDetailUseCase(bands, ratings);
-        BandDetailItem detail = showBand.showBand(CURRENT_USER, selectedBand.name(), musicLinksFromIntent())
+        BandDetailItem detail = showBand.showBand(currentUser(), selectedBand.name(), musicLinksFromIntent())
                 .orElseThrow();
         setContentView(render(detail));
+    }
+
+    private String currentUser() {
+        return currentSession.userId();
     }
 
     private View render(BandDetailItem detail) {
@@ -122,7 +132,7 @@ public final class BandDetailActivity extends Activity {
         ratingStars = new RatingStarsView(this, detail.rating(), !detail.defaultRating(), COLOR_ACCENT);
         ratingStars.setPadding(dp(12), 0, dp(12), 0);
         ratingStars.setOnRatingSelected(rating -> {
-            RateBandResult result = new RateBandUseCase(ratings).rateBand(CURRENT_USER, selectedBand, rating);
+            RateBandResult result = new RateBandUseCase(ratings).rateBand(currentUser(), selectedBand, rating);
             if (result.success()) {
                 ratingStars.applySavedRating(rating);
             }
@@ -250,7 +260,7 @@ public final class BandDetailActivity extends Activity {
     private void seedExplicitRating() {
         boolean defaultRating = getIntent().getBooleanExtra(EXTRA_DEFAULT_RATING, true);
         if (!defaultRating && getIntent().hasExtra(EXTRA_RATING)) {
-            ratings.save(CURRENT_USER, selectedBand, Rating.of(getIntent().getIntExtra(EXTRA_RATING, 1)));
+            ratings.save(currentUser(), selectedBand, Rating.of(getIntent().getIntExtra(EXTRA_RATING, 1)));
         }
     }
 

@@ -10,6 +10,7 @@
 - Let users rate bands on a 0–4 scale (0 = veto, 4 = must-see) from the overview or detail screen.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show imported English band biography/explanation and available band image metadata on the detail screen when `bands.csv` provides it.
+- Sign in with Supabase Auth so ratings can be associated with a user and the shared Wacken planning group.
 - Prepare groundwork for group decision rules and printable timelines.
 
 ## Architecture
@@ -178,10 +179,36 @@ Upload the generated Wacken bands CSV to Supabase:
 ```bash
 backend/flyway/import-bands.sh
 backend/flyway/verify-bands-import.sh
+backend/flyway/verify-auth-setup.sh
 ```
 
 The band import is idempotent. Re-running it upserts the CSV rows and marks
 bands missing from the CSV as inactive rather than deleting rows.
+
+### Supabase Auth
+
+The Android app uses Supabase Auth email/password sign-in and compiles only the
+public Supabase URL and anon key into `BuildConfig`. Keep database passwords and
+service-role keys out of the app and out of git.
+
+Required Supabase project settings:
+
+- Enable the Email provider in Authentication.
+- Create or invite app users through Supabase Authentication.
+- Run Flyway migrations so the `auth.users` trigger creates a matching
+  `public.profiles` row and assigns new users to the default Wacken 2026 group.
+
+The current MVP uses one shared planning group:
+
+```text
+00000000-0000-0000-0000-000000000001
+```
+
+Group role data is stored in `public.group_members.role`. To promote a user for
+future admin workflows, update that user's membership role to `admin` or `owner`
+and, when platform-wide access is required, set `public.profiles.is_admin`.
+Ratings remain protected by RLS: an authenticated user can read/write private
+ratings only when they belong to the rating's group.
 
 Coverage gates:
 

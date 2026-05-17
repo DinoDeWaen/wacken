@@ -30,7 +30,6 @@ import be.wacken.planner.application.RateBandUseCase;
 import be.wacken.planner.domain.Band;
 
 public final class MainActivity extends Activity {
-    private static final String CURRENT_USER = "my group";
     private static final int COLOR_BACKGROUND = Color.rgb(29, 36, 38);
     private static final int COLOR_ROW_DARK = Color.rgb(32, 39, 41);
     private static final int COLOR_ROW_LIGHT = Color.rgb(41, 48, 50);
@@ -41,6 +40,9 @@ public final class MainActivity extends Activity {
 
     private ListView bandList;
     private TextView status;
+    private TextView subtitle;
+    private AuthSessionStore sessionStore;
+    private AuthSession currentSession;
     private BandAdapter adapter;
     private List<BandListItem> cachedBands;
     private Map<String, Band> cachedBandsByName;
@@ -50,6 +52,11 @@ public final class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sessionStore = new AuthSessionStore(this);
+        if (!loadCurrentSession()) {
+            redirectToLogin();
+            return;
+        }
 
         LinearLayout screen = new LinearLayout(this);
         screen.setOrientation(LinearLayout.VERTICAL);
@@ -83,10 +90,31 @@ public final class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (!loadCurrentSession()) {
+            redirectToLogin();
+            return;
+        }
+        if (subtitle != null) {
+            subtitle.setText("Line-up ratings for " + currentSession.email());
+        }
         if (reloadNeeded || adapter == null) {
             showLoadingState();
             bandList.post(this::loadBandList);
         }
+    }
+
+    private boolean loadCurrentSession() {
+        currentSession = sessionStore.load();
+        return currentSession.isPresent();
+    }
+
+    private void redirectToLogin() {
+        startActivity(new Intent(this, LoginActivity.class));
+        finish();
+    }
+
+    private String currentUser() {
+        return currentSession.userId();
     }
 
     private void loadBandList() {
@@ -95,7 +123,7 @@ public final class MainActivity extends Activity {
                 repositories.bands(),
                 repositories.performances(),
                 repositories.ratings(),
-                CURRENT_USER
+                currentUser()
         ).listBands();
         cachedBandsByName = bandsByName(repositories);
         adapter = new BandAdapter(repositories, cachedBands, cachedBandsByName);
@@ -134,7 +162,7 @@ public final class MainActivity extends Activity {
         title.setGravity(Gravity.START);
         header.addView(title);
 
-        TextView subtitle = new TextView(this);
+        subtitle = new TextView(this);
         subtitle.setText("Line-up ratings for my group");
         subtitle.setTextColor(COLOR_MUTED);
         subtitle.setGravity(Gravity.START);
@@ -385,7 +413,7 @@ public final class MainActivity extends Activity {
 
         private void saveRating(int position, BandListItem band, RatingStarsView rating, int selectedRating) {
             RateBandResult result = new RateBandUseCase(repositories.ratings())
-                    .rateBand(CURRENT_USER, new Band(band.bandName()), selectedRating);
+                    .rateBand(currentUser(), new Band(band.bandName()), selectedRating);
             if (result.success()) {
                 rating.applySavedRating(selectedRating);
                 bands.set(position, new BandListItem(
