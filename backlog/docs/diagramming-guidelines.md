@@ -43,4 +43,4 @@ design has stable internal modules or components that are worth explaining.
 When closing a task, mention diagram impact in implementation notes:
 
 - `Diagram impact: updated ...`
-- `Diagram impact: not needed because ...`
+- `Diagram impact: none, because ...`

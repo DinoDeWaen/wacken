@@ -89,7 +89,7 @@ Negative / trade-offs:
 
 If an ADR changes how the application is understood, set up, tested, or navigated, update `README.md` with a link or short explanation.
 
-If no ADR is needed, record `ADR impact: not needed because ...` in the
+If no ADR is needed, record `ADR impact: none, because ...` in the
 Backlog.md implementation notes.
 
 ## Agent instruction

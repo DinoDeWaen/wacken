@@ -36,7 +36,7 @@ backlog task create "Allow user to deactivate account" \
   --ac "Given an active user, when an administrator deactivates the account, then the user can no longer log in" \
   --ac "Given a deactivated user, when historical records are viewed, then the user identity remains visible" \
   --ac "The behavior is covered by automated tests" \
-  --ac "README is updated, or implementation notes explain why no README update was needed"
+  --ac "README impact is recorded using the canonical wording from delivery-governance.md"
 ```
 
 ## Story template
@@ -70,7 +70,7 @@ Out of scope:
 - Given ..., when ..., then ...
 - Error and edge cases are handled.
 - Relevant tests are added or updated.
-- README is updated when setup, commands, architecture, public behavior, or troubleshooting changes.
+- README impact is recorded using the canonical wording from `delivery-governance.md`.
 
 ## Notes
 
@@ -120,7 +120,7 @@ Every task that changes setup, test commands, architecture, public behavior, or 
 Use one of these forms:
 
 - `README documents the new setup/test/architecture behavior.`
-- `Implementation notes explain why no README update was needed.`
+- `README impact: none, because ...`
 
 Architecture-significant tasks must also include an ADR-related acceptance criterion.
 
@@ -170,8 +170,8 @@ Before creating a task, verify:
 - The description explains why the task exists.
 - The acceptance criteria describe observable outcomes.
 - Test expectations are explicit.
-- README impact is explicit.
-- ADR impact is explicit when architecture is affected.
+- README impact uses the canonical wording from `delivery-governance.md`.
+- ADR impact uses the canonical wording from `delivery-governance.md` when architecture is affected.
 - The story is small enough for one PR.
 - The story does not smuggle in unrelated refactoring.
 
@@ -196,5 +196,5 @@ Recommended acceptance criteria:
 - [ ] Automated tests prove the behavior or protect the refactoring.
 - [ ] Manual test steps are documented in implementation notes.
 - [ ] The implementation plan is updated to reflect what was actually done.
-- [ ] README impact is handled.
+- [ ] README impact uses the canonical wording from `delivery-governance.md`.
 - [ ] The change is ready for merge to `main` only after the validation package is complete.

@@ -21,10 +21,20 @@ The agent must always separate three concerns:
 
 3. **What to develop**
    - Follow `README.md`.
-   - Follow `backlog/docs/project-context.md`.
    - Follow `backlog/docs/business-requirements.md`.
-   - Follow `backlog/docs/mvp-roadmap.md`.
+   - Use `backlog/docs/business-requirements.md` for project context, business requirements, and roadmap.
    - Follow the active Backlog.md task.
+
+## Which docs to read when
+
+Do not read every linked document by default. Read only the documents listed below for the current task.
+
+- Starting any implementation task: read `backlog/docs/development-ways-of-working.md`, `backlog/docs/agent-execution-guardrails.md`, and the relevant parts of `backlog/docs/business-requirements.md`.
+- Creating or splitting stories: read `backlog/docs/story-writing-guidelines.md`.
+- Adding or changing behavior: read `backlog/docs/testing-strategy.md` and `backlog/docs/technical-quality-guidelines.md`.
+- Touching architecture, dependencies, persistence, APIs, deployment, security, or module boundaries: read `backlog/docs/architecture-guidelines.md`, `backlog/docs/architecture-decision-rules.md`, and `backlog/docs/delivery-governance.md`.
+- Updating diagrams: read `backlog/docs/diagramming-guidelines.md`.
+- Reviewing code: read `backlog/docs/code-review-checklist.md`.
 
 ## Non-negotiable workflow
 
@@ -37,6 +47,7 @@ The agent must always separate three concerns:
 - Use `backlog task edit ...` to update tasks.
 - Never edit task markdown files directly.
 - Never manually change task checkboxes, status, frontmatter, plans, or notes.
+- Use `backlog/docs/agent-execution-guardrails.md` as the canonical source for Backlog.md CLI details.
 
 ### Before implementation
 
@@ -62,7 +73,7 @@ The agent must always separate three concerns:
 - Prefer the smallest design that preserves clean boundaries.
 - Do not make architecture-significant changes without explicit human approval.
 - Use multiple small commits when the environment allows commits, and commit completed tasks promptly before starting unrelated follow-up work.
-- Update `README.md` when setup, test commands, architecture, public behavior, troubleshooting, or diagrams change.
+- Update `README.md` only when setup, public behavior, architecture, commands, configuration, troubleshooting, or diagrams materially change.
 - Use Mermaid in Markdown documentation when diagrams improve understanding. Use C4-style Mermaid diagrams for architecture.
 
 ### After implementation
@@ -71,9 +82,8 @@ The agent must always separate three concerns:
 - Update the implementation plan so it reflects what was actually done, including deviations.
 - Check acceptance criteria through the CLI only.
 - Add PR-ready implementation notes using the CLI.
-- Include a validation package: what changed, how to test it, automated checks run, manual validation, README impact, ADR impact, approval status, and risks.
-- Mention README impact in implementation notes: either updated, or not needed with a reason.
-- Mention diagram impact in implementation notes: either updated, or not needed with a reason.
+- Include the validation package defined in `backlog/docs/delivery-governance.md`.
+- Use the canonical impact-note wording from `backlog/docs/delivery-governance.md` for README, diagram, and ADR impact.
 - Do not merge to `main` until the validation package is complete.
 - Set the task to `Done` only when all Definition of Done items are satisfied.
 
@@ -104,7 +114,7 @@ See:
 
 ## Living README rule
 
-`README.md` is the project entry point for humans and agents. Keep it up to date after every completed task.
+`README.md` is the project entry point for humans and agents. Keep it up to date when setup, public behavior, architecture, commands, configuration, troubleshooting, or diagrams materially change.
 
 The README must use Mermaid for diagrams. Architecture diagrams must be C4-style where possible.
 
@@ -118,11 +128,11 @@ The README must contain:
 - Links to ways of working, testing strategy, diagramming guidelines, architecture guidelines, and ADRs.
 - Troubleshooting notes.
 
-If a task does not require a README change, implementation notes must explicitly say why.
+If a task does not require a README change, use the canonical no-impact wording from `backlog/docs/delivery-governance.md`.
 
 ## Architecture decision and approval rule
 
-Before making an architecture-significant change, check `backlog/decisions/`, `backlog/docs/architecture-decision-rules.md`, and `backlog/docs/delivery-governance.md`.
+Before making an architecture-significant change, check existing decisions when present, `backlog/docs/architecture-decision-rules.md`, and `backlog/docs/delivery-governance.md`.
 
 Architecture-significant changes require explicit human approval before implementation.
 

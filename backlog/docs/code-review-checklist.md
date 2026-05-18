@@ -79,7 +79,7 @@ When reporting review findings, use:
 - Does the README contain a basic architecture map a junior developer can follow?
 - Does the README link to ways of working, testing strategy, architecture guidelines, and ADRs?
 - If the task changed setup, commands, architecture, behavior, or troubleshooting, was the README updated?
-- If no README update was needed, do the implementation notes explain why?
+- If no README change was needed, do task notes use `README impact: none, because ...`?
 - If the task made an architecture-significant decision, was an ADR created or updated?
 
 ## Legacy refactoring review
@@ -99,6 +99,6 @@ When reporting review findings, use:
 - [ ] Manual validation steps are documented when relevant.
 - [ ] Architecture-significant changes had explicit approval before implementation.
 - [ ] ADRs were created or updated for approved architecture-significant changes.
-- [ ] README impact is documented: updated, or explicitly not needed with a reason.
+- [ ] README, diagram, and ADR impact use the canonical wording from `delivery-governance.md`.
 - [ ] The branch is made of small, coherent commits or has an equivalent logical change list.
 - [ ] Nothing is merged to `main` before the validation package is complete.

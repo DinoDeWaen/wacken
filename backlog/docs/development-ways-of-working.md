@@ -135,7 +135,7 @@ Use:
 
 - `diagramming-guidelines.md` for Mermaid/C4 diagrams.
 - `architecture-decision-rules.md` for ADR decisions.
-- `delivery-governance.md` for final validation notes.
+- `delivery-governance.md` for final validation notes and canonical README, diagram, and ADR impact wording.
 
 ## Completion Checklist
 
@@ -145,8 +145,7 @@ Before marking done:
 - Tests were added/updated where meaningful.
 - Legacy refactoring is protected by approval/characterization tests.
 - Relevant checks pass.
-- README impact is handled.
-- Diagram impact is handled.
-- ADR impact and architecture approval are handled.
+- README, diagram, and ADR impact use the canonical wording from `delivery-governance.md`.
+- Architecture approval is handled when required.
 - Implementation plan reflects actual work.
 - Implementation notes explain what changed, how to test it, and remaining risk.

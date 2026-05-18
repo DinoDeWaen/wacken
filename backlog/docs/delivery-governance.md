@@ -30,6 +30,9 @@ Architecture-significant means a change affects:
 - External API contracts, messaging, integration, security, deployment, or
   operations.
 - Test strategy that affects future development.
+- Ownership of domain rules, policy selection, category classification,
+  invariants, rule engines, or internal configuration, especially when a change
+  would make callers or external boundaries construct or supply them.
 
 ## Required Architecture Approval Format
 
@@ -87,6 +90,16 @@ Implementation notes should be human-friendly and PR-ready:
 - Include tests, manual validation, README/diagram/ADR impact, and risks.
 - Avoid a single long line of text.
 
+Canonical impact-note wording:
+
+- `README impact: updated ...`
+- `README impact: none, because ...`
+- `Diagram impact: updated ...`
+- `Diagram impact: none, because ...`
+- `ADR impact: created ...`
+- `ADR impact: updated ...`
+- `ADR impact: none, because ...`
+
 Required sections:
 
 ```markdown
@@ -141,8 +154,8 @@ Do not merge unless:
 - Acceptance criteria are checked through the CLI.
 - Implementation notes contain the validation package.
 - Relevant tests pass.
-- README impact is handled.
-- Diagram impact is handled.
-- ADR impact is handled.
+- README impact uses the canonical wording.
+- Diagram impact uses the canonical wording.
+- ADR impact uses the canonical wording.
 - Architecture approval is present when required.
 - Risks and follow-up are documented.

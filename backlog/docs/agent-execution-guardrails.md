@@ -175,20 +175,11 @@ backlog task edit <id> --notes "Line 1`nLine 2"
 
 ## Architecture Stop Rule
 
-Stop and request approval before implementation if a change affects:
+Stop and request approval before implementation when
+`delivery-governance.md` defines the change as architecture-significant.
 
-- Architecture style or layer boundaries.
-- Module/package structure.
-- Ports, adapters, or dependency direction.
-- DDD bounded contexts, aggregates, entities, value objects, services, or events.
-- Database technology, schema strategy, migrations, or persistence model.
-- External APIs, messaging, integrations, security, deployment, or operations.
-- Test strategy that affects future development.
-- Ownership of domain rules, policy selection, category classification,
-  invariants, or configuration, especially when a requirement would make
-  callers or external boundaries construct or supply them.
-
-Use `architecture-decision-rules.md` and `delivery-governance.md`.
+Use `architecture-decision-rules.md` for ADR handling and
+`architecture-guidelines.md` for DDD/hexagonal boundary guidance.
 
 ## Business Requirement Boundary Conflict Rule
 
@@ -210,18 +201,9 @@ The decision request must include:
 
 ## Validation Rule
 
-Before a task can be marked done, implementation notes must include:
-
-- What changed.
-- Acceptance criteria evidence.
-- Automated tests/checks run and result.
-- Manual validation when relevant.
-- BDD/TDD/approval-test evidence.
-- README impact.
-- Diagram impact.
-- ADR impact.
-- Architecture approval status.
-- Risks and follow-up.
+Before a task can be marked done, implementation notes must include the
+validation package and canonical impact-note wording defined in
+`delivery-governance.md`.
 
 ## README Rule
 
@@ -229,4 +211,5 @@ Update `README.md` when a task changes setup, configuration, commands,
 architecture, package/module structure, public behavior, diagrams, or
 troubleshooting.
 
-If no README update is needed, say why in implementation notes.
+If no README change is needed, use `README impact: none, because ...` in task
+notes.
