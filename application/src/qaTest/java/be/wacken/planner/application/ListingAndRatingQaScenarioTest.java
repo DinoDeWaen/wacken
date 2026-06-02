@@ -36,16 +36,16 @@ class ListingAndRatingQaScenarioTest {
 
         ListBandsUseCase firstOpen = new ListBandsUseCase(bands, performances, ratings, "dino");
         assertEquals(
-                List.of(new BandListItem("5th Avenue", "Faster", "2026-07-30T18:00", "2026-07-30T19:00", 1, true)),
+                List.of(new BandListItem("5th Avenue", "Faster", "2026-07-30T18:00", "2026-07-30T19:00", 0, true)),
                 firstOpen.listBands()
         );
 
-        RateBandResult ratingResult = new RateBandUseCase(ratings).rateBand("dino", band, 4);
+        RateBandResult ratingResult = new RateBandUseCase(ratings).rateBand("dino", band, 5);
         assertEquals(RateBandResult.stored(), ratingResult);
 
         ListBandsUseCase reopened = new ListBandsUseCase(bands, performances, ratings, "dino");
         assertEquals(
-                List.of(new BandListItem("5th Avenue", "Faster", "2026-07-30T18:00", "2026-07-30T19:00", 4, false)),
+                List.of(new BandListItem("5th Avenue", "Faster", "2026-07-30T18:00", "2026-07-30T19:00", 5, false)),
                 reopened.listBands()
         );
     }
@@ -64,11 +64,11 @@ class ListingAndRatingQaScenarioTest {
                 LocalDateTime.parse("2026-07-30T19:00:00")
         ));
 
-        RateBandResult ratingResult = new RateBandUseCase(ratings).rateBand("dino", band, 5);
+        RateBandResult ratingResult = new RateBandUseCase(ratings).rateBand("dino", band, 6);
 
-        assertEquals(RateBandResult.failure("Rating must be between 0 and 4."), ratingResult);
+        assertEquals(RateBandResult.failure("Rating must be between 0 and 5."), ratingResult);
         assertEquals(
-                List.of(new BandListItem("5th Avenue", "Faster", "2026-07-30T18:00", "2026-07-30T19:00", 1, true)),
+                List.of(new BandListItem("5th Avenue", "Faster", "2026-07-30T18:00", "2026-07-30T19:00", 0, true)),
                 new ListBandsUseCase(bands, performances, ratings, "dino").listBands()
         );
     }

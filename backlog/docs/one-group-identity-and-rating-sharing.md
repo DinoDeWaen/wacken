@@ -46,12 +46,12 @@ Each rating belongs to one member and one band.
 | --- | --- |
 | `member_id` / `userName` | Rating owner. |
 | `band_id` or band name | Rated band. |
-| `rating` | Value from 0 to 4. |
+| `rating` | Explicit value from 1 to 5; 0 is reserved for unrated/no explicit rating. |
 | `updated_at` | Future sync/export field; not required by current repository. |
 
 Default behavior:
 
-- If a member has not rated a band, the effective rating is `1`.
+- If a member has not rated a band, the effective rating is `0` unrated.
 - The default must not be stored as an explicit rating unless the user actively saves it.
 - If the member changes the rating, the explicit saved rating replaces the default for future reads.
 

@@ -31,8 +31,8 @@ class ListBandsUseCaseTest {
 
         assertEquals(
                 List.of(
-                        new BandListItem("Alpha Band", "Faster Stage", "2026-07-30T21:00", "2026-07-30T22:00", 1, true),
-                        new BandListItem("Zulu Band", "Harder Stage", "2026-07-30T18:00", "2026-07-30T19:00", 1, true)
+                        new BandListItem("Alpha Band", "Faster Stage", "2026-07-30T21:00", "2026-07-30T22:00", 0, true),
+                        new BandListItem("Zulu Band", "Harder Stage", "2026-07-30T18:00", "2026-07-30T19:00", 0, true)
                 ),
                 useCase.listBands()
         );
@@ -59,8 +59,8 @@ class ListBandsUseCaseTest {
 
         assertEquals(
                 List.of(
-                        new BandListItem("5th Avenue", "Not scheduled yet", "TBA", "TBA", 1, true),
-                        new BandListItem("Midnight Skyline", "Not scheduled yet", "TBA", "TBA", 1, true)
+                        new BandListItem("5th Avenue", "Not scheduled yet", "TBA", "TBA", 0, true),
+                        new BandListItem("Midnight Skyline", "Not scheduled yet", "TBA", "TBA", 0, true)
                 ),
                 useCase.listBands()
         );
@@ -92,7 +92,7 @@ class ListBandsUseCaseTest {
         ListBandsUseCase useCase = new ListBandsUseCase(bands, performances, ratings, "dino");
 
         assertEquals(
-                List.of(new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", 1, true)),
+                List.of(new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", 0, true)),
                 useCase.listBands()
         );
 
@@ -122,7 +122,7 @@ class ListBandsUseCaseTest {
     @Test
     void exposesCompactOverviewDateTimeAndExplicitRatingState() {
         BandListItem scheduled = new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:05", "2026-07-30T19:10", 4, false);
-        BandListItem unscheduled = new BandListItem("Midnight Skyline", "Not scheduled yet", "TBA", "TBA", 1, true);
+        BandListItem unscheduled = new BandListItem("Midnight Skyline", "Not scheduled yet", "TBA", "TBA", 0, true);
 
         assertEquals("2026-07-30", scheduled.displayDate());
         assertEquals("18:05 - 19:10", scheduled.displayTime());

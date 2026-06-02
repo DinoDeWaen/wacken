@@ -8,7 +8,7 @@
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
 - Sync centrally managed festival master data from Supabase into the local Room cache.
 - List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.
-- Let users rate bands on a 0–4 scale (0 = veto, 4 = must-see) from the overview or detail screen.
+- Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars.
 - Save rating changes locally immediately and sync pending/group ratings with Supabase when the app syncs.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show imported English band biography/explanation and available band image metadata on the detail screen when `bands.csv` provides it.
@@ -223,6 +223,14 @@ ratings remain available and the app shows a stale-data message. The CSV import
 screen remains available for fallback/local import work and writes through the
 TSV fallback source plus Room cache; it is no longer the primary app data
 source.
+
+Rating scale migration: app database version 3 migrates old local explicit
+ratings from the previous 0-4 scale to the new 1-5 explicit scale by adding 1
+to stored rating rows. Flyway migration `V005__rating_scale_1_to_5.sql` applies
+the same conversion in Supabase and then constrains backend explicit ratings to
+1-5. TSV fallback rating files have no schema version; clear or regenerate old
+`ratings.tsv` fallback data before release if it contains ratings written
+before this migration.
 
 ### Supabase Auth
 

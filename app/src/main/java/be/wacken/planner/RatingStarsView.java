@@ -8,7 +8,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 final class RatingStarsView extends LinearLayout {
-    private static final int MAX_RATING = 4;
+    private static final int MAX_RATING = 5;
     private static final int STAR_POSITIONS = 5;
 
     private final TextView[] stars = new TextView[STAR_POSITIONS];
@@ -67,13 +67,13 @@ final class RatingStarsView extends LinearLayout {
     }
 
     void bind(int savedRating, boolean explicitRating) {
-        this.savedRating = Math.min(savedRating, MAX_RATING);
+        this.savedRating = clampRating(savedRating);
         this.explicitRating = explicitRating;
         restoreRestingState();
     }
 
     void applySavedRating(int rating) {
-        savedRating = Math.min(rating, MAX_RATING);
+        savedRating = clampRating(rating);
         explicitRating = true;
         restoreRestingState();
     }
@@ -104,6 +104,10 @@ final class RatingStarsView extends LinearLayout {
         int width = Math.max(getWidth(), 1);
         int position = Math.max(1, Math.min(STAR_POSITIONS, (int) Math.ceil((x / width) * STAR_POSITIONS)));
         return Math.min(position, MAX_RATING);
+    }
+
+    private int clampRating(int rating) {
+        return Math.max(0, Math.min(rating, MAX_RATING));
     }
 
     private void renderStars(int rating, boolean visible) {

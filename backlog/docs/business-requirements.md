@@ -2,6 +2,47 @@
 
 This document is the business source of truth for Wacken Planner 2026. It is filled from `project.md` and clarified by user input. Requirements not stated or clearly clarified are listed under `Open questions` instead of being invented.
 
+## Read Me First
+
+Use this section for most tasks. Read deeper sections only when the active task touches that area.
+
+### Current Product Scope
+
+Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken bands and prepare a conflict-aware festival schedule. The current implementation focuses on band import, band listing, band detail, 1-5 ratings with unrated state, local cache behavior, Supabase-backed master-data sync, Supabase Auth, and shared rating sync.
+
+### Current Implemented Capabilities
+
+- Android band overview and detail screens.
+- 1-5 band ratings with default unrated value of `0`.
+- Room local cache for fast app reads and offline continuity.
+- Supabase Auth for user identity.
+- Supabase Postgres/Flyway backend for central master data, group membership, and ratings.
+- Supabase sync for bands, stages, performances, stage distances, food options, and group ratings.
+- CSV/TSV fallback import path for local/admin data work.
+- Wacken-inspired overview/detail presentation with music links and imported metadata where available.
+
+### Current Non-Goals
+
+- Multiple independent groups in the current version.
+- Play Store distribution before a later delivery phase.
+- Business logic in Android UI, Activities, or Fragments.
+- Android instrumentation tests unless a future task makes them meaningful.
+
+### Business Rules Index
+
+| Area | Rules | Read when |
+| --- | --- | --- |
+| Ratings and group decisions | BR-001 to BR-021 | Rating, veto, effective rating, group decision, conflict resolution |
+| Travel, lunch, and timeline | BR-022 to BR-032 | Scheduling, walking time, lunch, food suggestions, printable timeline |
+| Festival data import | BR-033 to BR-046 | CSV import, Supabase master data, Room cache, admin data, band-only imports |
+| Overview, detail, and app state | BR-047 to BR-055 | Wacken UI, metadata, music links, loading, returning to app context |
+
+### Requirement Drift Markers
+
+- Supabase Auth, Supabase Postgres, Flyway migrations, Room cache, and rating sync are now part of the implemented system.
+- Older notes that describe authentication, backend sync, or production persistence as future-only must be treated as superseded unless a newer task or ADR says otherwise.
+- `README.md` describes current setup and architecture. This file describes business rules, product scope, workflows, non-goals, and open questions.
+
 ## Requirement Boundary Rule
 
 This document describes business behavior, terminology, outcomes, constraints, and externally meaningful rules.
@@ -55,7 +96,7 @@ Business problem:
 
 Desired outcome:
 
-- Users can rate bands on a shared 0-4 scale.
+- Users can rate bands on a shared 1-5 scale, with `0` reserved for unrated bands.
 - The app can propose a shared schedule that respects decision rules, conflicts, travel feasibility, and lunch.
 - The final timeline is clear, day-based, and exportable as a PDF.
 
@@ -114,7 +155,7 @@ Release assumptions:
 
 | Capability | Description | Priority | MVP |
 | --- | --- | --- | --- |
-| Band rating | Let users rate bands on the 0-4 preference scale. This is the first product priority. | Must | MVP 1 |
+| Band rating | Let users rate bands on the 1-5 preference scale, with `0` reserved for unrated bands. This is the first product priority. | Must | MVP 1 |
 | Band listing | Show bands in a responsive Wacken-themed overview with alphabetical sorting by band name, rating, stage, time information when available, loading feedback when needed, and same-row music-link actions. | Must | MVP 1 |
 | Band detail view | Show band details in a style inspired by the official Wacken band detail screen, with English biography when available, image metadata when available, rating stars, schedule information, and optional YouTube and Spotify links. | Must | MVP 1 |
 | Initial lineup import | Import or scrape the current Wacken band list before final stages and times are available. Band-only imports must be visible and rateable. English biography and image metadata are meaningful UI inputs when available. | Must | MVP 1 |
@@ -170,12 +211,12 @@ Scenario: Import festival data from selected CSV files
 
 ### Workflow 2: Rate bands
 
-A festival attendee rates bands using the shared 0-4 scale.
+A festival attendee rates bands using the shared 1-5 scale.
 
 ```gherkin
 Scenario: Rate a band
   Given a listed band with performance information
-  When a user rates the band from 0 to 4
+  When a user rates the band from 1 to 5
   Then the rating is available for group decision rules
 ```
 
@@ -242,32 +283,32 @@ Scenario: View printable festival timeline
 
 | Rule ID | Rule | Example | Priority |
 | --- | --- | --- | --- |
-| BR-001 | Ratings must use the 0-4 scale. | `0` means veto; `4` means must see. | Must |
-| BR-002 | A rating of `0` means veto. | A band rated `0` by a user counts as a veto in group decision rules. | Must |
-| BR-003 | A rating of `1` means OK or indifferent. | A band with max rating `1` is optional. | Must |
-| BR-004 | A rating of `2` means like, fine to miss. | A band with max rating `2` can be selected unless vetoed. | Must |
-| BR-005 | A rating of `3` means want to see. | A band with max rating `3` goes unless it has 2 or more vetoes. | Must |
-| BR-006 | A rating of `4` means must see. | Any band with at least one `4` is preferred by the decision rules. | Must |
-| BR-007 | If any group member rates a band `4`, the single-band decision is `GO`. | One must-see rating is enough to go. | Must |
-| BR-008 | If the maximum rating is `3`, the single-band decision is `GO` unless there are 2 or more vetoes. | Two vetoes block a band whose highest rating is `3`. | Must |
-| BR-009 | If the maximum rating is `2`, the single-band decision is `GO` unless there is any veto. | One veto blocks a band whose highest rating is `2`. | Must |
-| BR-010 | If the maximum rating is `2` during the 12:00-14:00 lunch window, the single-band decision is `OPTIONAL`. | A liked-but-missable lunch-window performance is optional. | Must |
-| BR-011 | If the maximum rating is `1`, the single-band decision is `OPTIONAL`. | A group that is only indifferent may optionally attend. | Must |
-| BR-012 | If the maximum rating is `0`, the single-band decision is `DO NOT GO`. | A fully vetoed band is not selected. | Must |
-| BR-013 | For overlapping performances, prefer any band with a `4`. | A must-see band wins over lower-rated alternatives. | Must |
-| BR-014 | If overlapping performances both have at least one `4`, choose the one that reduces travel time by being closest to the previous selected band or best positioned for the next selected band. | Between two must-see conflicts, choose the option that makes the route more feasible. | Must |
-| BR-015 | If overlapping options only have ratings of `3`, choose the band with the most `3` ratings. | Two want-to-see ratings beat one want-to-see rating. | Must |
-| BR-016 | If overlapping options with ratings of `3` tie, choose the band with fewer vetoes. | One veto beats two vetoes. | Must |
-| BR-017 | If overlapping options with ratings of `3` remain tied, choose the shortest travel distance. | The closer stage wins after rating and veto tie-breakers. | Must |
-| BR-018 | If overlapping options only have ratings of `2`, the result is `OPTIONAL` and the band with the most `2` ratings is chosen. | More like/fine-to-miss ratings decide optional choices. | Must |
-| BR-019 | If overlapping options only have ratings of `1`, the result is `OPTIONAL`. | Indifferent choices do not become mandatory. | Must |
-| BR-020 | An unrated band member rating defaults to `1`. | If someone has not rated a band, that missing rating counts as OK / indifferent. | Must |
+| BR-001 | Ratings must use the 1-5 scale, with `0` reserved for unrated bands. | `1` means veto; `5` means must see; `0` means no rating has been given. | Must |
+| BR-002 | A rating of `1` means veto. | A band rated `1` by a user counts as a veto in group decision rules. | Must |
+| BR-003 | A rating of `2` means OK or indifferent. | A band with max rating `2` is optional. | Must |
+| BR-004 | A rating of `3` means like, fine to miss. | A band with max rating `3` can be selected unless vetoed. | Must |
+| BR-005 | A rating of `4` means want to see. | A band with max rating `4` goes unless it has 2 or more vetoes. | Must |
+| BR-006 | A rating of `5` means must see. | Any band with at least one `5` is preferred by the decision rules. | Must |
+| BR-007 | If any group member rates a band `5`, the single-band decision is `GO`. | One must-see rating is enough to go. | Must |
+| BR-008 | If the maximum rating is `4`, the single-band decision is `GO` unless there are 2 or more vetoes. | Two vetoes block a band whose highest rating is `4`. | Must |
+| BR-009 | If the maximum rating is `3`, the single-band decision is `GO` unless there is any veto. | One veto blocks a band whose highest rating is `3`. | Must |
+| BR-010 | If the maximum rating is `3` during the 12:00-14:00 lunch window, the single-band decision is `OPTIONAL`. | A liked-but-missable lunch-window performance is optional. | Must |
+| BR-011 | If the maximum rating is `2`, the single-band decision is `OPTIONAL`. | A group that is only indifferent may optionally attend. | Must |
+| BR-012 | If the maximum rating is `0`, the band has no ratings yet and is treated as unrated. | A fully unrated band is not treated as vetoed. | Must |
+| BR-013 | For overlapping performances, prefer any band with a `5`. | A must-see band wins over lower-rated alternatives. | Must |
+| BR-014 | If overlapping performances both have at least one `5`, choose the one that reduces travel time by being closest to the previous selected band or best positioned for the next selected band. | Between two must-see conflicts, choose the option that makes the route more feasible. | Must |
+| BR-015 | If overlapping options only have ratings of `4`, choose the band with the most `4` ratings. | Two want-to-see ratings beat one want-to-see rating. | Must |
+| BR-016 | If overlapping options with ratings of `4` tie, choose the band with fewer vetoes. | One veto beats two vetoes. | Must |
+| BR-017 | If overlapping options with ratings of `4` remain tied, choose the shortest travel distance. | The closer stage wins after rating and veto tie-breakers. | Must |
+| BR-018 | If overlapping options only have ratings of `3`, the result is `OPTIONAL` and the band with the most `3` ratings is chosen. | More like/fine-to-miss ratings decide optional choices. | Must |
+| BR-019 | If overlapping options only have ratings of `2`, the result is `OPTIONAL`. | Indifferent choices do not become mandatory. | Must |
+| BR-020 | An unrated band member rating defaults to `0`. | If someone has not rated a band, that missing rating is stored as unrated and does not count as a veto. | Must |
 | BR-021 | If all overlapping options are vetoed, no performance is selected. | All-vetoed conflicts produce no selection. | Must |
 | BR-022 | A performance is invalid if `previousEndTime + travelTime > nextStartTime`. | A group cannot attend the next band if travel makes arrival late. | Must |
 | BR-023 | Travel feasibility uses walking minutes by default. | A 15-minute walk must fit between the previous end time and next start time. | Must |
 | BR-024 | Walking time may become a user setting later. | A future user can tune travel assumptions to their walking speed. | Could |
 | BR-025 | If a performance is infeasible, conflict resolution must be re-run excluding infeasible options. | The schedule chooses only from reachable options. | Must |
-| BR-026 | When choosing between equal `3`-rated options, prefer the one closest to the previous `4`-rated performance. | Travel proximity to a previous must-see band breaks the tie. | Must |
+| BR-026 | When choosing between equal `4`-rated options, prefer the one closest to the previous `5`-rated performance. | Travel proximity to a previous must-see band breaks the tie. | Must |
 | BR-027 | The schedule must start with a lunch block during 12:00-14:00. | A daily timeline visibly includes lunch in the lunch window. | Must |
 | BR-028 | Lunch timing is expected to be refined later with user input. | A later version can let users tune lunch placement or duration. | Should |
 | BR-029 | Lunch planning must show food options close to the previous stage and close to the next stage when such options exist. | Food suggestions are relevant to the user's route. | Must |
@@ -284,7 +325,7 @@ Scenario: View printable festival timeline
 | BR-040 | MVP CSV import must be file-upload based in Android, not paste-text based. | The user selects `bands.csv` and companion CSV files with the Android document picker. | Must |
 | BR-041 | The import screen must show which CSV files were selected before import. | After selecting `bands.csv`, the screen shows the chosen file name. | Must |
 | BR-042 | A successful CSV import updates festival master data for bands, stages, performances, distances, and food. | Re-importing a newer Wacken band list replaces the stored lineup data. | Must |
-| BR-043 | Re-importing festival master data must preserve existing ratings. | If a user rated 5th Avenue as `4`, importing updated CSV files must not erase that rating. | Must |
+| BR-043 | Re-importing festival master data must preserve existing ratings. | If a user rated 5th Avenue as `5`, importing updated CSV files must not erase that rating. | Must |
 | BR-044 | Ratings are user/group preference data, not festival master data. | Updating lineup CSVs must not clear or overwrite rating records. | Must |
 | BR-045 | Band-only imports must be visible in the band overview before performance times are available. | A Wacken lineup CSV without stages/times still shows bands for rating. | Must |
 | BR-046 | Bands without performance data must be clearly marked as not scheduled yet. | A band imported without a performance shows `Not scheduled yet` and `TBA`. | Must |
@@ -306,9 +347,9 @@ Scenario: View printable festival timeline
 | Performance | A scheduled band appearance. | Band, stage, time range | Must reference known band and stage data. |
 | Stage | A festival podium or location where performances happen. | Name or identifier | Must be known before performances can reference it. |
 | Distance | Travel information between stages. | From stage, to stage, walking minutes by default | Used to determine travel feasibility. |
-| User | A festival attendee who can rate bands. | User identity details are not finalized. | Can provide ratings; missing ratings default to `1`. |
+| User | A festival attendee who can rate bands. | User identity details are not finalized. | Can provide ratings; missing ratings default to `0` unrated. |
 | Group of friends | The single shared group for the current version. | Members are not fully specified. | Group decisions use all member ratings; multiple groups are deferred. |
-| Rating | A user's preference for a band. | Value from 0 to 4 | Must use the defined rating scale. |
+| Rating | A user's preference for a band. | Value from 1 to 5 when explicit; `0` only represents unrated/no explicit rating. | Must use the defined rating scale. |
 | Food option | A food location or option used for lunch planning. | Location near stages is implied but not specified in detail | Used for suggestions near previous and next stages when nearby options exist. |
 | Schedule | A conflict-aware festival plan. | Day, slots, lunch block, selected performances, alternatives, travel time | Must respect decision rules, conflicts, travel feasibility, and lunch constraints. |
 | Timeline slot | One visible item in the daily schedule. | Selected band, stage, time range, travel time, lost alternative | Must be clear enough for timeline display and PDF export. |
@@ -349,14 +390,14 @@ The required output format is a clear, printable day-based PDF timeline.
 
 ## Edge cases
 
-- A band has any `4` rating.
-- A band with maximum rating `3` has 2 or more vetoes.
-- A band with maximum rating `2` has any veto.
-- A band with maximum rating `2` occurs during the 12:00-14:00 lunch window.
-- Overlapping performances include multiple bands with `4` ratings.
+- A band has any `5` rating.
+- A band with maximum rating `4` has 2 or more vetoes.
+- A band with maximum rating `3` has any veto.
+- A band with maximum rating `3` occurs during the 12:00-14:00 lunch window.
+- Overlapping performances include multiple bands with `5` ratings.
 - Overlapping must-see performances have different travel impact from the previous or next selected band.
-- Overlapping performances with ratings of `3` tie on count.
-- Overlapping performances with ratings of `3` tie on count and veto count.
+- Overlapping performances with ratings of `4` tie on count.
+- Overlapping performances with ratings of `4` tie on count and veto count.
 - A group member has not rated a band.
 - Travel time makes the next performance infeasible.
 - Conflict resolution must be re-run after excluding infeasible performances.

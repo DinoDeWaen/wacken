@@ -18,21 +18,45 @@ class RateBandUseCaseTest {
         RateBandUseCase useCase = new RateBandUseCase(ratings);
         Band band = new Band("5th Avenue");
 
-        RateBandResult result = useCase.rateBand("dino", band, 4);
+        RateBandResult result = useCase.rateBand("dino", band, 5);
 
         assertEquals(RateBandResult.stored(), result);
-        assertEquals(Optional.of(Rating.of(4)), ratings.findByUserAndBand("dino", band));
+        assertEquals(Optional.of(Rating.of(5)), ratings.findByUserAndBand("dino", band));
     }
 
     @Test
-    void rejectsInvalidRatingWithValidationMessage() {
+    void rejectsRatingAboveFiveWithValidationMessage() {
         FakeRatingRepository ratings = new FakeRatingRepository();
         RateBandUseCase useCase = new RateBandUseCase(ratings);
         Band band = new Band("5th Avenue");
 
-        RateBandResult result = useCase.rateBand("dino", band, 5);
+        RateBandResult result = useCase.rateBand("dino", band, 6);
 
-        assertEquals(RateBandResult.failure("Rating must be between 0 and 4."), result);
+        assertEquals(RateBandResult.failure("Rating must be between 0 and 5."), result);
+        assertEquals(Optional.empty(), ratings.findByUserAndBand("dino", band));
+    }
+
+    @Test
+    void rejectsRatingBelowZeroWithValidationMessage() {
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        RateBandUseCase useCase = new RateBandUseCase(ratings);
+        Band band = new Band("5th Avenue");
+
+        RateBandResult result = useCase.rateBand("dino", band, -1);
+
+        assertEquals(RateBandResult.failure("Rating must be between 0 and 5."), result);
+        assertEquals(Optional.empty(), ratings.findByUserAndBand("dino", band));
+    }
+
+    @Test
+    void rejectsUnratedZeroAsExplicitUserSelection() {
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        RateBandUseCase useCase = new RateBandUseCase(ratings);
+        Band band = new Band("5th Avenue");
+
+        RateBandResult result = useCase.rateBand("dino", band, 0);
+
+        assertEquals(RateBandResult.failure("Rating must be between 1 and 5 when saving an explicit band rating."), result);
         assertEquals(Optional.empty(), ratings.findByUserAndBand("dino", band));
     }
 

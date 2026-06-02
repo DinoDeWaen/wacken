@@ -13,24 +13,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class EffectiveRatingResolverTest {
     @Test
-    void treatsMissingMemberRatingAsOneStarDefault() {
+    void treatsMissingMemberRatingAsUnratedZeroDefault() {
         EffectiveRatingResolver resolver = new EffectiveRatingResolver(new FakeRatingRepository());
 
         EffectiveRating rating = resolver.resolve("dino", new Band("5th Avenue"));
 
-        assertEquals(new EffectiveRating(1, false), rating);
+        assertEquals(new EffectiveRating(0, false), rating);
     }
 
     @Test
     void returnsExplicitMemberRatingWhenSaved() {
         FakeRatingRepository ratings = new FakeRatingRepository();
         Band band = new Band("5th Avenue");
-        ratings.save("dino", band, Rating.of(4));
+        ratings.save("dino", band, Rating.of(5));
         EffectiveRatingResolver resolver = new EffectiveRatingResolver(ratings);
 
         EffectiveRating rating = resolver.resolve("dino", band);
 
-        assertEquals(new EffectiveRating(4, true), rating);
+        assertEquals(new EffectiveRating(5, true), rating);
     }
 
     private static final class FakeRatingRepository implements RatingRepository {

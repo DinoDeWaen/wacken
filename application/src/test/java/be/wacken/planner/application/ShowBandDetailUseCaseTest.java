@@ -22,7 +22,7 @@ class ShowBandDetailUseCaseTest {
 
         Optional<BandDetailItem> detail = useCase.showBand("dino", "5th Avenue", MusicLinks.none());
 
-        assertEquals(Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 1, true, Optional.empty(), Optional.empty())), detail);
+        assertEquals(Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 0, true, Optional.empty(), Optional.empty())), detail);
     }
 
     @Test
@@ -56,7 +56,7 @@ class ShowBandDetailUseCaseTest {
                         "5th Avenue",
                         Optional.empty(),
                         Optional.empty(),
-                        1,
+                        0,
                         true,
                         Optional.of("https://youtube.example/5th"),
                         Optional.of("https://spotify.example/5th")
@@ -77,7 +77,7 @@ class ShowBandDetailUseCaseTest {
                 new MusicLinks(Optional.of(" "), Optional.empty())
         );
 
-        assertEquals(Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 1, true, Optional.empty(), Optional.empty())), detail);
+        assertEquals(Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 0, true, Optional.empty(), Optional.empty())), detail);
     }
 
     @Test
@@ -99,7 +99,7 @@ class ShowBandDetailUseCaseTest {
                         "5th Avenue",
                         Optional.of("Hamburg rock band returning to Wacken."),
                         Optional.of("https://images.example/5th.jpg"),
-                        1,
+                        0,
                         true,
                         Optional.of("https://youtube.example/stored"),
                         Optional.of("https://spotify.example/stored")

@@ -15,6 +15,9 @@ public final class RateBandUseCase {
     }
 
     public RateBandResult rateBand(String userName, Band band, int ratingValue) {
+        if (ratingValue == 0) {
+            return RateBandResult.failure("Rating must be between 1 and 5 when saving an explicit band rating.");
+        }
         try {
             ratings.save(userName, band, Rating.of(ratingValue));
             return RateBandResult.stored();
