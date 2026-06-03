@@ -25,14 +25,11 @@ import be.wacken.planner.application.RateBandResult;
 import be.wacken.planner.application.RateBandUseCase;
 import be.wacken.planner.application.ShowBandDetailUseCase;
 import be.wacken.planner.domain.Band;
-import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.BandRepository;
 import be.wacken.planner.domain.RatingRepository;
 
 public final class BandDetailActivity extends Activity {
     public static final String EXTRA_BAND_NAME = "be.wacken.planner.BAND_NAME";
-    public static final String EXTRA_RATING = "be.wacken.planner.RATING";
-    public static final String EXTRA_DEFAULT_RATING = "be.wacken.planner.DEFAULT_RATING";
     public static final String EXTRA_YOUTUBE_URL = "be.wacken.planner.YOUTUBE_URL";
     public static final String EXTRA_SPOTIFY_URL = "be.wacken.planner.SPOTIFY_URL";
     public static final String EXTRA_STAGE = "be.wacken.planner.STAGE";
@@ -70,7 +67,6 @@ public final class BandDetailActivity extends Activity {
         if (bands.findByName(selectedBand.name()).isEmpty()) {
             bands.save(selectedBand);
         }
-        seedExplicitRating();
 
         ShowBandDetailUseCase showBand = new ShowBandDetailUseCase(bands, ratings);
         BandDetailItem detail = showBand.showBand(currentUser(), selectedBand.name(), musicLinksFromIntent())
@@ -255,13 +251,6 @@ public final class BandDetailActivity extends Activity {
             return TBA;
         }
         return value;
-    }
-
-    private void seedExplicitRating() {
-        boolean defaultRating = getIntent().getBooleanExtra(EXTRA_DEFAULT_RATING, true);
-        if (!defaultRating && getIntent().hasExtra(EXTRA_RATING)) {
-            ratings.save(currentUser(), selectedBand, Rating.of(getIntent().getIntExtra(EXTRA_RATING, 1)));
-        }
     }
 
     private MusicLinks musicLinksFromIntent() {

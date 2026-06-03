@@ -345,8 +345,6 @@ public final class MainActivity extends Activity {
     private void openBandDetail(Map<String, Band> bandsByName, BandListItem band) {
         Intent intent = new Intent(this, BandDetailActivity.class);
         intent.putExtra(BandDetailActivity.EXTRA_BAND_NAME, band.bandName());
-        intent.putExtra(BandDetailActivity.EXTRA_RATING, band.rating());
-        intent.putExtra(BandDetailActivity.EXTRA_DEFAULT_RATING, band.defaultRating());
         intent.putExtra(BandDetailActivity.EXTRA_STAGE, band.stageName());
         intent.putExtra(BandDetailActivity.EXTRA_DATE, band.displayDate());
         intent.putExtra(BandDetailActivity.EXTRA_TIME, band.displayTime());
@@ -357,6 +355,7 @@ public final class MainActivity extends Activity {
         storedBand.flatMap(Band::spotifyUrl)
                 .ifPresent(url -> intent.putExtra(BandDetailActivity.EXTRA_SPOTIFY_URL, url));
 
+        reloadNeeded = true;
         startActivity(intent);
     }
 
