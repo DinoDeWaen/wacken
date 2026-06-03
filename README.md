@@ -259,6 +259,12 @@ ratings only when they belong to the rating's group. Rating inserts and updates
 also require `ratings.user_id = auth.uid()`, so a request cannot write another
 member's rating even when the caller belongs to the same group.
 
+The app stores Supabase access and refresh tokens locally. Authenticated
+Supabase requests refresh an expired access token before sending the request and
+retry once when Supabase rejects a request because the JWT expired. If the
+refresh token is invalid, expired, or revoked, the local session is cleared and
+the user is sent back to login.
+
 Coverage gates:
 
 - `domain`: 80% minimum instruction coverage.

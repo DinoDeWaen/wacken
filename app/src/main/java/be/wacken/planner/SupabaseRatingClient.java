@@ -23,26 +23,34 @@ import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.SavedRating;
 
 final class SupabaseRatingClient implements SupabaseRatingRemote {
+    private final SupabaseSessionManager sessionManager;
+    private final SupabaseAuthenticatedRequest authenticatedRequest;
+
+    SupabaseRatingClient(SupabaseSessionManager sessionManager) {
+        this.sessionManager = sessionManager;
+        this.authenticatedRequest = new SupabaseAuthenticatedRequest(sessionManager, "Supabase rating sync failed");
+    }
+
     @Override
     public void pushRating(AuthSession session, SavedRating rating) throws IOException {
-        if (!session.userId().equals(rating.userName())) {
+        AuthSession freshSession = authenticatedSession();
+        if (!freshSession.userId().equals(rating.userName())) {
             throw new IOException("Cannot sync a rating for another user.");
         }
         if (rating.rating().value() == 0) {
             throw new IOException("Cannot sync an unrated value as an explicit rating.");
         }
-        String bandId = bandIdFor(session, rating.band());
+        String bandId = bandIdFor(rating.band());
         try {
             JSONObject body = new JSONObject()
-                    .put("group_id", session.groupId())
-                    .put("user_id", session.userId())
+                    .put("group_id", freshSession.groupId())
+                    .put("user_id", freshSession.userId())
                     .put("band_id", bandId)
                     .put("rating", rating.rating().value());
             request(
                     "POST",
                     "/rest/v1/ratings?on_conflict=group_id,user_id,band_id",
                     body.toString(),
-                    session,
                     true
             );
         } catch (JSONException error) {
@@ -52,12 +60,12 @@ final class SupabaseRatingClient implements SupabaseRatingRemote {
 
     @Override
     public List<SavedRating> pullGroupRatings(AuthSession session) throws IOException {
-        Map<String, String> bandNamesById = bandNamesById(session);
+        AuthSession freshSession = authenticatedSession();
+        Map<String, String> bandNamesById = bandNamesById();
         String response = request(
                 "GET",
-                "/rest/v1/ratings?select=user_id,band_id,rating&group_id=eq." + encode(session.groupId()),
+                "/rest/v1/ratings?select=user_id,band_id,rating&group_id=eq." + encode(freshSession.groupId()),
                 null,
-                session,
                 false
         );
         try {
@@ -80,12 +88,11 @@ final class SupabaseRatingClient implements SupabaseRatingRemote {
         }
     }
 
-    private String bandIdFor(AuthSession session, Band band) throws IOException {
+    private String bandIdFor(Band band) throws IOException {
         String response = request(
                 "GET",
                 "/rest/v1/bands?select=id&name=eq." + encode(band.name()) + "&limit=1",
                 null,
-                session,
                 false
         );
         try {
@@ -99,8 +106,8 @@ final class SupabaseRatingClient implements SupabaseRatingRemote {
         }
     }
 
-    private Map<String, String> bandNamesById(AuthSession session) throws IOException {
-        String response = request("GET", "/rest/v1/bands?select=id,name", null, session, false);
+    private Map<String, String> bandNamesById() throws IOException {
+        String response = request("GET", "/rest/v1/bands?select=id,name", null, false);
         try {
             JSONArray rows = new JSONArray(response);
             Map<String, String> bandNamesById = new HashMap<>();
@@ -114,11 +121,15 @@ final class SupabaseRatingClient implements SupabaseRatingRemote {
         }
     }
 
-    private String request(String method, String endpoint, String body, AuthSession session, boolean upsert) throws IOException {
+    private String request(String method, String endpoint, String body, boolean upsert) throws IOException {
+        return authenticatedRequest.execute(freshSession -> send(method, endpoint, body, freshSession, upsert));
+    }
+
+    private SupabaseAuthenticatedRequest.Response send(String method, String endpoint, String body, AuthSession session, boolean upsert) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(SupabaseConfig.url() + endpoint).openConnection();
         connection.setRequestMethod(method);
         connection.setRequestProperty("apikey", SupabaseConfig.anonKey());
-        connection.setRequestProperty("Authorization", "Bearer " + (session == null ? SupabaseConfig.anonKey() : session.accessToken()));
+        connection.setRequestProperty("Authorization", "Bearer " + session.accessToken());
         connection.setRequestProperty("Content-Type", "application/json");
         if (upsert) {
             connection.setRequestProperty("Prefer", "resolution=merge-duplicates");
@@ -131,10 +142,7 @@ final class SupabaseRatingClient implements SupabaseRatingRemote {
         }
         int status = connection.getResponseCode();
         String response = read(status >= 400 ? connection.getErrorStream() : connection.getInputStream());
-        if (status >= 400) {
-            throw new IOException(errorMessage(response, status));
-        }
-        return response;
+        return new SupabaseAuthenticatedRequest.Response(status, response);
     }
 
     private String read(InputStream input) throws IOException {
@@ -151,16 +159,8 @@ final class SupabaseRatingClient implements SupabaseRatingRemote {
         return text.toString();
     }
 
-    private String errorMessage(String response, int status) {
-        if (response == null || response.isBlank()) {
-            return "Supabase rating sync failed with status " + status;
-        }
-        try {
-            JSONObject json = new JSONObject(response);
-            return json.optString("message", json.optString("msg", response));
-        } catch (JSONException ignored) {
-            return response;
-        }
+    private AuthSession authenticatedSession() throws IOException {
+        return sessionManager.requireFreshSession();
     }
 
     private String encode(String value) {

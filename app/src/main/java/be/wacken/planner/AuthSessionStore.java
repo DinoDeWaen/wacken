@@ -3,7 +3,7 @@ package be.wacken.planner;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-final class AuthSessionStore {
+final class AuthSessionStore implements AuthSessionRepository {
     private static final String FILE_NAME = "supabase-session";
     private static final String ACCESS_TOKEN = "accessToken";
     private static final String REFRESH_TOKEN = "refreshToken";
@@ -19,7 +19,8 @@ final class AuthSessionStore {
         this.preferences = context.getApplicationContext().getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
     }
 
-    AuthSession load() {
+    @Override
+    public AuthSession load() {
         return new AuthSession(
                 preferences.getString(ACCESS_TOKEN, ""),
                 preferences.getString(REFRESH_TOKEN, ""),
@@ -31,7 +32,8 @@ final class AuthSessionStore {
         );
     }
 
-    void save(AuthSession session) {
+    @Override
+    public void save(AuthSession session) {
         preferences.edit()
                 .putString(ACCESS_TOKEN, session.accessToken())
                 .putString(REFRESH_TOKEN, session.refreshToken())
@@ -43,7 +45,8 @@ final class AuthSessionStore {
                 .apply();
     }
 
-    void clear() {
+    @Override
+    public void clear() {
         preferences.edit().clear().apply();
     }
 }

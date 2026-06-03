@@ -13,7 +13,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-final class SupabaseAuthClient {
+final class SupabaseAuthClient implements SupabaseAuthGateway {
     private static final String DEFAULT_GROUP_ID = "00000000-0000-0000-0000-000000000001";
 
     AuthSession signIn(String email, String password) throws IOException {
@@ -27,25 +27,52 @@ final class SupabaseAuthClient {
                     body.toString(),
                     null
             );
-            String accessToken = response.getString("access_token");
-            String refreshToken = response.optString("refresh_token", "");
-            int expiresIn = response.optInt("expires_in", 3600);
-            JSONObject user = response.getJSONObject("user");
-            String userId = user.getString("id");
-            String userEmail = user.optString("email", email);
-            Membership membership = fetchDefaultMembership(accessToken, userId);
-            return new AuthSession(
-                    accessToken,
-                    refreshToken,
-                    userId,
-                    userEmail,
-                    System.currentTimeMillis() / 1000L + expiresIn,
-                    membership.groupId(),
-                    membership.role()
-            );
+            return sessionFromTokenResponse(response, email, null);
         } catch (JSONException error) {
             throw new IOException("Supabase sign-in response could not be read.", error);
         }
+    }
+
+    @Override
+    public AuthSession refresh(AuthSession session) throws IOException {
+        if (session.refreshToken() == null || session.refreshToken().isBlank()) {
+            throw new IOException("Cannot refresh Supabase session without a refresh token.");
+        }
+        try {
+            JSONObject body = new JSONObject()
+                    .put("refresh_token", session.refreshToken());
+            JSONObject response = requestJson(
+                    "POST",
+                    SupabaseConfig.url() + "/auth/v1/token?grant_type=refresh_token",
+                    body.toString(),
+                    null
+            );
+            return sessionFromTokenResponse(response, session.email(), session);
+        } catch (JSONException error) {
+            throw new IOException("Supabase refresh response could not be read.", error);
+        }
+    }
+
+    private AuthSession sessionFromTokenResponse(JSONObject response, String fallbackEmail, AuthSession previousSession) throws IOException, JSONException {
+        String accessToken = response.getString("access_token");
+        String refreshToken = response.optString("refresh_token", previousSession == null ? "" : previousSession.refreshToken());
+        int expiresIn = response.optInt("expires_in", 3600);
+        JSONObject user = response.optJSONObject("user");
+        if (user == null && previousSession == null) {
+            throw new IOException("Supabase token response did not include a user.");
+        }
+        String userId = user == null ? previousSession.userId() : user.getString("id");
+        String userEmail = user == null ? fallbackEmail : user.optString("email", fallbackEmail);
+        Membership membership = fetchDefaultMembership(accessToken, userId);
+        return new AuthSession(
+                accessToken,
+                refreshToken,
+                userId,
+                userEmail,
+                System.currentTimeMillis() / 1000L + expiresIn,
+                membership.groupId(),
+                membership.role()
+        );
     }
 
     private Membership fetchDefaultMembership(String accessToken, String userId) throws IOException {

@@ -248,6 +248,10 @@ public final class MainActivity extends Activity {
                     if (syncButton != null) {
                         syncButton.setEnabled(true);
                     }
+                    if (!loadCurrentSession()) {
+                        redirectToLogin();
+                        return;
+                    }
                     status.setVisibility(View.VISIBLE);
                     status.setText("Showing cached data. Supabase sync failed: " + error.getMessage());
                 });

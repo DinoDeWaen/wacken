@@ -60,4 +60,8 @@ final class AuthSession {
                 && userId != null && !userId.isBlank()
                 && groupId != null && !groupId.isBlank();
     }
+
+    boolean expiresAtOrBefore(long epochSeconds) {
+        return expiresAtEpochSeconds <= epochSeconds;
+    }
 }

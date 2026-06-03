@@ -26,10 +26,10 @@ import be.wacken.planner.domain.Stage;
 import be.wacken.planner.domain.StageDistance;
 
 final class SupabaseMasterDataClient {
-    private final AuthSession session;
+    private final SupabaseAuthenticatedRequest authenticatedRequest;
 
-    SupabaseMasterDataClient(AuthSession session) {
-        this.session = session;
+    SupabaseMasterDataClient(SupabaseSessionManager sessionManager) {
+        this.authenticatedRequest = new SupabaseAuthenticatedRequest(sessionManager, "Supabase sync failed");
     }
 
     List<Band> bands() throws IOException {
@@ -160,6 +160,10 @@ final class SupabaseMasterDataClient {
     }
 
     private String request(String endpoint) throws IOException {
+        return authenticatedRequest.execute(session -> send(endpoint, session));
+    }
+
+    private SupabaseAuthenticatedRequest.Response send(String endpoint, AuthSession session) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(SupabaseConfig.url() + endpoint).openConnection();
         connection.setRequestMethod("GET");
         connection.setRequestProperty("apikey", SupabaseConfig.anonKey());
@@ -167,10 +171,7 @@ final class SupabaseMasterDataClient {
         connection.setRequestProperty("Content-Type", "application/json");
         int status = connection.getResponseCode();
         String response = read(status >= 400 ? connection.getErrorStream() : connection.getInputStream());
-        if (status >= 400) {
-            throw new IOException(errorMessage(response, status));
-        }
-        return response;
+        return new SupabaseAuthenticatedRequest.Response(status, response);
     }
 
     private String read(InputStream input) throws IOException {
@@ -185,18 +186,6 @@ final class SupabaseMasterDataClient {
             }
         }
         return text.toString();
-    }
-
-    private String errorMessage(String response, int status) {
-        if (response == null || response.isBlank()) {
-            return "Supabase sync failed with status " + status;
-        }
-        try {
-            JSONObject json = new JSONObject(response);
-            return json.optString("message", json.optString("msg", response));
-        } catch (JSONException ignored) {
-            return response;
-        }
     }
 
     private static Optional<String> optional(String value) {

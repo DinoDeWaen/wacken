@@ -66,8 +66,10 @@ final class AppRepositories {
         PerformanceRepository performanceSource;
         StageDistanceRepository distanceSource;
         FoodOptionRepository foodSource;
+        AuthSessionStore authSessionStore = new AuthSessionStore(context);
+        SupabaseSessionManager sessionManager = new SupabaseSessionManager(authSessionStore, new SupabaseAuthClient());
         if (sourceMode == SourceMode.SUPABASE) {
-            SupabaseMasterDataClient client = new SupabaseMasterDataClient(new AuthSessionStore(context).load());
+            SupabaseMasterDataClient client = new SupabaseMasterDataClient(sessionManager);
             bandSource = new SupabaseBandRepository(client);
             stageSource = new SupabaseStageRepository(client);
             performanceSource = new SupabasePerformanceRepository(client);
@@ -89,8 +91,8 @@ final class AppRepositories {
         if (sourceMode == SourceMode.SUPABASE) {
             this.syncingRatings = new SyncingRatingRepository(
                     ratingCache,
-                    new SupabaseRatingClient(),
-                    new AuthSessionStore(context).load()
+                    new SupabaseRatingClient(sessionManager),
+                    authSessionStore.load()
             );
             this.ratings = syncingRatings;
         } else {
