@@ -131,22 +131,33 @@ final class AppRepositories {
 
     void syncRatings() {
         if (syncingRatings == null) {
+            SupabaseDiagnostics.info("ratings_sync", "skipped", "remote_repository=false");
             return;
         }
         try {
+            SupabaseDiagnostics.info("ratings_sync", "start", "remote_repository=true");
             syncingRatings.syncPendingRatings();
             syncingRatings.pullGroupRatings();
+            SupabaseDiagnostics.info("ratings_sync", "success", "remote_repository=true");
         } catch (Exception error) {
+            SupabaseDiagnostics.warn("ratings_sync", "failed", "remote_repository=true", error);
             throw new SupabaseSyncException(error.getMessage(), error);
         }
     }
 
     void syncMasterDataFromSource() {
-        bands.syncSourceToCache();
-        stages.syncSourceToCache();
-        performances.syncSourceToCache();
-        distances.syncSourceToCache();
-        foodOptions.syncSourceToCache();
+        try {
+            SupabaseDiagnostics.info("master_data_sync", "start", "source=remote_or_assets");
+            bands.syncSourceToCache();
+            stages.syncSourceToCache();
+            performances.syncSourceToCache();
+            distances.syncSourceToCache();
+            foodOptions.syncSourceToCache();
+            SupabaseDiagnostics.info("master_data_sync", "success", "source=remote_or_assets");
+        } catch (RuntimeException error) {
+            SupabaseDiagnostics.warn("master_data_sync", "failed", "source=remote_or_assets", error);
+            throw error;
+        }
     }
 
     private void seedCacheFromSourceIfNeeded(
