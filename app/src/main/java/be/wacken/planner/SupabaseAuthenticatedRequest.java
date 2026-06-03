@@ -32,7 +32,7 @@ final class SupabaseAuthenticatedRequest {
     }
 
     private boolean isExpiredJwt(Response response) {
-        if (response.status() != 401 && response.status() != 403) {
+        if (response.status() < 400) {
             return false;
         }
         String body = response.body() == null ? "" : response.body().toLowerCase(Locale.ROOT);

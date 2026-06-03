@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@codex'
 created_date: '2026-06-03 15:57'
-updated_date: '2026-06-03 16:13'
+updated_date: '2026-06-03 16:19'
 labels:
   - auth
   - supabase
@@ -91,4 +91,17 @@ The band list sync error path now redirects to login when refresh failure clears
 ## Risks and follow-up
 
 No Supabase network integration test was added; retry behavior is covered with a deterministic unit-level request wrapper test. A future end-to-end auth smoke test could validate the exact Supabase expired-token response shape against the live project.
+
+## Reopened validation
+
+User validation on 2026-06-03 showed the band list still displayed `Showing cached data. Supabase sync failed: JWT expired`. The retry detector must handle the actual Supabase/PostgREST expired-JWT response shape.
+
+## Follow-up fix after user validation
+
+The first implementation only retried expired JWT responses with HTTP status `401` or `403`. User validation showed the live app displaying `JWT expired` from the response body, so the retry detector now treats any failed Supabase response whose body mentions an expired JWT/token as refreshable. Added `SupabaseSessionManagerTest.refreshesAndRetriesWhenSupabaseReturnsJwtExpiredBodyWithUnexpectedStatus` to lock this behavior.
+
+## Follow-up validation
+
+- `/bin/zsh -lc "JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :app:testDebugUnitTest"` passed.
+- `/bin/zsh -lc "JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew test"` passed.
 <!-- SECTION:NOTES:END -->

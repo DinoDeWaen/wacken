@@ -78,6 +78,27 @@ public final class SupabaseSessionManagerTest {
     }
 
     @Test
+    public void refreshesAndRetriesWhenSupabaseReturnsJwtExpiredBodyWithUnexpectedStatus() throws Exception {
+        FakeSessionRepository sessions = new FakeSessionRepository(session("stale-access", "refresh", NOW + 3_600));
+        FakeAuthGateway auth = new FakeAuthGateway(FRESH);
+        SupabaseSessionManager manager = new SupabaseSessionManager(sessions, auth, () -> NOW);
+        SupabaseAuthenticatedRequest request = new SupabaseAuthenticatedRequest(manager, "Supabase sync failed");
+        List<String> accessTokens = new ArrayList<>();
+
+        String body = request.execute(session -> {
+            accessTokens.add(session.accessToken());
+            if (accessTokens.size() == 1) {
+                return new SupabaseAuthenticatedRequest.Response(400, "{\"message\":\"JWT expired\"}");
+            }
+            return new SupabaseAuthenticatedRequest.Response(200, "[{\"ok\":true}]");
+        });
+
+        assertEquals("[{\"ok\":true}]", body);
+        assertEquals(List.of("stale-access", "fresh-access"), accessTokens);
+        assertEquals(1, auth.refreshCount);
+    }
+
+    @Test
     public void usesAlreadyRenewedSessionWhenAnotherRequestRefreshedFirst() throws Exception {
         FakeSessionRepository sessions = new FakeSessionRepository(FRESH);
         FakeAuthGateway auth = new FakeAuthGateway(session("unused", "unused", NOW + 3_600));
