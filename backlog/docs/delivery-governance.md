@@ -94,6 +94,8 @@ Canonical impact-note wording:
 
 - `README impact: updated ...`
 - `README impact: none, because ...`
+- `Business requirements impact: updated ...`
+- `Business requirements impact: none, because ...`
 - `Diagram impact: updated ...`
 - `Diagram impact: none, because ...`
 - `ADR impact: created ...`
@@ -122,6 +124,8 @@ Required sections:
 - ADR:
 
 ## README impact
+
+## Business requirements impact
 
 ## Diagram impact
 
@@ -155,6 +159,7 @@ Do not merge unless:
 - Implementation notes contain the validation package.
 - Relevant tests pass.
 - README impact uses the canonical wording.
+- Business requirements impact uses the canonical wording.
 - Diagram impact uses the canonical wording.
 - ADR impact uses the canonical wording.
 - Architecture approval is present when required.

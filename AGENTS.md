@@ -29,6 +29,7 @@ The agent must always separate three concerns:
 
 Do not read every linked document by default. Read only the documents listed below for the current task.
 
+- For `backlog/docs/business-requirements.md`, read `Read Me First` first. Then read only the business rules, workflows, edge cases, and open questions relevant to the active task. Do not read the whole file unless the task affects product scope, roadmap, cross-cutting business behavior, or multiple capability areas.
 - Starting any implementation task: read `backlog/docs/development-ways-of-working.md`, `backlog/docs/agent-execution-guardrails.md`, and the relevant parts of `backlog/docs/business-requirements.md`.
 - Creating or splitting stories: read `backlog/docs/story-writing-guidelines.md`.
 - Adding or changing behavior: read `backlog/docs/testing-strategy.md` and `backlog/docs/technical-quality-guidelines.md`.
@@ -83,7 +84,7 @@ Do not read every linked document by default. Read only the documents listed bel
 - Check acceptance criteria through the CLI only.
 - Add PR-ready implementation notes using the CLI.
 - Include the validation package defined in `backlog/docs/delivery-governance.md`.
-- Use the canonical impact-note wording from `backlog/docs/delivery-governance.md` for README, diagram, and ADR impact.
+- Use the canonical impact-note wording from `backlog/docs/delivery-governance.md` for README, business requirements, diagram, and ADR impact.
 - Do not merge to `main` until the validation package is complete.
 - Set the task to `Done` only when all Definition of Done items are satisfied.
 
@@ -129,6 +130,12 @@ The README must contain:
 - Troubleshooting notes.
 
 If a task does not require a README change, use the canonical no-impact wording from `backlog/docs/delivery-governance.md`.
+
+## Requirement drift rule
+
+`backlog/docs/business-requirements.md` is the business source of truth. `README.md` describes the current implemented system.
+
+When a task changes public behavior, product scope, architecture, persistence, auth, sync, user workflows, business rules, capabilities, non-goals, or open questions, update the affected source of truth. If `README.md` changes and `business-requirements.md` does not, or vice versa, task notes must explain why using the validation package in `backlog/docs/delivery-governance.md`.
 
 ## Architecture decision and approval rule
 

@@ -54,7 +54,7 @@ The plan must include:
 - Risks or assumptions.
 - Whether the task needs minimal, standard, or full treatment.
 - Whether legacy behavior needs approval or characterization coverage.
-- README, diagram, and ADR impact.
+- README, business requirements, diagram, and ADR impact.
 - Whether architecture approval is required before coding.
 
 Before marking the task done, update the plan so it describes what actually
@@ -135,7 +135,7 @@ Use:
 
 - `diagramming-guidelines.md` for Mermaid/C4 diagrams.
 - `architecture-decision-rules.md` for ADR decisions.
-- `delivery-governance.md` for final validation notes and canonical README, diagram, and ADR impact wording.
+- `delivery-governance.md` for final validation notes and canonical README, business requirements, diagram, and ADR impact wording.
 
 ## Completion Checklist
 
@@ -145,7 +145,7 @@ Before marking done:
 - Tests were added/updated where meaningful.
 - Legacy refactoring is protected by approval/characterization tests.
 - Relevant checks pass.
-- README, diagram, and ADR impact use the canonical wording from `delivery-governance.md`.
+- README, business requirements, diagram, and ADR impact use the canonical wording from `delivery-governance.md`.
 - Architecture approval is handled when required.
 - Implementation plan reflects actual work.
 - Implementation notes explain what changed, how to test it, and remaining risk.

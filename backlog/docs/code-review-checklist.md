@@ -99,6 +99,6 @@ When reporting review findings, use:
 - [ ] Manual validation steps are documented when relevant.
 - [ ] Architecture-significant changes had explicit approval before implementation.
 - [ ] ADRs were created or updated for approved architecture-significant changes.
-- [ ] README, diagram, and ADR impact use the canonical wording from `delivery-governance.md`.
+- [ ] README, business requirements, diagram, and ADR impact use the canonical wording from `delivery-governance.md`.
 - [ ] The branch is made of small, coherent commits or has an equivalent logical change list.
 - [ ] Nothing is merged to `main` before the validation package is complete.

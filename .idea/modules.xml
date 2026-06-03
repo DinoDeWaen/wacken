@@ -2,7 +2,18 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/wacken.iml" filepath="$PROJECT_DIR$/wacken.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/WackenPlanner.iml" filepath="$PROJECT_DIR$/.idea/modules/WackenPlanner.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/WackenPlanner.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/WackenPlanner.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/application/WackenPlanner.application.iml" filepath="$PROJECT_DIR$/.idea/modules/application/WackenPlanner.application.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/application/WackenPlanner.application.main.iml" filepath="$PROJECT_DIR$/.idea/modules/application/WackenPlanner.application.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/application/WackenPlanner.application.qaTest.iml" filepath="$PROJECT_DIR$/.idea/modules/application/WackenPlanner.application.qaTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/application/WackenPlanner.application.test.iml" filepath="$PROJECT_DIR$/.idea/modules/application/WackenPlanner.application.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/domain/WackenPlanner.domain.iml" filepath="$PROJECT_DIR$/.idea/modules/domain/WackenPlanner.domain.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/domain/WackenPlanner.domain.main.iml" filepath="$PROJECT_DIR$/.idea/modules/domain/WackenPlanner.domain.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/domain/WackenPlanner.domain.test.iml" filepath="$PROJECT_DIR$/.idea/modules/domain/WackenPlanner.domain.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/infrastructure/WackenPlanner.infrastructure.iml" filepath="$PROJECT_DIR$/.idea/modules/infrastructure/WackenPlanner.infrastructure.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/infrastructure/WackenPlanner.infrastructure.main.iml" filepath="$PROJECT_DIR$/.idea/modules/infrastructure/WackenPlanner.infrastructure.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/infrastructure/WackenPlanner.infrastructure.test.iml" filepath="$PROJECT_DIR$/.idea/modules/infrastructure/WackenPlanner.infrastructure.test.iml" />
     </modules>
   </component>
 </project>

@@ -170,6 +170,7 @@ Before creating a task, verify:
 - The description explains why the task exists.
 - The acceptance criteria describe observable outcomes.
 - Test expectations are explicit.
+- Business requirements impact uses the canonical wording from `delivery-governance.md`.
 - README impact uses the canonical wording from `delivery-governance.md`.
 - ADR impact uses the canonical wording from `delivery-governance.md` when architecture is affected.
 - The story is small enough for one PR.
@@ -196,5 +197,5 @@ Recommended acceptance criteria:
 - [ ] Automated tests prove the behavior or protect the refactoring.
 - [ ] Manual test steps are documented in implementation notes.
 - [ ] The implementation plan is updated to reflect what was actually done.
-- [ ] README impact uses the canonical wording from `delivery-governance.md`.
+- [ ] Business requirements and README impact use the canonical wording from `delivery-governance.md`.
 - [ ] The change is ready for merge to `main` only after the validation package is complete.
