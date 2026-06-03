@@ -1,1 +1,8 @@
 stage_id,name,subtitle,latitude,longitude,sort_order
+faster,Faster,,,,512
+harder,Harder,,,,768
+louder,Louder,,,,1024
+headbangers-stage,Headbangers Stage,,,,1408
+w-e-t-stage,W:E:T Stage,,,,1536
+wackinger-stage,Wackinger Stage,,,,2304
+wasteland-stage,Wasteland Stage,,,,2560
