@@ -127,6 +127,7 @@ public final class BandDetailActivity extends Activity {
         facts.addView(sectionTitle("Rating"));
         ratingStars = new RatingStarsView(this, detail.rating(), !detail.defaultRating(), COLOR_ACCENT);
         ratingStars.setPadding(dp(12), 0, dp(12), 0);
+        ratingStars.showAvailableRating();
         ratingStars.setOnRatingSelected(rating -> {
             RateBandResult result = new RateBandUseCase(ratings).rateBand(currentUser(), selectedBand, rating);
             if (result.success()) {
