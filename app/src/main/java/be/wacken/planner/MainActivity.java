@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 import be.wacken.planner.application.BandListItem;
 import be.wacken.planner.application.ListBandsUseCase;
@@ -36,6 +37,7 @@ import be.wacken.planner.application.RateBandUseCase;
 import be.wacken.planner.domain.Band;
 
 public final class MainActivity extends Activity {
+    private static final String STATE_PENDING_SCROLL_BAND_NAME = "pending_scroll_band_name";
     private static final int COLOR_BACKGROUND = Color.rgb(29, 36, 38);
     private static final int COLOR_ROW_DARK = Color.rgb(32, 39, 41);
     private static final int COLOR_ROW_LIGHT = Color.rgb(41, 48, 50);
@@ -63,10 +65,14 @@ public final class MainActivity extends Activity {
     private boolean reloadNeeded = true;
     private boolean syncAttempted;
     private boolean syncInProgress;
+    private String pendingScrollBandName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            pendingScrollBandName = savedInstanceState.getString(STATE_PENDING_SCROLL_BAND_NAME);
+        }
         sessionStore = new AuthSessionStore(this);
         if (!loadCurrentSession()) {
             redirectToLogin();
@@ -127,6 +133,12 @@ public final class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_PENDING_SCROLL_BAND_NAME, pendingScrollBandName);
+    }
+
     private boolean loadCurrentSession() {
         currentSession = sessionStore.load();
         return currentSession.isPresent();
@@ -161,6 +173,7 @@ public final class MainActivity extends Activity {
         cachedBandsByName = bandsByName(repositories);
         adapter = new BandAdapter(repositories, cachedBands, cachedBandsByName);
         bandList.setAdapter(adapter);
+        restorePendingScrollTarget();
         loading = false;
         reloadNeeded = false;
         status.setVisibility(cachedBands.isEmpty() ? View.VISIBLE : View.GONE);
@@ -330,7 +343,7 @@ public final class MainActivity extends Activity {
                     }
                     status.setVisibility(View.VISIBLE);
                     status.setText("Showing cached data. Supabase sync failed: " + error.getMessage());
-                    if (adapter == null) {
+                    if (reloadNeeded || adapter == null) {
                         loadBandList();
                     }
                 });
@@ -551,7 +564,16 @@ public final class MainActivity extends Activity {
                 .ifPresent(url -> intent.putExtra(BandDetailActivity.EXTRA_SPOTIFY_URL, url));
 
         reloadNeeded = true;
+        pendingScrollBandName = band.bandName();
         startActivity(intent);
+    }
+
+    private void restorePendingScrollTarget() {
+        OptionalInt targetIndex = SelectedBandScrollTarget.findIndex(pendingScrollBandName, cachedBands);
+        pendingScrollBandName = null;
+        if (targetIndex.isPresent()) {
+            bandList.post(() -> bandList.setSelection(targetIndex.getAsInt()));
+        }
     }
 
     private int dp(int value) {

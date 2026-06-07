@@ -12,6 +12,7 @@
 - Save rating changes and clears locally immediately and sync pending/group ratings with Supabase when the app starts, reactivates, syncs manually, or closes.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show imported English band biography/explanation and available band image metadata on the detail screen when `bands.csv` provides it.
+- Return from band detail to the same overview band row after refresh so users can continue rating without losing their place.
 - Sign in with Supabase Auth so ratings can be associated with a user and the shared Wacken planning group.
 - Generate and view an MVP2 group schedule from shared ratings, conflict rules, optional decisions, and lost alternatives.
 - Prepare groundwork for printable timelines.
