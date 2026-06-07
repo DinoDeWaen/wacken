@@ -14,8 +14,8 @@ android {
         applicationId "be.wacken.planner"
         minSdk 26
         targetSdk 36
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.1"
         buildConfigField "String", "SUPABASE_URL", "\"https://dwyunoyaqwxkfbwscxhe.supabase.co\""
         buildConfigField "String", "SUPABASE_ANON_KEY", "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3eXVub3lhcXd4a2Zid3NjeGhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjQxODAsImV4cCI6MjA5NDYwMDE4MH0.OSD2cZT4LR2p0olO_k-f2dHXJx_sekHtxA9OGHrSvZM\""
     }
