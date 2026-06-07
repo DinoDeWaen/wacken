@@ -22,6 +22,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - Wacken-inspired overview/detail presentation with music links, imported metadata where available, and metal-themed sync feedback.
 - MVP2 group decision rules, conflict resolution, timeline generation, and Android schedule viewing for the current shared group.
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
+- Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
 
 ### Current Non-Goals
 
@@ -325,6 +326,7 @@ Scenario: View printable festival timeline
 | BR-037 | The current version supports one shared group, not multiple independent groups. | All ratings belong to "my group" for now. | Must |
 | BR-038 | Multi-group support is deferred to next year. | Separate friend groups are not part of the current scope. | Must |
 | BR-038a | Existing app users must belong to the `Sofie and Dino` shared group for MVP2. | Ratings from Sofie, Dino, and any existing signed-in users participate in one shared schedule. | Must |
+| BR-038b | The MVP2 invite action must share onboarding text for the single `Sofie and Dino` group without secrets or token links. | A friend receives instructions to install the APK, sign in with a provisioned Supabase account, and sync ratings into the shared group. | Must |
 | BR-039 | Printable timeline output must be PDF. | The generated festival plan can be exported as a PDF. | Must |
 | BR-040 | MVP CSV import must be file-upload based in Android, not paste-text based. | The user selects `bands.csv` and companion CSV files with the Android document picker. | Must |
 | BR-041 | The import screen must show which CSV files were selected before import. | After selecting `bands.csv`, the screen shows the chosen file name. | Must |
@@ -434,7 +436,7 @@ The required output format is a clear, printable day-based PDF timeline.
 - What exact fields can be scraped from the Wacken band list and band detail pages, and what are the legal/technical constraints for scraping those pages?
 - How should the proposed data grid be implemented in the Android app, and which validation states should each row support?
 - How are users identified inside the one current shared group, and where are their ratings stored or shared?
-- What exact shareable format should link-based friend invites use when the invite feature is implemented?
+- What exact token/deep-link format should future self-service friend invites use beyond the current plain-text MVP2 share instructions?
 - How long is the initial lunch block inside 12:00-14:00 before user-configurable lunch behavior is added?
 - What data source should provide walking minutes between stages before this becomes a user setting?
 - Are there multiple festival days, and what date/time format should performances use?

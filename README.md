@@ -14,6 +14,7 @@
 - Show imported English band biography/explanation and available band image metadata on the detail screen when `bands.csv` provides it.
 - Return from band detail to the same overview band row after refresh so users can continue rating without losing their place.
 - Sign in with Supabase Auth so ratings can be associated with a user and the shared Wacken planning group.
+- Share plain-text invite instructions for the single shared `Sofie and Dino` planning group through Android's share sheet.
 - Generate and view an MVP2 group schedule from shared ratings, conflict rules, optional decisions, and lost alternatives.
 - Prepare groundwork for printable timelines.
 
@@ -265,6 +266,13 @@ The current MVP uses one shared planning group, `Sofie and Dino`:
 Migration `V006__sofie_dino_group_backfill.sql` keeps that canonical group id,
 sets the group name to `Sofie and Dino`, and idempotently adds every existing
 Supabase auth user to the group.
+
+Signed-in users can use **Share group invite** from the Android overview to open
+the Android share sheet with plain-text onboarding instructions. The shared text
+explains that friends need the APK and a provisioned Supabase account, that this
+version has one shared planning group only, and that ratings participate after
+sync. It does not include passwords, API keys, service-role credentials, invite
+tokens, or deep links.
 
 Group role data is stored in `public.group_members.role`. To promote a user for
 future admin workflows, update that user's membership role to `admin` or `owner`

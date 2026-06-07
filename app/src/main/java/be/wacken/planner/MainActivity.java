@@ -226,6 +226,7 @@ public final class MainActivity extends Activity {
         actions.setPadding(0, 0, 0, dp(14));
         actions.addView(importButton());
         actions.addView(scheduleButton());
+        actions.addView(inviteButton());
         actions.addView(syncButton());
         actions.addView(closeButton());
         return actions;
@@ -266,6 +267,31 @@ public final class MainActivity extends Activity {
         layout.setMargins(0, 0, 0, dp(8));
         scheduleButton.setLayoutParams(layout);
         return scheduleButton;
+    }
+
+    private Button inviteButton() {
+        Button inviteButton = new Button(this);
+        inviteButton.setAllCaps(false);
+        inviteButton.setText("Share group invite");
+        inviteButton.setTextColor(Color.WHITE);
+        inviteButton.setTypeface(Typeface.DEFAULT_BOLD);
+        inviteButton.setBackgroundColor(Color.rgb(78, 67, 50));
+        inviteButton.setOnClickListener(view -> shareGroupInvite());
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        layout.setMargins(0, 0, 0, dp(8));
+        inviteButton.setLayoutParams(layout);
+        return inviteButton;
+    }
+
+    private void shareGroupInvite() {
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setType("text/plain");
+        share.putExtra(Intent.EXTRA_SUBJECT, InviteShareText.subject());
+        share.putExtra(Intent.EXTRA_TEXT, InviteShareText.message(currentSession.email()));
+        startActivity(Intent.createChooser(share, "Share Wacken Planner invite"));
     }
 
     private Button syncButton() {
