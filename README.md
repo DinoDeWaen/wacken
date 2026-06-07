@@ -30,6 +30,8 @@
 - ADR: [`0008-supabase-postgres-flyway-migrations.md`](backlog/decisions/0008-supabase-postgres-flyway-migrations.md).
 - CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
+- MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
+- V2.0 release notes: [`releases/v2.0.md`](releases/v2.0.md).
 - V1.1 release notes: [`releases/v1.1.md`](releases/v1.1.md).
 - V1.0 release notes: [`releases/v1.0.md`](releases/v1.0.md).
 
