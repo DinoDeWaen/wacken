@@ -20,6 +20,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - Supabase sync for bands, stages, performances, stage distances, food options, and group ratings on app start, overview reactivation, manual sync, and close.
 - CSV/TSV fallback import path for local/admin data work.
 - Wacken-inspired overview/detail presentation with music links, imported metadata where available, and metal-themed sync feedback.
+- MVP2 group decision rules, conflict resolution, timeline generation, and Android schedule viewing for the current shared group.
 
 ### Current Non-Goals
 

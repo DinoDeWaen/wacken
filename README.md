@@ -13,7 +13,8 @@
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show imported English band biography/explanation and available band image metadata on the detail screen when `bands.csv` provides it.
 - Sign in with Supabase Auth so ratings can be associated with a user and the shared Wacken planning group.
-- Prepare groundwork for group decision rules and printable timelines.
+- Generate and view an MVP2 group schedule from shared ratings, conflict rules, optional decisions, and lost alternatives.
+- Prepare groundwork for printable timelines.
 
 ## Architecture
 - Clean Architecture with DDD boundaries: domain, application, infrastructure, and Android UI modules.

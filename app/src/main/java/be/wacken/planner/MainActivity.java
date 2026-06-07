@@ -212,6 +212,7 @@ public final class MainActivity extends Activity {
         actions.setOrientation(LinearLayout.VERTICAL);
         actions.setPadding(0, 0, 0, dp(14));
         actions.addView(importButton());
+        actions.addView(scheduleButton());
         actions.addView(syncButton());
         actions.addView(closeButton());
         return actions;
@@ -235,6 +236,23 @@ public final class MainActivity extends Activity {
         layout.setMargins(0, 0, 0, dp(8));
         importButton.setLayoutParams(layout);
         return importButton;
+    }
+
+    private Button scheduleButton() {
+        Button scheduleButton = new Button(this);
+        scheduleButton.setAllCaps(false);
+        scheduleButton.setText("View group schedule");
+        scheduleButton.setTextColor(Color.WHITE);
+        scheduleButton.setTypeface(Typeface.DEFAULT_BOLD);
+        scheduleButton.setBackgroundColor(Color.rgb(64, 76, 79));
+        scheduleButton.setOnClickListener(view -> startActivity(new Intent(this, ScheduleActivity.class)));
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        layout.setMargins(0, 0, 0, dp(8));
+        scheduleButton.setLayoutParams(layout);
+        return scheduleButton;
     }
 
     private Button syncButton() {
