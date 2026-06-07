@@ -4,6 +4,7 @@ title: 'REL-061: Validate and release MVP2 schedule APK'
 status: To Do
 assignee: []
 created_date: '2026-06-07 15:37'
+updated_date: '2026-06-07 16:02'
 labels:
   - mvp2
   - release
@@ -11,6 +12,9 @@ labels:
 dependencies:
   - task-57
   - task-58
+  - task-60
+  - task-61
+  - task-62
 priority: high
 ---
 
