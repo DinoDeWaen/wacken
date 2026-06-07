@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-06-07 15:37'
-updated_date: '2026-06-07 16:28'
+updated_date: '2026-06-07 16:29'
 labels:
   - mvp2
   - release
@@ -41,7 +41,7 @@ Out of scope:
 - [x] #2 Given representative group ratings and overlapping performances, when MVP2 UAT is run, then the generated schedule demonstrates GO, OPTIONAL, veto-blocked, conflict-winner, and lost-alternative cases.
 - [ ] #3 Given the Android schedule screen is tested, when the APK is installed locally, then users can sync, rate, generate, and view the shared schedule.
 - [x] #4 Release notes document MVP2 scope, validation, known non-goals, and accepted risks.
-- [ ] #5 The GitHub release is published with the debug APK attached and the tag/version metadata recorded.
+- [x] #5 The GitHub release is published with the debug APK attached and the tag/version metadata recorded.
 - [x] #6 README, business requirements, diagram, ADR, and architecture impact are recorded using canonical delivery-governance wording.
 <!-- AC:END -->
 
@@ -123,4 +123,11 @@ Diagram impact: none, because the system structure and data flow did not change.
 
 - Installed-device UAT remains to be run on a connected Android device or emulator.
 - V2.0 is a debug APK release for local installation, not Play Store distribution.
+
+Release publication update:
+
+- GitHub release published: https://github.com/DinoDeWaen/wacken/releases/tag/v2.0
+- Attached APK: app/build/outputs/apk/debug/app-debug.apk
+- Branch pushed: codex-task-2-testing-coverage
+- Remaining validation gap: installed-device UAT still needs a connected Android device or emulator.
 <!-- SECTION:NOTES:END -->
