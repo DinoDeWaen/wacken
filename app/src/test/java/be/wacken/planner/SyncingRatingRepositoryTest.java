@@ -81,6 +81,37 @@ public final class SyncingRatingRepositoryTest {
     }
 
     @Test
+    public void syncsPendingClearAndMarksItSynced() throws Exception {
+        FakeLocalStore local = new FakeLocalStore();
+        FakeRemote remote = new FakeRemote(local);
+        SyncingRatingRepository repository = new SyncingRatingRepository(local, remote, SESSION);
+        local.savePending("group-1", "user-1", new Band("5th Avenue"), Rating.of(0));
+
+        repository.syncPendingRatings();
+
+        assertEquals(List.of(new SavedRating("user-1", new Band("5th Avenue"), Rating.of(0))), remote.pushed);
+        assertEquals(Rating.of(0), repository.findByUserAndBand("user-1", new Band("5th Avenue")).orElseThrow());
+        assertTrue(local.findPending("group-1", "user-1").isEmpty());
+    }
+
+    @Test
+    public void leavesPendingClearWhenSyncFails() {
+        FakeLocalStore local = new FakeLocalStore();
+        FakeRemote remote = new FakeRemote(local);
+        remote.failPush = true;
+        SyncingRatingRepository repository = new SyncingRatingRepository(local, remote, SESSION);
+        local.savePending("group-1", "user-1", new Band("5th Avenue"), Rating.of(0));
+
+        try {
+            repository.syncPendingRatings();
+        } catch (IOException ignored) {
+            // Expected: pending clear stays available for a later sync.
+        }
+
+        assertEquals(List.of(new SavedRating("user-1", new Band("5th Avenue"), Rating.of(0))), local.findPending("group-1", "user-1"));
+    }
+
+    @Test
     public void pullsGroupRatingsIntoLocalStore() throws Exception {
         FakeLocalStore local = new FakeLocalStore();
         FakeRemote remote = new FakeRemote(local);
@@ -90,6 +121,20 @@ public final class SyncingRatingRepositoryTest {
         repository.pullGroupRatings();
 
         assertEquals(Rating.of(1), repository.findByUserAndBand("user-2", new Band("5th Avenue")).orElseThrow());
+    }
+
+    @Test
+    public void clearsSyncedGroupRatingsMissingFromRemotePull() throws Exception {
+        FakeLocalStore local = new FakeLocalStore();
+        FakeRemote remote = new FakeRemote(local);
+        local.saveSynced("group-1", "user-2", new Band("5th Avenue"), Rating.of(5));
+        remote.pulled.add(new SavedRating("user-3", new Band("Skyline"), Rating.of(4)));
+        SyncingRatingRepository repository = new SyncingRatingRepository(local, remote, SESSION);
+
+        repository.pullGroupRatings();
+
+        assertEquals(Rating.of(0), repository.findByUserAndBand("user-2", new Band("5th Avenue")).orElseThrow());
+        assertEquals(Rating.of(4), repository.findByUserAndBand("user-3", new Band("Skyline")).orElseThrow());
     }
 
     private static final class FakeRemote implements SupabaseRatingRemote {
@@ -133,6 +178,23 @@ public final class SyncingRatingRepositoryTest {
         @Override
         public void saveSyncedGroupRating(String groupId, SavedRating rating) {
             save(groupId, rating, "SYNCED");
+        }
+
+        @Override
+        public void replaceSyncedGroupRatings(String groupId, List<SavedRating> syncedRatings) {
+            ratings.stream()
+                    .filter(rating -> rating.groupId.equals(groupId))
+                    .filter(rating -> rating.status.equals("SYNCED"))
+                    .filter(rating -> !syncedRatings.contains(rating.savedRating))
+                    .toList()
+                    .forEach(rating -> save(groupId, new SavedRating(
+                            rating.savedRating.userName(),
+                            rating.savedRating.band(),
+                            Rating.of(0)
+                    ), "SYNCED"));
+            for (SavedRating syncedRating : syncedRatings) {
+                save(groupId, syncedRating, "SYNCED");
+            }
         }
 
         @Override

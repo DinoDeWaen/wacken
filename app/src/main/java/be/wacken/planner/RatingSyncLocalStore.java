@@ -14,6 +14,8 @@ public interface RatingSyncLocalStore {
 
     void saveSyncedGroupRating(String groupId, SavedRating rating);
 
+    void replaceSyncedGroupRatings(String groupId, List<SavedRating> syncedRatings);
+
     List<SavedRating> findPending(String groupId, String userName);
 
     Optional<Rating> findByUserAndBand(String userName, Band band);

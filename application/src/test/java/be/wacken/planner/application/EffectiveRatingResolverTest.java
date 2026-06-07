@@ -33,6 +33,18 @@ class EffectiveRatingResolverTest {
         assertEquals(new EffectiveRating(5, true), rating);
     }
 
+    @Test
+    void treatsSavedZeroAsUnratedDefault() {
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Band band = new Band("5th Avenue");
+        ratings.save("dino", band, Rating.of(0));
+        EffectiveRatingResolver resolver = new EffectiveRatingResolver(ratings);
+
+        EffectiveRating rating = resolver.resolve("dino", band);
+
+        assertEquals(new EffectiveRating(0, false), rating);
+    }
+
     private static final class FakeRatingRepository implements RatingRepository {
         private final Map<Key, Rating> ratings = new HashMap<>();
 

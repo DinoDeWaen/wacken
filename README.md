@@ -8,8 +8,8 @@
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
 - Sync centrally managed festival master data from Supabase into the local Room cache on app start, overview reactivation, manual sync, and close.
 - List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.
-- Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars.
-- Save rating changes locally immediately and sync pending/group ratings with Supabase when the app starts, reactivates, syncs manually, or closes.
+- Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars, and clear a previous rating back to unrated.
+- Save rating changes and clears locally immediately and sync pending/group ratings with Supabase when the app starts, reactivates, syncs manually, or closes.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show imported English band biography/explanation and available band image metadata on the detail screen when `bands.csv` provides it.
 - Sign in with Supabase Auth so ratings can be associated with a user and the shared Wacken planning group.
@@ -222,9 +222,11 @@ when the app starts and whenever the overview is reactivated after returning
 from another screen or app. Use **Sync from Supabase** to retry manually. Use
 **Sync & close** to push/pull Supabase data before closing the app. Each sync
 pulls central bands, stages, performances, stage distances, and food options
-from Supabase into Room and pushes/pulls group ratings. Rating changes are
-stored locally first with pending sync metadata; when Supabase accepts the
-rating it is marked synced. If sync fails, existing cached Room data and pending
+from Supabase into Room and pushes/pulls group ratings. Rating changes and
+rating clears are stored locally first with pending sync metadata; when Supabase
+accepts the rating change it is marked synced. Clearing a rating deletes that
+explicit user/group/band rating row in Supabase, so future group pulls no longer
+count the previous score. If sync fails, existing cached Room data and pending
 ratings remain available and the app shows a stale-data message. A Wacken/metal
 sync overlay is shown while startup, reactivation, manual, or close sync is
 running. The CSV import screen remains available for fallback/local import work

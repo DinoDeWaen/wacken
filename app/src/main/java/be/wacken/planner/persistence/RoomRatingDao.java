@@ -21,6 +21,9 @@ public interface RoomRatingDao {
     @Query("SELECT * FROM ratings WHERE groupId = :groupId AND userName = :userName AND syncStatus = 'PENDING'")
     List<RoomRating> findPending(String groupId, String userName);
 
+    @Query("SELECT * FROM ratings WHERE groupId = :groupId AND syncStatus = 'SYNCED'")
+    List<RoomRating> findSyncedByGroup(String groupId);
+
     @Query("SELECT COUNT(*) FROM ratings")
     int count();
 }

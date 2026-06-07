@@ -37,10 +37,18 @@ final class SupabaseRatingClient implements SupabaseRatingRemote {
         if (!freshSession.userId().equals(rating.userName())) {
             throw new IOException("Cannot sync a rating for another user.");
         }
-        if (rating.rating().value() == 0) {
-            throw new IOException("Cannot sync an unrated value as an explicit rating.");
-        }
         String bandId = bandIdFor(rating.band());
+        if (rating.rating().value() == 0) {
+            request(
+                    "DELETE",
+                    "/rest/v1/ratings?group_id=eq." + encode(freshSession.groupId())
+                            + "&user_id=eq." + encode(freshSession.userId())
+                            + "&band_id=eq." + encode(bandId),
+                    null,
+                    false
+            );
+            return;
+        }
         try {
             JSONObject body = new JSONObject()
                     .put("group_id", freshSession.groupId())

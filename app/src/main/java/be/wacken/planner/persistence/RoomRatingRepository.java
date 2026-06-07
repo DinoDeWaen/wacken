@@ -7,6 +7,7 @@ import be.wacken.planner.domain.SavedRating;
 import be.wacken.planner.RatingSyncLocalStore;
 
 import java.util.List;
+import java.util.Set;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -38,6 +39,22 @@ public final class RoomRatingRepository implements RatingRepository, RatingSyncL
     }
 
     @Override
+    public void replaceSyncedGroupRatings(String groupId, List<SavedRating> syncedRatings) {
+        Set<RatingIdentity> remoteRatings = syncedRatings.stream()
+                .map(rating -> new RatingIdentity(rating.userName(), rating.band().name()))
+                .collect(Collectors.toSet());
+        for (RoomRating localRating : ratings.findSyncedByGroup(groupId)) {
+            RatingIdentity localIdentity = new RatingIdentity(localRating.userName, localRating.bandName);
+            if (!remoteRatings.contains(localIdentity)) {
+                saveSynced(groupId, localRating.userName, new Band(localRating.bandName), Rating.of(0));
+            }
+        }
+        for (SavedRating rating : syncedRatings) {
+            saveSyncedGroupRating(groupId, rating);
+        }
+    }
+
+    @Override
     public List<SavedRating> findPending(String groupId, String userName) {
         return ratings.findPending(groupId, userName)
                 .stream()
@@ -65,5 +82,8 @@ public final class RoomRatingRepository implements RatingRepository, RatingSyncL
 
     private SavedRating toDomain(RoomRating row) {
         return new SavedRating(row.userName, new Band(row.bandName), Rating.of(row.value));
+    }
+
+    private record RatingIdentity(String userName, String bandName) {
     }
 }

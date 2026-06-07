@@ -135,6 +135,14 @@ public final class BandDetailActivity extends Activity {
             }
         });
         facts.addView(ratingStars, new LinearLayout.LayoutParams(dp(150), dp(42)));
+        Button clearRating = baseIconButton("0", "Clear rating", COLOR_GRID);
+        clearRating.setOnClickListener(view -> {
+            RateBandResult result = new RateBandUseCase(ratings).rateBand(currentUser(), selectedBand, 0);
+            if (result.success()) {
+                ratingStars.applySavedRating(0);
+            }
+        });
+        facts.addView(clearRating);
 
         facts.addView(sectionTitle("Running Order"));
         facts.addView(infoLine("Stage", valueExtra(EXTRA_STAGE)));

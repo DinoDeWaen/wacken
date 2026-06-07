@@ -13,7 +13,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 ### Current Implemented Capabilities
 
 - Android band overview and detail screens.
-- 1-5 band ratings with default unrated value of `0`.
+- 1-5 band ratings with default unrated value of `0`, including clearing a prior rating back to unrated.
 - Room local cache for fast app reads and offline continuity.
 - Supabase Auth for user identity.
 - Supabase Postgres/Flyway backend for central master data, group membership, and ratings.
@@ -286,6 +286,7 @@ Scenario: View printable festival timeline
 | Rule ID | Rule | Example | Priority |
 | --- | --- | --- | --- |
 | BR-001 | Ratings must use the 1-5 scale, with `0` reserved for unrated bands. | `1` means veto; `5` means must see; `0` means no rating has been given. | Must |
+| BR-001a | A user can clear their own band rating back to unrated. | Clearing a previous score stores the local value as `0` and removes that user's explicit Supabase rating contribution for the band after sync. | Must |
 | BR-002 | A rating of `1` means veto. | A band rated `1` by a user counts as a veto in group decision rules. | Must |
 | BR-003 | A rating of `2` means OK or indifferent. | A band with max rating `2` is optional. | Must |
 | BR-004 | A rating of `3` means like, fine to miss. | A band with max rating `3` can be selected unless vetoed. | Must |

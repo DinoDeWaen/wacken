@@ -16,7 +16,7 @@ public final class EffectiveRatingResolver {
 
     public EffectiveRating resolve(String userName, Band band) {
         return ratings.findByUserAndBand(userName, band)
-                .map(rating -> new EffectiveRating(rating.value(), true))
+                .map(rating -> new EffectiveRating(rating.value(), rating.value() != DEFAULT_UNRATED_VALUE))
                 .orElse(new EffectiveRating(DEFAULT_UNRATED_VALUE, false));
     }
 }

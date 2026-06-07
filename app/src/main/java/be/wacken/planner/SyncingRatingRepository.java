@@ -43,8 +43,6 @@ final class SyncingRatingRepository implements RatingRepository {
     }
 
     void pullGroupRatings() throws IOException {
-        for (SavedRating rating : remote.pullGroupRatings(session)) {
-            cache.saveSyncedGroupRating(session.groupId(), rating);
-        }
+        cache.replaceSyncedGroupRatings(session.groupId(), remote.pullGroupRatings(session));
     }
 }

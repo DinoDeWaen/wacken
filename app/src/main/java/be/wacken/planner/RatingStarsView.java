@@ -74,7 +74,7 @@ final class RatingStarsView extends LinearLayout {
 
     void applySavedRating(int rating) {
         savedRating = clampRating(rating);
-        explicitRating = true;
+        explicitRating = savedRating > 0;
         restoreRestingState();
     }
 

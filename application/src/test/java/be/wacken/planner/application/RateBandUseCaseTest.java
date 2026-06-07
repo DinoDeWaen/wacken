@@ -49,15 +49,15 @@ class RateBandUseCaseTest {
     }
 
     @Test
-    void rejectsUnratedZeroAsExplicitUserSelection() {
+    void storesUnratedZeroWhenClearingRating() {
         FakeRatingRepository ratings = new FakeRatingRepository();
         RateBandUseCase useCase = new RateBandUseCase(ratings);
         Band band = new Band("5th Avenue");
 
         RateBandResult result = useCase.rateBand("dino", band, 0);
 
-        assertEquals(RateBandResult.failure("Rating must be between 1 and 5 when saving an explicit band rating."), result);
-        assertEquals(Optional.empty(), ratings.findByUserAndBand("dino", band));
+        assertEquals(RateBandResult.stored(), result);
+        assertEquals(Optional.of(Rating.of(0)), ratings.findByUserAndBand("dino", band));
     }
 
     private static final class FakeRatingRepository implements RatingRepository {
