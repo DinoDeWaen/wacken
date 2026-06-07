@@ -21,6 +21,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - CSV/TSV fallback import path for local/admin data work.
 - Wacken-inspired overview/detail presentation with music links, imported metadata where available, and metal-themed sync feedback.
 - MVP2 group decision rules, conflict resolution, timeline generation, and Android schedule viewing for the current shared group.
+- The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 
 ### Current Non-Goals
 
@@ -322,6 +323,7 @@ Scenario: View printable festival timeline
 | BR-036 | The band rating screen should follow the official Wacken band detail style where practical, adding rating stars and optional YouTube and Spotify links. | A band detail page shows band information plus star rating controls. | Must |
 | BR-037 | The current version supports one shared group, not multiple independent groups. | All ratings belong to "my group" for now. | Must |
 | BR-038 | Multi-group support is deferred to next year. | Separate friend groups are not part of the current scope. | Must |
+| BR-038a | Existing app users must belong to the `Sofie and Dino` shared group for MVP2. | Ratings from Sofie, Dino, and any existing signed-in users participate in one shared schedule. | Must |
 | BR-039 | Printable timeline output must be PDF. | The generated festival plan can be exported as a PDF. | Must |
 | BR-040 | MVP CSV import must be file-upload based in Android, not paste-text based. | The user selects `bands.csv` and companion CSV files with the Android document picker. | Must |
 | BR-041 | The import screen must show which CSV files were selected before import. | After selecting `bands.csv`, the screen shows the chosen file name. | Must |

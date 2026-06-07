@@ -53,13 +53,25 @@ CREATE TEMP TABLE auth_setup_verification AS
             SELECT count(*)
             FROM public.groups
             WHERE id = '00000000-0000-0000-0000-000000000001'
+              AND slug = 'wacken-2026'
+              AND name = 'Sofie and Dino'
         ) AS default_group_count,
         (
             SELECT count(*)
             FROM public.group_members
             WHERE group_id = '00000000-0000-0000-0000-000000000001'
               AND role IN ('member', 'admin', 'owner')
-        ) AS default_group_member_count;
+        ) AS default_group_member_count,
+        (
+            SELECT count(*)
+            FROM auth.users users
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM public.group_members members
+                WHERE members.group_id = '00000000-0000-0000-0000-000000000001'
+                  AND members.user_id = users.id
+            )
+        ) AS auth_users_without_default_group;
 
 SELECT *
 FROM auth_setup_verification;
@@ -72,15 +84,17 @@ BEGIN
     IF result.auth_user_trigger_count <> 1
         OR result.profiles_insert_policy_count <> 1
         OR result.ratings_policy_count < 4
-        OR result.default_group_count <> 1 THEN
+        OR result.default_group_count <> 1
+        OR result.auth_users_without_default_group <> 0 THEN
         RAISE EXCEPTION
-            'Auth setup verification failed: trigger=%, profile_insert_policy=%, ratings_policies=%, default_group=%',
+            'Auth setup verification failed: trigger=%, profile_insert_policy=%, ratings_policies=%, default_group=%, users_without_group=%',
             result.auth_user_trigger_count,
             result.profiles_insert_policy_count,
             result.ratings_policy_count,
-            result.default_group_count;
+            result.default_group_count,
+            result.auth_users_without_default_group;
     END IF;
 END \$\$;
 SQL
 
-echo "Auth setup verified: trigger, profile insert policy, ratings RLS policies, and default group are present."
+echo "Auth setup verified: trigger, profile insert policy, ratings RLS policies, Sofie and Dino group, and user memberships are present."

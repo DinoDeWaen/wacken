@@ -250,13 +250,18 @@ Required Supabase project settings:
 - Enable the Email provider in Authentication.
 - Create or invite app users through Supabase Authentication.
 - Run Flyway migrations so the `auth.users` trigger creates a matching
-  `public.profiles` row and assigns new users to the default Wacken 2026 group.
+  `public.profiles` row and assigns new users to the shared `Sofie and Dino`
+  group.
 
-The current MVP uses one shared planning group:
+The current MVP uses one shared planning group, `Sofie and Dino`:
 
 ```text
 00000000-0000-0000-0000-000000000001
 ```
+
+Migration `V006__sofie_dino_group_backfill.sql` keeps that canonical group id,
+sets the group name to `Sofie and Dino`, and idempotently adds every existing
+Supabase auth user to the group.
 
 Group role data is stored in `public.group_members.role`. To promote a user for
 future admin workflows, update that user's membership role to `admin` or `owner`
