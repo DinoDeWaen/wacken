@@ -1,8 +1,13 @@
 package be.wacken.planner;
 
 import android.app.Activity;
+import android.animation.ValueAnimator;
 import android.content.Intent;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.SweepGradient;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -13,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -37,6 +43,7 @@ public final class MainActivity extends Activity {
     private static final int COLOR_TEXT = Color.rgb(220, 224, 225);
     private static final int COLOR_MUTED = Color.rgb(162, 169, 171);
     private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
+    private static final int COLOR_DARK_STEEL = Color.rgb(17, 21, 22);
 
     private ListView bandList;
     private TextView status;
@@ -44,6 +51,11 @@ public final class MainActivity extends Activity {
     private AuthSessionStore sessionStore;
     private AuthSession currentSession;
     private Button syncButton;
+    private Button closeButton;
+    private FrameLayout syncOverlay;
+    private TextView syncOverlayMessage;
+    private MetalSyncView syncAnimation;
+    private ValueAnimator syncAnimator;
     private BandAdapter adapter;
     private List<BandListItem> cachedBands;
     private Map<String, Band> cachedBandsByName;
@@ -61,11 +73,8 @@ public final class MainActivity extends Activity {
             return;
         }
 
-        LinearLayout screen = new LinearLayout(this);
-        screen.setOrientation(LinearLayout.VERTICAL);
-        screen.setBackgroundColor(COLOR_BACKGROUND);
-        int padding = dp(14);
-        screen.setPadding(padding, padding, padding, padding);
+        FrameLayout root = new FrameLayout(this);
+        LinearLayout screen = contentView();
 
         screen.addView(header());
         screen.addView(actionRow());
@@ -87,7 +96,9 @@ public final class MainActivity extends Activity {
                 1
         ));
 
-        setContentView(screen);
+        root.addView(screen);
+        root.addView(syncOverlay());
+        setContentView(root);
     }
 
     @Override
@@ -100,10 +111,20 @@ public final class MainActivity extends Activity {
         if (subtitle != null) {
             subtitle.setText("Line-up ratings for " + currentSession.email());
         }
+        if (!syncInProgress) {
+            syncFromSupabase(false, "Forging latest ratings...");
+            return;
+        }
         if (reloadNeeded || adapter == null) {
             showLoadingState();
             bandList.post(this::loadBandList);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopSyncAnimation();
+        super.onDestroy();
     }
 
     private boolean loadCurrentSession() {
@@ -118,6 +139,15 @@ public final class MainActivity extends Activity {
 
     private String currentUser() {
         return currentSession.userId();
+    }
+
+    private LinearLayout contentView() {
+        LinearLayout screen = new LinearLayout(this);
+        screen.setOrientation(LinearLayout.VERTICAL);
+        screen.setBackgroundColor(COLOR_BACKGROUND);
+        int padding = dp(14);
+        screen.setPadding(padding, padding, padding, padding);
+        return screen;
     }
 
     private void loadBandList() {
@@ -179,11 +209,11 @@ public final class MainActivity extends Activity {
 
     private LinearLayout actionRow() {
         LinearLayout actions = new LinearLayout(this);
-        actions.setOrientation(LinearLayout.HORIZONTAL);
-        actions.setGravity(Gravity.START);
+        actions.setOrientation(LinearLayout.VERTICAL);
         actions.setPadding(0, 0, 0, dp(14));
         actions.addView(importButton());
         actions.addView(syncButton());
+        actions.addView(closeButton());
         return actions;
     }
 
@@ -199,10 +229,10 @@ public final class MainActivity extends Activity {
             startActivity(new Intent(this, ImportCsvActivity.class));
         });
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        layout.setMargins(0, 0, dp(8), 0);
+        layout.setMargins(0, 0, 0, dp(8));
         importButton.setLayoutParams(layout);
         return importButton;
     }
@@ -214,21 +244,46 @@ public final class MainActivity extends Activity {
         syncButton.setTextColor(Color.WHITE);
         syncButton.setTypeface(Typeface.DEFAULT_BOLD);
         syncButton.setBackgroundColor(Color.rgb(49, 56, 58));
-        syncButton.setOnClickListener(view -> syncMasterDataFromSupabase());
+        syncButton.setOnClickListener(view -> syncFromSupabase(false, "Forging latest ratings..."));
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        layout.setMargins(0, 0, 0, dp(8));
+        syncButton.setLayoutParams(layout);
         return syncButton;
     }
 
+    private Button closeButton() {
+        closeButton = new Button(this);
+        closeButton.setAllCaps(false);
+        closeButton.setText("Sync & close");
+        closeButton.setTextColor(Color.WHITE);
+        closeButton.setTypeface(Typeface.DEFAULT_BOLD);
+        closeButton.setBackgroundColor(Color.rgb(91, 27, 39));
+        closeButton.setOnClickListener(view -> syncFromSupabase(true, "Sealing scores before exit..."));
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        closeButton.setLayoutParams(layout);
+        return closeButton;
+    }
+
     private void syncMasterDataFromSupabase() {
+        syncFromSupabase(false, "Forging latest festival data...");
+    }
+
+    private void syncFromSupabase(boolean closeAfterSync, String message) {
         if (syncInProgress) {
             return;
         }
         syncAttempted = true;
         syncInProgress = true;
-        if (syncButton != null) {
-            syncButton.setEnabled(false);
-        }
+        setSyncActionsEnabled(false);
         status.setVisibility(View.VISIBLE);
-        status.setText("Syncing latest festival data...");
+        status.setText(message);
+        showSyncOverlay(message);
         new Thread(() -> {
             try {
                 AppRepositories repositories = new AppRepositories(this);
@@ -236,27 +291,145 @@ public final class MainActivity extends Activity {
                 repositories.syncRatings();
                 runOnUiThread(() -> {
                     syncInProgress = false;
-                    if (syncButton != null) {
-                        syncButton.setEnabled(true);
-                    }
+                    setSyncActionsEnabled(true);
                     reloadNeeded = true;
-                    loadBandList();
+                    if (closeAfterSync) {
+                        hideSyncOverlay();
+                        finishAndRemoveTask();
+                    } else {
+                        loadBandList();
+                        hideSyncOverlay();
+                    }
                 });
             } catch (Exception error) {
                 runOnUiThread(() -> {
                     syncInProgress = false;
-                    if (syncButton != null) {
-                        syncButton.setEnabled(true);
-                    }
+                    setSyncActionsEnabled(true);
+                    hideSyncOverlay();
                     if (!loadCurrentSession()) {
                         redirectToLogin();
                         return;
                     }
                     status.setVisibility(View.VISIBLE);
                     status.setText("Showing cached data. Supabase sync failed: " + error.getMessage());
+                    if (adapter == null) {
+                        loadBandList();
+                    }
                 });
             }
         }).start();
+    }
+
+    private void setSyncActionsEnabled(boolean enabled) {
+        if (syncButton != null) {
+            syncButton.setEnabled(enabled);
+        }
+        if (closeButton != null) {
+            closeButton.setEnabled(enabled);
+        }
+    }
+
+    private FrameLayout syncOverlay() {
+        syncOverlay = new FrameLayout(this);
+        syncOverlay.setVisibility(View.GONE);
+        syncOverlay.setClickable(true);
+        syncOverlay.setBackground(metalPanelBackground());
+
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setGravity(Gravity.CENTER);
+        panel.setPadding(dp(24), dp(24), dp(24), dp(24));
+
+        TextView title = new TextView(this);
+        title.setText("WACKEN SYNC");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(32);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        title.setGravity(Gravity.CENTER);
+        title.setShadowLayer(dp(8), 0, dp(2), COLOR_ACCENT);
+        panel.addView(title);
+
+        syncAnimation = new MetalSyncView(this);
+        LinearLayout.LayoutParams animationLayout = new LinearLayout.LayoutParams(dp(116), dp(116));
+        animationLayout.setMargins(0, dp(22), 0, dp(18));
+        panel.addView(syncAnimation, animationLayout);
+
+        syncOverlayMessage = new TextView(this);
+        syncOverlayMessage.setTextColor(COLOR_TEXT);
+        syncOverlayMessage.setTextSize(16);
+        syncOverlayMessage.setTypeface(Typeface.DEFAULT_BOLD);
+        syncOverlayMessage.setGravity(Gravity.CENTER);
+        panel.addView(syncOverlayMessage);
+
+        TextView subtitle = new TextView(this);
+        subtitle.setText("Steel cache online");
+        subtitle.setTextColor(COLOR_MUTED);
+        subtitle.setTextSize(12);
+        subtitle.setGravity(Gravity.CENTER);
+        subtitle.setPadding(0, dp(8), 0, 0);
+        panel.addView(subtitle);
+
+        syncOverlay.addView(panel, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+        ));
+        return syncOverlay;
+    }
+
+    private GradientDrawable metalPanelBackground() {
+        GradientDrawable drawable = new GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                new int[]{
+                        Color.rgb(6, 8, 9),
+                        COLOR_DARK_STEEL,
+                        Color.rgb(43, 50, 52),
+                        Color.rgb(9, 11, 12)
+                }
+        );
+        return drawable;
+    }
+
+    private void showSyncOverlay(String message) {
+        if (syncOverlay == null || syncAnimation == null) {
+            return;
+        }
+        syncOverlayMessage.setText(message);
+        syncOverlay.setAlpha(0f);
+        syncOverlay.setVisibility(View.VISIBLE);
+        syncOverlay.animate().alpha(1f).setDuration(180).start();
+        startSyncAnimation();
+    }
+
+    private void hideSyncOverlay() {
+        if (syncOverlay == null) {
+            return;
+        }
+        stopSyncAnimation();
+        syncOverlay.animate()
+                .alpha(0f)
+                .setDuration(180)
+                .withEndAction(() -> syncOverlay.setVisibility(View.GONE))
+                .start();
+    }
+
+    private void startSyncAnimation() {
+        stopSyncAnimation();
+        syncAnimator = ValueAnimator.ofFloat(0f, 360f);
+        syncAnimator.setDuration(950);
+        syncAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        syncAnimator.addUpdateListener(animation -> {
+            if (syncAnimation != null) {
+                syncAnimation.setRotationDegrees((float) animation.getAnimatedValue());
+            }
+        });
+        syncAnimator.start();
+    }
+
+    private void stopSyncAnimation() {
+        if (syncAnimator != null) {
+            syncAnimator.cancel();
+            syncAnimator = null;
+        }
     }
 
     private LinearLayout tableHeader() {
@@ -365,6 +538,69 @@ public final class MainActivity extends Activity {
 
     private int dp(int value) {
         return (int) (value * getResources().getDisplayMetrics().density);
+    }
+
+    private static final class MetalSyncView extends View {
+        private final Paint ring = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint inner = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint bolt = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF bounds = new RectF();
+        private float rotationDegrees;
+
+        MetalSyncView(Activity activity) {
+            super(activity);
+            ring.setStyle(Paint.Style.STROKE);
+            ring.setStrokeWidth(activity.getResources().getDisplayMetrics().density * 7f);
+            ring.setStrokeCap(Paint.Cap.ROUND);
+            inner.setStyle(Paint.Style.FILL);
+            inner.setColor(Color.rgb(29, 36, 38));
+            bolt.setColor(Color.rgb(255, 56, 92));
+            bolt.setTextAlign(Paint.Align.CENTER);
+            bolt.setTypeface(Typeface.DEFAULT_BOLD);
+            bolt.setTextSize(activity.getResources().getDisplayMetrics().density * 42f);
+        }
+
+        void setRotationDegrees(float rotationDegrees) {
+            this.rotationDegrees = rotationDegrees;
+            invalidate();
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            float size = Math.min(getWidth(), getHeight());
+            float padding = ring.getStrokeWidth() + 4f;
+            bounds.set(padding, padding, size - padding, size - padding);
+            float center = size / 2f;
+            ring.setShader(new SweepGradient(
+                    center,
+                    center,
+                    new int[]{
+                            Color.rgb(77, 83, 85),
+                            Color.WHITE,
+                            Color.rgb(132, 140, 143),
+                            Color.rgb(255, 56, 92),
+                            Color.rgb(77, 83, 85)
+                    },
+                    null
+            ));
+            canvas.save();
+            canvas.rotate(rotationDegrees, center, center);
+            canvas.drawArc(bounds, 20, 280, false, ring);
+            canvas.drawArc(bounds, 324, 42, false, ring);
+            canvas.restore();
+
+            inner.setShader(new SweepGradient(
+                    center,
+                    center,
+                    Color.rgb(84, 92, 95),
+                    Color.rgb(14, 17, 18)
+            ));
+            canvas.drawCircle(center, center, size * 0.25f, inner);
+            inner.setShader(null);
+            bolt.setShadowLayer(12f, 0f, 0f, Color.rgb(255, 56, 92));
+            canvas.drawText("W", center, center + (bolt.getTextSize() * 0.34f), bolt);
+        }
     }
 
     private final class BandAdapter extends BaseAdapter {

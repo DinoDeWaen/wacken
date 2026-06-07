@@ -8,7 +8,7 @@ Use this section for most tasks. Read deeper sections only when the active task 
 
 ### Current Product Scope
 
-Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken bands and prepare a conflict-aware festival schedule. The current implementation focuses on band import, band listing, band detail, 1-5 ratings with unrated state, local cache behavior, Supabase-backed master-data sync, Supabase Auth, and shared rating sync.
+Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken bands and prepare a conflict-aware festival schedule. The current implementation focuses on band import, band listing, band detail, 1-5 ratings with unrated state, local cache behavior, Supabase-backed lifecycle master-data sync, Supabase Auth, and shared rating sync.
 
 ### Current Implemented Capabilities
 
@@ -17,9 +17,9 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - Room local cache for fast app reads and offline continuity.
 - Supabase Auth for user identity.
 - Supabase Postgres/Flyway backend for central master data, group membership, and ratings.
-- Supabase sync for bands, stages, performances, stage distances, food options, and group ratings.
+- Supabase sync for bands, stages, performances, stage distances, food options, and group ratings on app start, overview reactivation, manual sync, and close.
 - CSV/TSV fallback import path for local/admin data work.
-- Wacken-inspired overview/detail presentation with music links and imported metadata where available.
+- Wacken-inspired overview/detail presentation with music links, imported metadata where available, and metal-themed sync feedback.
 
 ### Current Non-Goals
 
@@ -35,7 +35,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 | Ratings and group decisions | BR-001 to BR-021 | Rating, veto, effective rating, group decision, conflict resolution |
 | Travel, lunch, and timeline | BR-022 to BR-032 | Scheduling, walking time, lunch, food suggestions, printable timeline |
 | Festival data import | BR-033 to BR-046 | CSV import, Supabase master data, Room cache, admin data, band-only imports |
-| Overview, detail, and app state | BR-047 to BR-055 | Wacken UI, metadata, music links, loading, returning to app context |
+| Overview, detail, and app state | BR-047 to BR-059 | Wacken UI, metadata, music links, loading, sync feedback, returning to app context |
 
 ### Requirement Drift Markers
 
@@ -339,6 +339,9 @@ Scenario: View printable festival timeline
 | BR-054 | Returning to the app must restore the user’s last Wacken Planner screen instead of showing an unrelated browser or new-tab state. | Returning from another app brings the user back to the same overview or detail screen. | Must |
 | BR-055 | External music links must not destroy or replace the app’s internal navigation state. | Opening YouTube or Spotify and returning restores the previous Wacken Planner context. | Must |
 | BR-056 | Authenticated Supabase calls must renew expired access tokens when the refresh token is still valid. | Master-data sync and rating sync continue after normal JWT expiry; if refresh fails, the local session is cleared and the user returns to login. | Must |
+| BR-057 | The signed-in app must sync Supabase master data and group ratings when the band overview starts or is reactivated. | A user opening the app on a second Android device sees ratings from the shared Supabase group without needing to force-close the first device. | Must |
+| BR-058 | The app must provide a close action that attempts Supabase sync before closing. | Tapping close pushes local pending ratings and pulls group ratings before the app exits; if sync fails, local ratings remain available and the app stays open with a clear failure message. | Must |
+| BR-059 | Sync operations must show clear Wacken/metal-themed feedback and prevent conflicting sync/close actions while in progress. | Startup, reactivation, manual sync, and close sync show visible progress instead of a blank or frozen screen. | Must |
 
 ## Data and terminology
 

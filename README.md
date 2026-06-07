@@ -6,10 +6,10 @@
 
 ## Basic Functionality (MVP 1)
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
-- Sync centrally managed festival master data from Supabase into the local Room cache.
+- Sync centrally managed festival master data from Supabase into the local Room cache on app start, overview reactivation, manual sync, and close.
 - List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.
 - Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars.
-- Save rating changes locally immediately and sync pending/group ratings with Supabase when the app syncs.
+- Save rating changes locally immediately and sync pending/group ratings with Supabase when the app starts, reactivates, syncs manually, or closes.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show imported English band biography/explanation and available band image metadata on the detail screen when `bands.csv` provides it.
 - Sign in with Supabase Auth so ratings can be associated with a user and the shared Wacken planning group.
@@ -215,15 +215,19 @@ performance times, stage overlaps, negative walking minutes, and food/stage
 references, then applies the import in one transaction. Failed imports update
 their import batch to `failed` and leave existing master data unchanged.
 
-The Android band overview reads from Room. Use **Sync from Supabase** in the app
-to pull central bands, stages, performances, stage distances, and food options
-from Supabase into Room and to push/pull group ratings. Rating changes are
+The Android band overview reads from Room and automatically syncs from Supabase
+when the app starts and whenever the overview is reactivated after returning
+from another screen or app. Use **Sync from Supabase** to retry manually. Use
+**Sync & close** to push/pull Supabase data before closing the app. Each sync
+pulls central bands, stages, performances, stage distances, and food options
+from Supabase into Room and pushes/pulls group ratings. Rating changes are
 stored locally first with pending sync metadata; when Supabase accepts the
 rating it is marked synced. If sync fails, existing cached Room data and pending
-ratings remain available and the app shows a stale-data message. The CSV import
-screen remains available for fallback/local import work and writes through the
-TSV fallback source plus Room cache; it is no longer the primary app data
-source.
+ratings remain available and the app shows a stale-data message. A Wacken/metal
+sync overlay is shown while startup, reactivation, manual, or close sync is
+running. The CSV import screen remains available for fallback/local import work
+and writes through the TSV fallback source plus Room cache; it is no longer the
+primary app data source.
 
 Rating scale migration: app database version 3 migrates old local explicit
 ratings from the previous 0-4 scale to the new 1-5 explicit scale by adding 1
