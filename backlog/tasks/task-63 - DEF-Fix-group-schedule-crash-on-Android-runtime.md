@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@codex'
 created_date: '2026-06-08 07:16'
-updated_date: '2026-06-08 07:20'
+updated_date: '2026-06-08 07:21'
 labels:
   - android
   - mvp2
@@ -99,4 +99,9 @@ Diagram impact: none, because the system structure and data flow did not change.
 ## Risks and follow-up
 
 - Device verification remains needed because no Android device or emulator is connected in this environment.
+
+Release asset update:
+
+- Replaced the GitHub `v2.0` release APK asset with the rebuilt fixed APK using `gh release upload v2.0 app/build/outputs/apk/debug/app-debug.apk --clobber`.
+- Branch pushed: codex-task-2-testing-coverage at commit c0e5709.
 <!-- SECTION:NOTES:END -->
