@@ -52,9 +52,11 @@ public final class GenerateSharedScheduleUseCase {
         List<TimelineSlot> slots = conflictDetector.detect(scheduled)
                 .stream()
                 .map(conflictSet -> conflictResolver.resolve(conflictSet, groupRatings))
-                .flatMap(resolution -> toSlot(resolution).stream())
+                .map(this::toSlot)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .sorted(Comparator.comparing(TimelineSlot::start))
-                .toList();
+                .collect(Collectors.toList());
 
         if (slots.isEmpty()) {
             return SharedSchedule.noSelections();
@@ -91,6 +93,6 @@ public final class GenerateSharedScheduleUseCase {
         return slotsByDay.entrySet()
                 .stream()
                 .map(entry -> new ScheduleDay(entry.getKey(), entry.getValue()))
-                .toList();
+                .collect(Collectors.toList());
     }
 }

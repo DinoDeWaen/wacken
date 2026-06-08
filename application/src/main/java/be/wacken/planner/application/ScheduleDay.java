@@ -1,6 +1,8 @@
 package be.wacken.planner.application;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public record ScheduleDay(LocalDate date, List<TimelineSlot> slots) {
@@ -11,6 +13,6 @@ public record ScheduleDay(LocalDate date, List<TimelineSlot> slots) {
         if (slots == null) {
             throw new IllegalArgumentException("Schedule day slots must not be null.");
         }
-        slots = List.copyOf(slots);
+        slots = Collections.unmodifiableList(new ArrayList<>(slots));
     }
 }

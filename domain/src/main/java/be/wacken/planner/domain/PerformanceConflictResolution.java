@@ -1,5 +1,7 @@
 package be.wacken.planner.domain;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -19,6 +21,6 @@ public record PerformanceConflictResolution(
         if (reason == null || reason.isBlank()) {
             throw new DomainValidationException("Performance conflict resolution reason must not be blank.");
         }
-        rejected = List.copyOf(rejected);
+        rejected = Collections.unmodifiableList(new ArrayList<>(rejected));
     }
 }

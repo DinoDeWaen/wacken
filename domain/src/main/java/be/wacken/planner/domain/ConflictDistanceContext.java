@@ -1,5 +1,7 @@
 package be.wacken.planner.domain;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -9,11 +11,11 @@ public record ConflictDistanceContext(Optional<Stage> previousStage, Optional<St
         previousStage = previousStage == null ? Optional.empty() : previousStage;
         nextStage = nextStage == null ? Optional.empty() : nextStage;
         Objects.requireNonNull(distances, "distances must not be null");
-        distances = List.copyOf(distances);
+        distances = Collections.unmodifiableList(new ArrayList<>(distances));
     }
 
     public static ConflictDistanceContext none() {
-        return new ConflictDistanceContext(Optional.empty(), Optional.empty(), List.of());
+        return new ConflictDistanceContext(Optional.empty(), Optional.empty(), Collections.emptyList());
     }
 
     public static ConflictDistanceContext fromPreviousStage(Stage previousStage, List<StageDistance> distances) {
@@ -27,10 +29,10 @@ public record ConflictDistanceContext(Optional<Stage> previousStage, Optional<St
     int routeScoreTo(Stage stage) {
         int score = 0;
         if (previousStage.isPresent()) {
-            score += walkingMinutes(previousStage.orElseThrow(), stage);
+            score += walkingMinutes(previousStage.get(), stage);
         }
         if (nextStage.isPresent()) {
-            score += walkingMinutes(stage, nextStage.orElseThrow());
+            score += walkingMinutes(stage, nextStage.get());
         }
         return score;
     }

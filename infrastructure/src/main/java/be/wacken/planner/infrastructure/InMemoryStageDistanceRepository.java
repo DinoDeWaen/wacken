@@ -4,6 +4,8 @@ import be.wacken.planner.domain.Stage;
 import be.wacken.planner.domain.StageDistance;
 import be.wacken.planner.domain.StageDistanceRepository;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +35,7 @@ public final class InMemoryStageDistanceRepository implements StageDistanceRepos
 
     @Override
     public List<StageDistance> findAll() {
-        return List.copyOf(distancesByStagePair.values());
+        return Collections.unmodifiableList(new ArrayList<>(distancesByStagePair.values()));
     }
 
     private record StagePair(Stage from, Stage to) {

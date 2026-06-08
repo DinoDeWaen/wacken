@@ -1,5 +1,7 @@
 package be.wacken.planner.domain;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -9,7 +11,7 @@ public record PerformanceConflictSet(List<Performance> performances) {
         if (performances.isEmpty()) {
             throw new DomainValidationException("Performance conflict set must not be empty.");
         }
-        performances = List.copyOf(performances);
+        performances = Collections.unmodifiableList(new ArrayList<>(performances));
     }
 
     public boolean hasConflict() {

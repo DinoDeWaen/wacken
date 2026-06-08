@@ -70,7 +70,7 @@ public final class BandDetailActivity extends Activity {
 
         ShowBandDetailUseCase showBand = new ShowBandDetailUseCase(bands, ratings);
         BandDetailItem detail = showBand.showBand(currentUser(), selectedBand.name(), musicLinksFromIntent())
-                .orElseThrow();
+                .orElseThrow(() -> new IllegalStateException("Band detail could not be loaded."));
         setContentView(render(detail));
     }
 

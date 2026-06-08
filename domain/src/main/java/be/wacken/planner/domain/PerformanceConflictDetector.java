@@ -1,9 +1,11 @@
 package be.wacken.planner.domain;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public final class PerformanceConflictDetector {
     public List<PerformanceConflictSet> detect(List<Performance> performances) {
@@ -14,7 +16,7 @@ public final class PerformanceConflictDetector {
                         .comparing(Performance::start)
                         .thenComparing(Performance::end)
                         .thenComparing(performance -> performance.band().name(), String.CASE_INSENSITIVE_ORDER))
-                .toList();
+                .collect(Collectors.toList());
 
         List<PerformanceConflictSet> sets = new ArrayList<>();
         List<Performance> current = new ArrayList<>();
@@ -30,7 +32,7 @@ public final class PerformanceConflictDetector {
         if (!current.isEmpty()) {
             sets.add(new PerformanceConflictSet(current));
         }
-        return List.copyOf(sets);
+        return Collections.unmodifiableList(new ArrayList<>(sets));
     }
 
     private boolean overlapsAny(List<Performance> current, Performance candidate) {

@@ -1,11 +1,13 @@
 package be.wacken.planner.domain;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class PerformanceConflictResolver {
     private final GroupDecisionPolicy decisionPolicy;
@@ -35,7 +37,7 @@ public final class PerformanceConflictResolver {
         List<Candidate> selectable = candidates.stream()
                 .filter(Candidate::isSelectable)
                 .sorted(candidateComparator())
-                .toList();
+                .collect(Collectors.toList());
 
         if (selectable.isEmpty()) {
             GroupDecisionStatus status = candidates.stream().anyMatch(Candidate::isBlocked)
@@ -81,12 +83,12 @@ public final class PerformanceConflictResolver {
         List<Candidate> candidates = new ArrayList<>();
         int index = 0;
         for (Performance performance : conflictSet.performances()) {
-            List<Rating> ratings = ratingsByBand.getOrDefault(performance.band(), List.of());
+            List<Rating> ratings = ratingsByBand.getOrDefault(performance.band(), Collections.emptyList());
             GroupDecision decision = decisionPolicy.decide(performance, ratings);
             candidates.add(new Candidate(performance, ratings, decision, distanceContext.routeScoreTo(performance.stage()), index));
             index++;
         }
-        return List.copyOf(candidates);
+        return Collections.unmodifiableList(new ArrayList<>(candidates));
     }
 
     private Comparator<Candidate> candidateComparator() {
@@ -107,7 +109,7 @@ public final class PerformanceConflictResolver {
             int inputOrder
     ) {
         Candidate {
-            ratings = List.copyOf(ratings);
+            ratings = Collections.unmodifiableList(new ArrayList<>(ratings));
         }
 
         boolean isSelectable() {
