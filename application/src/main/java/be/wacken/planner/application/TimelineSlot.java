@@ -7,15 +7,20 @@ import java.util.Optional;
 
 public record TimelineSlot(
         String bandName,
+        int rating,
         String stageName,
         LocalDateTime start,
         LocalDateTime end,
         GroupDecisionStatus decisionStatus,
-        Optional<String> lostAlternativeBandName
+        Optional<String> lostAlternativeBandName,
+        Optional<Integer> lostAlternativeRating
 ) {
     public TimelineSlot {
         if (bandName == null || bandName.isBlank()) {
             throw new IllegalArgumentException("Timeline slot band name must not be blank.");
+        }
+        if (rating < 0 || rating > 5) {
+            throw new IllegalArgumentException("Timeline slot rating must be between 0 and 5.");
         }
         if (stageName == null || stageName.isBlank()) {
             throw new IllegalArgumentException("Timeline slot stage name must not be blank.");
@@ -30,6 +35,10 @@ public record TimelineSlot(
             throw new IllegalArgumentException("Timeline slot decision status must not be null.");
         }
         lostAlternativeBandName = lostAlternativeBandName == null ? Optional.empty() : lostAlternativeBandName;
+        lostAlternativeRating = lostAlternativeRating == null ? Optional.empty() : lostAlternativeRating;
+        if (lostAlternativeRating.isPresent() && (lostAlternativeRating.get() < 0 || lostAlternativeRating.get() > 5)) {
+            throw new IllegalArgumentException("Timeline slot lost alternative rating must be between 0 and 5.");
+        }
     }
 
     public boolean optional() {

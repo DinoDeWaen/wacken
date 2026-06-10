@@ -15,7 +15,7 @@
 - Return from band detail to the same overview band row after refresh so users can continue rating without losing their place.
 - Sign in with Supabase Auth so ratings can be associated with a user and the shared Wacken planning group.
 - Share plain-text invite instructions for the single shared `Sofie and Dino` planning group through Android's share sheet.
-- Generate and view an MVP2 group schedule from shared ratings, conflict rules, optional decisions, and lost alternatives.
+- Generate and view an MVP2 group schedule from shared ratings, conflict rules, optional decisions, winner stars, and lost-alternative stars.
 - Prepare groundwork for printable timelines.
 
 ## Architecture

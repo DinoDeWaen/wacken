@@ -55,8 +55,28 @@ class GenerateSharedScheduleUseCaseTest {
         TimelineSlot slot = new GenerateSharedScheduleUseCase(performances, ratings).generate().days().get(0).slots().get(0);
 
         assertEquals("5th Avenue", slot.bandName());
+        assertEquals(5, slot.rating());
         assertEquals(Optional.of("Airbourne"), slot.lostAlternativeBandName());
+        assertEquals(Optional.of(4), slot.lostAlternativeRating());
         assertEquals(GroupDecisionStatus.GO, slot.decisionStatus());
+    }
+
+    @Test
+    void usesHighestGroupRatingForWinnerAndLostAlternativeStars() {
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Performance selected = performance("5th Avenue", 30, 18, 0, 19, 0);
+        Performance lost = performance("Airbourne", 30, 18, 30, 19, 30);
+        performances.replaceAll(List.of(selected, lost));
+        ratings.save("sofie", selected.band(), Rating.of(4));
+        ratings.save("dino", selected.band(), Rating.of(5));
+        ratings.save("sofie", lost.band(), Rating.of(3));
+        ratings.save("dino", lost.band(), Rating.of(4));
+
+        TimelineSlot slot = new GenerateSharedScheduleUseCase(performances, ratings).generate().days().get(0).slots().get(0);
+
+        assertEquals(5, slot.rating());
+        assertEquals(Optional.of(4), slot.lostAlternativeRating());
     }
 
     @Test
@@ -73,6 +93,7 @@ class GenerateSharedScheduleUseCaseTest {
         TimelineSlot slot = new GenerateSharedScheduleUseCase(performances, ratings).generate().days().get(0).slots().get(0);
 
         assertEquals("5th Avenue", slot.bandName());
+        assertEquals(3, slot.rating());
         assertEquals(GroupDecisionStatus.OPTIONAL, slot.decisionStatus());
         assertEquals(true, slot.optional());
     }

@@ -119,7 +119,7 @@ public final class ScheduleActivity extends Activity {
         panel.setLayoutParams(layout);
 
         TextView band = new TextView(this);
-        band.setText(slot.bandName());
+        band.setText(slot.bandName() + " " + stars(slot.rating()));
         band.setTextColor(COLOR_TEXT);
         band.setTextSize(18);
         band.setTypeface(Typeface.DEFAULT_BOLD);
@@ -140,12 +140,25 @@ public final class ScheduleActivity extends Activity {
 
         slot.lostAlternativeBandName().ifPresent(lost -> {
             TextView alternative = new TextView(this);
-            alternative.setText("Lost alternative: " + lost);
+            String alternativeText = "Lost alternative: " + lost
+                    + slot.lostAlternativeRating()
+                    .map(rating -> " " + stars(rating))
+                    .orElse("");
+            alternative.setText(alternativeText);
             alternative.setTextColor(COLOR_MUTED);
             alternative.setPadding(0, dp(5), 0, 0);
             panel.addView(alternative);
         });
         return panel;
+    }
+
+    private String stars(int rating) {
+        int safeRating = Math.max(0, Math.min(5, rating));
+        StringBuilder text = new StringBuilder(5);
+        for (int index = 0; index < 5; index++) {
+            text.append(index < safeRating ? "★" : "☆");
+        }
+        return text.toString();
     }
 
     private TextView message(String text, int color) {

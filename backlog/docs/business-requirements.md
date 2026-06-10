@@ -317,7 +317,7 @@ Scenario: View printable festival timeline
 | BR-028 | Lunch timing is expected to be refined later with user input. | A later version can let users tune lunch placement or duration. | Should |
 | BR-029 | Lunch planning must show food options close to the previous stage and close to the next stage when such options exist. | Food suggestions are relevant to the user's route. | Must |
 | BR-030 | If no food option is close to the previous or next stage, the app does not need to show a substitute suggestion. | No nearby food means no nearby-food recommendation. | Must |
-| BR-031 | Each timeline slot must show selected band, stage, time range, travel time to next stage, lost alternative, and lunch where applicable. | Users can understand the plan and the closest rejected option. | Must |
+| BR-031 | Each timeline slot must show selected band, winner rating stars, stage, time range, travel time to next stage, lost alternative with rating stars, and lunch where applicable. | Users can understand the plan, why the winner was selected, and whether the closest rejected option is still worth considering. | Must |
 | BR-032 | A lost alternative is the second-highest band: the performance that lost to the selected performance and could still be chosen manually if preferred. | If the winning band is not good enough, the user can inspect the runner-up. | Must |
 | BR-033 | CSV import validation must detect missing references, overlaps, and unknown stages. | An imported performance cannot reference an unknown stage without validation feedback. | Must |
 | BR-034 | Scraped or imported data changes should be proposed in a data grid for line-by-line user validation. | The user can accept or reject each proposed band or performance update. | Should |

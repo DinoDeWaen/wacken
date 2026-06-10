@@ -52,7 +52,7 @@ public final class GenerateSharedScheduleUseCase {
         List<TimelineSlot> slots = conflictDetector.detect(scheduled)
                 .stream()
                 .map(conflictSet -> conflictResolver.resolve(conflictSet, groupRatings))
-                .map(this::toSlot)
+                .map(resolution -> toSlot(resolution, groupRatings))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .sorted(Comparator.comparing(TimelineSlot::start))
@@ -74,15 +74,25 @@ public final class GenerateSharedScheduleUseCase {
                 ));
     }
 
-    private Optional<TimelineSlot> toSlot(PerformanceConflictResolution resolution) {
+    private Optional<TimelineSlot> toSlot(PerformanceConflictResolution resolution, Map<Band, List<Rating>> groupRatings) {
         return resolution.selected().map(selected -> new TimelineSlot(
                 selected.band().name(),
+                highestRating(selected.band(), groupRatings),
                 selected.stage().name(),
                 selected.start(),
                 selected.end(),
                 resolution.status(),
-                resolution.lostAlternative().map(alternative -> alternative.band().name())
+                resolution.lostAlternative().map(alternative -> alternative.band().name()),
+                resolution.lostAlternative().map(alternative -> highestRating(alternative.band(), groupRatings))
         ));
+    }
+
+    private int highestRating(Band band, Map<Band, List<Rating>> groupRatings) {
+        return groupRatings.getOrDefault(band, java.util.Collections.emptyList())
+                .stream()
+                .mapToInt(Rating::value)
+                .max()
+                .orElse(0);
     }
 
     private List<ScheduleDay> groupByDay(List<TimelineSlot> slots) {
