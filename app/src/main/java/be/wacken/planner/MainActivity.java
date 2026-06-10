@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.SweepGradient;
 import android.graphics.Typeface;
@@ -20,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -48,7 +48,6 @@ public final class MainActivity extends Activity {
     private static final int COLOR_TEXT = Color.rgb(220, 224, 225);
     private static final int COLOR_MUTED = Color.rgb(162, 169, 171);
     private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
-    private static final int COLOR_DARK_STEEL = Color.rgb(17, 21, 22);
     private static final int TABLE_HEADER_HEIGHT_DP = 44;
     private static final int BAND_ROW_HEIGHT_DP = 58;
 
@@ -321,66 +320,63 @@ public final class MainActivity extends Activity {
         syncOverlay = new FrameLayout(this);
         syncOverlay.setVisibility(View.GONE);
         syncOverlay.setClickable(true);
-        syncOverlay.setBackground(metalPanelBackground());
 
-        syncOverlay.addView(new HeavyMetalBackdropView(this), new FrameLayout.LayoutParams(
+        ImageView splash = new ImageView(this);
+        splash.setImageResource(R.drawable.splash_dino_metal);
+        splash.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        syncOverlay.addView(splash, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+        ));
+
+        View scrim = new View(this);
+        scrim.setBackgroundColor(Color.argb(56, 0, 0, 0));
+        syncOverlay.addView(scrim, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
         ));
 
         LinearLayout panel = new LinearLayout(this);
-        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setOrientation(LinearLayout.HORIZONTAL);
         panel.setGravity(Gravity.CENTER);
-        panel.setPadding(dp(24), dp(24), dp(24), dp(24));
+        panel.setPadding(dp(18), dp(16), dp(18), dp(16));
+        panel.setBackgroundColor(Color.argb(188, 6, 8, 9));
 
         TextView title = new TextView(this);
-        title.setText("WACKEN FORGE");
+        title.setText("SYNC");
         title.setTextColor(Color.WHITE);
-        title.setTextSize(34);
+        title.setTextSize(16);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER);
-        title.setShadowLayer(dp(10), 0, dp(2), COLOR_ACCENT);
+        title.setShadowLayer(dp(6), 0, dp(1), COLOR_ACCENT);
         panel.addView(title);
 
         syncAnimation = new MetalSyncView(this);
-        LinearLayout.LayoutParams animationLayout = new LinearLayout.LayoutParams(dp(144), dp(144));
-        animationLayout.setMargins(0, dp(22), 0, dp(18));
+        LinearLayout.LayoutParams animationLayout = new LinearLayout.LayoutParams(dp(72), dp(72));
+        animationLayout.setMargins(dp(16), 0, dp(16), 0);
         panel.addView(syncAnimation, animationLayout);
 
         syncOverlayMessage = new TextView(this);
         syncOverlayMessage.setTextColor(COLOR_TEXT);
-        syncOverlayMessage.setTextSize(16);
+        syncOverlayMessage.setTextSize(14);
         syncOverlayMessage.setTypeface(Typeface.DEFAULT_BOLD);
-        syncOverlayMessage.setGravity(Gravity.CENTER);
-        panel.addView(syncOverlayMessage);
-
-        TextView subtitle = new TextView(this);
-        subtitle.setText("IRON CACHE // LIVE RATING RITUAL");
-        subtitle.setTextColor(Color.rgb(255, 199, 44));
-        subtitle.setTextSize(11);
-        subtitle.setTypeface(Typeface.DEFAULT_BOLD);
-        subtitle.setGravity(Gravity.CENTER);
-        subtitle.setPadding(0, dp(8), 0, 0);
-        panel.addView(subtitle);
-
-        syncOverlay.addView(panel, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
+        syncOverlayMessage.setGravity(Gravity.CENTER_VERTICAL);
+        syncOverlayMessage.setMaxLines(2);
+        syncOverlayMessage.setEllipsize(TextUtils.TruncateAt.END);
+        panel.addView(syncOverlayMessage, new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1
         ));
-        return syncOverlay;
-    }
 
-    private GradientDrawable metalPanelBackground() {
-        GradientDrawable drawable = new GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                new int[]{
-                        Color.rgb(6, 8, 9),
-                        COLOR_DARK_STEEL,
-                        Color.rgb(43, 50, 52),
-                        Color.rgb(9, 11, 12)
-                }
+        FrameLayout.LayoutParams panelLayout = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP
         );
-        return drawable;
+        panelLayout.setMargins(0, dp(20), 0, 0);
+        syncOverlay.addView(panel, panelLayout);
+        return syncOverlay;
     }
 
     private void showSyncOverlay(String message) {
@@ -636,64 +632,6 @@ public final class MainActivity extends Activity {
             inner.setShader(null);
             bolt.setShadowLayer(12f, 0f, 0f, Color.rgb(255, 56, 92));
             canvas.drawText("⚡", center, center + (bolt.getTextSize() * 0.34f), bolt);
-        }
-    }
-
-    private static final class HeavyMetalBackdropView extends View {
-        private final Paint beams = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint spikes = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint wires = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Path path = new Path();
-
-        HeavyMetalBackdropView(Activity activity) {
-            super(activity);
-            beams.setStyle(Paint.Style.FILL);
-            spikes.setStyle(Paint.Style.FILL);
-            spikes.setColor(Color.rgb(7, 9, 10));
-            wires.setStyle(Paint.Style.STROKE);
-            wires.setStrokeWidth(activity.getResources().getDisplayMetrics().density * 2f);
-            wires.setColor(Color.rgb(255, 56, 92));
-            wires.setAlpha(120);
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            super.onDraw(canvas);
-            float width = getWidth();
-            float height = getHeight();
-            beams.setColor(Color.rgb(95, 14, 29));
-            beams.setAlpha(90);
-            path.reset();
-            path.moveTo(width * 0.08f, height);
-            path.lineTo(width * 0.36f, 0);
-            path.lineTo(width * 0.48f, 0);
-            path.lineTo(width * 0.22f, height);
-            path.close();
-            canvas.drawPath(path, beams);
-
-            path.reset();
-            path.moveTo(width * 0.92f, height);
-            path.lineTo(width * 0.64f, 0);
-            path.lineTo(width * 0.52f, 0);
-            path.lineTo(width * 0.78f, height);
-            path.close();
-            canvas.drawPath(path, beams);
-
-            path.reset();
-            path.moveTo(0, height);
-            for (int index = 0; index <= 14; index++) {
-                float x = width * index / 14f;
-                float y = index % 2 == 0 ? height * 0.84f : height * 0.94f;
-                path.lineTo(x, y);
-            }
-            path.lineTo(width, height);
-            path.close();
-            canvas.drawPath(path, spikes);
-
-            for (int index = 0; index < 4; index++) {
-                float y = height * (0.18f + index * 0.15f);
-                canvas.drawLine(width * 0.12f, y, width * 0.88f, y + height * 0.04f, wires);
-            }
         }
     }
 
