@@ -322,8 +322,9 @@ public final class MainActivity extends Activity {
         syncOverlay.setClickable(true);
 
         ImageView splash = new ImageView(this);
+        splash.setBackgroundColor(Color.BLACK);
         splash.setImageResource(R.drawable.splash_dino_metal);
-        splash.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        splash.setScaleType(ImageView.ScaleType.FIT_CENTER);
         syncOverlay.addView(splash, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
