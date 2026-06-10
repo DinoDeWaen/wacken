@@ -11,6 +11,7 @@ import be.wacken.planner.domain.RatingRepository;
 import be.wacken.planner.domain.SavedRating;
 import be.wacken.planner.domain.Stage;
 import be.wacken.planner.domain.StageDistanceRepository;
+import be.wacken.planner.domain.StageWalkingTimePolicy;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -26,9 +27,6 @@ import java.util.stream.Collectors;
 
 public final class GenerateSharedScheduleUseCase {
     private static final LocalTime FESTIVAL_DAY_CUTOFF = LocalTime.of(2, 0);
-    private static final String HEAVY = "heavy";
-    private static final String LOUDER = "louder";
-
     private final PerformanceRepository performances;
     private final RatingRepository ratings;
     private final Optional<StageDistanceRepository> distances;
@@ -181,30 +179,7 @@ public final class GenerateSharedScheduleUseCase {
         return distances
                 .flatMap(repository -> repository.findBetween(from, to))
                 .map(distance -> OptionalInt.of(distance.walkingMinutes()))
-                .orElseGet(() -> OptionalInt.of(defaultWalkingMinutes(fromStageName, toStageName)));
-    }
-
-    private int defaultWalkingMinutes(String fromStageName, String toStageName) {
-        String from = normalizeStage(fromStageName);
-        String to = normalizeStage(toStageName);
-        if (from.equals(to)) {
-            return 0;
-        }
-        if (isHeavyOrLouder(from) && isHeavyOrLouder(to)) {
-            return 5;
-        }
-        if (isHeavyOrLouder(from) || isHeavyOrLouder(to)) {
-            return 15;
-        }
-        return 5;
-    }
-
-    private boolean isHeavyOrLouder(String stageName) {
-        return HEAVY.equals(stageName) || LOUDER.equals(stageName);
-    }
-
-    private String normalizeStage(String stageName) {
-        return stageName == null ? "" : stageName.trim().toLowerCase(java.util.Locale.ROOT);
+                .orElseGet(() -> OptionalInt.of(StageWalkingTimePolicy.defaultWalkingMinutes(fromStageName, toStageName)));
     }
 
     private LocalDate festivalDay(java.time.LocalDateTime time) {

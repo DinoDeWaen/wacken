@@ -2,6 +2,7 @@ package be.wacken.planner;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -23,6 +24,7 @@ import be.wacken.planner.application.ScheduleDecisionCandidate;
 import be.wacken.planner.application.SharedSchedule;
 import be.wacken.planner.application.SharedScheduleStatus;
 import be.wacken.planner.application.TimelineSlot;
+import be.wacken.planner.domain.StageWalkingTimePolicy;
 
 public final class ScheduleActivity extends Activity {
     private static final int COLOR_BACKGROUND = Color.rgb(29, 36, 38);
@@ -185,17 +187,17 @@ public final class ScheduleActivity extends Activity {
     }
 
     private TextView slotStartTimeLabel(ScheduleDecisionCandidate candidate) {
-        return timelineLabel(candidate.start().format(TIME) + " ─┐");
+        return eventTimeLabel(candidate.start().format(TIME) + " ─");
     }
 
     private TextView slotEndTimeLabel(ScheduleDecisionCandidate candidate) {
-        return timelineLabel(candidate.end().format(TIME) + " ─┘");
+        return eventTimeLabel(candidate.end().format(TIME) + " ─");
     }
 
-    private TextView timelineLabel(String text) {
+    private TextView eventTimeLabel(String text) {
         TextView label = new TextView(this);
         label.setText(text);
-        label.setTextColor(COLOR_MUTED);
+        label.setTextColor(Color.WHITE);
         label.setTextSize(11);
         label.setTypeface(Typeface.DEFAULT_BOLD);
         label.setSingleLine(true);
@@ -304,14 +306,14 @@ public final class ScheduleActivity extends Activity {
         detail.addView(detailText("Chosen act", COLOR_ACCENT, 12, true));
         final AlertDialog[] dialog = new AlertDialog[1];
         java.util.List<ScheduleDecisionCandidate> candidates = manualSelections.detailCandidates(slot);
-        detail.addView(candidateView(slot, candidates.get(0), () -> dialog[0].dismiss()));
+        detail.addView(candidateView(slot, candidates.get(0), candidates, () -> dialog[0].dismiss()));
 
         detail.addView(detailText("Alternatives", COLOR_ACCENT, 12, true));
         boolean hasAlternatives = false;
         for (int index = 1; index < candidates.size(); index++) {
             ScheduleDecisionCandidate candidate = candidates.get(index);
             if (!candidate.selected()) {
-                detail.addView(candidateView(slot, candidate, () -> dialog[0].dismiss()));
+                detail.addView(candidateView(slot, candidate, candidates, () -> dialog[0].dismiss()));
                 hasAlternatives = true;
             }
         }
@@ -341,7 +343,12 @@ public final class ScheduleActivity extends Activity {
         }
     }
 
-    private LinearLayout candidateView(TimelineSlot slot, ScheduleDecisionCandidate candidate, Runnable afterSelect) {
+    private LinearLayout candidateView(
+            TimelineSlot slot,
+            ScheduleDecisionCandidate candidate,
+            java.util.List<ScheduleDecisionCandidate> candidates,
+            Runnable afterSelect
+    ) {
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setPadding(0, dp(6), 0, dp(10));
@@ -350,6 +357,11 @@ public final class ScheduleActivity extends Activity {
                 candidate.selected() ? COLOR_TEXT : COLOR_MUTED,
                 16,
                 candidate.selected());
+        name.setClickable(true);
+        name.setOnClickListener(view -> {
+            openBandDetail(candidate);
+            afterSelect.run();
+        });
         panel.addView(name);
 
         TextView facts = detailText(
@@ -362,6 +374,9 @@ public final class ScheduleActivity extends Activity {
 
         TextView status = detailText(candidate.status(), candidate.selected() ? COLOR_ACCENT : COLOR_AMBER, 12, true);
         panel.addView(status);
+        walkingContext(candidate, candidates).ifPresent(context ->
+                panel.addView(detailText(context, COLOR_AMBER, 12, true))
+        );
         if (!candidate.selected()) {
             Button select = new Button(this);
             select.setAllCaps(false);
@@ -377,6 +392,34 @@ public final class ScheduleActivity extends Activity {
             panel.addView(select);
         }
         return panel;
+    }
+
+    private java.util.Optional<String> walkingContext(
+            ScheduleDecisionCandidate candidate,
+            java.util.List<ScheduleDecisionCandidate> candidates
+    ) {
+        java.util.List<String> details = new java.util.ArrayList<>();
+        for (ScheduleDecisionCandidate other : candidates) {
+            if (other == candidate || other.bandName().equals(candidate.bandName())) {
+                continue;
+            }
+            int minutes = StageWalkingTimePolicy.defaultWalkingMinutes(candidate.stageName(), other.stageName());
+            details.add(minutes + " min to " + other.bandName());
+        }
+        if (details.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        return java.util.Optional.of("Walk: " + String.join(" | ", details));
+    }
+
+    private void openBandDetail(ScheduleDecisionCandidate candidate) {
+        Intent intent = new Intent(this, BandDetailActivity.class);
+        intent.putExtra(BandDetailActivity.EXTRA_BAND_NAME, candidate.bandName());
+        intent.putExtra(BandDetailActivity.EXTRA_STAGE, candidate.stageName());
+        intent.putExtra(BandDetailActivity.EXTRA_DATE, candidate.start().toLocalDate().toString());
+        intent.putExtra(BandDetailActivity.EXTRA_TIME,
+                candidate.start().format(TIME) + " - " + candidate.end().format(TIME));
+        startActivity(intent);
     }
 
     private TextView detailText(String text, int color, int size, boolean bold) {
