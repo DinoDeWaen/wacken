@@ -37,9 +37,9 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 | Area | Rules | Read when |
 | --- | --- | --- |
 | Ratings and group decisions | BR-001 to BR-021 | Rating, veto, effective rating, group decision, conflict resolution |
-| Travel, lunch, and timeline | BR-022 to BR-032 | Scheduling, walking time, lunch, food suggestions, printable timeline |
+| Travel, lunch, and timeline | BR-022 to BR-032, BR-073 to BR-074 | Scheduling, walking time, lunch, food suggestions, printable timeline |
 | Festival data import | BR-033 to BR-046 | CSV import, Supabase master data, Room cache, admin data, band-only imports |
-| Overview, detail, and app state | BR-047 to BR-068 | Wacken UI, metadata, music links, loading, sync feedback, settings, calendar schedule, returning to app context |
+| Overview, detail, and app state | BR-047 to BR-072 | Wacken UI, metadata, music links, loading, sync feedback, settings, calendar schedule, returning to app context |
 
 ### Requirement Drift Markers
 
@@ -173,6 +173,8 @@ Release assumptions:
 | App navigation and settings | Keep primary actions compact and move secondary/admin actions into a settings page. | Must | MVP 2 |
 | Calendar schedule view | Show the group schedule as day calendars with hour lines and performance blocks. | Must | MVP 2 |
 | Manual schedule selection | Let the group choose an alternative act for a conflict and update the visible schedule result. | Must | MVP 2 |
+| Schedule visual polish | Keep calendar, decision detail, and sync/startup feedback consistent with the Wacken dark heavy-metal presentation. | Must | MVP 2 |
+| Walking-time schedule visibility | Apply the agreed MVP walking-time defaults and show movement time in the group schedule where known. | Must | MVP 3 |
 | Travel feasibility | Exclude or re-evaluate options that cannot be reached in time between stages. | Must | MVP 3 |
 | Lunch planning | Insert lunch into the schedule and consider food options near relevant stages. | Must | MVP 3 |
 | Food suggestions | Show food options close to the previous and next stages. | Must | MVP 3 |
@@ -372,6 +374,12 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-066 | A user can select an alternative as the act the group is going to for the visible schedule screen. | Choosing an alternative updates the local visible schedule result so that act becomes selected for that conflict. | Must |
 | BR-067 | Manual schedule choices must not silently change the underlying rating rules. | Selecting an alternative changes the local visible schedule choice, but the original ratings and generated decision evidence remain visible. | Must |
 | BR-068 | MVP2 manual schedule choices are local-only visible overrides. | A signed-in user can change the current schedule screen result; the choice is not synced to Supabase, is not persisted across app restart, and is cleared by leaving or regenerating the schedule screen. | Must |
+| BR-069 | Calendar schedule days must include late-night festival time through 02:00 before the next festival day starts. | A performance ending at 02:00 appears in the intended festival day view instead of being hidden by a midnight cutoff. | Must |
+| BR-070 | Calendar schedule day headings must include the weekday name. | A day heading shows a weekday such as Monday or Tuesday together with the festival date. | Must |
+| BR-071 | Schedule decision details must use the Wacken dark/metal visual scheme. | Opening a performance block shows chosen act and alternatives on a dark themed surface with readable light text and accent colors, not a default white dialog. | Must |
+| BR-072 | Splash and sync feedback should use a stronger heavy-metal visual style. | Startup, reactivation, manual sync, and close sync feedback feel visually aligned with Wacken/metal branding rather than generic loading. | Should |
+| BR-073 | MVP walking-time defaults must include named stage distances for Heavy, Louder, and other stages. | Heavy to Louder uses 5 minutes; Heavy or Louder to any other stage uses 15 minutes; walking between two other stages requires clarification before implementation. | Must |
+| BR-074 | The group schedule must show walking time between consecutive selected acts when known. | If the group moves from Heavy to Louder, the schedule shows 5 minutes walking time; if it moves from Heavy to another stage, it shows 15 minutes. | Must |
 
 ## Data and terminology
 
@@ -408,9 +416,10 @@ Scenario: Inspect and change a schedule conflict choice
 | Festival Master Data | Represents imported source data for the festival. | Is updated by CSV import; excludes ratings. |
 | Band Overview Row | Represents a visible, tappable band summary. | Opens band detail and displays effective rating, schedule status, and optional music-link actions. |
 | Settings page | Represents secondary app actions and operational controls. | Contains group/invite, import, and manual sync actions. |
-| Calendar schedule day | Represents one festival day in calendar form. | Contains hour lines and time-positioned performance blocks. |
+| Calendar schedule day | Represents one festival day in calendar form. | Contains hour lines and time-positioned performance blocks, including late-night festival time through 02:00 before the next festival day starts. |
 | Performance block | Represents a selected scheduled act in the calendar view. | Shows band, stage, rating stars, and opens the conflict detail. |
 | Manual schedule choice | Represents a user-selected act for a conflict. | Overrides the local visible selected act for that conflict without changing ratings, persistence, or synced group data. |
+| Walking-time segment | Represents movement time between consecutive selected schedule entries. | Uses known stage distance data or MVP walking-time defaults and is shown in the schedule where known. |
 
 ## Future domain events
 
@@ -465,6 +474,6 @@ The current in-app output format is a day-based calendar schedule. A clear, prin
 - How are users identified inside the one current shared group, and where are their ratings stored or shared?
 - What exact token/deep-link format should future self-service friend invites use beyond the current plain-text MVP2 share instructions?
 - How long is the initial lunch block inside 12:00-14:00 before user-configurable lunch behavior is added?
-- What data source should provide walking minutes between stages before this becomes a user setting?
-- Are there multiple festival days, and what date/time format should performances use?
+- For stages other than Heavy and Louder, should walking between two non-Heavy/Louder stages be 5 minutes, 15 minutes, or another value?
+- What exact festival dates should be used for weekday display, and what date/time format should performances use?
 - Should a later shared-decision workflow sync manual schedule choices to Supabase, add permissions, and provide an explicit reset-to-generated action?
