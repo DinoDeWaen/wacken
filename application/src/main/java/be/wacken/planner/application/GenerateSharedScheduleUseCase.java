@@ -93,36 +93,56 @@ public final class GenerateSharedScheduleUseCase {
     }
 
     private Optional<TimelineSlot> toSlot(PerformanceConflictResolution resolution, Map<Band, List<Rating>> groupRatings) {
-        return resolution.selected().map(selected -> new TimelineSlot(
-                selected.band().name(),
-                highestRating(selected.band(), groupRatings),
-                selected.stage().name(),
-                selected.start(),
-                selected.end(),
-                resolution.status(),
-                resolution.lostAlternative().map(alternative -> alternative.band().name()),
-                resolution.lostAlternative().map(alternative -> highestRating(alternative.band(), groupRatings)),
-                candidates(resolution, groupRatings)
-        ));
+        return resolution.selected().map(selected -> {
+            Optional<Performance> visibleLostAlternative = resolution.lostAlternative()
+                    .filter(alternative -> overlaps(selected, alternative));
+            return new TimelineSlot(
+                    selected.band().name(),
+                    highestRating(selected.band(), groupRatings),
+                    selected.stage().name(),
+                    selected.start(),
+                    selected.end(),
+                    resolution.status(),
+                    visibleLostAlternative.map(alternative -> alternative.band().name()),
+                    visibleLostAlternative.map(alternative -> highestRating(alternative.band(), groupRatings)),
+                    candidates(resolution, groupRatings, visibleLostAlternative)
+            );
+        });
     }
 
     private List<ScheduleDecisionCandidate> candidates(
             PerformanceConflictResolution resolution,
-            Map<Band, List<Rating>> groupRatings
+            Map<Band, List<Rating>> groupRatings,
+            Optional<Performance> visibleLostAlternative
     ) {
         List<ScheduleDecisionCandidate> candidates = new ArrayList<>();
         if (resolution.selected().isPresent()) {
             Performance selected = resolution.selected().get();
             candidates.add(candidate(selected, groupRatings, "CHOSEN", true));
+            for (Performance rejected : resolution.rejected()) {
+                if (overlaps(selected, rejected)) {
+                    candidates.add(candidate(rejected, groupRatings, rejectedStatus(rejected, visibleLostAlternative), false));
+                }
+            }
+            return candidates;
         }
         for (Performance rejected : resolution.rejected()) {
-            String status = resolution.lostAlternative()
-                    .filter(rejected::equals)
-                    .map(ignored -> "LOST ALTERNATIVE")
-                    .orElse("NOT SELECTED");
-            candidates.add(candidate(rejected, groupRatings, status, false));
+            candidates.add(candidate(rejected, groupRatings, rejectedStatus(rejected, visibleLostAlternative), false));
         }
         return candidates;
+    }
+
+    private String rejectedStatus(Performance rejected, Optional<Performance> lostAlternative) {
+        return lostAlternative
+                .filter(rejected::equals)
+                .map(ignored -> "LOST ALTERNATIVE")
+                .orElse("NOT SELECTED");
+    }
+
+    private boolean overlaps(Performance first, Performance second) {
+        return first.start().toLocalDate().equals(second.start().toLocalDate())
+                && first.start().isBefore(second.end())
+                && second.start().isBefore(first.end());
     }
 
     private ScheduleDecisionCandidate candidate(

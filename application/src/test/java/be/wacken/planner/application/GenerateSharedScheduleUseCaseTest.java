@@ -166,6 +166,24 @@ class GenerateSharedScheduleUseCaseTest {
     }
 
     @Test
+    void limitsDetailCandidatesToPerformancesThatDirectlyOverlapTheSelectedAct() {
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Performance selected = performance("Def Leppard", "Harder", 30, 18, 0, 19, 0);
+        Performance directAlternative = performance("Direct Alternative", "Louder", 30, 18, 30, 19, 30);
+        Performance chainedAlternative = performance("Chained Alternative", "Faster", 30, 19, 15, 20, 0);
+        performances.replaceAll(List.of(selected, directAlternative, chainedAlternative));
+        ratings.save("sofie", selected.band(), Rating.of(5));
+        ratings.save("dino", directAlternative.band(), Rating.of(4));
+        ratings.save("jan", chainedAlternative.band(), Rating.of(4));
+
+        TimelineSlot slot = new GenerateSharedScheduleUseCase(performances, ratings).generate().days().get(0).slots().get(0);
+
+        assertEquals(List.of("Def Leppard", "Direct Alternative"), slot.candidates().stream().map(ScheduleDecisionCandidate::bandName).toList());
+        assertEquals(Optional.of("Direct Alternative"), slot.lostAlternativeBandName());
+    }
+
+    @Test
     void marksOptionalSlotsWhenConflictResolutionIsOptional() {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
