@@ -96,6 +96,19 @@ final class ScheduleCalendarLayout {
         return Math.max(MIN_BLOCK_MINUTES, minutes);
     }
 
+    int endOffsetMinutes(ScheduleDecisionCandidate candidate) {
+        return Math.max(0, minutesFromStart(candidate.end()));
+    }
+
+    int walkingMarkerOffsetMinutes(ScheduleDecisionCandidate from, ScheduleDecisionCandidate to) {
+        int gapStart = endOffsetMinutes(from);
+        int gapEnd = topOffsetMinutes(to);
+        if (gapEnd <= gapStart) {
+            return gapStart;
+        }
+        return gapStart + ((gapEnd - gapStart) / 2);
+    }
+
     String hourLabel(int hourOffset) {
         int hour = (startHour + hourOffset) % 24;
         return String.format("%02d:00", hour);

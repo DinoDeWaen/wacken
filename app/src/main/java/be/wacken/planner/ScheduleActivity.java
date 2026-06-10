@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -32,7 +33,7 @@ public final class ScheduleActivity extends Activity {
     private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
     private static final int COLOR_AMBER = Color.rgb(255, 199, 44);
     private static final int HOUR_HEIGHT_DP = 72;
-    private static final int TIME_LABEL_WIDTH_DP = 54;
+    private static final int TIME_LABEL_WIDTH_DP = 78;
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("EEEE yyyy-MM-dd", Locale.ENGLISH);
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
     private final ScheduleManualSelections manualSelections = new ScheduleManualSelections();
@@ -143,7 +144,13 @@ public final class ScheduleActivity extends Activity {
         for (int index = 0; index < day.slots().size(); index++) {
             TimelineSlot slot = day.slots().get(index);
             ScheduleDecisionCandidate visible = manualSelections.visibleCandidate(slot);
-            calendar.addView(slotView(slot, visible, index < day.slots().size() - 1), slotLayout(layout, visible));
+            calendar.addView(slotStartTimeLabel(visible), slotStartTimeLayout(layout, visible));
+            calendar.addView(slotEndTimeLabel(visible), slotEndTimeLayout(layout, visible));
+            calendar.addView(slotView(slot, visible, layout.durationMinutes(visible)), slotLayout(layout, visible));
+            if (index < day.slots().size() - 1) {
+                ScheduleDecisionCandidate next = manualSelections.visibleCandidate(day.slots().get(index + 1));
+                calendar.addView(walkingMarker(slot), walkingMarkerLayout(layout, visible, next));
+            }
         }
         return calendar;
     }
@@ -177,7 +184,74 @@ public final class ScheduleActivity extends Activity {
         return params;
     }
 
-    private LinearLayout slotView(TimelineSlot slot, ScheduleDecisionCandidate visible, boolean hasNextSlot) {
+    private TextView slotStartTimeLabel(ScheduleDecisionCandidate candidate) {
+        return timelineLabel(candidate.start().format(TIME) + " ─┐");
+    }
+
+    private TextView slotEndTimeLabel(ScheduleDecisionCandidate candidate) {
+        return timelineLabel(candidate.end().format(TIME) + " ─┘");
+    }
+
+    private TextView timelineLabel(String text) {
+        TextView label = new TextView(this);
+        label.setText(text);
+        label.setTextColor(COLOR_MUTED);
+        label.setTextSize(11);
+        label.setTypeface(Typeface.DEFAULT_BOLD);
+        label.setSingleLine(true);
+        return label;
+    }
+
+    private FrameLayout.LayoutParams slotStartTimeLayout(ScheduleCalendarLayout layout, ScheduleDecisionCandidate candidate) {
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                dp(TIME_LABEL_WIDTH_DP),
+                dp(18)
+        );
+        params.topMargin = dp(layout.topOffsetMinutes(candidate) * HOUR_HEIGHT_DP / 60);
+        return params;
+    }
+
+    private FrameLayout.LayoutParams slotEndTimeLayout(ScheduleCalendarLayout layout, ScheduleDecisionCandidate candidate) {
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                dp(TIME_LABEL_WIDTH_DP),
+                dp(18)
+        );
+        int top = (layout.endOffsetMinutes(candidate) * HOUR_HEIGHT_DP / 60) - 18;
+        params.topMargin = dp(Math.max(0, top));
+        return params;
+    }
+
+    private TextView walkingMarker(TimelineSlot slot) {
+        TextView marker = new TextView(this);
+        String text = slot.walkingMinutesToNext().isPresent()
+                ? "Walk next: " + slot.walkingMinutesToNext().getAsInt() + " min"
+                : "Walk next: unknown";
+        marker.setText(text);
+        marker.setTextColor(COLOR_AMBER);
+        marker.setTextSize(12);
+        marker.setTypeface(Typeface.DEFAULT_BOLD);
+        marker.setGravity(Gravity.CENTER_VERTICAL);
+        marker.setSingleLine(true);
+        marker.setEllipsize(TextUtils.TruncateAt.END);
+        return marker;
+    }
+
+    private FrameLayout.LayoutParams walkingMarkerLayout(
+            ScheduleCalendarLayout layout,
+            ScheduleDecisionCandidate from,
+            ScheduleDecisionCandidate to
+    ) {
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                dp(22)
+        );
+        params.leftMargin = dp(TIME_LABEL_WIDTH_DP);
+        params.topMargin = dp(Math.max(0, (layout.walkingMarkerOffsetMinutes(from, to) * HOUR_HEIGHT_DP / 60) - 11));
+        return params;
+    }
+
+    private LinearLayout slotView(TimelineSlot slot, ScheduleDecisionCandidate visible, int blockMinutes) {
+        ScheduleBlockContent content = ScheduleBlockContent.from(slot, visible, blockMinutes);
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setBackground(slotBackground());
@@ -186,48 +260,31 @@ public final class ScheduleActivity extends Activity {
         panel.setOnClickListener(view -> showDecisionDetails(slot));
 
         TextView band = new TextView(this);
-        band.setText(visible.bandName() + " " + stars(visible.rating()));
+        band.setText(content.bandLine());
         band.setTextColor(COLOR_TEXT);
-        band.setTextSize(18);
+        band.setTextSize(16);
         band.setTypeface(Typeface.DEFAULT_BOLD);
+        band.setSingleLine(true);
+        band.setEllipsize(TextUtils.TruncateAt.END);
         panel.addView(band);
 
         TextView facts = new TextView(this);
-        facts.setText(visible.stageName() + " | " + visible.start().format(TIME) + " - " + visible.end().format(TIME));
+        facts.setText(content.stageLine());
         facts.setTextColor(COLOR_MUTED);
+        facts.setSingleLine(true);
+        facts.setEllipsize(TextUtils.TruncateAt.END);
         facts.setPadding(0, dp(3), 0, 0);
         panel.addView(facts);
 
-        TextView decision = new TextView(this);
-        decision.setText(manualSelections.isManual(slot) ? "MANUAL CHOICE" : slot.optional() ? "OPTIONAL" : slot.decisionStatus().name());
-        decision.setTextColor(slot.optional() ? COLOR_AMBER : COLOR_ACCENT);
-        decision.setTypeface(Typeface.DEFAULT_BOLD);
-        decision.setPadding(0, dp(5), 0, 0);
-        panel.addView(decision);
-
-        slot.lostAlternativeBandName().ifPresent(lost -> {
+        content.lostAlternativeLine().ifPresent(lost -> {
             TextView alternative = new TextView(this);
-            String alternativeText = "Lost alternative: " + lost
-                    + slot.lostAlternativeRating()
-                    .map(rating -> " " + stars(rating))
-                    .orElse("");
-            alternative.setText(alternativeText);
+            alternative.setText(lost);
             alternative.setTextColor(COLOR_MUTED);
+            alternative.setSingleLine(true);
+            alternative.setEllipsize(TextUtils.TruncateAt.END);
             alternative.setPadding(0, dp(5), 0, 0);
             panel.addView(alternative);
         });
-        if (hasNextSlot) {
-            TextView walking = new TextView(this);
-            String walkingText = slot.walkingMinutesToNext().isPresent()
-                    ? "Walk to next: " + slot.walkingMinutesToNext().getAsInt() + " min"
-                    : "Walk to next: unknown";
-            walking.setText(walkingText);
-            walking.setTextColor(COLOR_AMBER);
-            walking.setTypeface(Typeface.DEFAULT_BOLD);
-            walking.setTextSize(12);
-            walking.setPadding(0, dp(4), 0, 0);
-            panel.addView(walking);
-        }
         return panel;
     }
 

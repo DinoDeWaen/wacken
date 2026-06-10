@@ -45,6 +45,19 @@ public final class ScheduleCalendarLayoutTest {
         ScheduleCalendarLayout layout = ScheduleCalendarLayout.forSlots(List.of(slot));
 
         assertEquals(30, layout.durationMinutes(slot));
+        assertEquals(10, layout.endOffsetMinutes(candidate(slot)));
+    }
+
+    @Test
+    public void positionsWalkingMarkerBetweenConsecutiveBlocks() {
+        TimelineSlot first = slot("Alien Rockin Explosion", 13, 30, 14, 15);
+        TimelineSlot second = slot("Thundermother", 15, 15, 16, 15);
+
+        ScheduleCalendarLayout layout = ScheduleCalendarLayout.forSlots(List.of(first, second));
+
+        assertEquals(75, layout.endOffsetMinutes(candidate(first)));
+        assertEquals(135, layout.topOffsetMinutes(candidate(second)));
+        assertEquals(105, layout.walkingMarkerOffsetMinutes(candidate(first), candidate(second)));
     }
 
     @Test
