@@ -1,11 +1,11 @@
 ---
 id: task-70
 title: 'REL: Create V2.1 official release APK'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-06-10 08:20'
-updated_date: '2026-06-10 08:29'
+updated_date: '2026-06-10 08:31'
 labels:
   - release
   - mvp2
@@ -32,11 +32,11 @@ Out of scope:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Given all V2.1 stories are complete, when release validation runs, then automated tests and release APK assembly pass.
-- [ ] #2 Given V2.1 is released, then Android version metadata is bumped to versionCode 4 and versionName 2.1.
-- [ ] #3 Given this is not a debug release, then the attached APK is built from the release variant and release notes document signing status.
-- [ ] #4 Given GitHub release v2.1 is published, then the release APK and notes are attached/recorded.
-- [ ] #5 README, business requirements, diagram, ADR, and architecture impact are recorded using canonical delivery-governance wording.
+- [x] #1 Given all V2.1 stories are complete, when release validation runs, then automated tests and release APK assembly pass.
+- [x] #2 Given V2.1 is released, then Android version metadata is bumped to versionCode 4 and versionName 2.1.
+- [x] #3 Given this is not a debug release, then the attached APK is built from the release variant and release notes document signing status.
+- [x] #4 Given GitHub release v2.1 is published, then the release APK and notes are attached/recorded.
+- [x] #5 README, business requirements, diagram, ADR, and architecture impact are recorded using canonical delivery-governance wording.
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -55,11 +55,64 @@ Deviation: V2.1 uses a local self-signed release key for direct installation/tes
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-## Architecture approval pending
+## Implementation summary
 
-Creating an installable non-debug APK requires release signing support. This affects deployment/security configuration and therefore needs explicit approval before implementation continues.
+Finalised Wacken Planner 2026 V2.1 as a non-debug Android release APK. GitHub release `v2.1` is published at https://github.com/DinoDeWaen/wacken/releases/tag/v2.1 with `app-release.apk` attached.
 
-## Progress update
+Android metadata is now `versionCode 4` / `versionName 2.1`. The release artifact is `app/build/outputs/apk/release/app-release.apk` and was built from the Android `release` variant with local environment/property-driven signing.
 
-Release signing support, version metadata, README link, and V2.1 release notes are prepared. Full automated validation and `assembleRelease` passed. `apksigner verify --verbose app/build/outputs/apk/release/app-release.apk` verifies the APK using APK Signature Scheme v2 with one signer.
+## Acceptance criteria validation
+
+- AC1: V2.1 implementation stories task-66, task-67, task-68, and task-69 are Done. Full automated validation and `assembleRelease` passed.
+- AC2: Android metadata was bumped to `versionCode 4` and `versionName 2.1`.
+- AC3: The attached APK is `app-release.apk` from the release variant. V2.1 notes document local self-signed release-key status and no Play App Signing custody.
+- AC4: GitHub release `v2.1` is published with `app-release.apk` attached. Asset digest reported by GitHub: `sha256:8743c753146005d3451928777f571a437ebe326813c142c5248c86a6961123d8`.
+- AC5: README, business requirements, diagram, ADR, and architecture impact are recorded below.
+
+## How to test
+
+### Automated tests
+
+- `JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :domain:test :application:test :infrastructure:test :app:testDebugUnitTest :app:compileDebugJavaWithJavac assembleRelease`
+- `/Users/dino/Library/Android/sdk/build-tools/36.1.0-rc1/apksigner verify --verbose app/build/outputs/apk/release/app-release.apk`
+- `git diff --check`
+
+### Manual validation
+
+- Installed-device UAT was not run from this environment. Use `backlog/docs/mvp2-android-uat-checklist.md` after installing the V2.1 release APK.
+
+## TDD / BDD / approval-test evidence
+
+This release task packages already completed behavior. The V2.1 implementation stories added focused tests for calendar layout, schedule decision detail data, and local manual-selection state. Existing domain/application/app tests cover schedule generation, conflict behavior, sync, invite text, and Android wiring.
+
+## Architecture impact
+
+- Architecture-significant change: yes, limited to Android deployment/signing configuration.
+- Approval received: yes; user requested finalising all stories and doing the release after the signing approval request.
+- ADR impact: none, because this is standard local Gradle release signing configuration using properties/environment variables, without new infrastructure, schema, API, persistence, dependency, or domain-boundary decisions.
+
+## README impact
+
+README impact: updated release links with V2.1 release notes.
+
+## Business requirements impact
+
+Business requirements impact: none in this release task, because task-69 already updated the manual-selection business rules before this release.
+
+## Diagram impact
+
+Diagram impact: none, because the system structure and data flow did not change.
+
+## Commits / logical change list
+
+- Add property/environment-driven release signing configuration.
+- Bump Android version metadata to V2.1.
+- Add V2.1 release notes and README link.
+- Build signed release APK from `assembleRelease`.
+- Publish GitHub release `v2.1` with `app-release.apk`.
+
+## Risks and follow-up
+
+- V2.1 is signed with a locally generated self-signed release key for direct installation/testing. It is not a Play Store release and does not establish Play App Signing custody.
+- Installed-device UAT remains to be run on a connected Android device or emulator.
 <!-- SECTION:NOTES:END -->
