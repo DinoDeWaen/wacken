@@ -2,6 +2,12 @@ plugins {
     id "com.android.application"
 }
 
+def releaseStoreFile = project.findProperty("WACKEN_RELEASE_STORE_FILE") ?: System.getenv("WACKEN_RELEASE_STORE_FILE")
+def releaseStorePassword = project.findProperty("WACKEN_RELEASE_STORE_PASSWORD") ?: System.getenv("WACKEN_RELEASE_STORE_PASSWORD")
+def releaseKeyAlias = project.findProperty("WACKEN_RELEASE_KEY_ALIAS") ?: System.getenv("WACKEN_RELEASE_KEY_ALIAS")
+def releaseKeyPassword = project.findProperty("WACKEN_RELEASE_KEY_PASSWORD") ?: System.getenv("WACKEN_RELEASE_KEY_PASSWORD")
+def releaseSigningConfigured = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+
 android {
     namespace "be.wacken.planner"
     compileSdk 36
@@ -14,10 +20,29 @@ android {
         applicationId "be.wacken.planner"
         minSdk 26
         targetSdk 36
-        versionCode 3
-        versionName "2.0"
+        versionCode 4
+        versionName "2.1"
         buildConfigField "String", "SUPABASE_URL", "\"https://dwyunoyaqwxkfbwscxhe.supabase.co\""
         buildConfigField "String", "SUPABASE_ANON_KEY", "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3eXVub3lhcXd4a2Zid3NjeGhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjQxODAsImV4cCI6MjA5NDYwMDE4MH0.OSD2cZT4LR2p0olO_k-f2dHXJx_sekHtxA9OGHrSvZM\""
+    }
+
+    signingConfigs {
+        release {
+            if (releaseSigningConfigured) {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            if (releaseSigningConfigured) {
+                signingConfig signingConfigs.release
+            }
+        }
     }
 
     compileOptions {
