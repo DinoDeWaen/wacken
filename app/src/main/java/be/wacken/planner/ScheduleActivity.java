@@ -14,6 +14,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 import be.wacken.planner.application.GenerateSharedScheduleUseCase;
 import be.wacken.planner.application.ScheduleDay;
@@ -32,7 +33,7 @@ public final class ScheduleActivity extends Activity {
     private static final int COLOR_AMBER = Color.rgb(255, 199, 44);
     private static final int HOUR_HEIGHT_DP = 72;
     private static final int TIME_LABEL_WIDTH_DP = 54;
-    private static final DateTimeFormatter DATE = DateTimeFormatter.ISO_LOCAL_DATE;
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("EEEE yyyy-MM-dd", Locale.ENGLISH);
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
     private final ScheduleManualSelections manualSelections = new ScheduleManualSelections();
 
@@ -77,7 +78,8 @@ public final class ScheduleActivity extends Activity {
             AppRepositories repositories = new AppRepositories(this);
             SharedSchedule schedule = new GenerateSharedScheduleUseCase(
                     repositories.performances(),
-                    repositories.ratings()
+                    repositories.ratings(),
+                    repositories.distances()
             ).generate();
             addSchedule(screen, schedule);
         } catch (Exception error) {
@@ -126,7 +128,7 @@ public final class ScheduleActivity extends Activity {
         for (TimelineSlot slot : day.slots()) {
             visibleCandidates.add(manualSelections.visibleCandidate(slot));
         }
-        ScheduleCalendarLayout layout = ScheduleCalendarLayout.forCandidates(visibleCandidates);
+        ScheduleCalendarLayout layout = ScheduleCalendarLayout.forCandidates(visibleCandidates, day.date());
         int calendarHeight = dp(layout.hourCount() * HOUR_HEIGHT_DP);
         FrameLayout calendar = new FrameLayout(this);
         calendar.setBackgroundColor(COLOR_BACKGROUND);
@@ -138,9 +140,10 @@ public final class ScheduleActivity extends Activity {
         for (int hour = 0; hour <= layout.hourCount(); hour++) {
             calendar.addView(hourLine(layout, hour), hourLineLayout(hour));
         }
-        for (TimelineSlot slot : day.slots()) {
+        for (int index = 0; index < day.slots().size(); index++) {
+            TimelineSlot slot = day.slots().get(index);
             ScheduleDecisionCandidate visible = manualSelections.visibleCandidate(slot);
-            calendar.addView(slotView(slot, visible), slotLayout(layout, visible));
+            calendar.addView(slotView(slot, visible, index < day.slots().size() - 1), slotLayout(layout, visible));
         }
         return calendar;
     }
@@ -174,7 +177,7 @@ public final class ScheduleActivity extends Activity {
         return params;
     }
 
-    private LinearLayout slotView(TimelineSlot slot, ScheduleDecisionCandidate visible) {
+    private LinearLayout slotView(TimelineSlot slot, ScheduleDecisionCandidate visible, boolean hasNextSlot) {
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setBackground(slotBackground());
@@ -213,13 +216,33 @@ public final class ScheduleActivity extends Activity {
             alternative.setPadding(0, dp(5), 0, 0);
             panel.addView(alternative);
         });
+        if (hasNextSlot) {
+            TextView walking = new TextView(this);
+            String walkingText = slot.walkingMinutesToNext().isPresent()
+                    ? "Walk to next: " + slot.walkingMinutesToNext().getAsInt() + " min"
+                    : "Walk to next: unknown";
+            walking.setText(walkingText);
+            walking.setTextColor(COLOR_AMBER);
+            walking.setTypeface(Typeface.DEFAULT_BOLD);
+            walking.setTextSize(12);
+            walking.setPadding(0, dp(4), 0, 0);
+            panel.addView(walking);
+        }
         return panel;
     }
 
     private void showDecisionDetails(TimelineSlot slot) {
+        ScrollView scroll = new ScrollView(this);
+        scroll.setBackground(detailDialogBackground());
+
         LinearLayout detail = new LinearLayout(this);
         detail.setOrientation(LinearLayout.VERTICAL);
-        detail.setPadding(dp(18), dp(12), dp(18), dp(6));
+        detail.setPadding(dp(18), dp(16), dp(18), dp(10));
+        detail.setBackground(detailDialogBackground());
+
+        TextView title = detailText(slot.bandName(), COLOR_TEXT, 24, true);
+        title.setPadding(0, 0, 0, dp(14));
+        detail.addView(title);
 
         detail.addView(detailText("Chosen act", COLOR_ACCENT, 12, true));
         final AlertDialog[] dialog = new AlertDialog[1];
@@ -238,12 +261,27 @@ public final class ScheduleActivity extends Activity {
         if (!hasAlternatives) {
             detail.addView(detailText("No alternatives available.", COLOR_MUTED, 14, false));
         }
+        Button close = new Button(this);
+        close.setAllCaps(false);
+        close.setText("Close");
+        close.setTextColor(COLOR_AMBER);
+        close.setTypeface(Typeface.DEFAULT_BOLD);
+        close.setBackground(slotBackground());
+        close.setOnClickListener(view -> dialog[0].dismiss());
+        LinearLayout.LayoutParams closeLayout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        closeLayout.setMargins(0, dp(18), 0, 0);
+        detail.addView(close, closeLayout);
+        scroll.addView(detail);
 
         dialog[0] = new AlertDialog.Builder(this)
-                .setTitle(slot.bandName())
-                .setView(detail)
-                .setPositiveButton("Close", null)
+                .setView(scroll)
                 .show();
+        if (dialog[0].getWindow() != null) {
+            dialog[0].getWindow().setBackgroundDrawable(detailDialogBackground());
+        }
     }
 
     private LinearLayout candidateView(TimelineSlot slot, ScheduleDecisionCandidate candidate, Runnable afterSelect) {
@@ -273,7 +311,7 @@ public final class ScheduleActivity extends Activity {
             select.setText("Select as act");
             select.setTextColor(Color.WHITE);
             select.setTypeface(Typeface.DEFAULT_BOLD);
-            select.setBackgroundColor(COLOR_ACCENT);
+            select.setBackground(slotBackground());
             select.setOnClickListener(view -> {
                 manualSelections.select(slot, candidate);
                 setContentView(render());
@@ -289,10 +327,26 @@ public final class ScheduleActivity extends Activity {
         view.setText(text);
         view.setTextColor(color);
         view.setTextSize(size);
+        view.setPadding(0, dp(2), 0, dp(2));
         if (bold) {
             view.setTypeface(Typeface.DEFAULT_BOLD);
         }
         return view;
+    }
+
+    private GradientDrawable detailDialogBackground() {
+        GradientDrawable drawable = new GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                new int[]{
+                        Color.rgb(10, 13, 14),
+                        COLOR_BACKGROUND,
+                        Color.rgb(48, 38, 28),
+                        Color.rgb(13, 16, 17)
+                }
+        );
+        drawable.setStroke(dp(1), COLOR_ACCENT);
+        drawable.setCornerRadius(dp(4));
+        return drawable;
     }
 
     private GradientDrawable slotBackground() {

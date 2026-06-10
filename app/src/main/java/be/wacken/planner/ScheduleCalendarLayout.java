@@ -9,18 +9,21 @@ import be.wacken.planner.application.TimelineSlot;
 
 final class ScheduleCalendarLayout {
     private static final int MIN_BLOCK_MINUTES = 30;
+    private static final int FESTIVAL_DAY_END_HOUR = 26;
 
     private final int startHour;
     private final int endHour;
+    private final LocalDate scheduleDate;
 
-    private ScheduleCalendarLayout(int startHour, int endHour) {
+    private ScheduleCalendarLayout(int startHour, int endHour, LocalDate scheduleDate) {
         this.startHour = startHour;
         this.endHour = endHour;
+        this.scheduleDate = scheduleDate;
     }
 
     static ScheduleCalendarLayout forSlots(List<TimelineSlot> slots) {
         if (slots == null || slots.isEmpty()) {
-            return new ScheduleCalendarLayout(12, 14);
+            return new ScheduleCalendarLayout(12, 14, LocalDate.now());
         }
         List<ScheduleDecisionCandidate> candidates = new java.util.ArrayList<>();
         for (TimelineSlot slot : slots) {
@@ -38,23 +41,29 @@ final class ScheduleCalendarLayout {
     }
 
     static ScheduleCalendarLayout forCandidates(List<ScheduleDecisionCandidate> candidates) {
+        LocalDate date = candidates == null || candidates.isEmpty()
+                ? LocalDate.now()
+                : festivalDay(candidates.get(0).start());
+        return forCandidates(candidates, date);
+    }
+
+    static ScheduleCalendarLayout forCandidates(List<ScheduleDecisionCandidate> candidates, LocalDate scheduleDate) {
         if (candidates == null || candidates.isEmpty()) {
-            return new ScheduleCalendarLayout(12, 14);
+            return new ScheduleCalendarLayout(12, 14, scheduleDate);
         }
-        int start = 23;
+        int start = FESTIVAL_DAY_END_HOUR;
         int end = 0;
         for (ScheduleDecisionCandidate candidate : candidates) {
-            start = Math.min(start, candidate.start().getHour());
-            int slotEndHour = candidate.end().getMinute() == 0 ? candidate.end().getHour() : candidate.end().getHour() + 1;
-            if (candidate.end().toLocalDate().isAfter(candidate.start().toLocalDate())) {
-                slotEndHour += 24;
-            }
+            start = Math.min(start, hourFromScheduleStart(candidate.start(), scheduleDate));
+            int slotEndHour = hourFromScheduleStart(candidate.end(), scheduleDate);
+            slotEndHour += candidate.end().getMinute() == 0 ? 0 : 1;
             end = Math.max(end, slotEndHour);
         }
+        end = Math.max(end, FESTIVAL_DAY_END_HOUR);
         if (end <= start) {
             end = start + 1;
         }
-        return new ScheduleCalendarLayout(start, end);
+        return new ScheduleCalendarLayout(start, end, scheduleDate);
     }
 
     int startHour() {
@@ -70,22 +79,20 @@ final class ScheduleCalendarLayout {
     }
 
     int topOffsetMinutes(TimelineSlot slot) {
-        return Math.max(0, minutesFromStart(slot.start(), slot.start().toLocalDate()));
+        return Math.max(0, minutesFromStart(slot.start()));
     }
 
     int durationMinutes(TimelineSlot slot) {
-        int minutes = minutesFromStart(slot.end(), slot.start().toLocalDate())
-                - minutesFromStart(slot.start(), slot.start().toLocalDate());
+        int minutes = minutesFromStart(slot.end()) - minutesFromStart(slot.start());
         return Math.max(MIN_BLOCK_MINUTES, minutes);
     }
 
     int topOffsetMinutes(ScheduleDecisionCandidate candidate) {
-        return Math.max(0, minutesFromStart(candidate.start(), candidate.start().toLocalDate()));
+        return Math.max(0, minutesFromStart(candidate.start()));
     }
 
     int durationMinutes(ScheduleDecisionCandidate candidate) {
-        int minutes = minutesFromStart(candidate.end(), candidate.start().toLocalDate())
-                - minutesFromStart(candidate.start(), candidate.start().toLocalDate());
+        int minutes = minutesFromStart(candidate.end()) - minutesFromStart(candidate.start());
         return Math.max(MIN_BLOCK_MINUTES, minutes);
     }
 
@@ -94,8 +101,19 @@ final class ScheduleCalendarLayout {
         return String.format("%02d:00", hour);
     }
 
-    private int minutesFromStart(LocalDateTime time, LocalDate scheduleDate) {
-        int dayOffset = time.toLocalDate().isAfter(scheduleDate) ? 24 * 60 : 0;
-        return dayOffset + (time.getHour() - startHour) * 60 + time.getMinute();
+    private int minutesFromStart(LocalDateTime time) {
+        return hourFromScheduleStart(time, scheduleDate) * 60 + time.getMinute() - startHour * 60;
+    }
+
+    private static int hourFromScheduleStart(LocalDateTime time, LocalDate scheduleDate) {
+        int dayOffset = time.toLocalDate().isAfter(scheduleDate) ? 24 : 0;
+        return dayOffset + time.getHour();
+    }
+
+    private static LocalDate festivalDay(LocalDateTime time) {
+        if (time.toLocalTime().isBefore(java.time.LocalTime.of(2, 0))) {
+            return time.toLocalDate().minusDays(1);
+        }
+        return time.toLocalDate();
     }
 }

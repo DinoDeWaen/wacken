@@ -378,7 +378,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-070 | Calendar schedule day headings must include the weekday name. | A day heading shows a weekday such as Monday or Tuesday together with the festival date. | Must |
 | BR-071 | Schedule decision details must use the Wacken dark/metal visual scheme. | Opening a performance block shows chosen act and alternatives on a dark themed surface with readable light text and accent colors, not a default white dialog. | Must |
 | BR-072 | Splash and sync feedback should use a stronger heavy-metal visual style. | Startup, reactivation, manual sync, and close sync feedback feel visually aligned with Wacken/metal branding rather than generic loading. | Should |
-| BR-073 | MVP walking-time defaults must include named stage distances for Heavy, Louder, and other stages. | Heavy to Louder uses 5 minutes; Heavy or Louder to any other stage uses 15 minutes; walking between two other stages requires clarification before implementation. | Must |
+| BR-073 | MVP walking-time defaults must include named stage distances for Heavy, Louder, and other stages. | Heavy to Louder uses 5 minutes; Heavy or Louder to any other stage uses 15 minutes; walking between two other stages uses 5 minutes. | Must |
 | BR-074 | The group schedule must show walking time between consecutive selected acts when known. | If the group moves from Heavy to Louder, the schedule shows 5 minutes walking time; if it moves from Heavy to another stage, it shows 15 minutes. | Must |
 
 ## Data and terminology
@@ -474,6 +474,5 @@ The current in-app output format is a day-based calendar schedule. A clear, prin
 - How are users identified inside the one current shared group, and where are their ratings stored or shared?
 - What exact token/deep-link format should future self-service friend invites use beyond the current plain-text MVP2 share instructions?
 - How long is the initial lunch block inside 12:00-14:00 before user-configurable lunch behavior is added?
-- For stages other than Heavy and Louder, should walking between two non-Heavy/Louder stages be 5 minutes, 15 minutes, or another value?
 - What exact festival dates should be used for weekday display, and what date/time format should performances use?
 - Should a later shared-decision workflow sync manual schedule choices to Supabase, add permissions, and provide an explicit reset-to-generated action?

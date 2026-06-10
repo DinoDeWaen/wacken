@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 public record TimelineSlot(
         String bandName,
@@ -17,7 +18,8 @@ public record TimelineSlot(
         GroupDecisionStatus decisionStatus,
         Optional<String> lostAlternativeBandName,
         Optional<Integer> lostAlternativeRating,
-        List<ScheduleDecisionCandidate> candidates
+        List<ScheduleDecisionCandidate> candidates,
+        OptionalInt walkingMinutesToNext
 ) {
     public TimelineSlot(
             String bandName,
@@ -38,7 +40,33 @@ public record TimelineSlot(
                 decisionStatus,
                 lostAlternativeBandName,
                 lostAlternativeRating,
-                Collections.emptyList()
+                Collections.emptyList(),
+                OptionalInt.empty()
+        );
+    }
+
+    public TimelineSlot(
+            String bandName,
+            int rating,
+            String stageName,
+            LocalDateTime start,
+            LocalDateTime end,
+            GroupDecisionStatus decisionStatus,
+            Optional<String> lostAlternativeBandName,
+            Optional<Integer> lostAlternativeRating,
+            List<ScheduleDecisionCandidate> candidates
+    ) {
+        this(
+                bandName,
+                rating,
+                stageName,
+                start,
+                end,
+                decisionStatus,
+                lostAlternativeBandName,
+                lostAlternativeRating,
+                candidates,
+                OptionalInt.empty()
         );
     }
 
@@ -64,12 +92,31 @@ public record TimelineSlot(
         lostAlternativeBandName = lostAlternativeBandName == null ? Optional.empty() : lostAlternativeBandName;
         lostAlternativeRating = lostAlternativeRating == null ? Optional.empty() : lostAlternativeRating;
         candidates = candidates == null ? Collections.emptyList() : Collections.unmodifiableList(new ArrayList<>(candidates));
+        walkingMinutesToNext = walkingMinutesToNext == null ? OptionalInt.empty() : walkingMinutesToNext;
         if (lostAlternativeRating.isPresent() && (lostAlternativeRating.get() < 0 || lostAlternativeRating.get() > 5)) {
             throw new IllegalArgumentException("Timeline slot lost alternative rating must be between 0 and 5.");
+        }
+        if (walkingMinutesToNext.isPresent() && walkingMinutesToNext.getAsInt() < 0) {
+            throw new IllegalArgumentException("Timeline slot walking minutes to next must not be negative.");
         }
     }
 
     public boolean optional() {
         return decisionStatus == GroupDecisionStatus.OPTIONAL;
+    }
+
+    public TimelineSlot withWalkingMinutesToNext(OptionalInt walkingMinutes) {
+        return new TimelineSlot(
+                bandName,
+                rating,
+                stageName,
+                start,
+                end,
+                decisionStatus,
+                lostAlternativeBandName,
+                lostAlternativeRating,
+                candidates,
+                walkingMinutes
+        );
     }
 }

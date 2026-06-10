@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.SweepGradient;
 import android.graphics.Typeface;
@@ -322,22 +323,27 @@ public final class MainActivity extends Activity {
         syncOverlay.setClickable(true);
         syncOverlay.setBackground(metalPanelBackground());
 
+        syncOverlay.addView(new HeavyMetalBackdropView(this), new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+        ));
+
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setGravity(Gravity.CENTER);
         panel.setPadding(dp(24), dp(24), dp(24), dp(24));
 
         TextView title = new TextView(this);
-        title.setText("WACKEN SYNC");
+        title.setText("WACKEN FORGE");
         title.setTextColor(Color.WHITE);
-        title.setTextSize(32);
+        title.setTextSize(34);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER);
-        title.setShadowLayer(dp(8), 0, dp(2), COLOR_ACCENT);
+        title.setShadowLayer(dp(10), 0, dp(2), COLOR_ACCENT);
         panel.addView(title);
 
         syncAnimation = new MetalSyncView(this);
-        LinearLayout.LayoutParams animationLayout = new LinearLayout.LayoutParams(dp(116), dp(116));
+        LinearLayout.LayoutParams animationLayout = new LinearLayout.LayoutParams(dp(144), dp(144));
         animationLayout.setMargins(0, dp(22), 0, dp(18));
         panel.addView(syncAnimation, animationLayout);
 
@@ -349,9 +355,10 @@ public final class MainActivity extends Activity {
         panel.addView(syncOverlayMessage);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("Steel cache online");
-        subtitle.setTextColor(COLOR_MUTED);
-        subtitle.setTextSize(12);
+        subtitle.setText("IRON CACHE // LIVE RATING RITUAL");
+        subtitle.setTextColor(Color.rgb(255, 199, 44));
+        subtitle.setTextSize(11);
+        subtitle.setTypeface(Typeface.DEFAULT_BOLD);
         subtitle.setGravity(Gravity.CENTER);
         subtitle.setPadding(0, dp(8), 0, 0);
         panel.addView(subtitle);
@@ -586,7 +593,7 @@ public final class MainActivity extends Activity {
             bolt.setColor(Color.rgb(255, 56, 92));
             bolt.setTextAlign(Paint.Align.CENTER);
             bolt.setTypeface(Typeface.DEFAULT_BOLD);
-            bolt.setTextSize(activity.getResources().getDisplayMetrics().density * 42f);
+            bolt.setTextSize(activity.getResources().getDisplayMetrics().density * 54f);
         }
 
         void setRotationDegrees(float rotationDegrees) {
@@ -628,7 +635,65 @@ public final class MainActivity extends Activity {
             canvas.drawCircle(center, center, size * 0.25f, inner);
             inner.setShader(null);
             bolt.setShadowLayer(12f, 0f, 0f, Color.rgb(255, 56, 92));
-            canvas.drawText("W", center, center + (bolt.getTextSize() * 0.34f), bolt);
+            canvas.drawText("⚡", center, center + (bolt.getTextSize() * 0.34f), bolt);
+        }
+    }
+
+    private static final class HeavyMetalBackdropView extends View {
+        private final Paint beams = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint spikes = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint wires = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Path path = new Path();
+
+        HeavyMetalBackdropView(Activity activity) {
+            super(activity);
+            beams.setStyle(Paint.Style.FILL);
+            spikes.setStyle(Paint.Style.FILL);
+            spikes.setColor(Color.rgb(7, 9, 10));
+            wires.setStyle(Paint.Style.STROKE);
+            wires.setStrokeWidth(activity.getResources().getDisplayMetrics().density * 2f);
+            wires.setColor(Color.rgb(255, 56, 92));
+            wires.setAlpha(120);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            float width = getWidth();
+            float height = getHeight();
+            beams.setColor(Color.rgb(95, 14, 29));
+            beams.setAlpha(90);
+            path.reset();
+            path.moveTo(width * 0.08f, height);
+            path.lineTo(width * 0.36f, 0);
+            path.lineTo(width * 0.48f, 0);
+            path.lineTo(width * 0.22f, height);
+            path.close();
+            canvas.drawPath(path, beams);
+
+            path.reset();
+            path.moveTo(width * 0.92f, height);
+            path.lineTo(width * 0.64f, 0);
+            path.lineTo(width * 0.52f, 0);
+            path.lineTo(width * 0.78f, height);
+            path.close();
+            canvas.drawPath(path, beams);
+
+            path.reset();
+            path.moveTo(0, height);
+            for (int index = 0; index <= 14; index++) {
+                float x = width * index / 14f;
+                float y = index % 2 == 0 ? height * 0.84f : height * 0.94f;
+                path.lineTo(x, y);
+            }
+            path.lineTo(width, height);
+            path.close();
+            canvas.drawPath(path, spikes);
+
+            for (int index = 0; index < 4; index++) {
+                float y = height * (0.18f + index * 0.15f);
+                canvas.drawLine(width * 0.12f, y, width * 0.88f, y + height * 0.04f, wires);
+            }
         }
     }
 

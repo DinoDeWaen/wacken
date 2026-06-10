@@ -2,6 +2,7 @@ package be.wacken.planner;
 
 import static org.junit.Assert.assertEquals;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -20,10 +21,11 @@ public final class ScheduleCalendarLayoutTest {
         ));
 
         assertEquals(18, layout.startHour());
-        assertEquals(22, layout.endHour());
-        assertEquals(4, layout.hourCount());
+        assertEquals(26, layout.endHour());
+        assertEquals(8, layout.hourCount());
         assertEquals("18:00", layout.hourLabel(0));
         assertEquals("21:00", layout.hourLabel(3));
+        assertEquals("02:00", layout.hourLabel(8));
     }
 
     @Test
@@ -43,6 +45,41 @@ public final class ScheduleCalendarLayoutTest {
         ScheduleCalendarLayout layout = ScheduleCalendarLayout.forSlots(List.of(slot));
 
         assertEquals(30, layout.durationMinutes(slot));
+    }
+
+    @Test
+    public void positionsAfterMidnightBlocksInsidePreviousFestivalDay() {
+        TimelineSlot slot = new TimelineSlot(
+                "Sepultura",
+                5,
+                "Harder",
+                LocalDateTime.of(2026, 7, 31, 1, 0),
+                LocalDateTime.of(2026, 7, 31, 2, 0),
+                GroupDecisionStatus.GO,
+                Optional.empty(),
+                Optional.empty()
+        );
+
+        ScheduleCalendarLayout layout = ScheduleCalendarLayout.forCandidates(List.of(candidate(slot)), LocalDate.of(2026, 7, 30));
+
+        assertEquals(25, layout.startHour());
+        assertEquals(26, layout.endHour());
+        assertEquals("01:00", layout.hourLabel(0));
+        assertEquals("02:00", layout.hourLabel(1));
+        assertEquals(0, layout.topOffsetMinutes(slot));
+        assertEquals(60, layout.durationMinutes(slot));
+    }
+
+    private be.wacken.planner.application.ScheduleDecisionCandidate candidate(TimelineSlot slot) {
+        return new be.wacken.planner.application.ScheduleDecisionCandidate(
+                slot.bandName(),
+                slot.rating(),
+                slot.stageName(),
+                slot.start(),
+                slot.end(),
+                "CHOSEN",
+                true
+        );
     }
 
     private TimelineSlot slot(String band, int startHour, int startMinute, int endHour, int endMinute) {

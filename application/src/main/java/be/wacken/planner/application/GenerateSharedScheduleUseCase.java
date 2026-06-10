@@ -9,8 +9,11 @@ import be.wacken.planner.domain.PerformanceRepository;
 import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.RatingRepository;
 import be.wacken.planner.domain.SavedRating;
+import be.wacken.planner.domain.Stage;
+import be.wacken.planner.domain.StageDistanceRepository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -18,26 +21,42 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 public final class GenerateSharedScheduleUseCase {
+    private static final LocalTime FESTIVAL_DAY_CUTOFF = LocalTime.of(2, 0);
+    private static final String HEAVY = "heavy";
+    private static final String LOUDER = "louder";
+
     private final PerformanceRepository performances;
     private final RatingRepository ratings;
+    private final Optional<StageDistanceRepository> distances;
     private final PerformanceConflictDetector conflictDetector;
     private final PerformanceConflictResolver conflictResolver;
 
     public GenerateSharedScheduleUseCase(PerformanceRepository performances, RatingRepository ratings) {
-        this(performances, ratings, new PerformanceConflictDetector(), new PerformanceConflictResolver());
+        this(performances, ratings, null);
+    }
+
+    public GenerateSharedScheduleUseCase(
+            PerformanceRepository performances,
+            RatingRepository ratings,
+            StageDistanceRepository distances
+    ) {
+        this(performances, ratings, distances, new PerformanceConflictDetector(), new PerformanceConflictResolver());
     }
 
     GenerateSharedScheduleUseCase(
             PerformanceRepository performances,
             RatingRepository ratings,
+            StageDistanceRepository distances,
             PerformanceConflictDetector conflictDetector,
             PerformanceConflictResolver conflictResolver
     ) {
         this.performances = Objects.requireNonNull(performances, "performances must not be null");
         this.ratings = Objects.requireNonNull(ratings, "ratings must not be null");
+        this.distances = Optional.ofNullable(distances);
         this.conflictDetector = Objects.requireNonNull(conflictDetector, "conflictDetector must not be null");
         this.conflictResolver = Objects.requireNonNull(conflictResolver, "conflictResolver must not be null");
     }
@@ -61,6 +80,7 @@ public final class GenerateSharedScheduleUseCase {
         if (slots.isEmpty()) {
             return SharedSchedule.noSelections();
         }
+        slots = withWalkingTimes(slots);
         return SharedSchedule.generated(groupByDay(slots));
     }
 
@@ -135,11 +155,62 @@ public final class GenerateSharedScheduleUseCase {
     private List<ScheduleDay> groupByDay(List<TimelineSlot> slots) {
         Map<LocalDate, List<TimelineSlot>> slotsByDay = new LinkedHashMap<>();
         for (TimelineSlot slot : slots) {
-            slotsByDay.computeIfAbsent(slot.start().toLocalDate(), ignored -> new ArrayList<>()).add(slot);
+            slotsByDay.computeIfAbsent(festivalDay(slot.start()), ignored -> new ArrayList<>()).add(slot);
         }
         return slotsByDay.entrySet()
                 .stream()
                 .map(entry -> new ScheduleDay(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
+    }
+
+    private List<TimelineSlot> withWalkingTimes(List<TimelineSlot> slots) {
+        List<TimelineSlot> enriched = new ArrayList<>(slots.size());
+        for (int index = 0; index < slots.size(); index++) {
+            OptionalInt walkingMinutes = OptionalInt.empty();
+            if (index < slots.size() - 1) {
+                walkingMinutes = walkingMinutes(slots.get(index).stageName(), slots.get(index + 1).stageName());
+            }
+            enriched.add(slots.get(index).withWalkingMinutesToNext(walkingMinutes));
+        }
+        return enriched;
+    }
+
+    private OptionalInt walkingMinutes(String fromStageName, String toStageName) {
+        Stage from = new Stage(fromStageName);
+        Stage to = new Stage(toStageName);
+        return distances
+                .flatMap(repository -> repository.findBetween(from, to))
+                .map(distance -> OptionalInt.of(distance.walkingMinutes()))
+                .orElseGet(() -> OptionalInt.of(defaultWalkingMinutes(fromStageName, toStageName)));
+    }
+
+    private int defaultWalkingMinutes(String fromStageName, String toStageName) {
+        String from = normalizeStage(fromStageName);
+        String to = normalizeStage(toStageName);
+        if (from.equals(to)) {
+            return 0;
+        }
+        if (isHeavyOrLouder(from) && isHeavyOrLouder(to)) {
+            return 5;
+        }
+        if (isHeavyOrLouder(from) || isHeavyOrLouder(to)) {
+            return 15;
+        }
+        return 5;
+    }
+
+    private boolean isHeavyOrLouder(String stageName) {
+        return HEAVY.equals(stageName) || LOUDER.equals(stageName);
+    }
+
+    private String normalizeStage(String stageName) {
+        return stageName == null ? "" : stageName.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
+    private LocalDate festivalDay(java.time.LocalDateTime time) {
+        if (time.toLocalTime().isBefore(FESTIVAL_DAY_CUTOFF)) {
+            return time.toLocalDate().minusDays(1);
+        }
+        return time.toLocalDate();
     }
 }
