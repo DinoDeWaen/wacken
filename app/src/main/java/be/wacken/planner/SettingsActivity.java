@@ -1,0 +1,144 @@
+package be.wacken.planner;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.os.Bundle;
+import android.view.Gravity;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+public final class SettingsActivity extends Activity {
+    private static final int COLOR_BACKGROUND = Color.rgb(29, 36, 38);
+    private static final int COLOR_TEXT = Color.rgb(220, 224, 225);
+    private static final int COLOR_MUTED = Color.rgb(162, 169, 171);
+    private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
+    private static final int COLOR_AMBER = Color.rgb(255, 199, 44);
+
+    private AuthSessionStore sessionStore;
+    private AuthSession currentSession;
+    private TextView status;
+    private Button syncButton;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        sessionStore = new AuthSessionStore(this);
+        if (!loadCurrentSession()) {
+            redirectToLogin();
+            return;
+        }
+        setContentView(content());
+    }
+
+    private boolean loadCurrentSession() {
+        currentSession = sessionStore.load();
+        return currentSession.isPresent();
+    }
+
+    private void redirectToLogin() {
+        startActivity(new Intent(this, LoginActivity.class));
+        finish();
+    }
+
+    private LinearLayout content() {
+        LinearLayout screen = new LinearLayout(this);
+        screen.setOrientation(LinearLayout.VERTICAL);
+        screen.setBackgroundColor(COLOR_BACKGROUND);
+        screen.setPadding(dp(16), dp(16), dp(16), dp(16));
+
+        TextView title = new TextView(this);
+        title.setText("Settings");
+        title.setTextColor(COLOR_AMBER);
+        title.setTextSize(28);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        title.setGravity(Gravity.CENTER_HORIZONTAL);
+        screen.addView(title);
+
+        TextView subtitle = new TextView(this);
+        subtitle.setText("Group, import, and sync");
+        subtitle.setTextColor(COLOR_MUTED);
+        subtitle.setGravity(Gravity.CENTER_HORIZONTAL);
+        subtitle.setPadding(0, dp(4), 0, dp(18));
+        screen.addView(subtitle);
+
+        screen.addView(actionButton("Share group invite", Color.rgb(78, 67, 50), view -> shareGroupInvite()));
+        screen.addView(actionButton("Import lineup CSV files", COLOR_AMBER, view -> {
+            startActivity(new Intent(this, ImportCsvActivity.class));
+        }, Color.BLACK));
+        syncButton = actionButton("Sync from Supabase", Color.rgb(49, 56, 58),
+                view -> syncFromSupabase());
+        screen.addView(syncButton);
+        screen.addView(actionButton("Back to bands", Color.rgb(64, 76, 79), view -> finish()));
+
+        status = new TextView(this);
+        status.setTextColor(COLOR_MUTED);
+        status.setGravity(Gravity.CENTER_HORIZONTAL);
+        status.setPadding(0, dp(18), 0, 0);
+        screen.addView(status);
+        return screen;
+    }
+
+    private Button actionButton(String text, int color, android.view.View.OnClickListener listener) {
+        return actionButton(text, color, listener, Color.WHITE);
+    }
+
+    private Button actionButton(String text, int color, android.view.View.OnClickListener listener, int textColor) {
+        Button button = new Button(this);
+        button.setAllCaps(false);
+        button.setText(text);
+        button.setTextColor(textColor);
+        button.setTypeface(Typeface.DEFAULT_BOLD);
+        button.setBackgroundColor(color);
+        button.setOnClickListener(listener);
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        layout.setMargins(0, 0, 0, dp(10));
+        button.setLayoutParams(layout);
+        return button;
+    }
+
+    private void shareGroupInvite() {
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setType("text/plain");
+        share.putExtra(Intent.EXTRA_SUBJECT, InviteShareText.subject());
+        share.putExtra(Intent.EXTRA_TEXT, InviteShareText.message(currentSession.email()));
+        startActivity(Intent.createChooser(share, "Share Wacken Planner invite"));
+    }
+
+    private void syncFromSupabase() {
+        syncButton.setEnabled(false);
+        status.setTextColor(COLOR_MUTED);
+        status.setText("Forging latest ratings...");
+        new Thread(() -> {
+            try {
+                AppRepositories repositories = new AppRepositories(this);
+                repositories.syncMasterDataFromSource();
+                repositories.syncRatings();
+                runOnUiThread(() -> {
+                    syncButton.setEnabled(true);
+                    status.setTextColor(COLOR_TEXT);
+                    status.setText("Sync complete.");
+                });
+            } catch (Exception error) {
+                runOnUiThread(() -> {
+                    syncButton.setEnabled(true);
+                    if (!loadCurrentSession()) {
+                        redirectToLogin();
+                        return;
+                    }
+                    status.setTextColor(COLOR_ACCENT);
+                    status.setText("Supabase sync failed: " + error.getMessage());
+                });
+            }
+        }).start();
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density);
+    }
+}

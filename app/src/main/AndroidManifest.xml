@@ -17,6 +17,9 @@
             android:name=".ScheduleActivity"
             android:exported="false" />
         <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ImportCsvActivity"
             android:exported="false" />
         <activity

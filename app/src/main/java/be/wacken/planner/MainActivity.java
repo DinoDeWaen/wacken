@@ -56,7 +56,6 @@ public final class MainActivity extends Activity {
     private TextView subtitle;
     private AuthSessionStore sessionStore;
     private AuthSession currentSession;
-    private Button syncButton;
     private Button closeButton;
     private FrameLayout syncOverlay;
     private TextView syncOverlayMessage;
@@ -226,109 +225,39 @@ public final class MainActivity extends Activity {
 
     private LinearLayout actionRow() {
         LinearLayout actions = new LinearLayout(this);
-        actions.setOrientation(LinearLayout.VERTICAL);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setGravity(Gravity.CENTER_VERTICAL);
         actions.setPadding(0, 0, 0, dp(14));
-        actions.addView(importButton());
-        actions.addView(scheduleButton());
-        actions.addView(inviteButton());
-        actions.addView(syncButton());
-        actions.addView(closeButton());
+        actions.addView(topActionButton("⚙", "Settings", Color.rgb(78, 67, 50),
+                view -> startActivity(new Intent(this, SettingsActivity.class))));
+        actions.addView(topActionButton("📅", "Group schedule", Color.rgb(64, 76, 79),
+                view -> startActivity(new Intent(this, ScheduleActivity.class))));
+        actions.addView(topActionButton("⏻", "Sync and exit", Color.rgb(91, 27, 39),
+                view -> syncFromSupabase(true, "Sealing scores before exit...")));
         return actions;
     }
 
-    private Button importButton() {
-        Button importButton = new Button(this);
-        importButton.setAllCaps(false);
-        importButton.setText("Import lineup CSV files");
-        importButton.setTextColor(Color.BLACK);
-        importButton.setTypeface(Typeface.DEFAULT_BOLD);
-        importButton.setBackgroundColor(Color.rgb(255, 199, 44));
-        importButton.setOnClickListener(view -> {
-            reloadNeeded = true;
-            startActivity(new Intent(this, ImportCsvActivity.class));
-        });
+    private Button topActionButton(String icon, String description, int color, View.OnClickListener listener) {
+        Button button = new Button(this);
+        button.setAllCaps(false);
+        button.setText(icon);
+        button.setTextSize(22);
+        button.setContentDescription(description);
+        button.setTextColor(Color.WHITE);
+        button.setTypeface(Typeface.DEFAULT_BOLD);
+        button.setBackgroundColor(color);
+        button.setOnClickListener(listener);
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                0,
+                dp(48),
+                1
         );
-        layout.setMargins(0, 0, 0, dp(8));
-        importButton.setLayoutParams(layout);
-        return importButton;
-    }
-
-    private Button scheduleButton() {
-        Button scheduleButton = new Button(this);
-        scheduleButton.setAllCaps(false);
-        scheduleButton.setText("View group schedule");
-        scheduleButton.setTextColor(Color.WHITE);
-        scheduleButton.setTypeface(Typeface.DEFAULT_BOLD);
-        scheduleButton.setBackgroundColor(Color.rgb(64, 76, 79));
-        scheduleButton.setOnClickListener(view -> startActivity(new Intent(this, ScheduleActivity.class)));
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        layout.setMargins(0, 0, 0, dp(8));
-        scheduleButton.setLayoutParams(layout);
-        return scheduleButton;
-    }
-
-    private Button inviteButton() {
-        Button inviteButton = new Button(this);
-        inviteButton.setAllCaps(false);
-        inviteButton.setText("Share group invite");
-        inviteButton.setTextColor(Color.WHITE);
-        inviteButton.setTypeface(Typeface.DEFAULT_BOLD);
-        inviteButton.setBackgroundColor(Color.rgb(78, 67, 50));
-        inviteButton.setOnClickListener(view -> shareGroupInvite());
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        layout.setMargins(0, 0, 0, dp(8));
-        inviteButton.setLayoutParams(layout);
-        return inviteButton;
-    }
-
-    private void shareGroupInvite() {
-        Intent share = new Intent(Intent.ACTION_SEND);
-        share.setType("text/plain");
-        share.putExtra(Intent.EXTRA_SUBJECT, InviteShareText.subject());
-        share.putExtra(Intent.EXTRA_TEXT, InviteShareText.message(currentSession.email()));
-        startActivity(Intent.createChooser(share, "Share Wacken Planner invite"));
-    }
-
-    private Button syncButton() {
-        syncButton = new Button(this);
-        syncButton.setAllCaps(false);
-        syncButton.setText("Sync from Supabase");
-        syncButton.setTextColor(Color.WHITE);
-        syncButton.setTypeface(Typeface.DEFAULT_BOLD);
-        syncButton.setBackgroundColor(Color.rgb(49, 56, 58));
-        syncButton.setOnClickListener(view -> syncFromSupabase(false, "Forging latest ratings..."));
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        layout.setMargins(0, 0, 0, dp(8));
-        syncButton.setLayoutParams(layout);
-        return syncButton;
-    }
-
-    private Button closeButton() {
-        closeButton = new Button(this);
-        closeButton.setAllCaps(false);
-        closeButton.setText("Sync & close");
-        closeButton.setTextColor(Color.WHITE);
-        closeButton.setTypeface(Typeface.DEFAULT_BOLD);
-        closeButton.setBackgroundColor(Color.rgb(91, 27, 39));
-        closeButton.setOnClickListener(view -> syncFromSupabase(true, "Sealing scores before exit..."));
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        closeButton.setLayoutParams(layout);
-        return closeButton;
+        layout.setMargins(dp(3), 0, dp(3), 0);
+        button.setLayoutParams(layout);
+        if ("Sync and exit".equals(description)) {
+            closeButton = button;
+        }
+        return button;
     }
 
     private void syncMasterDataFromSupabase() {
@@ -382,9 +311,6 @@ public final class MainActivity extends Activity {
     }
 
     private void setSyncActionsEnabled(boolean enabled) {
-        if (syncButton != null) {
-            syncButton.setEnabled(enabled);
-        }
         if (closeButton != null) {
             closeButton.setEnabled(enabled);
         }
