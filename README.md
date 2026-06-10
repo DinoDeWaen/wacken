@@ -33,6 +33,7 @@
 - CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
+- V2.5 release notes: [`releases/v2.5.md`](releases/v2.5.md).
 - V2.4 release notes: [`releases/v2.4.md`](releases/v2.4.md).
 - V2.3 release notes: [`releases/v2.3.md`](releases/v2.3.md).
 - V2.2 release notes: [`releases/v2.2.md`](releases/v2.2.md).
