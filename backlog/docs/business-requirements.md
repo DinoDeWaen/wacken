@@ -20,6 +20,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - Supabase sync for bands, stages, performances, stage distances, food options, and group ratings on app start, overview reactivation, manual sync, and close.
 - CSV/TSV fallback import path for local/admin data work.
 - Wacken-inspired overview/detail presentation with music links, imported metadata where available, and metal-themed sync feedback.
+- Compact per-person star details on the band overview when shared group ratings are available.
 - MVP2 group decision rules, conflict resolution, timeline generation, and Android schedule viewing for the current shared group.
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
@@ -349,6 +350,7 @@ Scenario: View printable festival timeline
 | BR-057 | The signed-in app must sync Supabase master data and group ratings when the band overview starts or is reactivated. | A user opening the app on a second Android device sees ratings from the shared Supabase group without needing to force-close the first device. | Must |
 | BR-058 | The app must provide a close action that attempts Supabase sync before closing. | Tapping close pushes local pending ratings and pulls group ratings before the app exits; if sync fails, local ratings remain available and the app stays open with a clear failure message. | Must |
 | BR-059 | Sync operations must show clear Wacken/metal-themed feedback and prevent conflicting sync/close actions while in progress. | Startup, reactivation, manual sync, and close sync show visible progress instead of a blank or frozen screen. | Must |
+| BR-060 | The band overview should show available per-person group ratings as a compact read-only detail. | A band row can show each available person rating as small stars without changing the main rating workflow. | Should |
 
 ## Data and terminology
 

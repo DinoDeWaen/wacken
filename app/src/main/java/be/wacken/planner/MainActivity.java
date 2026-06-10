@@ -24,6 +24,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import java.util.OptionalInt;
 
 import be.wacken.planner.application.BandListItem;
 import be.wacken.planner.application.ListBandsUseCase;
+import be.wacken.planner.application.PersonRatingStars;
 import be.wacken.planner.application.RateBandResult;
 import be.wacken.planner.application.RateBandUseCase;
 import be.wacken.planner.domain.Band;
@@ -46,6 +48,8 @@ public final class MainActivity extends Activity {
     private static final int COLOR_MUTED = Color.rgb(162, 169, 171);
     private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
     private static final int COLOR_DARK_STEEL = Color.rgb(17, 21, 22);
+    private static final int TABLE_HEADER_HEIGHT_DP = 44;
+    private static final int BAND_ROW_HEIGHT_DP = 58;
 
     private ListView bandList;
     private TextView status;
@@ -509,13 +513,17 @@ public final class MainActivity extends Activity {
     }
 
     private LinearLayout tableRow(int backgroundColor) {
+        return tableRow(backgroundColor, TABLE_HEADER_HEIGHT_DP);
+    }
+
+    private LinearLayout tableRow(int backgroundColor, int heightDp) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setBackgroundColor(backgroundColor);
         row.setLayoutParams(new ListView.LayoutParams(
                 ListView.LayoutParams.MATCH_PARENT,
-                dp(44)
+                dp(heightDp)
         ));
         return row;
     }
@@ -530,7 +538,36 @@ public final class MainActivity extends Activity {
         cell.setTypeface(typeface);
         cell.setGravity(Gravity.CENTER_VERTICAL);
         cell.setPadding(dp(5), 0, dp(5), 0);
-        cell.setLayoutParams(new LinearLayout.LayoutParams(0, dp(44), weight));
+        cell.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, weight));
+        return cell;
+    }
+
+    private LinearLayout bandNameCell(TextView name, TextView personRatings) {
+        LinearLayout cell = new LinearLayout(this);
+        cell.setOrientation(LinearLayout.VERTICAL);
+        cell.setGravity(Gravity.CENTER_VERTICAL);
+        cell.setPadding(dp(5), 0, dp(5), 0);
+        cell.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 2.45f));
+
+        name.setSingleLine(true);
+        name.setEllipsize(TextUtils.TruncateAt.END);
+        name.setTextColor(COLOR_TEXT);
+        name.setTextSize(12);
+        name.setTypeface(Typeface.DEFAULT_BOLD);
+
+        personRatings.setSingleLine(true);
+        personRatings.setEllipsize(TextUtils.TruncateAt.END);
+        personRatings.setTextColor(COLOR_MUTED);
+        personRatings.setTextSize(9);
+
+        cell.addView(name, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+        cell.addView(personRatings, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
         return cell;
     }
 
@@ -539,7 +576,7 @@ public final class MainActivity extends Activity {
         actions.setOrientation(LinearLayout.HORIZONTAL);
         actions.setGravity(Gravity.CENTER);
         actions.setPadding(dp(2), 0, dp(2), 0);
-        actions.setLayoutParams(new LinearLayout.LayoutParams(0, dp(44), 1.45f));
+        actions.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.45f));
         band.flatMap(Band::youtubeUrl).ifPresent(url -> actions.addView(iconButton("▶", "Open YouTube", COLOR_ACCENT, url, dp(26))));
         band.flatMap(Band::spotifyUrl).ifPresent(url -> actions.addView(iconButton("♬", "Open Spotify", Color.rgb(30, 215, 96), url, dp(26))));
         return actions;
@@ -710,26 +747,28 @@ public final class MainActivity extends Activity {
         }
 
         private RowHolder createRow() {
-            LinearLayout row = tableRow(COLOR_ROW_DARK);
+            LinearLayout row = tableRow(COLOR_ROW_DARK, BAND_ROW_HEIGHT_DP);
             row.setClickable(true);
             row.setFocusable(true);
 
-            TextView name = cell("", Typeface.DEFAULT_BOLD, 2.45f);
+            TextView name = new TextView(MainActivity.this);
+            TextView personRatings = new TextView(MainActivity.this);
+            LinearLayout bandName = bandNameCell(name, personRatings);
             RatingStarsView rating = new RatingStarsView(MainActivity.this, 0, false, COLOR_ACCENT);
-            rating.setLayoutParams(new LinearLayout.LayoutParams(0, dp(44), 1.75f));
+            rating.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.75f));
             LinearLayout actions = new LinearLayout(MainActivity.this);
-            actions.setLayoutParams(new LinearLayout.LayoutParams(0, dp(44), 1.45f));
+            actions.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.45f));
             TextView stage = cell("", Typeface.DEFAULT_BOLD, 1.25f);
             TextView date = cell("", Typeface.DEFAULT_BOLD, 0.95f);
             TextView time = cell("", Typeface.DEFAULT_BOLD, 1.15f);
 
-            row.addView(name);
+            row.addView(bandName);
             row.addView(rating);
             row.addView(actions);
             row.addView(stage);
             row.addView(date);
             row.addView(time);
-            return new RowHolder(row, name, rating, actions, stage, date, time);
+            return new RowHolder(row, name, personRatings, rating, actions, stage, date, time);
         }
 
         private void bindRow(RowHolder holder, int position) {
@@ -742,6 +781,8 @@ public final class MainActivity extends Activity {
             });
 
             holder.name.setText(band.bandName());
+            holder.personRatings.setText(band.personRatingSummary());
+            holder.personRatings.setVisibility(band.hasPersonRatings() ? View.VISIBLE : View.GONE);
             holder.rating.bind(band.rating(), band.explicitRating());
             holder.rating.setOnRatingSelected(selectedRating -> saveRating(position, band, holder.rating, selectedRating));
             holder.row.setOnHoverListener((view, event) -> {
@@ -773,7 +814,7 @@ public final class MainActivity extends Activity {
             holder.actions.setOrientation(LinearLayout.HORIZONTAL);
             holder.actions.setGravity(Gravity.CENTER);
             holder.actions.setPadding(dp(2), 0, dp(2), 0);
-            holder.actions.setLayoutParams(new LinearLayout.LayoutParams(0, dp(44), 1.45f));
+            holder.actions.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.45f));
 
             holder.stage.setText(band.stageName());
             holder.date.setText(band.displayDate());
@@ -791,15 +832,32 @@ public final class MainActivity extends Activity {
                         band.startTime(),
                         band.endTime(),
                         selectedRating,
-                        false
+                        false,
+                        updatedPersonRatings(band, selectedRating)
                 ));
+                notifyDataSetChanged();
             }
+        }
+
+        private List<PersonRatingStars> updatedPersonRatings(BandListItem band, int selectedRating) {
+            List<PersonRatingStars> updated = new ArrayList<>();
+            for (PersonRatingStars personRating : band.personRatings()) {
+                if (!personRating.personName().equals(currentUser())) {
+                    updated.add(personRating);
+                }
+            }
+            if (selectedRating > 0) {
+                updated.add(new PersonRatingStars(currentUser(), selectedRating));
+            }
+            updated.sort(Comparator.comparing(PersonRatingStars::personName, String.CASE_INSENSITIVE_ORDER));
+            return updated;
         }
     }
 
     private record RowHolder(
             LinearLayout row,
             TextView name,
+            TextView personRatings,
             RatingStarsView rating,
             LinearLayout actions,
             TextView stage,

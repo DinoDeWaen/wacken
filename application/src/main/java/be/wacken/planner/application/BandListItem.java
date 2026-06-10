@@ -1,7 +1,25 @@
 package be.wacken.planner.application;
 
-public record BandListItem(String bandName, String stageName, String startTime, String endTime, int rating, boolean defaultRating) {
+import java.util.List;
+
+public record BandListItem(
+        String bandName,
+        String stageName,
+        String startTime,
+        String endTime,
+        int rating,
+        boolean defaultRating,
+        List<PersonRatingStars> personRatings
+) {
     private static final String TIME_SEPARATOR = "T";
+
+    public BandListItem(String bandName, String stageName, String startTime, String endTime, int rating, boolean defaultRating) {
+        this(bandName, stageName, startTime, endTime, rating, defaultRating, List.of());
+    }
+
+    public BandListItem {
+        personRatings = List.copyOf(personRatings);
+    }
 
     public String displayDate() {
         if (!hasDateTimeSeparator(startTime)) {
@@ -19,6 +37,17 @@ public record BandListItem(String bandName, String stageName, String startTime, 
 
     public boolean explicitRating() {
         return !defaultRating;
+    }
+
+    public boolean hasPersonRatings() {
+        return !personRatings.isEmpty();
+    }
+
+    public String personRatingSummary() {
+        return personRatings.stream()
+                .map(PersonRatingStars::displayText)
+                .reduce((left, right) -> left + "  " + right)
+                .orElse("");
     }
 
     private String clockTime(String dateTime) {

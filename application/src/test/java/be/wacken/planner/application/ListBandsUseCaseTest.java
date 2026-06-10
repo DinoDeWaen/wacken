@@ -6,6 +6,7 @@ import be.wacken.planner.domain.Performance;
 import be.wacken.planner.domain.PerformanceRepository;
 import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.RatingRepository;
+import be.wacken.planner.domain.SavedRating;
 import be.wacken.planner.domain.Stage;
 import org.junit.jupiter.api.Test;
 
@@ -77,7 +78,15 @@ class ListBandsUseCaseTest {
         ListBandsUseCase useCase = new ListBandsUseCase(bands, performances, ratings, "dino");
 
         assertEquals(
-                List.of(new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", 3, false)),
+                List.of(new BandListItem(
+                        "5th Avenue",
+                        "Faster Stage",
+                        "2026-07-30T18:00",
+                        "2026-07-30T19:00",
+                        3,
+                        false,
+                        List.of(new PersonRatingStars("dino", 3))
+                )),
                 useCase.listBands()
         );
     }
@@ -99,7 +108,15 @@ class ListBandsUseCaseTest {
         new RateBandUseCase(ratings).rateBand("dino", performance.band(), 2);
 
         assertEquals(
-                List.of(new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:00", "2026-07-30T19:00", 2, false)),
+                List.of(new BandListItem(
+                        "5th Avenue",
+                        "Faster Stage",
+                        "2026-07-30T18:00",
+                        "2026-07-30T19:00",
+                        2,
+                        false,
+                        List.of(new PersonRatingStars("dino", 2))
+                )),
                 useCase.listBands()
         );
     }
@@ -114,22 +131,72 @@ class ListBandsUseCaseTest {
         ListBandsUseCase useCase = new ListBandsUseCase(bands, new FakePerformanceRepository(), ratings, "dino");
 
         assertEquals(
-                List.of(new BandListItem("5th Avenue", "Not scheduled yet", "TBA", "TBA", 4, false)),
+                List.of(new BandListItem(
+                        "5th Avenue",
+                        "Not scheduled yet",
+                        "TBA",
+                        "TBA",
+                        4,
+                        false,
+                        List.of(new PersonRatingStars("dino", 4))
+                )),
+                useCase.listBands()
+        );
+    }
+
+    @Test
+    void includesCompactPerPersonRatingStarsForRatedPeople() {
+        FakeBandRepository bands = new FakeBandRepository();
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Performance performance = performance("5th Avenue", "Faster Stage", 18, 0, 19, 0);
+        performances.save(performance);
+        ratings.save("sofie", performance.band(), Rating.of(5));
+        ratings.save("dino", performance.band(), Rating.of(3));
+        ratings.save("alex", performance.band(), Rating.of(0));
+        ratings.save("sofie", new Band("Other Band"), Rating.of(4));
+        ListBandsUseCase useCase = new ListBandsUseCase(bands, performances, ratings, "dino");
+
+        assertEquals(
+                List.of(new BandListItem(
+                        "5th Avenue",
+                        "Faster Stage",
+                        "2026-07-30T18:00",
+                        "2026-07-30T19:00",
+                        3,
+                        false,
+                        List.of(
+                                new PersonRatingStars("dino", 3),
+                                new PersonRatingStars("sofie", 5)
+                        )
+                )),
                 useCase.listBands()
         );
     }
 
     @Test
     void exposesCompactOverviewDateTimeAndExplicitRatingState() {
-        BandListItem scheduled = new BandListItem("5th Avenue", "Faster Stage", "2026-07-30T18:05", "2026-07-30T19:10", 4, false);
+        BandListItem scheduled = new BandListItem(
+                "5th Avenue",
+                "Faster Stage",
+                "2026-07-30T18:05",
+                "2026-07-30T19:10",
+                4,
+                false,
+                List.of(new PersonRatingStars("dino", 4), new PersonRatingStars("sofie", 5))
+        );
         BandListItem unscheduled = new BandListItem("Midnight Skyline", "Not scheduled yet", "TBA", "TBA", 0, true);
 
         assertEquals("2026-07-30", scheduled.displayDate());
         assertEquals("18:05 - 19:10", scheduled.displayTime());
         assertEquals(true, scheduled.explicitRating());
+        assertEquals(true, scheduled.hasPersonRatings());
+        assertEquals("dino ★★★★  sofie ★★★★★", scheduled.personRatingSummary());
         assertEquals("TBA", unscheduled.displayDate());
         assertEquals("TBA", unscheduled.displayTime());
         assertEquals(false, unscheduled.explicitRating());
+        assertEquals(false, unscheduled.hasPersonRatings());
+        assertEquals("", unscheduled.personRatingSummary());
     }
 
     private static Performance performance(String bandName, String stageName, int startHour, int startMinute, int endHour, int endMinute) {
@@ -197,6 +264,14 @@ class ListBandsUseCaseTest {
         @Override
         public Optional<Rating> findByUserAndBand(String userName, Band band) {
             return Optional.ofNullable(ratings.get(new Key(userName, band)));
+        }
+
+        @Override
+        public List<SavedRating> findAll() {
+            return ratings.entrySet()
+                    .stream()
+                    .map(entry -> new SavedRating(entry.getKey().userName(), entry.getKey().band(), entry.getValue()))
+                    .toList();
         }
 
         private record Key(String userName, Band band) {
