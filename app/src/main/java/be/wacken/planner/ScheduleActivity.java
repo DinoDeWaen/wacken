@@ -3,9 +3,11 @@ package be.wacken.planner;
 import android.app.Activity;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -21,10 +23,13 @@ import be.wacken.planner.application.TimelineSlot;
 public final class ScheduleActivity extends Activity {
     private static final int COLOR_BACKGROUND = Color.rgb(29, 36, 38);
     private static final int COLOR_PANEL = Color.rgb(38, 46, 48);
+    private static final int COLOR_GRID = Color.rgb(67, 75, 78);
     private static final int COLOR_TEXT = Color.rgb(220, 224, 225);
     private static final int COLOR_MUTED = Color.rgb(162, 169, 171);
     private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
     private static final int COLOR_AMBER = Color.rgb(255, 199, 44);
+    private static final int HOUR_HEIGHT_DP = 72;
+    private static final int TIME_LABEL_WIDTH_DP = 54;
     private static final DateTimeFormatter DATE = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -87,12 +92,14 @@ public final class ScheduleActivity extends Activity {
             screen.addView(message(schedule.message(), COLOR_MUTED));
             return;
         }
+        if (schedule.days().isEmpty()) {
+            screen.addView(message("No selected performances are available yet.", COLOR_MUTED));
+            return;
+        }
         for (ScheduleDay day : schedule.days()) {
             TextView dayTitle = sectionTitle(day.date().format(DATE));
             screen.addView(dayTitle);
-            for (TimelineSlot slot : day.slots()) {
-                screen.addView(slotView(slot));
-            }
+            screen.addView(dayCalendar(day));
         }
     }
 
@@ -106,17 +113,64 @@ public final class ScheduleActivity extends Activity {
         return title;
     }
 
+    private FrameLayout dayCalendar(ScheduleDay day) {
+        if (day.slots().isEmpty()) {
+            FrameLayout empty = new FrameLayout(this);
+            empty.addView(message("No selected performances.", COLOR_MUTED));
+            return empty;
+        }
+        ScheduleCalendarLayout layout = ScheduleCalendarLayout.forSlots(day.slots());
+        int calendarHeight = dp(layout.hourCount() * HOUR_HEIGHT_DP);
+        FrameLayout calendar = new FrameLayout(this);
+        calendar.setBackgroundColor(COLOR_BACKGROUND);
+        calendar.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                calendarHeight
+        ));
+
+        for (int hour = 0; hour <= layout.hourCount(); hour++) {
+            calendar.addView(hourLine(layout, hour), hourLineLayout(hour));
+        }
+        for (TimelineSlot slot : day.slots()) {
+            calendar.addView(slotView(slot), slotLayout(layout, slot));
+        }
+        return calendar;
+    }
+
+    private TextView hourLine(ScheduleCalendarLayout layout, int hourOffset) {
+        TextView line = new TextView(this);
+        line.setText(layout.hourLabel(hourOffset) + " ─────────────────");
+        line.setTextColor(COLOR_GRID);
+        line.setTextSize(11);
+        line.setSingleLine(true);
+        return line;
+    }
+
+    private FrameLayout.LayoutParams hourLineLayout(int hourOffset) {
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                dp(18)
+        );
+        params.topMargin = dp(hourOffset * HOUR_HEIGHT_DP);
+        return params;
+    }
+
+    private FrameLayout.LayoutParams slotLayout(ScheduleCalendarLayout layout, TimelineSlot slot) {
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                dp(Math.max(58, layout.durationMinutes(slot) * HOUR_HEIGHT_DP / 60))
+        );
+        params.leftMargin = dp(TIME_LABEL_WIDTH_DP);
+        params.topMargin = dp(layout.topOffsetMinutes(slot) * HOUR_HEIGHT_DP / 60);
+        params.rightMargin = 0;
+        return params;
+    }
+
     private LinearLayout slotView(TimelineSlot slot) {
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setBackgroundColor(COLOR_PANEL);
-        panel.setPadding(dp(12), dp(10), dp(12), dp(10));
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        layout.setMargins(0, 0, 0, dp(8));
-        panel.setLayoutParams(layout);
+        panel.setBackground(slotBackground());
+        panel.setPadding(dp(10), dp(6), dp(10), dp(6));
 
         TextView band = new TextView(this);
         band.setText(slot.bandName() + " " + stars(slot.rating()));
@@ -150,6 +204,14 @@ public final class ScheduleActivity extends Activity {
             panel.addView(alternative);
         });
         return panel;
+    }
+
+    private GradientDrawable slotBackground() {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(COLOR_PANEL);
+        drawable.setStroke(dp(1), COLOR_ACCENT);
+        drawable.setCornerRadius(dp(4));
+        return drawable;
     }
 
     private String stars(int rating) {
