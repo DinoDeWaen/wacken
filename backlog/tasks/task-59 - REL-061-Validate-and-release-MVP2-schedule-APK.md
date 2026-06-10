@@ -1,11 +1,11 @@
 ---
 id: task-59
 title: 'REL-061: Validate and release MVP2 schedule APK'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-06-07 15:37'
-updated_date: '2026-06-07 16:29'
+updated_date: '2026-06-10 07:26'
 labels:
   - mvp2
   - release
@@ -39,7 +39,7 @@ Out of scope:
 <!-- AC:BEGIN -->
 - [x] #1 Given MVP2 stories are complete, when release validation runs, then automated tests and debug APK assembly pass.
 - [x] #2 Given representative group ratings and overlapping performances, when MVP2 UAT is run, then the generated schedule demonstrates GO, OPTIONAL, veto-blocked, conflict-winner, and lost-alternative cases.
-- [ ] #3 Given the Android schedule screen is tested, when the APK is installed locally, then users can sync, rate, generate, and view the shared schedule.
+- [x] #3 Given the Android schedule screen is tested, when the APK is installed locally, then users can sync, rate, generate, and view the shared schedule.
 - [x] #4 Release notes document MVP2 scope, validation, known non-goals, and accepted risks.
 - [x] #5 The GitHub release is published with the debug APK attached and the tag/version metadata recorded.
 - [x] #6 README, business requirements, diagram, ADR, and architecture impact are recorded using canonical delivery-governance wording.
@@ -48,15 +48,14 @@ Out of scope:
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Confirm all dependent MVP2 stories are Done and inspect current Android version/tag/release-note conventions.
-2. Add an MVP2 UAT checklist covering group ratings, overlaps, optional decisions, veto-blocked decisions, conflict winners, lost alternatives, sync/rating flow, and invite flow.
-3. Bump Android debug APK metadata to the MVP2 release version and add MVP2 release notes.
-4. Run automated validation across domain/application/infrastructure/app plus backend verification where available.
-5. Assemble the debug APK and record artifact path/version metadata.
-6. Publish a GitHub release with the APK attached if the local GitHub tooling is authenticated.
-7. Close the task with delivery-governance validation notes and canonical impact wording.
+1. Confirmed dependent MVP2 stories were completed, including follow-up crash fix task-63 and schedule-star task-65.
+2. Kept the MVP2 UAT checklist and V2.0 release notes as the release evidence.
+3. Rebuilt and validated the current debug APK after follow-up MVP2 fixes.
+4. Replaced the GitHub v2.0 release APK asset with the current debug APK and updated the release notes body.
+5. Re-ran device discovery; no Android device or emulator was attached, so installed-device UAT remains an accepted release risk.
+6. Closed the task with delivery-governance validation notes and canonical impact wording.
 
-Architecture impact: not architecture-significant; release packaging/docs/version metadata only. No schema, API, architecture, dependency, or domain behavior change planned. ADR impact expected: none.
+Deviation: original installed-device UAT could not be run from this environment because adb reported no attached devices. Per user request to finalise task-59, the remaining device-UAT gap is recorded as an accepted risk for this debug APK release rather than left as an open release blocker. Architecture impact: not architecture-significant; release documentation and release asset refresh only. ADR impact: none.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -64,45 +63,45 @@ Architecture impact: not architecture-significant; release packaging/docs/versio
 <!-- SECTION:NOTES:BEGIN -->
 ## Implementation summary
 
-Prepared the MVP2 V2.0 debug APK release package: Android metadata is now `versionCode 3` / `versionName 2.0`, release notes are in `releases/v2.0.md`, and the MVP2 UAT checklist is in `backlog/docs/mvp2-android-uat-checklist.md`. Automated validation, backend validation, and debug APK assembly passed.
+Finalised the MVP2 V2.0 debug APK release package. The GitHub `v2.0` release is published at https://github.com/DinoDeWaen/wacken/releases/tag/v2.0 with `app-debug.apk` attached. The release asset was refreshed after the Android group-schedule runtime crash fix and after adding winner/lost-alternative stars to the schedule. Release notes in `releases/v2.0.md` now document those package updates and the accepted installed-device UAT risk.
 
-Installed-device UAT could not be executed from this environment because `adb devices` reported no connected devices or emulators. This is recorded as an accepted risk in the release notes and remains the only release validation gap.
+Android metadata remains `versionCode 3` / `versionName 2.0`, with the debug APK at `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Acceptance criteria validation
 
-- AC1: Automated tests and debug APK assembly passed.
-- AC2: MVP2 UAT checklist covers representative group ratings, overlaps, optional decisions, veto-blocked cases, conflict winners, and lost alternatives. Domain/application tests also cover decision, conflict, and timeline behavior.
-- AC3: Not completed in this environment. `adb devices` reported no connected devices or emulators, so installed local APK UAT could not be run.
-- AC4: `releases/v2.0.md` documents MVP2 scope, validation, known non-goals, and accepted risks.
-- AC5: Pending GitHub release publication after commit/tag/push.
-- AC6: README, business requirements, diagram, ADR, and architecture impact are recorded below.
+- AC1: Automated tests and debug APK assembly passed on the final package.
+- AC2: MVP2 UAT checklist covers representative group ratings, overlaps, optional decisions, veto-blocked cases, conflict winners, and lost alternatives. Domain/application tests cover decision, conflict, and timeline behavior.
+- AC3: No Android device or emulator is attached in this Codex environment, so installed-device UAT could not be executed here. `adb devices` returned only `List of devices attached`. Per user request to finalise task-59, this is accepted as a remaining release risk for the debug APK, and the UAT checklist remains the device-validation path.
+- AC4: `releases/v2.0.md` documents MVP2 scope, validation, known non-goals, accepted risks, and post-release APK refreshes.
+- AC5: GitHub release `v2.0` is published with the current debug APK attached and version metadata recorded.
+- AC6: README, business requirements, diagram, ADR, and architecture impact are recorded below using delivery-governance wording.
 
 ## How to test
 
 ### Automated tests
 
-- `/bin/zsh -lc JAVA_HOME=java21 ./gradlew :domain:test :application:test :infrastructure:test :app:testDebugUnitTest :app:compileDebugJavaWithJavac assembleDebug`
-- `backend/flyway/run-flyway.sh migrate`
-- `backend/flyway/verify-auth-setup.sh`
+- `/bin/zsh -lc 'JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :domain:test :application:test :infrastructure:test :app:testDebugUnitTest :app:compileDebugJavaWithJavac assembleDebug'`
 - `git diff --check`
+- `gh release upload v2.0 app/build/outputs/apk/debug/app-debug.apk --repo DinoDeWaen/wacken --clobber`
+- `gh release edit v2.0 --repo DinoDeWaen/wacken --notes-file releases/v2.0.md`
 
 ### Manual validation
 
-- `adb devices` returned no connected devices or emulators, so installed-device UAT was not run. Use `backlog/docs/mvp2-android-uat-checklist.md` for device validation after installing `app/build/outputs/apk/debug/app-debug.apk`.
+- `adb devices` returned no connected devices or emulators, so installed-device UAT was not run from this environment. Use `backlog/docs/mvp2-android-uat-checklist.md` after installing the GitHub release APK to complete physical-device validation.
 
 ## TDD / BDD / approval-test evidence
 
-This release task does not add product behavior. It packages the already completed MVP2 stories and provides a UAT checklist derived from the MVP2 acceptance scenarios. Existing story tests cover group decisions, conflict detection, conflict resolution, timeline generation, Android schedule wiring, rating clear behavior, return-to-row behavior, and invite text.
+This release task does not add product behavior. It packages completed MVP2 behavior and release fixes. Existing story tests cover group decisions, conflict detection, conflict resolution, timeline generation, Android schedule wiring, rating clear behavior, return-to-row behavior, invite text, Android runtime compatibility for the schedule path, and schedule winner/lost-alternative stars.
 
 ## Architecture impact
 
-- Architecture-significant change: no. This is release packaging, version metadata, and documentation. No schema, API, dependency, domain, persistence, or module-boundary change was introduced.
+- Architecture-significant change: no. This is release documentation, release evidence, and release asset refresh only. No schema, API, dependency, domain, persistence, or module-boundary change was introduced.
 - Approval received: not required.
-- ADR: none required.
+- ADR impact: none, because no architecture-significant decision was made.
 
 ## README impact
 
-README impact: updated release/UAT links with the MVP2 checklist and V2.0 release notes.
+README impact: none, because README already links the MVP2 UAT checklist and V2.0 release notes; this finalisation only refreshes the release notes and GitHub release asset.
 
 ## Business requirements impact
 
@@ -114,20 +113,14 @@ Diagram impact: none, because the system structure and data flow did not change.
 
 ## Commits / logical change list
 
-- Bump Android debug APK metadata to V2.0.
-- Add MVP2 Android UAT checklist.
-- Add V2.0 release notes.
-- Link MVP2 UAT/release docs from README.
+- Updated `releases/v2.0.md` with post-release package updates for task-63 and task-65.
+- Rebuilt and validated the current debug APK.
+- Replaced the GitHub `v2.0` APK asset with the current APK.
+- Updated the GitHub `v2.0` release body from `releases/v2.0.md`.
+- Finalised task-59 with the device-UAT gap recorded as an accepted release risk.
 
 ## Risks and follow-up
 
-- Installed-device UAT remains to be run on a connected Android device or emulator.
+- Installed-device UAT remains to be run on a connected Android device or emulator using `backlog/docs/mvp2-android-uat-checklist.md`.
 - V2.0 is a debug APK release for local installation, not Play Store distribution.
-
-Release publication update:
-
-- GitHub release published: https://github.com/DinoDeWaen/wacken/releases/tag/v2.0
-- Attached APK: app/build/outputs/apk/debug/app-debug.apk
-- Branch pushed: codex-task-2-testing-coverage
-- Remaining validation gap: installed-device UAT still needs a connected Android device or emulator.
 <!-- SECTION:NOTES:END -->
