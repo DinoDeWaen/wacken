@@ -39,7 +39,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 | Ratings and group decisions | BR-001 to BR-021 | Rating, veto, effective rating, group decision, conflict resolution |
 | Travel, lunch, and timeline | BR-022 to BR-032 | Scheduling, walking time, lunch, food suggestions, printable timeline |
 | Festival data import | BR-033 to BR-046 | CSV import, Supabase master data, Room cache, admin data, band-only imports |
-| Overview, detail, and app state | BR-047 to BR-059 | Wacken UI, metadata, music links, loading, sync feedback, returning to app context |
+| Overview, detail, and app state | BR-047 to BR-067 | Wacken UI, metadata, music links, loading, sync feedback, settings, calendar schedule, returning to app context |
 
 ### Requirement Drift Markers
 
@@ -170,6 +170,9 @@ Release assumptions:
 | Decision engine | Decide whether the group should go, optionally go, or not go to a band. | Must | MVP 2 |
 | Conflict resolution | Resolve overlapping performances according to the authoritative group rules. | Must | MVP 2 |
 | Timeline generation | Generate a day-based shared festival timeline. | Must | MVP 2 |
+| App navigation and settings | Keep primary actions compact and move secondary/admin actions into a settings page. | Must | MVP 2 |
+| Calendar schedule view | Show the group schedule as day calendars with hour lines and performance blocks. | Must | MVP 2 |
+| Manual schedule selection | Let the group choose an alternative act for a conflict and update the visible schedule result. | Must | MVP 2 |
 | Travel feasibility | Exclude or re-evaluate options that cannot be reached in time between stages. | Must | MVP 3 |
 | Lunch planning | Insert lunch into the schedule and consider food options near relevant stages. | Must | MVP 3 |
 | Food suggestions | Show food options close to the previous and next stages. | Must | MVP 3 |
@@ -272,15 +275,25 @@ Scenario: Generate a conflict-aware group schedule
   Then the timeline respects group decision rules, conflicts, travel feasibility, and lunch constraints
 ```
 
-### Workflow 6: Use the printable timeline
+### Workflow 6: Use the calendar schedule
 
-The group reviews a clear per-day timeline for use during the festival.
+The group reviews a clear per-day calendar schedule for use during the festival.
 
 ```gherkin
-Scenario: View printable festival timeline
+Scenario: View calendar festival schedule
   Given a shared schedule has been generated
-  When a user views the daily timeline
-  Then each slot shows the selected band, stage, time range, travel time, lost alternative, and lunch where applicable
+  When a user views the daily calendar schedule
+  Then each festival day is shown with hour lines
+  And selected performances are shown as blocks with band, stage, and rating stars
+```
+
+```gherkin
+Scenario: Inspect and change a schedule conflict choice
+  Given a selected performance has alternatives
+  When a user opens the performance block detail
+  Then the chosen act and all alternatives are shown with stage and rating stars
+  And the user can select an alternative as the act the group is going to
+  And the visible schedule result changes to that selection
 ```
 
 ## Business rules
@@ -351,6 +364,13 @@ Scenario: View printable festival timeline
 | BR-058 | The app must provide a close action that attempts Supabase sync before closing. | Tapping close pushes local pending ratings and pulls group ratings before the app exits; if sync fails, local ratings remain available and the app stays open with a clear failure message. | Must |
 | BR-059 | Sync operations must show clear Wacken/metal-themed feedback and prevent conflicting sync/close actions while in progress. | Startup, reactivation, manual sync, and close sync show visible progress instead of a blank or frozen screen. | Must |
 | BR-060 | The band overview should show available per-person group ratings as a compact read-only detail. | A band row can show each available person rating as small stars without changing the main rating workflow. | Should |
+| BR-061 | Primary app navigation must use compact icon actions for high-frequency destinations. | The overview shows a cog for settings, a calendar icon for the group schedule, and an exit action for sync-and-exit. | Must |
+| BR-062 | Secondary and admin-style actions must live on the settings page. | Group/invite actions, lineup import, and manual sync are moved out of the primary overview action area and into settings. | Must |
+| BR-063 | The group schedule must be shown as a day-based calendar. | Each festival day appears as a calendar-like view with hour lines and performance blocks positioned by time. | Must |
+| BR-064 | Calendar performance blocks must summarize the selected act. | A block shows band name, stage, and rating stars while remaining readable on a phone screen. | Must |
+| BR-065 | Opening a calendar performance block must show the conflict detail. | The detail shows the chosen act and all alternatives, with each band's stage and rating stars. | Must |
+| BR-066 | A user can select an alternative as the act the group is going to. | Choosing an alternative updates the visible schedule result so that act becomes selected for that conflict. | Must |
+| BR-067 | Manual schedule choices must not silently change the underlying rating rules. | Selecting an alternative changes the schedule choice, but the original ratings and generated decision evidence remain visible. | Must |
 
 ## Data and terminology
 
@@ -386,6 +406,10 @@ Scenario: View printable festival timeline
 | Food Option | Represents a lunch option. | Is suggested based on proximity to previous and next stages. |
 | Festival Master Data | Represents imported source data for the festival. | Is updated by CSV import; excludes ratings. |
 | Band Overview Row | Represents a visible, tappable band summary. | Opens band detail and displays effective rating, schedule status, and optional music-link actions. |
+| Settings page | Represents secondary app actions and operational controls. | Contains group/invite, import, and manual sync actions. |
+| Calendar schedule day | Represents one festival day in calendar form. | Contains hour lines and time-positioned performance blocks. |
+| Performance block | Represents a selected scheduled act in the calendar view. | Shows band, stage, rating stars, and opens the conflict detail. |
+| Manual schedule choice | Represents a user-selected act for a conflict. | Overrides the visible selected act for that conflict without changing ratings. |
 
 ## Future domain events
 
@@ -399,7 +423,7 @@ No domain events are specified in `project.md`.
 
 No reporting or audit needs are specified.
 
-The required output format is a clear, printable day-based PDF timeline.
+The current in-app output format is a day-based calendar schedule. A clear, printable day-based PDF timeline remains a later export requirement.
 
 ## Edge cases
 
@@ -442,3 +466,7 @@ The required output format is a clear, printable day-based PDF timeline.
 - How long is the initial lunch block inside 12:00-14:00 before user-configurable lunch behavior is added?
 - What data source should provide walking minutes between stages before this becomes a user setting?
 - Are there multiple festival days, and what date/time format should performances use?
+- Should manual schedule choices sync to Supabase and affect every group member, or should they remain local until a later shared-decision workflow is defined?
+- Should manual schedule choices persist after app restart and new Supabase sync, and how should users clear a manual choice back to the generated result?
+- Who is allowed to change the group's chosen act: any group member, an owner/admin, or only the current signed-in user for their local view?
+- Should manual schedule choices survive future rating, group membership, or festival master-data changes, or should schedule regeneration clear them?
