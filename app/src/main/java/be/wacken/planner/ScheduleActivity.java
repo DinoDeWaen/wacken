@@ -34,6 +34,7 @@ public final class ScheduleActivity extends Activity {
     private static final int TIME_LABEL_WIDTH_DP = 54;
     private static final DateTimeFormatter DATE = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
+    private final ScheduleManualSelections manualSelections = new ScheduleManualSelections();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,7 +122,11 @@ public final class ScheduleActivity extends Activity {
             empty.addView(message("No selected performances.", COLOR_MUTED));
             return empty;
         }
-        ScheduleCalendarLayout layout = ScheduleCalendarLayout.forSlots(day.slots());
+        java.util.List<ScheduleDecisionCandidate> visibleCandidates = new java.util.ArrayList<>();
+        for (TimelineSlot slot : day.slots()) {
+            visibleCandidates.add(manualSelections.visibleCandidate(slot));
+        }
+        ScheduleCalendarLayout layout = ScheduleCalendarLayout.forCandidates(visibleCandidates);
         int calendarHeight = dp(layout.hourCount() * HOUR_HEIGHT_DP);
         FrameLayout calendar = new FrameLayout(this);
         calendar.setBackgroundColor(COLOR_BACKGROUND);
@@ -134,7 +139,8 @@ public final class ScheduleActivity extends Activity {
             calendar.addView(hourLine(layout, hour), hourLineLayout(hour));
         }
         for (TimelineSlot slot : day.slots()) {
-            calendar.addView(slotView(slot), slotLayout(layout, slot));
+            ScheduleDecisionCandidate visible = manualSelections.visibleCandidate(slot);
+            calendar.addView(slotView(slot, visible), slotLayout(layout, visible));
         }
         return calendar;
     }
@@ -157,18 +163,18 @@ public final class ScheduleActivity extends Activity {
         return params;
     }
 
-    private FrameLayout.LayoutParams slotLayout(ScheduleCalendarLayout layout, TimelineSlot slot) {
+    private FrameLayout.LayoutParams slotLayout(ScheduleCalendarLayout layout, ScheduleDecisionCandidate candidate) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
-                dp(Math.max(58, layout.durationMinutes(slot) * HOUR_HEIGHT_DP / 60))
+                dp(Math.max(58, layout.durationMinutes(candidate) * HOUR_HEIGHT_DP / 60))
         );
         params.leftMargin = dp(TIME_LABEL_WIDTH_DP);
-        params.topMargin = dp(layout.topOffsetMinutes(slot) * HOUR_HEIGHT_DP / 60);
+        params.topMargin = dp(layout.topOffsetMinutes(candidate) * HOUR_HEIGHT_DP / 60);
         params.rightMargin = 0;
         return params;
     }
 
-    private LinearLayout slotView(TimelineSlot slot) {
+    private LinearLayout slotView(TimelineSlot slot, ScheduleDecisionCandidate visible) {
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setBackground(slotBackground());
@@ -177,20 +183,20 @@ public final class ScheduleActivity extends Activity {
         panel.setOnClickListener(view -> showDecisionDetails(slot));
 
         TextView band = new TextView(this);
-        band.setText(slot.bandName() + " " + stars(slot.rating()));
+        band.setText(visible.bandName() + " " + stars(visible.rating()));
         band.setTextColor(COLOR_TEXT);
         band.setTextSize(18);
         band.setTypeface(Typeface.DEFAULT_BOLD);
         panel.addView(band);
 
         TextView facts = new TextView(this);
-        facts.setText(slot.stageName() + " | " + slot.start().format(TIME) + " - " + slot.end().format(TIME));
+        facts.setText(visible.stageName() + " | " + visible.start().format(TIME) + " - " + visible.end().format(TIME));
         facts.setTextColor(COLOR_MUTED);
         facts.setPadding(0, dp(3), 0, 0);
         panel.addView(facts);
 
         TextView decision = new TextView(this);
-        decision.setText(slot.optional() ? "OPTIONAL" : slot.decisionStatus().name());
+        decision.setText(manualSelections.isManual(slot) ? "MANUAL CHOICE" : slot.optional() ? "OPTIONAL" : slot.decisionStatus().name());
         decision.setTextColor(slot.optional() ? COLOR_AMBER : COLOR_ACCENT);
         decision.setTypeface(Typeface.DEFAULT_BOLD);
         decision.setPadding(0, dp(5), 0, 0);
@@ -216,21 +222,16 @@ public final class ScheduleActivity extends Activity {
         detail.setPadding(dp(18), dp(12), dp(18), dp(6));
 
         detail.addView(detailText("Chosen act", COLOR_ACCENT, 12, true));
-        detail.addView(candidateView(new ScheduleDecisionCandidate(
-                slot.bandName(),
-                slot.rating(),
-                slot.stageName(),
-                slot.start(),
-                slot.end(),
-                "CHOSEN",
-                true
-        )));
+        final AlertDialog[] dialog = new AlertDialog[1];
+        java.util.List<ScheduleDecisionCandidate> candidates = manualSelections.detailCandidates(slot);
+        detail.addView(candidateView(slot, candidates.get(0), () -> dialog[0].dismiss()));
 
         detail.addView(detailText("Alternatives", COLOR_ACCENT, 12, true));
         boolean hasAlternatives = false;
-        for (ScheduleDecisionCandidate candidate : slot.candidates()) {
+        for (int index = 1; index < candidates.size(); index++) {
+            ScheduleDecisionCandidate candidate = candidates.get(index);
             if (!candidate.selected()) {
-                detail.addView(candidateView(candidate));
+                detail.addView(candidateView(slot, candidate, () -> dialog[0].dismiss()));
                 hasAlternatives = true;
             }
         }
@@ -238,14 +239,14 @@ public final class ScheduleActivity extends Activity {
             detail.addView(detailText("No alternatives available.", COLOR_MUTED, 14, false));
         }
 
-        new AlertDialog.Builder(this)
+        dialog[0] = new AlertDialog.Builder(this)
                 .setTitle(slot.bandName())
                 .setView(detail)
                 .setPositiveButton("Close", null)
                 .show();
     }
 
-    private LinearLayout candidateView(ScheduleDecisionCandidate candidate) {
+    private LinearLayout candidateView(TimelineSlot slot, ScheduleDecisionCandidate candidate, Runnable afterSelect) {
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setPadding(0, dp(6), 0, dp(10));
@@ -266,6 +267,20 @@ public final class ScheduleActivity extends Activity {
 
         TextView status = detailText(candidate.status(), candidate.selected() ? COLOR_ACCENT : COLOR_AMBER, 12, true);
         panel.addView(status);
+        if (!candidate.selected()) {
+            Button select = new Button(this);
+            select.setAllCaps(false);
+            select.setText("Select as act");
+            select.setTextColor(Color.WHITE);
+            select.setTypeface(Typeface.DEFAULT_BOLD);
+            select.setBackgroundColor(COLOR_ACCENT);
+            select.setOnClickListener(view -> {
+                manualSelections.select(slot, candidate);
+                setContentView(render());
+                afterSelect.run();
+            });
+            panel.addView(select);
+        }
         return panel;
     }
 

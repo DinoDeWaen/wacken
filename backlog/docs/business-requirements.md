@@ -39,7 +39,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 | Ratings and group decisions | BR-001 to BR-021 | Rating, veto, effective rating, group decision, conflict resolution |
 | Travel, lunch, and timeline | BR-022 to BR-032 | Scheduling, walking time, lunch, food suggestions, printable timeline |
 | Festival data import | BR-033 to BR-046 | CSV import, Supabase master data, Room cache, admin data, band-only imports |
-| Overview, detail, and app state | BR-047 to BR-067 | Wacken UI, metadata, music links, loading, sync feedback, settings, calendar schedule, returning to app context |
+| Overview, detail, and app state | BR-047 to BR-068 | Wacken UI, metadata, music links, loading, sync feedback, settings, calendar schedule, returning to app context |
 
 ### Requirement Drift Markers
 
@@ -369,8 +369,9 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-063 | The group schedule must be shown as a day-based calendar. | Each festival day appears as a calendar-like view with hour lines and performance blocks positioned by time. | Must |
 | BR-064 | Calendar performance blocks must summarize the selected act. | A block shows band name, stage, and rating stars while remaining readable on a phone screen. | Must |
 | BR-065 | Opening a calendar performance block must show the conflict detail. | The detail shows the chosen act and all alternatives, with each band's stage and rating stars. | Must |
-| BR-066 | A user can select an alternative as the act the group is going to. | Choosing an alternative updates the visible schedule result so that act becomes selected for that conflict. | Must |
-| BR-067 | Manual schedule choices must not silently change the underlying rating rules. | Selecting an alternative changes the schedule choice, but the original ratings and generated decision evidence remain visible. | Must |
+| BR-066 | A user can select an alternative as the act the group is going to for the visible schedule screen. | Choosing an alternative updates the local visible schedule result so that act becomes selected for that conflict. | Must |
+| BR-067 | Manual schedule choices must not silently change the underlying rating rules. | Selecting an alternative changes the local visible schedule choice, but the original ratings and generated decision evidence remain visible. | Must |
+| BR-068 | MVP2 manual schedule choices are local-only visible overrides. | A signed-in user can change the current schedule screen result; the choice is not synced to Supabase, is not persisted across app restart, and is cleared by leaving or regenerating the schedule screen. | Must |
 
 ## Data and terminology
 
@@ -409,7 +410,7 @@ Scenario: Inspect and change a schedule conflict choice
 | Settings page | Represents secondary app actions and operational controls. | Contains group/invite, import, and manual sync actions. |
 | Calendar schedule day | Represents one festival day in calendar form. | Contains hour lines and time-positioned performance blocks. |
 | Performance block | Represents a selected scheduled act in the calendar view. | Shows band, stage, rating stars, and opens the conflict detail. |
-| Manual schedule choice | Represents a user-selected act for a conflict. | Overrides the visible selected act for that conflict without changing ratings. |
+| Manual schedule choice | Represents a user-selected act for a conflict. | Overrides the local visible selected act for that conflict without changing ratings, persistence, or synced group data. |
 
 ## Future domain events
 
@@ -466,7 +467,4 @@ The current in-app output format is a day-based calendar schedule. A clear, prin
 - How long is the initial lunch block inside 12:00-14:00 before user-configurable lunch behavior is added?
 - What data source should provide walking minutes between stages before this becomes a user setting?
 - Are there multiple festival days, and what date/time format should performances use?
-- Should manual schedule choices sync to Supabase and affect every group member, or should they remain local until a later shared-decision workflow is defined?
-- Should manual schedule choices persist after app restart and new Supabase sync, and how should users clear a manual choice back to the generated result?
-- Who is allowed to change the group's chosen act: any group member, an owner/admin, or only the current signed-in user for their local view?
-- Should manual schedule choices survive future rating, group membership, or festival master-data changes, or should schedule regeneration clear them?
+- Should a later shared-decision workflow sync manual schedule choices to Supabase, add permissions, and provide an explicit reset-to-generated action?

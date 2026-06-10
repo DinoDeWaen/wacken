@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import be.wacken.planner.application.ScheduleDecisionCandidate;
 import be.wacken.planner.application.TimelineSlot;
 
 final class ScheduleCalendarLayout {
@@ -21,12 +22,31 @@ final class ScheduleCalendarLayout {
         if (slots == null || slots.isEmpty()) {
             return new ScheduleCalendarLayout(12, 14);
         }
+        List<ScheduleDecisionCandidate> candidates = new java.util.ArrayList<>();
+        for (TimelineSlot slot : slots) {
+            candidates.add(new ScheduleDecisionCandidate(
+                    slot.bandName(),
+                    slot.rating(),
+                    slot.stageName(),
+                    slot.start(),
+                    slot.end(),
+                    "CHOSEN",
+                    true
+            ));
+        }
+        return forCandidates(candidates);
+    }
+
+    static ScheduleCalendarLayout forCandidates(List<ScheduleDecisionCandidate> candidates) {
+        if (candidates == null || candidates.isEmpty()) {
+            return new ScheduleCalendarLayout(12, 14);
+        }
         int start = 23;
         int end = 0;
-        for (TimelineSlot slot : slots) {
-            start = Math.min(start, slot.start().getHour());
-            int slotEndHour = slot.end().getMinute() == 0 ? slot.end().getHour() : slot.end().getHour() + 1;
-            if (slot.end().toLocalDate().isAfter(slot.start().toLocalDate())) {
+        for (ScheduleDecisionCandidate candidate : candidates) {
+            start = Math.min(start, candidate.start().getHour());
+            int slotEndHour = candidate.end().getMinute() == 0 ? candidate.end().getHour() : candidate.end().getHour() + 1;
+            if (candidate.end().toLocalDate().isAfter(candidate.start().toLocalDate())) {
                 slotEndHour += 24;
             }
             end = Math.max(end, slotEndHour);
@@ -56,6 +76,16 @@ final class ScheduleCalendarLayout {
     int durationMinutes(TimelineSlot slot) {
         int minutes = minutesFromStart(slot.end(), slot.start().toLocalDate())
                 - minutesFromStart(slot.start(), slot.start().toLocalDate());
+        return Math.max(MIN_BLOCK_MINUTES, minutes);
+    }
+
+    int topOffsetMinutes(ScheduleDecisionCandidate candidate) {
+        return Math.max(0, minutesFromStart(candidate.start(), candidate.start().toLocalDate()));
+    }
+
+    int durationMinutes(ScheduleDecisionCandidate candidate) {
+        int minutes = minutesFromStart(candidate.end(), candidate.start().toLocalDate())
+                - minutesFromStart(candidate.start(), candidate.start().toLocalDate());
         return Math.max(MIN_BLOCK_MINUTES, minutes);
     }
 

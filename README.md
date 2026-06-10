@@ -17,7 +17,7 @@
 - Sign in with Supabase Auth so ratings can be associated with a user and the shared Wacken planning group.
 - Keep the band overview focused with compact settings, schedule, and sync-exit icon actions; settings contains group invite, lineup import, and manual Supabase sync.
 - Share plain-text invite instructions for the single shared `Sofie and Dino` planning group through Android's share sheet.
-- Generate and view an MVP2 calendar-style group schedule from shared ratings, conflict rules, optional decisions, winner stars, and lost-alternative stars; tapping a performance block opens the chosen act and alternatives.
+- Generate and view an MVP2 calendar-style group schedule from shared ratings, conflict rules, optional decisions, winner stars, and lost-alternative stars; tapping a performance block opens the chosen act and alternatives, and alternatives can be selected as local visible overrides.
 - Prepare groundwork for printable timelines.
 
 ## Architecture
