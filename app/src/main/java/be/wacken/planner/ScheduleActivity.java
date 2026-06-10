@@ -1,6 +1,7 @@
 package be.wacken.planner;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -16,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 
 import be.wacken.planner.application.GenerateSharedScheduleUseCase;
 import be.wacken.planner.application.ScheduleDay;
+import be.wacken.planner.application.ScheduleDecisionCandidate;
 import be.wacken.planner.application.SharedSchedule;
 import be.wacken.planner.application.SharedScheduleStatus;
 import be.wacken.planner.application.TimelineSlot;
@@ -171,6 +173,8 @@ public final class ScheduleActivity extends Activity {
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setBackground(slotBackground());
         panel.setPadding(dp(10), dp(6), dp(10), dp(6));
+        panel.setClickable(true);
+        panel.setOnClickListener(view -> showDecisionDetails(slot));
 
         TextView band = new TextView(this);
         band.setText(slot.bandName() + " " + stars(slot.rating()));
@@ -204,6 +208,76 @@ public final class ScheduleActivity extends Activity {
             panel.addView(alternative);
         });
         return panel;
+    }
+
+    private void showDecisionDetails(TimelineSlot slot) {
+        LinearLayout detail = new LinearLayout(this);
+        detail.setOrientation(LinearLayout.VERTICAL);
+        detail.setPadding(dp(18), dp(12), dp(18), dp(6));
+
+        detail.addView(detailText("Chosen act", COLOR_ACCENT, 12, true));
+        detail.addView(candidateView(new ScheduleDecisionCandidate(
+                slot.bandName(),
+                slot.rating(),
+                slot.stageName(),
+                slot.start(),
+                slot.end(),
+                "CHOSEN",
+                true
+        )));
+
+        detail.addView(detailText("Alternatives", COLOR_ACCENT, 12, true));
+        boolean hasAlternatives = false;
+        for (ScheduleDecisionCandidate candidate : slot.candidates()) {
+            if (!candidate.selected()) {
+                detail.addView(candidateView(candidate));
+                hasAlternatives = true;
+            }
+        }
+        if (!hasAlternatives) {
+            detail.addView(detailText("No alternatives available.", COLOR_MUTED, 14, false));
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle(slot.bandName())
+                .setView(detail)
+                .setPositiveButton("Close", null)
+                .show();
+    }
+
+    private LinearLayout candidateView(ScheduleDecisionCandidate candidate) {
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(0, dp(6), 0, dp(10));
+
+        TextView name = detailText(candidate.bandName() + " " + stars(candidate.rating()),
+                candidate.selected() ? COLOR_TEXT : COLOR_MUTED,
+                16,
+                candidate.selected());
+        panel.addView(name);
+
+        TextView facts = detailText(
+                candidate.stageName() + " | " + candidate.start().format(TIME) + " - " + candidate.end().format(TIME),
+                COLOR_MUTED,
+                13,
+                false
+        );
+        panel.addView(facts);
+
+        TextView status = detailText(candidate.status(), candidate.selected() ? COLOR_ACCENT : COLOR_AMBER, 12, true);
+        panel.addView(status);
+        return panel;
+    }
+
+    private TextView detailText(String text, int color, int size, boolean bold) {
+        TextView view = new TextView(this);
+        view.setText(text);
+        view.setTextColor(color);
+        view.setTextSize(size);
+        if (bold) {
+            view.setTypeface(Typeface.DEFAULT_BOLD);
+        }
+        return view;
     }
 
     private GradientDrawable slotBackground() {

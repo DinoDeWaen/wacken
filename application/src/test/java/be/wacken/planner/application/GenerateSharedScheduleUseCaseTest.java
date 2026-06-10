@@ -80,6 +80,31 @@ class GenerateSharedScheduleUseCaseTest {
     }
 
     @Test
+    void includesDecisionCandidatesForScheduleDetails() {
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Performance selected = performance("5th Avenue", 30, 18, 0, 19, 0);
+        Performance lost = performance("Airbourne", 30, 18, 30, 19, 30);
+        performances.replaceAll(List.of(selected, lost));
+        ratings.save("sofie", selected.band(), Rating.of(5));
+        ratings.save("dino", lost.band(), Rating.of(4));
+
+        TimelineSlot slot = new GenerateSharedScheduleUseCase(performances, ratings).generate().days().get(0).slots().get(0);
+
+        assertEquals(2, slot.candidates().size());
+        assertEquals("5th Avenue", slot.candidates().get(0).bandName());
+        assertEquals("Stage 5th Avenue", slot.candidates().get(0).stageName());
+        assertEquals(5, slot.candidates().get(0).rating());
+        assertEquals("CHOSEN", slot.candidates().get(0).status());
+        assertEquals(true, slot.candidates().get(0).selected());
+        assertEquals("Airbourne", slot.candidates().get(1).bandName());
+        assertEquals("Stage Airbourne", slot.candidates().get(1).stageName());
+        assertEquals(4, slot.candidates().get(1).rating());
+        assertEquals("LOST ALTERNATIVE", slot.candidates().get(1).status());
+        assertEquals(false, slot.candidates().get(1).selected());
+    }
+
+    @Test
     void marksOptionalSlotsWhenConflictResolutionIsOptional() {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();

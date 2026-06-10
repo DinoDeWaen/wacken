@@ -83,8 +83,45 @@ public final class GenerateSharedScheduleUseCase {
                 selected.end(),
                 resolution.status(),
                 resolution.lostAlternative().map(alternative -> alternative.band().name()),
-                resolution.lostAlternative().map(alternative -> highestRating(alternative.band(), groupRatings))
+                resolution.lostAlternative().map(alternative -> highestRating(alternative.band(), groupRatings)),
+                candidates(resolution, groupRatings)
         ));
+    }
+
+    private List<ScheduleDecisionCandidate> candidates(
+            PerformanceConflictResolution resolution,
+            Map<Band, List<Rating>> groupRatings
+    ) {
+        List<ScheduleDecisionCandidate> candidates = new ArrayList<>();
+        if (resolution.selected().isPresent()) {
+            Performance selected = resolution.selected().get();
+            candidates.add(candidate(selected, groupRatings, "CHOSEN", true));
+        }
+        for (Performance rejected : resolution.rejected()) {
+            String status = resolution.lostAlternative()
+                    .filter(rejected::equals)
+                    .map(ignored -> "LOST ALTERNATIVE")
+                    .orElse("NOT SELECTED");
+            candidates.add(candidate(rejected, groupRatings, status, false));
+        }
+        return candidates;
+    }
+
+    private ScheduleDecisionCandidate candidate(
+            Performance performance,
+            Map<Band, List<Rating>> groupRatings,
+            String status,
+            boolean selected
+    ) {
+        return new ScheduleDecisionCandidate(
+                performance.band().name(),
+                highestRating(performance.band(), groupRatings),
+                performance.stage().name(),
+                performance.start(),
+                performance.end(),
+                status,
+                selected
+        );
     }
 
     private int highestRating(Band band, Map<Band, List<Rating>> groupRatings) {

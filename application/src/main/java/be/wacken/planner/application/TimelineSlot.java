@@ -2,6 +2,9 @@ package be.wacken.planner.application;
 
 import be.wacken.planner.domain.GroupDecisionStatus;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -13,8 +16,32 @@ public record TimelineSlot(
         LocalDateTime end,
         GroupDecisionStatus decisionStatus,
         Optional<String> lostAlternativeBandName,
-        Optional<Integer> lostAlternativeRating
+        Optional<Integer> lostAlternativeRating,
+        List<ScheduleDecisionCandidate> candidates
 ) {
+    public TimelineSlot(
+            String bandName,
+            int rating,
+            String stageName,
+            LocalDateTime start,
+            LocalDateTime end,
+            GroupDecisionStatus decisionStatus,
+            Optional<String> lostAlternativeBandName,
+            Optional<Integer> lostAlternativeRating
+    ) {
+        this(
+                bandName,
+                rating,
+                stageName,
+                start,
+                end,
+                decisionStatus,
+                lostAlternativeBandName,
+                lostAlternativeRating,
+                Collections.emptyList()
+        );
+    }
+
     public TimelineSlot {
         if (bandName == null || bandName.isBlank()) {
             throw new IllegalArgumentException("Timeline slot band name must not be blank.");
@@ -36,6 +63,7 @@ public record TimelineSlot(
         }
         lostAlternativeBandName = lostAlternativeBandName == null ? Optional.empty() : lostAlternativeBandName;
         lostAlternativeRating = lostAlternativeRating == null ? Optional.empty() : lostAlternativeRating;
+        candidates = candidates == null ? Collections.emptyList() : Collections.unmodifiableList(new ArrayList<>(candidates));
         if (lostAlternativeRating.isPresent() && (lostAlternativeRating.get() < 0 || lostAlternativeRating.get() > 5)) {
             throw new IllegalArgumentException("Timeline slot lost alternative rating must be between 0 and 5.");
         }
