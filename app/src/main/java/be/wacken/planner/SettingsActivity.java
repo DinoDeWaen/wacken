@@ -1,6 +1,7 @@
 package be.wacken.planner;
 
 import android.app.Activity;
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -21,7 +22,9 @@ public final class SettingsActivity extends Activity {
     private AuthSession currentSession;
     private TextView status;
     private TextView ratingAllocation;
+    private TextView syncIndicator;
     private Button syncButton;
+    private ValueAnimator syncAnimator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,12 +86,27 @@ public final class SettingsActivity extends Activity {
         screen.addView(syncButton);
         screen.addView(actionButton("Back to bands", Color.rgb(64, 76, 79), view -> finish()));
 
+        syncIndicator = new TextView(this);
+        syncIndicator.setText("⚡");
+        syncIndicator.setTextColor(COLOR_ACCENT);
+        syncIndicator.setTextSize(36);
+        syncIndicator.setTypeface(Typeface.DEFAULT_BOLD);
+        syncIndicator.setGravity(Gravity.CENTER_HORIZONTAL);
+        syncIndicator.setVisibility(android.view.View.GONE);
+        screen.addView(syncIndicator);
+
         status = new TextView(this);
         status.setTextColor(COLOR_MUTED);
         status.setGravity(Gravity.CENTER_HORIZONTAL);
         status.setPadding(0, dp(18), 0, 0);
         screen.addView(status);
         return screen;
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopSyncAnimation();
+        super.onDestroy();
     }
 
     private Button actionButton(String text, int color, android.view.View.OnClickListener listener) {
@@ -122,6 +140,7 @@ public final class SettingsActivity extends Activity {
 
     private void syncFromSupabase() {
         syncButton.setEnabled(false);
+        startSyncAnimation();
         status.setTextColor(COLOR_MUTED);
         status.setText("Forging latest ratings...");
         new Thread(() -> {
@@ -131,6 +150,7 @@ public final class SettingsActivity extends Activity {
                 repositories.syncRatings();
                 runOnUiThread(() -> {
                     syncButton.setEnabled(true);
+                    stopSyncAnimation();
                     status.setTextColor(COLOR_TEXT);
                     status.setText("Sync complete.");
                     refreshRatingAllocation();
@@ -138,6 +158,7 @@ public final class SettingsActivity extends Activity {
             } catch (Exception error) {
                 runOnUiThread(() -> {
                     syncButton.setEnabled(true);
+                    stopSyncAnimation();
                     if (!loadCurrentSession()) {
                         redirectToLogin();
                         return;
@@ -147,6 +168,29 @@ public final class SettingsActivity extends Activity {
                 });
             }
         }).start();
+    }
+
+    private void startSyncAnimation() {
+        stopSyncAnimation();
+        syncIndicator.setVisibility(android.view.View.VISIBLE);
+        syncAnimator = ValueAnimator.ofFloat(0f, 360f);
+        syncAnimator.setDuration(950);
+        syncAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        syncAnimator.addUpdateListener(animation ->
+                syncIndicator.setRotation((float) animation.getAnimatedValue())
+        );
+        syncAnimator.start();
+    }
+
+    private void stopSyncAnimation() {
+        if (syncAnimator != null) {
+            syncAnimator.cancel();
+            syncAnimator = null;
+        }
+        if (syncIndicator != null) {
+            syncIndicator.setRotation(0f);
+            syncIndicator.setVisibility(android.view.View.GONE);
+        }
     }
 
     private void refreshRatingAllocation() {

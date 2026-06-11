@@ -58,6 +58,8 @@ public final class MainActivity extends Activity {
     private AuthSession currentSession;
     private Button closeButton;
     private FrameLayout syncOverlay;
+    private ImageView syncSplash;
+    private View syncScrim;
     private TextView syncOverlayMessage;
     private MetalSyncView syncAnimation;
     private ValueAnimator syncAnimator;
@@ -268,12 +270,13 @@ public final class MainActivity extends Activity {
         if (syncInProgress) {
             return;
         }
+        SyncVisualMode visualMode = SyncVisualPolicy.mode(syncAttempted, closeAfterSync);
         syncAttempted = true;
         syncInProgress = true;
         setSyncActionsEnabled(false);
         status.setVisibility(View.VISIBLE);
         status.setText(message);
-        showSyncOverlay(message);
+        showSyncOverlay(message, visualMode);
         new Thread(() -> {
             try {
                 AppRepositories repositories = new AppRepositories(this);
@@ -321,18 +324,18 @@ public final class MainActivity extends Activity {
         syncOverlay.setVisibility(View.GONE);
         syncOverlay.setClickable(true);
 
-        ImageView splash = new ImageView(this);
-        splash.setBackgroundColor(Color.BLACK);
-        splash.setImageResource(R.drawable.splash_dino_metal);
-        splash.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        syncOverlay.addView(splash, new FrameLayout.LayoutParams(
+        syncSplash = new ImageView(this);
+        syncSplash.setBackgroundColor(Color.BLACK);
+        syncSplash.setImageResource(R.drawable.splash_dino_metal);
+        syncSplash.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        syncOverlay.addView(syncSplash, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
         ));
 
-        View scrim = new View(this);
-        scrim.setBackgroundColor(Color.argb(56, 0, 0, 0));
-        syncOverlay.addView(scrim, new FrameLayout.LayoutParams(
+        syncScrim = new View(this);
+        syncScrim.setBackgroundColor(Color.argb(56, 0, 0, 0));
+        syncOverlay.addView(syncScrim, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
         ));
@@ -380,9 +383,16 @@ public final class MainActivity extends Activity {
         return syncOverlay;
     }
 
-    private void showSyncOverlay(String message) {
+    private void showSyncOverlay(String message, SyncVisualMode visualMode) {
         if (syncOverlay == null || syncAnimation == null) {
             return;
+        }
+        boolean fullSplash = visualMode == SyncVisualMode.FULL_STARTUP_SPLASH;
+        if (syncSplash != null) {
+            syncSplash.setVisibility(fullSplash ? View.VISIBLE : View.GONE);
+        }
+        if (syncScrim != null) {
+            syncScrim.setVisibility(fullSplash ? View.VISIBLE : View.GONE);
         }
         syncOverlayMessage.setText(message);
         syncOverlay.setAlpha(0f);
