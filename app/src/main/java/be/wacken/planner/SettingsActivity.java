@@ -20,6 +20,7 @@ public final class SettingsActivity extends Activity {
     private AuthSessionStore sessionStore;
     private AuthSession currentSession;
     private TextView status;
+    private TextView ratingAllocation;
     private Button syncButton;
 
     @Override
@@ -63,6 +64,15 @@ public final class SettingsActivity extends Activity {
         subtitle.setGravity(Gravity.CENTER_HORIZONTAL);
         subtitle.setPadding(0, dp(4), 0, dp(18));
         screen.addView(subtitle);
+
+        ratingAllocation = new TextView(this);
+        ratingAllocation.setTextColor(COLOR_TEXT);
+        ratingAllocation.setTextSize(15);
+        ratingAllocation.setTypeface(Typeface.DEFAULT_BOLD);
+        ratingAllocation.setGravity(Gravity.CENTER_HORIZONTAL);
+        ratingAllocation.setPadding(0, 0, 0, dp(18));
+        screen.addView(ratingAllocation);
+        refreshRatingAllocation();
 
         screen.addView(actionButton("Share group invite", Color.rgb(78, 67, 50), view -> shareGroupInvite()));
         screen.addView(actionButton("Import lineup CSV files", COLOR_AMBER, view -> {
@@ -123,6 +133,7 @@ public final class SettingsActivity extends Activity {
                     syncButton.setEnabled(true);
                     status.setTextColor(COLOR_TEXT);
                     status.setText("Sync complete.");
+                    refreshRatingAllocation();
                 });
             } catch (Exception error) {
                 runOnUiThread(() -> {
@@ -136,6 +147,22 @@ public final class SettingsActivity extends Activity {
                 });
             }
         }).start();
+    }
+
+    private void refreshRatingAllocation() {
+        if (ratingAllocation == null) {
+            return;
+        }
+        try {
+            AppRepositories repositories = new AppRepositories(this);
+            ratingAllocation.setText(RatingAllocationSummary.format(
+                    RatingAllocationSummary.countForUser(currentSession.userId(), repositories.ratings().findAll())
+            ));
+        } catch (Exception error) {
+            ratingAllocation.setText(RatingAllocationSummary.format(
+                    RatingAllocationSummary.countForUser(currentSession.userId(), java.util.List.of())
+            ));
+        }
     }
 
     private int dp(int value) {
