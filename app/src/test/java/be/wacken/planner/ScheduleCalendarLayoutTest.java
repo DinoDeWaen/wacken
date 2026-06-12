@@ -83,6 +83,34 @@ public final class ScheduleCalendarLayoutTest {
         assertEquals(60, layout.durationMinutes(slot));
     }
 
+    @Test
+    public void ordersStageColumnsWithLouderAndHarderFirstAndAdjacent() {
+        be.wacken.planner.application.ScheduleDecisionCandidate wackinger = candidate(slot("Storm Seeker", "Wackinger Stage", 18, 0, 19, 0));
+        be.wacken.planner.application.ScheduleDecisionCandidate harder = candidate(slot("Def Leppard", "Harder", 22, 15, 23, 45));
+        be.wacken.planner.application.ScheduleDecisionCandidate louder = candidate(slot("Future Palace", "Louder", 13, 45, 14, 30));
+        be.wacken.planner.application.ScheduleDecisionCandidate faster = candidate(slot("Paradise Lost", "Faster", 14, 30, 15, 30));
+
+        ScheduleCalendarLayout layout = ScheduleCalendarLayout.forCandidates(List.of(wackinger, harder, louder, faster), LocalDate.of(2026, 7, 30));
+
+        assertEquals(List.of("Louder", "Harder", "Faster", "Wackinger Stage"), layout.stageColumns());
+        assertEquals(0, layout.stageColumnIndex(louder));
+        assertEquals(1, layout.stageColumnIndex(harder));
+        assertEquals(4, layout.stageColumnCount());
+    }
+
+    @Test
+    public void assignsOverlappingDifferentStageActsToDifferentColumns() {
+        be.wacken.planner.application.ScheduleDecisionCandidate louder = candidate(slot("Future Palace", "Louder", 13, 45, 14, 30));
+        be.wacken.planner.application.ScheduleDecisionCandidate faster = candidate(slot("Paradise Lost", "Faster", 14, 0, 15, 30));
+
+        ScheduleCalendarLayout layout = ScheduleCalendarLayout.forCandidates(List.of(louder, faster), LocalDate.of(2026, 7, 30));
+
+        assertEquals(0, layout.stageColumnIndex(louder));
+        assertEquals(1, layout.stageColumnIndex(faster));
+        assertEquals(45, layout.topOffsetMinutes(louder));
+        assertEquals(60, layout.topOffsetMinutes(faster));
+    }
+
     private be.wacken.planner.application.ScheduleDecisionCandidate candidate(TimelineSlot slot) {
         return new be.wacken.planner.application.ScheduleDecisionCandidate(
                 slot.bandName(),
@@ -96,10 +124,14 @@ public final class ScheduleCalendarLayoutTest {
     }
 
     private TimelineSlot slot(String band, int startHour, int startMinute, int endHour, int endMinute) {
+        return slot(band, "Faster", startHour, startMinute, endHour, endMinute);
+    }
+
+    private TimelineSlot slot(String band, String stage, int startHour, int startMinute, int endHour, int endMinute) {
         return new TimelineSlot(
                 band,
                 4,
-                "Faster",
+                stage,
                 LocalDateTime.of(2026, 7, 30, startHour, startMinute),
                 LocalDateTime.of(2026, 7, 30, endHour, endMinute),
                 GroupDecisionStatus.GO,

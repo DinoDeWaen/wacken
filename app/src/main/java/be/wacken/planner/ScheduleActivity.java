@@ -9,8 +9,10 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -36,6 +38,9 @@ public final class ScheduleActivity extends Activity {
     private static final int COLOR_AMBER = Color.rgb(255, 199, 44);
     private static final int HOUR_HEIGHT_DP = 72;
     private static final int TIME_LABEL_WIDTH_DP = 78;
+    private static final int STAGE_COLUMN_WIDTH_DP = 190;
+    private static final int STAGE_HEADER_HEIGHT_DP = 32;
+    private static final int COLUMN_GAP_DP = 6;
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("EEEE yyyy-MM-dd", Locale.ENGLISH);
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
     private final ScheduleManualSelections manualSelections = new ScheduleManualSelections();
@@ -121,7 +126,7 @@ public final class ScheduleActivity extends Activity {
         return title;
     }
 
-    private FrameLayout dayCalendar(ScheduleDay day) {
+    private View dayCalendar(ScheduleDay day) {
         if (day.slots().isEmpty()) {
             FrameLayout empty = new FrameLayout(this);
             empty.addView(message("No selected performances.", COLOR_MUTED));
@@ -132,14 +137,18 @@ public final class ScheduleActivity extends Activity {
             visibleCandidates.add(manualSelections.visibleCandidate(slot));
         }
         ScheduleCalendarLayout layout = ScheduleCalendarLayout.forCandidates(visibleCandidates, day.date());
-        int calendarHeight = dp(layout.hourCount() * HOUR_HEIGHT_DP);
+        int calendarHeight = dp(STAGE_HEADER_HEIGHT_DP + (layout.hourCount() * HOUR_HEIGHT_DP));
+        int calendarWidth = dp(TIME_LABEL_WIDTH_DP + (layout.stageColumnCount() * STAGE_COLUMN_WIDTH_DP));
         FrameLayout calendar = new FrameLayout(this);
         calendar.setBackgroundColor(COLOR_BACKGROUND);
-        calendar.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
+        calendar.setLayoutParams(new FrameLayout.LayoutParams(
+                calendarWidth,
                 calendarHeight
         ));
 
+        for (int column = 0; column < layout.stageColumns().size(); column++) {
+            calendar.addView(stageHeader(layout.stageColumns().get(column)), stageHeaderLayout(column));
+        }
         for (int hour = 0; hour <= layout.hourCount(); hour++) {
             calendar.addView(hourLine(layout, hour), hourLineLayout(hour));
         }
@@ -154,7 +163,34 @@ public final class ScheduleActivity extends Activity {
                 calendar.addView(walkingMarker(slot), walkingMarkerLayout(layout, visible, next));
             }
         }
-        return calendar;
+        HorizontalScrollView horizontal = new HorizontalScrollView(this);
+        horizontal.setHorizontalScrollBarEnabled(true);
+        horizontal.setFillViewport(false);
+        horizontal.setBackgroundColor(COLOR_BACKGROUND);
+        horizontal.addView(calendar);
+        return horizontal;
+    }
+
+    private TextView stageHeader(String stageName) {
+        TextView header = new TextView(this);
+        header.setText(stageName);
+        header.setTextColor(COLOR_AMBER);
+        header.setTextSize(12);
+        header.setTypeface(Typeface.DEFAULT_BOLD);
+        header.setGravity(Gravity.CENTER);
+        header.setSingleLine(true);
+        header.setEllipsize(TextUtils.TruncateAt.END);
+        header.setBackgroundColor(Color.rgb(24, 30, 32));
+        return header;
+    }
+
+    private FrameLayout.LayoutParams stageHeaderLayout(int column) {
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                dp(STAGE_COLUMN_WIDTH_DP - COLUMN_GAP_DP),
+                dp(STAGE_HEADER_HEIGHT_DP - 4)
+        );
+        params.leftMargin = dp(TIME_LABEL_WIDTH_DP + (column * STAGE_COLUMN_WIDTH_DP));
+        return params;
     }
 
     private TextView hourLine(ScheduleCalendarLayout layout, int hourOffset) {
@@ -171,18 +207,17 @@ public final class ScheduleActivity extends Activity {
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 dp(18)
         );
-        params.topMargin = dp(hourOffset * HOUR_HEIGHT_DP);
+        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (hourOffset * HOUR_HEIGHT_DP));
         return params;
     }
 
     private FrameLayout.LayoutParams slotLayout(ScheduleCalendarLayout layout, ScheduleDecisionCandidate candidate) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
+                dp(STAGE_COLUMN_WIDTH_DP - COLUMN_GAP_DP),
                 dp(Math.max(58, layout.durationMinutes(candidate) * HOUR_HEIGHT_DP / 60))
         );
-        params.leftMargin = dp(TIME_LABEL_WIDTH_DP);
-        params.topMargin = dp(layout.topOffsetMinutes(candidate) * HOUR_HEIGHT_DP / 60);
-        params.rightMargin = 0;
+        params.leftMargin = dp(TIME_LABEL_WIDTH_DP + (layout.stageColumnIndex(candidate) * STAGE_COLUMN_WIDTH_DP));
+        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (layout.topOffsetMinutes(candidate) * HOUR_HEIGHT_DP / 60));
         return params;
     }
 
@@ -209,7 +244,7 @@ public final class ScheduleActivity extends Activity {
                 dp(TIME_LABEL_WIDTH_DP),
                 dp(18)
         );
-        params.topMargin = dp(layout.topOffsetMinutes(candidate) * HOUR_HEIGHT_DP / 60);
+        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (layout.topOffsetMinutes(candidate) * HOUR_HEIGHT_DP / 60));
         return params;
     }
 
@@ -219,15 +254,15 @@ public final class ScheduleActivity extends Activity {
                 dp(18)
         );
         int top = (layout.endOffsetMinutes(candidate) * HOUR_HEIGHT_DP / 60) - 18;
-        params.topMargin = dp(Math.max(0, top));
+        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + Math.max(0, top));
         return params;
     }
 
     private TextView walkingMarker(TimelineSlot slot) {
         TextView marker = new TextView(this);
         String text = slot.walkingMinutesToNext().isPresent()
-                ? "Walk next: " + slot.walkingMinutesToNext().getAsInt() + " min"
-                : "Walk next: unknown";
+                ? "Walk " + slot.walkingMinutesToNext().getAsInt() + "m"
+                : "Walk ?";
         marker.setText(text);
         marker.setTextColor(COLOR_AMBER);
         marker.setTextSize(12);
@@ -244,11 +279,12 @@ public final class ScheduleActivity extends Activity {
             ScheduleDecisionCandidate to
     ) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
+                dp(TIME_LABEL_WIDTH_DP),
                 dp(22)
         );
-        params.leftMargin = dp(TIME_LABEL_WIDTH_DP);
-        params.topMargin = dp(Math.max(0, (layout.walkingMarkerOffsetMinutes(from, to) * HOUR_HEIGHT_DP / 60) - 11));
+        params.leftMargin = 0;
+        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP
+                + Math.max(0, (layout.walkingMarkerOffsetMinutes(from, to) * HOUR_HEIGHT_DP / 60) - 11));
         return params;
     }
 
