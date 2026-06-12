@@ -15,7 +15,7 @@ class PerformanceConflictDetectorTest {
     @Test
     void groupsSameDayOverlappingPerformancesIntoTheSameConflictSet() {
         Performance first = performance("5th Avenue", 30, 18, 0, 19, 0);
-        Performance second = performance("Airbourne", 30, 18, 30, 19, 30);
+        Performance second = performance("Airbourne", 30, 18, 20, 19, 20);
 
         List<PerformanceConflictSet> sets = detector.detect(List.of(first, second));
 
@@ -53,6 +53,19 @@ class PerformanceConflictDetectorTest {
     }
 
     @Test
+    void keepsPerformancesSeparateWhenOnlyTheirEdgesOverlapOutsideTheMiddleThirtyMinutes() {
+        Performance first = performance("5th Avenue", 30, 18, 0, 19, 0);
+        Performance second = performance("Airbourne", 30, 18, 40, 19, 40);
+
+        List<PerformanceConflictSet> sets = detector.detect(List.of(first, second));
+
+        assertEquals(List.of(
+                new PerformanceConflictSet(List.of(first)),
+                new PerformanceConflictSet(List.of(second))
+        ), sets);
+    }
+
+    @Test
     void keepsIndependentNonOverlappingPerformancesSeparate() {
         Performance first = performance("5th Avenue", 30, 16, 0, 17, 0);
         Performance second = performance("Airbourne", 30, 18, 0, 19, 0);
@@ -70,8 +83,8 @@ class PerformanceConflictDetectorTest {
     @Test
     void groupsChainedOverlapsIntoOneConnectedConflictSet() {
         Performance first = performance("5th Avenue", 30, 18, 0, 19, 0);
-        Performance second = performance("Airbourne", 30, 18, 45, 19, 30);
-        Performance third = performance("Iron Maiden", 30, 19, 15, 20, 0);
+        Performance second = performance("Airbourne", 30, 18, 20, 19, 20);
+        Performance third = performance("Iron Maiden", 30, 18, 45, 19, 45);
 
         List<PerformanceConflictSet> sets = detector.detect(List.of(first, third, second));
 

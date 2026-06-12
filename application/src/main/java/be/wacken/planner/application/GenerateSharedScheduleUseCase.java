@@ -5,6 +5,8 @@ import be.wacken.planner.domain.Performance;
 import be.wacken.planner.domain.PerformanceConflictDetector;
 import be.wacken.planner.domain.PerformanceConflictResolution;
 import be.wacken.planner.domain.PerformanceConflictResolver;
+import be.wacken.planner.domain.PerformanceConflictSet;
+import be.wacken.planner.domain.PerformanceOverlapPolicy;
 import be.wacken.planner.domain.PerformanceRepository;
 import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.RatingRepository;
@@ -32,6 +34,7 @@ public final class GenerateSharedScheduleUseCase {
     private final Optional<StageDistanceRepository> distances;
     private final PerformanceConflictDetector conflictDetector;
     private final PerformanceConflictResolver conflictResolver;
+    private final PerformanceOverlapPolicy overlapPolicy;
 
     public GenerateSharedScheduleUseCase(PerformanceRepository performances, RatingRepository ratings) {
         this(performances, ratings, null);
@@ -57,6 +60,7 @@ public final class GenerateSharedScheduleUseCase {
         this.distances = Optional.ofNullable(distances);
         this.conflictDetector = Objects.requireNonNull(conflictDetector, "conflictDetector must not be null");
         this.conflictResolver = Objects.requireNonNull(conflictResolver, "conflictResolver must not be null");
+        this.overlapPolicy = new PerformanceOverlapPolicy();
     }
 
     public SharedSchedule generate() {
@@ -68,10 +72,7 @@ public final class GenerateSharedScheduleUseCase {
         Map<Band, List<Rating>> groupRatings = groupRatingsByBand();
         List<TimelineSlot> slots = conflictDetector.detect(scheduled)
                 .stream()
-                .map(conflictSet -> conflictResolver.resolve(conflictSet, groupRatings))
-                .map(resolution -> toSlot(resolution, groupRatings))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .flatMap(conflictSet -> toSlots(conflictSet, groupRatings).stream())
                 .sorted(Comparator.comparing(TimelineSlot::start))
                 .collect(Collectors.toList());
 
@@ -90,6 +91,28 @@ public final class GenerateSharedScheduleUseCase {
                         LinkedHashMap::new,
                         Collectors.mapping(SavedRating::rating, Collectors.toList())
                 ));
+    }
+
+    private List<TimelineSlot> toSlots(PerformanceConflictSet conflictSet, Map<Band, List<Rating>> groupRatings) {
+        List<Performance> remaining = new ArrayList<>(conflictSet.performances());
+        List<TimelineSlot> slots = new ArrayList<>();
+        while (!remaining.isEmpty()) {
+            PerformanceConflictResolution resolution = conflictResolver.resolve(
+                    new PerformanceConflictSet(remaining),
+                    groupRatings
+            );
+            Optional<TimelineSlot> slot = toSlot(resolution, groupRatings);
+            if (slot.isEmpty()) {
+                break;
+            }
+            Performance selected = resolution.selected().get();
+            slots.add(slot.get());
+            remaining = remaining.stream()
+                    .filter(performance -> !performance.equals(selected))
+                    .filter(performance -> !overlaps(selected, performance))
+                    .collect(Collectors.toCollection(ArrayList::new));
+        }
+        return slots;
     }
 
     private Optional<TimelineSlot> toSlot(PerformanceConflictResolution resolution, Map<Band, List<Rating>> groupRatings) {
@@ -140,9 +163,7 @@ public final class GenerateSharedScheduleUseCase {
     }
 
     private boolean overlaps(Performance first, Performance second) {
-        return first.start().toLocalDate().equals(second.start().toLocalDate())
-                && first.start().isBefore(second.end())
-                && second.start().isBefore(first.end());
+        return overlapPolicy.overlapsForScheduling(first, second);
     }
 
     private ScheduleDecisionCandidate candidate(

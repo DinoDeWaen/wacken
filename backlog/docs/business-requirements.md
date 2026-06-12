@@ -316,6 +316,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-011 | If the maximum rating is `2`, the single-band decision is `OPTIONAL`. | A group that is only indifferent may optionally attend. | Must |
 | BR-012 | If the maximum rating is `0`, the band has no ratings yet and is treated as unrated. | A fully unrated band is not treated as vetoed. | Must |
 | BR-013 | For overlapping performances, prefer any band with a `5`. | A must-see band wins over lower-rated alternatives. | Must |
+| BR-013a | For schedule conflict resolution and alternatives, two performances count as overlapping only when their middle 30-minute windows overlap. | If two acts only overlap at the start or end of their full performance time, they can both appear in the schedule. | Must |
 | BR-014 | If overlapping performances both have at least one `5`, choose the one that reduces travel time by being closest to the previous selected band or best positioned for the next selected band. | Between two must-see conflicts, choose the option that makes the route more feasible. | Must |
 | BR-015 | If overlapping options only have ratings of `4`, choose the band with the most `4` ratings. | Two want-to-see ratings beat one want-to-see rating. | Must |
 | BR-016 | If overlapping options with ratings of `4` tie, choose the band with fewer vetoes. | One veto beats two vetoes. | Must |

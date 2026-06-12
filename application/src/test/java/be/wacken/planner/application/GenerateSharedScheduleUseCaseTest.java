@@ -108,7 +108,7 @@ class GenerateSharedScheduleUseCaseTest {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
         Performance selected = performance("5th Avenue", 30, 18, 0, 19, 0);
-        Performance lost = performance("Airbourne", 30, 18, 30, 19, 30);
+        Performance lost = performance("Airbourne", 30, 18, 20, 19, 20);
         performances.replaceAll(List.of(selected, lost));
         ratings.save("sofie", selected.band(), Rating.of(5));
         ratings.save("dino", lost.band(), Rating.of(4));
@@ -127,7 +127,7 @@ class GenerateSharedScheduleUseCaseTest {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
         Performance selected = performance("5th Avenue", 30, 18, 0, 19, 0);
-        Performance lost = performance("Airbourne", 30, 18, 30, 19, 30);
+        Performance lost = performance("Airbourne", 30, 18, 20, 19, 20);
         performances.replaceAll(List.of(selected, lost));
         ratings.save("sofie", selected.band(), Rating.of(4));
         ratings.save("dino", selected.band(), Rating.of(5));
@@ -145,7 +145,7 @@ class GenerateSharedScheduleUseCaseTest {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
         Performance selected = performance("5th Avenue", 30, 18, 0, 19, 0);
-        Performance lost = performance("Airbourne", 30, 18, 30, 19, 30);
+        Performance lost = performance("Airbourne", 30, 18, 20, 19, 20);
         performances.replaceAll(List.of(selected, lost));
         ratings.save("sofie", selected.band(), Rating.of(5));
         ratings.save("dino", lost.band(), Rating.of(4));
@@ -170,8 +170,8 @@ class GenerateSharedScheduleUseCaseTest {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
         Performance selected = performance("Def Leppard", "Harder", 30, 18, 0, 19, 0);
-        Performance directAlternative = performance("Direct Alternative", "Louder", 30, 18, 30, 19, 30);
-        Performance chainedAlternative = performance("Chained Alternative", "Faster", 30, 19, 15, 20, 0);
+        Performance directAlternative = performance("Direct Alternative", "Louder", 30, 18, 20, 19, 20);
+        Performance chainedAlternative = performance("Chained Alternative", "Faster", 30, 19, 15, 20, 15);
         performances.replaceAll(List.of(selected, directAlternative, chainedAlternative));
         ratings.save("sofie", selected.band(), Rating.of(5));
         ratings.save("dino", directAlternative.band(), Rating.of(4));
@@ -184,11 +184,32 @@ class GenerateSharedScheduleUseCaseTest {
     }
 
     @Test
+    void selectsDefLeppardWhenItOnlyOverlapsAnotherSelectedActOutsideTheMiddleThirtyMinutes() {
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Performance earlierMustSee = performance("Yngwie Malmsteen", "Faster", 31, 18, 0, 19, 0);
+        Performance edgeOverlap = performance("Bridge Act", "Louder", 31, 18, 20, 19, 20);
+        Performance defLeppard = performance("Def Leppard", "Harder", 31, 18, 45, 19, 45);
+        performances.replaceAll(List.of(earlierMustSee, edgeOverlap, defLeppard));
+        ratings.save("sofie", earlierMustSee.band(), Rating.of(5));
+        ratings.save("dino", earlierMustSee.band(), Rating.of(5));
+        ratings.save("sofie", defLeppard.band(), Rating.of(5));
+        ratings.save("dino", defLeppard.band(), Rating.of(5));
+
+        SharedSchedule schedule = new GenerateSharedScheduleUseCase(performances, ratings).generate();
+
+        assertEquals(
+                List.of("Yngwie Malmsteen", "Def Leppard"),
+                schedule.days().get(0).slots().stream().map(TimelineSlot::bandName).toList()
+        );
+    }
+
+    @Test
     void marksOptionalSlotsWhenConflictResolutionIsOptional() {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
         Performance selected = performance("5th Avenue", 30, 18, 0, 19, 0);
-        Performance lost = performance("Airbourne", 30, 18, 30, 19, 30);
+        Performance lost = performance("Airbourne", 30, 18, 20, 19, 20);
         performances.replaceAll(List.of(selected, lost));
         ratings.save("sofie", selected.band(), Rating.of(3));
         ratings.save("dino", selected.band(), Rating.of(3));
@@ -207,7 +228,7 @@ class GenerateSharedScheduleUseCaseTest {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
         Performance first = performance("5th Avenue", 30, 18, 0, 19, 0);
-        Performance second = performance("Airbourne", 30, 18, 30, 19, 30);
+        Performance second = performance("Airbourne", 30, 18, 20, 19, 20);
         performances.replaceAll(List.of(first, second));
         ratings.save("sofie", first.band(), Rating.of(3));
         ratings.save("dino", first.band(), Rating.of(1));

@@ -8,6 +8,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public final class PerformanceConflictDetector {
+    private final PerformanceOverlapPolicy overlapPolicy = new PerformanceOverlapPolicy();
+
     public List<PerformanceConflictSet> detect(List<Performance> performances) {
         Objects.requireNonNull(performances, "performances must not be null");
         List<Performance> sorted = performances.stream()
@@ -40,9 +42,6 @@ public final class PerformanceConflictDetector {
     }
 
     private boolean overlaps(Performance first, Performance second) {
-        if (!first.start().toLocalDate().equals(second.start().toLocalDate())) {
-            return false;
-        }
-        return first.start().isBefore(second.end()) && second.start().isBefore(first.end());
+        return overlapPolicy.overlapsForScheduling(first, second);
     }
 }
