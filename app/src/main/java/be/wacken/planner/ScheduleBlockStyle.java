@@ -5,9 +5,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import be.wacken.planner.application.ScheduleDecisionCandidate;
+import be.wacken.planner.domain.StageWalkingTimePolicy;
 
 final class ScheduleBlockStyle {
     private static final int SCRATCH_OVERLAP_THRESHOLD_MINUTES = 15;
+    private static final int NEARBY_STAGE_WALKING_ALLOWANCE_MINUTES = 5;
 
     enum BorderTone {
         GOLD,
@@ -56,12 +58,21 @@ final class ScheduleBlockStyle {
             if (candidate.rating() <= visible.rating()) {
                 continue;
             }
-            if (overlapMinutes(visible.start(), visible.end(), candidate.start(), candidate.end())
-                    > SCRATCH_OVERLAP_THRESHOLD_MINUTES) {
+            if (effectiveConflictMinutes(visible, candidate) > SCRATCH_OVERLAP_THRESHOLD_MINUTES) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static long effectiveConflictMinutes(
+            ScheduleDecisionCandidate visible,
+            ScheduleDecisionCandidate candidate
+    ) {
+        long overlap = overlapMinutes(visible.start(), visible.end(), candidate.start(), candidate.end());
+        int walkingMinutes = StageWalkingTimePolicy.defaultWalkingMinutes(visible.stageName(), candidate.stageName());
+        int walkingPenalty = Math.max(0, walkingMinutes - NEARBY_STAGE_WALKING_ALLOWANCE_MINUTES);
+        return overlap + walkingPenalty;
     }
 
     private static long overlapMinutes(

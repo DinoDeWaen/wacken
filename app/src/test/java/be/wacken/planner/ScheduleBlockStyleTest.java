@@ -52,11 +52,49 @@ public final class ScheduleBlockStyleTest {
     }
 
     @Test
+    public void scratchesMiddleActWhenItLosesToHigherRatedVisibleOverlapInChain() {
+        ScheduleDecisionCandidate pigDestroyer = candidate("Pig Destroyer", 2, 18, 0, 45);
+        ScheduleDecisionCandidate saxon = candidate("Saxon", 3, 18, 15, 75);
+        ScheduleDecisionCandidate hatebreed = candidate("Hatebreed", 4, 19, 0, 60);
+        List<ScheduleDecisionCandidate> visible = List.of(pigDestroyer, saxon, hatebreed);
+
+        ScheduleBlockStyle pigDestroyerStyle = ScheduleBlockStyle.from(pigDestroyer, visible);
+        ScheduleBlockStyle saxonStyle = ScheduleBlockStyle.from(saxon, visible);
+        ScheduleBlockStyle hatebreedStyle = ScheduleBlockStyle.from(hatebreed, visible);
+
+        assertTrue(pigDestroyerStyle.scratched());
+        assertTrue(saxonStyle.scratched());
+        assertFalse(hatebreedStyle.scratched());
+    }
+
+    @Test
     public void doesNotScratchWhenVisibleOverlapIsFifteenMinutes() {
         ScheduleDecisionCandidate first = candidate("Yngwie Malmsteen", 5, 17, 30, 75);
         ScheduleDecisionCandidate second = candidate("Storm Seeker", 4, 18, 30, 60);
 
         ScheduleBlockStyle style = ScheduleBlockStyle.from(second, List.of(first, second));
+
+        assertFalse(style.scratched());
+    }
+
+    @Test
+    public void scratchesLowerRatedBlockWhenFifteenMinuteOverlapAlsoNeedsFifteenMinuteWalk() {
+        ScheduleDecisionCandidate higherRated = candidate("Hatebreed", 4, 19, 0, 60, "Harder");
+        ScheduleDecisionCandidate lowerRated = candidate("Saxon", 3, 18, 15, 60, "Headbangers Stage");
+
+        ScheduleBlockStyle higherRatedStyle = ScheduleBlockStyle.from(higherRated, List.of(higherRated, lowerRated));
+        ScheduleBlockStyle lowerRatedStyle = ScheduleBlockStyle.from(lowerRated, List.of(higherRated, lowerRated));
+
+        assertFalse(higherRatedStyle.scratched());
+        assertTrue(lowerRatedStyle.scratched());
+    }
+
+    @Test
+    public void doesNotScratchWhenFifteenMinuteOverlapOnlyNeedsNearbyFiveMinuteWalk() {
+        ScheduleDecisionCandidate higherRated = candidate("Hatebreed", 4, 19, 0, 60, "Louder");
+        ScheduleDecisionCandidate lowerRated = candidate("Saxon", 3, 18, 15, 60, "Harder");
+
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(lowerRated, List.of(higherRated, lowerRated));
 
         assertFalse(style.scratched());
     }
@@ -99,7 +137,7 @@ public final class ScheduleBlockStyleTest {
             int startMinute,
             int durationMinutes
     ) {
-        return candidate(bandName, rating, startHour, startMinute, durationMinutes, "CHOSEN", true);
+        return candidate(bandName, rating, startHour, startMinute, durationMinutes, "Harder");
     }
 
     private ScheduleDecisionCandidate candidate(
@@ -108,6 +146,18 @@ public final class ScheduleBlockStyleTest {
             int startHour,
             int startMinute,
             int durationMinutes,
+            String stageName
+    ) {
+        return candidate(bandName, rating, startHour, startMinute, durationMinutes, stageName, "CHOSEN", true);
+    }
+
+    private ScheduleDecisionCandidate candidate(
+            String bandName,
+            int rating,
+            int startHour,
+            int startMinute,
+            int durationMinutes,
+            String stageName,
             String status,
             boolean selected
     ) {
@@ -115,7 +165,7 @@ public final class ScheduleBlockStyleTest {
         return new ScheduleDecisionCandidate(
                 bandName,
                 rating,
-                "Harder",
+                stageName,
                 start,
                 start.plusMinutes(durationMinutes),
                 status,
