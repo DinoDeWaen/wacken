@@ -23,11 +23,11 @@ final class ScheduleBlockContent {
             ScheduleDecisionCandidate visible,
             int blockMinutes
     ) {
-        String bandLine = visible.bandName() + " " + stars(visible.rating());
+        String bandLine = ScheduleBandDisplayName.clean(visible.bandName()) + " " + stars(visible.rating());
         Optional<String> lostAlternative = Optional.empty();
         if (blockMinutes >= LOST_ALTERNATIVE_MINUTES) {
             lostAlternative = slot.lostAlternativeBandName()
-                    .map(name -> "Lost alt: " + name
+                    .map(name -> "Lost alt: " + ScheduleBandDisplayName.clean(name)
                             + slot.lostAlternativeRating()
                             .map(rating -> " " + stars(rating))
                             .orElse(""));

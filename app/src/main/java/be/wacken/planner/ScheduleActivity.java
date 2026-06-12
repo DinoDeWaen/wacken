@@ -335,7 +335,7 @@ public final class ScheduleActivity extends Activity {
         detail.setPadding(dp(18), dp(16), dp(18), dp(10));
         detail.setBackground(detailDialogBackground());
 
-        TextView title = detailText(slot.bandName(), COLOR_TEXT, 24, true);
+        TextView title = detailText(ScheduleBandDisplayName.clean(slot.bandName()), COLOR_TEXT, 24, true);
         title.setPadding(0, 0, 0, dp(14));
         detail.addView(title);
 
@@ -389,7 +389,7 @@ public final class ScheduleActivity extends Activity {
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setPadding(0, dp(6), 0, dp(10));
 
-        TextView name = detailText(candidate.bandName() + " " + stars(candidate.rating()),
+        TextView name = detailText(ScheduleBandDisplayName.clean(candidate.bandName()) + " " + stars(candidate.rating()),
                 candidate.selected() ? COLOR_TEXT : COLOR_MUTED,
                 16,
                 candidate.selected());
@@ -440,7 +440,7 @@ public final class ScheduleActivity extends Activity {
                 continue;
             }
             int minutes = StageWalkingTimePolicy.defaultWalkingMinutes(candidate.stageName(), other.stageName());
-            details.add(minutes + " min to " + other.bandName());
+            details.add(minutes + " min to " + ScheduleBandDisplayName.clean(other.bandName()));
         }
         if (details.isEmpty()) {
             return java.util.Optional.empty();

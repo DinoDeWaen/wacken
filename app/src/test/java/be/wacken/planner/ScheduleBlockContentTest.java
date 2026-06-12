@@ -37,6 +37,37 @@ public final class ScheduleBlockContentTest {
         assertEquals("Lost alt: Rose Tattoo ★★★★☆", content.lostAlternativeLine().get());
     }
 
+    @Test
+    public void hidesUuidFromVisibleBandAndLostAlternativeLines() {
+        LocalDateTime start = LocalDateTime.of(2026, 7, 30, 13, 30);
+        ScheduleDecisionCandidate chosen = new ScheduleDecisionCandidate(
+                "Def Leppard - 123e4567-e89b-12d3-a456-426614174000",
+                5,
+                "Harder",
+                start,
+                start.plusMinutes(120),
+                "CHOSEN",
+                true
+        );
+        TimelineSlot slot = new TimelineSlot(
+                chosen.bandName(),
+                5,
+                "Harder",
+                start,
+                start.plusMinutes(120),
+                GroupDecisionStatus.GO,
+                Optional.of("Year of the Goat - 123e4567-e89b-12d3-a456-426614174000"),
+                Optional.of(4),
+                List.of(chosen),
+                OptionalInt.of(5)
+        );
+
+        ScheduleBlockContent content = ScheduleBlockContent.from(slot, chosen, 120);
+
+        assertEquals("Def Leppard ★★★★★", content.bandLine());
+        assertEquals("Lost alt: Year of the Goat ★★★★☆", content.lostAlternativeLine().get());
+    }
+
     private TimelineSlot slot(int minutes) {
         LocalDateTime start = LocalDateTime.of(2026, 7, 30, 13, 30);
         LocalDateTime end = start.plusMinutes(minutes);
