@@ -8,7 +8,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
+import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -40,6 +43,7 @@ public final class ScheduleActivity extends Activity {
     private static final int COLOR_MUTED = Color.rgb(162, 169, 171);
     private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
     private static final int COLOR_AMBER = Color.rgb(255, 199, 44);
+    private static final int COLOR_LIGHT_GREY_BORDER = Color.rgb(206, 212, 214);
     private static final int HOUR_HEIGHT_DP = 72;
     private static final int TIME_LABEL_WIDTH_DP = 78;
     private static final int STAGE_COLUMN_WIDTH_DP = 190;
@@ -314,9 +318,10 @@ public final class ScheduleActivity extends Activity {
 
     private LinearLayout slotView(TimelineSlot slot, ScheduleDecisionCandidate visible, int blockMinutes) {
         ScheduleBlockContent content = ScheduleBlockContent.from(slot, visible, blockMinutes);
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(slot, visible);
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setBackground(slotBackground());
+        panel.setBackground(slotBackground(style));
         panel.setPadding(dp(10), dp(6), dp(10), dp(6));
         panel.setClickable(true);
         panel.setOnClickListener(view -> showDecisionDetails(slot));
@@ -518,6 +523,38 @@ public final class ScheduleActivity extends Activity {
         return drawable;
     }
 
+    private Drawable slotBackground(ScheduleBlockStyle style) {
+        int borderColor = borderColor(style.borderTone());
+        int scratchColor = scratchColor(borderColor);
+        return new ScheduleBlockDrawable(
+                COLOR_PANEL,
+                borderColor,
+                scratchColor,
+                style.scratched(),
+                dp(4),
+                dp(1),
+                dp(14),
+                dp(34)
+        );
+    }
+
+    private int borderColor(ScheduleBlockStyle.BorderTone tone) {
+        return switch (tone) {
+            case GOLD -> COLOR_AMBER;
+            case LIGHT_GREY -> COLOR_LIGHT_GREY_BORDER;
+            case RED -> COLOR_ACCENT;
+        };
+    }
+
+    private int scratchColor(int borderColor) {
+        return Color.argb(
+                96,
+                Math.min(255, Color.red(borderColor) + 80),
+                Math.min(255, Color.green(borderColor) + 80),
+                Math.min(255, Color.blue(borderColor) + 80)
+        );
+    }
+
     private String stars(int rating) {
         int safeRating = Math.max(0, Math.min(5, rating));
         StringBuilder text = new StringBuilder(5);
@@ -566,6 +603,78 @@ public final class ScheduleActivity extends Activity {
             super.onDraw(canvas);
             float y = getHeight() / 2f;
             canvas.drawLine(0f, y, getWidth(), y, paint);
+        }
+    }
+
+    private static final class ScheduleBlockDrawable extends Drawable {
+        private final Paint fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint scratchPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final boolean scratched;
+        private final float radius;
+        private final float scratchGap;
+        private final RectF bounds = new RectF();
+
+        ScheduleBlockDrawable(
+                int fillColor,
+                int borderColor,
+                int scratchColor,
+                boolean scratched,
+                int radius,
+                int borderWidth,
+                int scratchWidth,
+                int scratchGap
+        ) {
+            this.scratched = scratched;
+            this.radius = radius;
+            this.scratchGap = scratchGap;
+            fillPaint.setColor(fillColor);
+            fillPaint.setStyle(Paint.Style.FILL);
+            borderPaint.setColor(borderColor);
+            borderPaint.setStyle(Paint.Style.STROKE);
+            borderPaint.setStrokeWidth(borderWidth);
+            scratchPaint.setColor(scratchColor);
+            scratchPaint.setStyle(Paint.Style.STROKE);
+            scratchPaint.setStrokeWidth(scratchWidth);
+            scratchPaint.setStrokeCap(Paint.Cap.SQUARE);
+        }
+
+        @Override
+        public void draw(Canvas canvas) {
+            bounds.set(getBounds());
+            float halfStroke = borderPaint.getStrokeWidth() / 2f;
+            bounds.inset(halfStroke, halfStroke);
+            canvas.drawRoundRect(bounds, radius, radius, fillPaint);
+            if (scratched) {
+                int save = canvas.save();
+                canvas.clipRect(bounds);
+                float start = -bounds.height();
+                float end = bounds.width() + bounds.height();
+                for (float x = start; x < end; x += scratchGap) {
+                    canvas.drawLine(x, bounds.bottom, x + bounds.height(), bounds.top, scratchPaint);
+                }
+                canvas.restoreToCount(save);
+            }
+            canvas.drawRoundRect(bounds, radius, radius, borderPaint);
+        }
+
+        @Override
+        public void setAlpha(int alpha) {
+            fillPaint.setAlpha(alpha);
+            borderPaint.setAlpha(alpha);
+            scratchPaint.setAlpha(alpha);
+        }
+
+        @Override
+        public void setColorFilter(android.graphics.ColorFilter colorFilter) {
+            fillPaint.setColorFilter(colorFilter);
+            borderPaint.setColorFilter(colorFilter);
+            scratchPaint.setColorFilter(colorFilter);
+        }
+
+        @Override
+        public int getOpacity() {
+            return PixelFormat.TRANSLUCENT;
         }
     }
 }
