@@ -2,8 +2,12 @@ package be.wacken.planner;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -150,16 +154,16 @@ public final class ScheduleActivity extends Activity {
             calendar.addView(stageHeader(layout.stageColumns().get(column)), stageHeaderLayout(column));
         }
         for (int hour = 0; hour <= layout.hourCount(); hour++) {
-            calendar.addView(hourLine(layout, hour), hourLineLayout(hour));
+            calendar.addView(hourLabel(layout, hour), hourLabelLayout(hour));
+            calendar.addView(hourGridLine(), hourGridLineLayout(layout, hour));
             if (hour < layout.hourCount()) {
-                calendar.addView(halfHourLine(), halfHourLineLayout(hour));
+                calendar.addView(halfHourNotch(), halfHourNotchLayout(hour));
+                calendar.addView(halfHourGridLine(), halfHourGridLineLayout(layout, hour));
             }
         }
         for (int index = 0; index < day.slots().size(); index++) {
             TimelineSlot slot = day.slots().get(index);
             ScheduleDecisionCandidate visible = manualSelections.visibleCandidate(slot);
-            calendar.addView(slotStartTimeLabel(visible), slotStartTimeLayout(layout, visible));
-            calendar.addView(slotEndTimeLabel(visible), slotEndTimeLayout(layout, visible));
             calendar.addView(slotView(slot, visible, layout.durationMinutes(visible)), slotLayout(layout, visible));
             if (index < day.slots().size() - 1) {
                 ScheduleDecisionCandidate next = manualSelections.visibleCandidate(day.slots().get(index + 1));
@@ -196,40 +200,76 @@ public final class ScheduleActivity extends Activity {
         return params;
     }
 
-    private TextView hourLine(ScheduleCalendarLayout layout, int hourOffset) {
-        TextView line = new TextView(this);
-        line.setText(layout.hourLabel(hourOffset) + " ─────────────────");
-        line.setTextColor(COLOR_GRID);
-        line.setTextSize(11);
-        line.setSingleLine(true);
-        return line;
+    private TextView hourLabel(ScheduleCalendarLayout layout, int hourOffset) {
+        TextView label = new TextView(this);
+        label.setText(layout.hourLabel(hourOffset));
+        label.setTextColor(COLOR_GRID);
+        label.setTextSize(11);
+        label.setSingleLine(true);
+        return label;
     }
 
-    private TextView halfHourLine() {
-        TextView line = new TextView(this);
-        line.setText("      · · · · · · · · · · · ·");
-        line.setTextColor(COLOR_GRID);
-        line.setTextSize(11);
-        line.setSingleLine(true);
-        return line;
-    }
-
-    private FrameLayout.LayoutParams hourLineLayout(int hourOffset) {
+    private FrameLayout.LayoutParams hourLabelLayout(int hourOffset) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
+                dp(TIME_LABEL_WIDTH_DP),
                 dp(18)
         );
         params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (hourOffset * HOUR_HEIGHT_DP));
         return params;
     }
 
-    private FrameLayout.LayoutParams halfHourLineLayout(int hourOffset) {
+    private View hourGridLine() {
+        View line = new View(this);
+        line.setBackgroundColor(COLOR_GRID);
+        return line;
+    }
+
+    private FrameLayout.LayoutParams hourGridLineLayout(ScheduleCalendarLayout layout, int hourOffset) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                dp(18)
+                stageGridWidth(layout),
+                dp(1)
         );
-        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (hourOffset * HOUR_HEIGHT_DP) + (HOUR_HEIGHT_DP / 2));
+        params.leftMargin = dp(TIME_LABEL_WIDTH_DP);
+        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (hourOffset * HOUR_HEIGHT_DP) + 9);
         return params;
+    }
+
+    private View halfHourNotch() {
+        View line = new View(this);
+        line.setBackgroundColor(COLOR_GRID);
+        return line;
+    }
+
+    private FrameLayout.LayoutParams halfHourNotchLayout(int hourOffset) {
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                dp(12),
+                dp(1)
+        );
+        params.leftMargin = dp(TIME_LABEL_WIDTH_DP - 16);
+        params.topMargin = halfHourTopMargin(hourOffset);
+        return params;
+    }
+
+    private View halfHourGridLine() {
+        return new DottedLineView(this, COLOR_GRID);
+    }
+
+    private FrameLayout.LayoutParams halfHourGridLineLayout(ScheduleCalendarLayout layout, int hourOffset) {
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                stageGridWidth(layout),
+                dp(8)
+        );
+        params.leftMargin = dp(TIME_LABEL_WIDTH_DP);
+        params.topMargin = halfHourTopMargin(hourOffset) - dp(4);
+        return params;
+    }
+
+    private int halfHourTopMargin(int hourOffset) {
+        return dp(STAGE_HEADER_HEIGHT_DP + (hourOffset * HOUR_HEIGHT_DP) + (HOUR_HEIGHT_DP / 2) + 9);
+    }
+
+    private int stageGridWidth(ScheduleCalendarLayout layout) {
+        return dp(layout.stageColumnCount() * STAGE_COLUMN_WIDTH_DP);
     }
 
     private FrameLayout.LayoutParams slotLayout(ScheduleCalendarLayout layout, ScheduleDecisionCandidate candidate) {
@@ -239,43 +279,6 @@ public final class ScheduleActivity extends Activity {
         );
         params.leftMargin = dp(TIME_LABEL_WIDTH_DP + (layout.stageColumnIndex(candidate) * STAGE_COLUMN_WIDTH_DP));
         params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (layout.topOffsetMinutes(candidate) * HOUR_HEIGHT_DP / 60));
-        return params;
-    }
-
-    private TextView slotStartTimeLabel(ScheduleDecisionCandidate candidate) {
-        return eventTimeLabel(candidate.start().format(TIME) + " ─");
-    }
-
-    private TextView slotEndTimeLabel(ScheduleDecisionCandidate candidate) {
-        return eventTimeLabel(candidate.end().format(TIME) + " ─");
-    }
-
-    private TextView eventTimeLabel(String text) {
-        TextView label = new TextView(this);
-        label.setText(text);
-        label.setTextColor(Color.WHITE);
-        label.setTextSize(11);
-        label.setTypeface(Typeface.DEFAULT_BOLD);
-        label.setSingleLine(true);
-        return label;
-    }
-
-    private FrameLayout.LayoutParams slotStartTimeLayout(ScheduleCalendarLayout layout, ScheduleDecisionCandidate candidate) {
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                dp(TIME_LABEL_WIDTH_DP),
-                dp(18)
-        );
-        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (layout.topOffsetMinutes(candidate) * HOUR_HEIGHT_DP / 60));
-        return params;
-    }
-
-    private FrameLayout.LayoutParams slotEndTimeLayout(ScheduleCalendarLayout layout, ScheduleDecisionCandidate candidate) {
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                dp(TIME_LABEL_WIDTH_DP),
-                dp(18)
-        );
-        int top = (layout.endOffsetMinutes(candidate) * HOUR_HEIGHT_DP / 60) - 18;
-        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + Math.max(0, top));
         return params;
     }
 
@@ -551,5 +554,25 @@ public final class ScheduleActivity extends Activity {
 
     private int dp(int value) {
         return (int) (value * getResources().getDisplayMetrics().density);
+    }
+
+    private static final class DottedLineView extends View {
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+        DottedLineView(Context context, int color) {
+            super(context);
+            float density = context.getResources().getDisplayMetrics().density;
+            paint.setColor(color);
+            paint.setStrokeWidth(density);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setPathEffect(new DashPathEffect(new float[]{3f * density, 8f * density}, 0f));
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            float y = getHeight() / 2f;
+            canvas.drawLine(0f, y, getWidth(), y, paint);
+        }
     }
 }
