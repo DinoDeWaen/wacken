@@ -31,8 +31,10 @@
 - ADR: [`0007-room-local-cache-with-tsv-backend-source.md`](backlog/decisions/0007-room-local-cache-with-tsv-backend-source.md).
 - ADR: [`0008-supabase-postgres-flyway-migrations.md`](backlog/decisions/0008-supabase-postgres-flyway-migrations.md).
 - CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
+- Release process: [`release-process.md`](backlog/docs/release-process.md).
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
+- V2.9 release notes: [`releases/v2.9.md`](releases/v2.9.md).
 - V2.8 release notes: [`releases/v2.8.md`](releases/v2.8.md).
 - V2.7 release notes: [`releases/v2.7.md`](releases/v2.7.md).
 - V2.6 release notes: [`releases/v2.6.md`](releases/v2.6.md).
