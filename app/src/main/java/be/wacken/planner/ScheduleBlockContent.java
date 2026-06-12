@@ -10,24 +10,21 @@ final class ScheduleBlockContent {
     private static final java.time.format.DateTimeFormatter TIME =
             java.time.format.DateTimeFormatter.ofPattern("HH:mm");
 
-    private final String startTimeLine;
+    private final String timeRangeLine;
     private final String bandLine;
     private final String stageLine;
     private final Optional<String> lostAlternativeLine;
-    private final String endTimeLine;
 
     private ScheduleBlockContent(
-            String startTimeLine,
+            String timeRangeLine,
             String bandLine,
             String stageLine,
-            Optional<String> lostAlternativeLine,
-            String endTimeLine
+            Optional<String> lostAlternativeLine
     ) {
-        this.startTimeLine = startTimeLine;
+        this.timeRangeLine = timeRangeLine;
         this.bandLine = bandLine;
         this.stageLine = stageLine;
         this.lostAlternativeLine = lostAlternativeLine;
-        this.endTimeLine = endTimeLine;
     }
 
     static ScheduleBlockContent from(
@@ -45,16 +42,15 @@ final class ScheduleBlockContent {
                             .orElse(""));
         }
         return new ScheduleBlockContent(
-                visible.start().format(TIME),
+                visible.start().format(TIME) + "-" + visible.end().format(TIME),
                 bandLine,
                 visible.stageName(),
-                lostAlternative,
-                visible.end().format(TIME)
+                lostAlternative
         );
     }
 
-    String startTimeLine() {
-        return startTimeLine;
+    String timeRangeLine() {
+        return timeRangeLine;
     }
 
     String bandLine() {
@@ -67,10 +63,6 @@ final class ScheduleBlockContent {
 
     Optional<String> lostAlternativeLine() {
         return lostAlternativeLine;
-    }
-
-    String endTimeLine() {
-        return endTimeLine;
     }
 
     private static String stars(int rating) {

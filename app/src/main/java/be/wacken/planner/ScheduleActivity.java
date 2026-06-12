@@ -151,6 +151,9 @@ public final class ScheduleActivity extends Activity {
         }
         for (int hour = 0; hour <= layout.hourCount(); hour++) {
             calendar.addView(hourLine(layout, hour), hourLineLayout(hour));
+            if (hour < layout.hourCount()) {
+                calendar.addView(halfHourLine(), halfHourLineLayout(hour));
+            }
         }
         for (int index = 0; index < day.slots().size(); index++) {
             TimelineSlot slot = day.slots().get(index);
@@ -202,12 +205,30 @@ public final class ScheduleActivity extends Activity {
         return line;
     }
 
+    private TextView halfHourLine() {
+        TextView line = new TextView(this);
+        line.setText("      · · · · · · · · · · · ·");
+        line.setTextColor(COLOR_GRID);
+        line.setTextSize(11);
+        line.setSingleLine(true);
+        return line;
+    }
+
     private FrameLayout.LayoutParams hourLineLayout(int hourOffset) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 dp(18)
         );
         params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (hourOffset * HOUR_HEIGHT_DP));
+        return params;
+    }
+
+    private FrameLayout.LayoutParams halfHourLineLayout(int hourOffset) {
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                dp(18)
+        );
+        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (hourOffset * HOUR_HEIGHT_DP) + (HOUR_HEIGHT_DP / 2));
         return params;
     }
 
@@ -297,13 +318,13 @@ public final class ScheduleActivity extends Activity {
         panel.setClickable(true);
         panel.setOnClickListener(view -> showDecisionDetails(slot));
 
-        TextView startTime = new TextView(this);
-        startTime.setText(content.startTimeLine());
-        startTime.setTextColor(COLOR_MUTED);
-        startTime.setTextSize(10);
-        startTime.setTypeface(Typeface.DEFAULT_BOLD);
-        startTime.setSingleLine(true);
-        panel.addView(startTime);
+        TextView timeRange = new TextView(this);
+        timeRange.setText(content.timeRangeLine());
+        timeRange.setTextColor(COLOR_MUTED);
+        timeRange.setTextSize(10);
+        timeRange.setTypeface(Typeface.DEFAULT_BOLD);
+        timeRange.setSingleLine(true);
+        panel.addView(timeRange);
 
         TextView band = new TextView(this);
         band.setText(content.bandLine());
@@ -331,14 +352,6 @@ public final class ScheduleActivity extends Activity {
             alternative.setPadding(0, dp(5), 0, 0);
             panel.addView(alternative);
         });
-        TextView endTime = new TextView(this);
-        endTime.setText(content.endTimeLine());
-        endTime.setTextColor(COLOR_MUTED);
-        endTime.setTextSize(10);
-        endTime.setTypeface(Typeface.DEFAULT_BOLD);
-        endTime.setSingleLine(true);
-        endTime.setPadding(0, dp(4), 0, 0);
-        panel.addView(endTime);
         return panel;
     }
 
