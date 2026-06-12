@@ -1,11 +1,11 @@
 ---
 id: task-high.3
 title: 'US: Simplify schedule blocks and update stage walking groups'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-06-12 13:04'
-updated_date: '2026-06-12 13:14'
+updated_date: '2026-06-12 13:15'
 labels:
   - user-story
   - ui
