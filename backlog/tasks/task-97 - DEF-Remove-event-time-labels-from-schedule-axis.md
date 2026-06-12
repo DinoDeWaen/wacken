@@ -1,7 +1,7 @@
 ---
 id: task-97
 title: 'DEF: Remove event time labels from schedule axis'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-06-12 12:35'
