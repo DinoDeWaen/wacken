@@ -6,20 +6,24 @@ import org.junit.jupiter.api.Test;
 
 final class StageWalkingTimePolicyTest {
     @Test
-    void heavyAndLouderAreFiveMinutesApart() {
-        assertEquals(5, StageWalkingTimePolicy.defaultWalkingMinutes("Heavy", "Louder"));
-        assertEquals(5, StageWalkingTimePolicy.defaultWalkingMinutes("Louder", "Heavy"));
+    void harderFasterAndLouderAreFiveMinutesApart() {
+        assertEquals(5, StageWalkingTimePolicy.defaultWalkingMinutes("Harder", "Faster"));
+        assertEquals(5, StageWalkingTimePolicy.defaultWalkingMinutes("Faster Stage", "Louder"));
+        assertEquals(5, StageWalkingTimePolicy.defaultWalkingMinutes("Louder", "Harder Stage"));
     }
 
     @Test
-    void heavyOrLouderToOtherStageIsFifteenMinutes() {
-        assertEquals(15, StageWalkingTimePolicy.defaultWalkingMinutes("Heavy", "Wackinger Stage"));
-        assertEquals(15, StageWalkingTimePolicy.defaultWalkingMinutes("Headbangers Stage", "Louder"));
+    void headbangersAndWetAreFiveMinutesApart() {
+        assertEquals(5, StageWalkingTimePolicy.defaultWalkingMinutes("Headbangers Stage", "W:E:T Stage"));
+        assertEquals(5, StageWalkingTimePolicy.defaultWalkingMinutes("WET Stage", "Headbangers Stage"));
     }
 
     @Test
-    void otherStagesAreFiveMinutesApart() {
-        assertEquals(5, StageWalkingTimePolicy.defaultWalkingMinutes("Wackinger Stage", "Headbangers Stage"));
+    void travelBetweenStageGroupsIsFifteenMinutes() {
+        assertEquals(15, StageWalkingTimePolicy.defaultWalkingMinutes("Harder", "Headbangers Stage"));
+        assertEquals(15, StageWalkingTimePolicy.defaultWalkingMinutes("W:E:T Stage", "Louder"));
+        assertEquals(15, StageWalkingTimePolicy.defaultWalkingMinutes("Wackinger Stage", "Faster"));
+        assertEquals(15, StageWalkingTimePolicy.defaultWalkingMinutes("Headbangers Stage", "Wackinger Stage"));
     }
 
     @Test

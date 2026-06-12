@@ -63,10 +63,10 @@ class GenerateSharedScheduleUseCaseTest {
     void appliesMvpWalkingDefaultsBetweenConsecutiveSelectedActs() {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
-        Performance heavy = performance("Sepultura", "Heavy", 30, 18, 0, 19, 0);
+        Performance heavy = performance("Sepultura", "Harder", 30, 18, 0, 19, 0);
         Performance louder = performance("Subway to Sally", "Louder", 30, 20, 0, 21, 0);
         Performance other = performance("Alcest", "Headbangers Stage", 30, 22, 0, 23, 0);
-        Performance otherLater = performance("Skyline", "Wackinger Stage", 30, 23, 30, 23, 59);
+        Performance otherLater = performance("Skyline", "W:E:T Stage", 30, 23, 30, 23, 59);
         performances.replaceAll(List.of(heavy, louder, other, otherLater));
         ratings.save("sofie", heavy.band(), Rating.of(5));
         ratings.save("sofie", louder.band(), Rating.of(5));
@@ -86,7 +86,7 @@ class GenerateSharedScheduleUseCaseTest {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
         FakeStageDistanceRepository distances = new FakeStageDistanceRepository();
-        Performance heavy = performance("Sepultura", "Heavy", 30, 18, 0, 19, 0);
+        Performance heavy = performance("Sepultura", "Harder", 30, 18, 0, 19, 0);
         Performance louder = performance("Subway to Sally", "Louder", 30, 20, 0, 21, 0);
         performances.replaceAll(List.of(heavy, louder));
         distances.save(StageDistance.between(heavy.stage(), louder.stage(), 9));

@@ -371,7 +371,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-062 | Secondary and admin-style actions must live on the settings page. | Group/invite actions, lineup import, and manual sync are moved out of the primary overview action area and into settings. | Must |
 | BR-063 | The group schedule must be shown as a day-based calendar. | Each festival day appears as a calendar-like view with hour lines and performance blocks positioned by time. | Must |
 | BR-063a | The calendar schedule must use stage columns so overlapping or near-overlapping selected acts remain readable. Louder and Harder must be adjacent and shown before other stage columns when present. | If Louder, Harder, Faster, and Wackinger acts overlap, each act appears in its stage lane instead of being drawn on top of the others. | Must |
-| BR-064 | Calendar performance blocks must summarize the selected act. | A block shows compact `HH:mm-HH:mm` time range as its first line, then band name, stage, and rating stars while remaining readable on a phone screen. | Must |
+| BR-064 | Calendar performance blocks must summarize the selected act. | A block shows compact `HH:mm-HH:mm` time range as its first line, then band name and rating stars; the stage is provided by the stage column rather than repeated inside the block. | Must |
 | BR-064a | The calendar time axis must keep hour markers clear and half-hour markers subtle. | The left axis labels only full hours, uses full lines for hour rows across all stage columns, and uses a small notch with an unlabeled dotted line across all stage columns for half-hour rows. | Must |
 | BR-065 | Opening a calendar performance block must show the conflict detail. | The detail shows the chosen act and all alternatives, with each band's stage and rating stars. | Must |
 | BR-066 | A user can select an alternative as the act the group is going to for the visible schedule screen. | Choosing an alternative updates the local visible schedule result so that act becomes selected for that conflict. | Must |
@@ -381,8 +381,8 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-070 | Calendar schedule day headings must include the weekday name. | A day heading shows a weekday such as Monday or Tuesday together with the festival date. | Must |
 | BR-071 | Schedule decision details must use the Wacken dark/metal visual scheme. | Opening a performance block shows chosen act and alternatives on a dark themed surface with readable light text and accent colors, not a default white dialog. | Must |
 | BR-072 | Splash and sync feedback should use a stronger heavy-metal visual style. | Startup, reactivation, manual sync, and close sync feedback feel visually aligned with Wacken/metal branding rather than generic loading. | Should |
-| BR-073 | MVP walking-time defaults must include named stage distances for Heavy, Louder, and other stages. | Heavy to Louder uses 5 minutes; Heavy or Louder to any other stage uses 15 minutes; walking between two other stages uses 5 minutes. | Must |
-| BR-074 | The group schedule must show walking time between consecutive selected acts when known. | If the group moves from Heavy to Louder, the schedule shows 5 minutes walking time; if it moves from Heavy to another stage, it shows 15 minutes. | Must |
+| BR-073 | MVP walking-time defaults must include named nearby-stage groups. | Harder, Faster, and Louder are 5 minutes apart from each other; Headbangers Stage and W:E:T Stage are 5 minutes apart from each other; travel between these groups or to other stages defaults to 15 minutes unless the stage is the same. | Must |
+| BR-074 | The group schedule must show walking time between consecutive selected acts when known. | If the group moves between nearby stages in the same walking group, the schedule shows 5 minutes; if it moves between stage groups, the schedule shows 15 minutes. | Must |
 
 ## Data and terminology
 

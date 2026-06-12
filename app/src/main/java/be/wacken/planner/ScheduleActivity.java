@@ -338,18 +338,11 @@ public final class ScheduleActivity extends Activity {
         band.setEllipsize(TextUtils.TruncateAt.END);
         panel.addView(band);
 
-        TextView facts = new TextView(this);
-        facts.setText(content.stageLine());
-        facts.setTextColor(COLOR_MUTED);
-        facts.setSingleLine(true);
-        facts.setEllipsize(TextUtils.TruncateAt.END);
-        facts.setPadding(0, dp(3), 0, 0);
-        panel.addView(facts);
-
         content.lostAlternativeLine().ifPresent(lost -> {
             TextView alternative = new TextView(this);
             alternative.setText(lost);
             alternative.setTextColor(COLOR_MUTED);
+            alternative.setTextSize(11);
             alternative.setSingleLine(true);
             alternative.setEllipsize(TextUtils.TruncateAt.END);
             alternative.setPadding(0, dp(5), 0, 0);

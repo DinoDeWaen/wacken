@@ -23,10 +23,8 @@ public final class ScheduleBlockContentTest {
 
         assertEquals("13:30-14:15", content.timeRangeLine());
         assertEquals("Alien Rockin Explosion ★★★★☆", content.bandLine());
-        assertEquals("Wackinger Stage", content.stageLine());
         assertFalse(content.lostAlternativeLine().isPresent());
         assertFalse(content.bandLine().contains("GO"));
-        assertFalse(content.stageLine().contains("13:30"));
     }
 
     @Test

@@ -12,18 +12,15 @@ final class ScheduleBlockContent {
 
     private final String timeRangeLine;
     private final String bandLine;
-    private final String stageLine;
     private final Optional<String> lostAlternativeLine;
 
     private ScheduleBlockContent(
             String timeRangeLine,
             String bandLine,
-            String stageLine,
             Optional<String> lostAlternativeLine
     ) {
         this.timeRangeLine = timeRangeLine;
         this.bandLine = bandLine;
-        this.stageLine = stageLine;
         this.lostAlternativeLine = lostAlternativeLine;
     }
 
@@ -44,7 +41,6 @@ final class ScheduleBlockContent {
         return new ScheduleBlockContent(
                 visible.start().format(TIME) + "-" + visible.end().format(TIME),
                 bandLine,
-                visible.stageName(),
                 lostAlternative
         );
     }
@@ -55,10 +51,6 @@ final class ScheduleBlockContent {
 
     String bandLine() {
         return bandLine;
-    }
-
-    String stageLine() {
-        return stageLine;
     }
 
     Optional<String> lostAlternativeLine() {
