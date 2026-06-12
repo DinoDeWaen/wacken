@@ -21,8 +21,10 @@ public final class ScheduleBlockContentTest {
         TimelineSlot slot = slot(45);
         ScheduleBlockContent content = ScheduleBlockContent.from(slot, slot.candidates().get(0), 45);
 
+        assertEquals("13:30", content.startTimeLine());
         assertEquals("Alien Rockin Explosion ★★★★☆", content.bandLine());
         assertEquals("Wackinger Stage", content.stageLine());
+        assertEquals("14:15", content.endTimeLine());
         assertFalse(content.lostAlternativeLine().isPresent());
         assertFalse(content.bandLine().contains("GO"));
         assertFalse(content.stageLine().contains("13:30"));

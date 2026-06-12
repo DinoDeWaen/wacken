@@ -297,6 +297,14 @@ public final class ScheduleActivity extends Activity {
         panel.setClickable(true);
         panel.setOnClickListener(view -> showDecisionDetails(slot));
 
+        TextView startTime = new TextView(this);
+        startTime.setText(content.startTimeLine());
+        startTime.setTextColor(COLOR_MUTED);
+        startTime.setTextSize(10);
+        startTime.setTypeface(Typeface.DEFAULT_BOLD);
+        startTime.setSingleLine(true);
+        panel.addView(startTime);
+
         TextView band = new TextView(this);
         band.setText(content.bandLine());
         band.setTextColor(COLOR_TEXT);
@@ -323,6 +331,14 @@ public final class ScheduleActivity extends Activity {
             alternative.setPadding(0, dp(5), 0, 0);
             panel.addView(alternative);
         });
+        TextView endTime = new TextView(this);
+        endTime.setText(content.endTimeLine());
+        endTime.setTextColor(COLOR_MUTED);
+        endTime.setTextSize(10);
+        endTime.setTypeface(Typeface.DEFAULT_BOLD);
+        endTime.setSingleLine(true);
+        endTime.setPadding(0, dp(4), 0, 0);
+        panel.addView(endTime);
         return panel;
     }
 

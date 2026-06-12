@@ -7,15 +7,27 @@ import be.wacken.planner.application.TimelineSlot;
 
 final class ScheduleBlockContent {
     private static final int LOST_ALTERNATIVE_MINUTES = 90;
+    private static final java.time.format.DateTimeFormatter TIME =
+            java.time.format.DateTimeFormatter.ofPattern("HH:mm");
 
+    private final String startTimeLine;
     private final String bandLine;
     private final String stageLine;
     private final Optional<String> lostAlternativeLine;
+    private final String endTimeLine;
 
-    private ScheduleBlockContent(String bandLine, String stageLine, Optional<String> lostAlternativeLine) {
+    private ScheduleBlockContent(
+            String startTimeLine,
+            String bandLine,
+            String stageLine,
+            Optional<String> lostAlternativeLine,
+            String endTimeLine
+    ) {
+        this.startTimeLine = startTimeLine;
         this.bandLine = bandLine;
         this.stageLine = stageLine;
         this.lostAlternativeLine = lostAlternativeLine;
+        this.endTimeLine = endTimeLine;
     }
 
     static ScheduleBlockContent from(
@@ -32,7 +44,17 @@ final class ScheduleBlockContent {
                             .map(rating -> " " + stars(rating))
                             .orElse(""));
         }
-        return new ScheduleBlockContent(bandLine, visible.stageName(), lostAlternative);
+        return new ScheduleBlockContent(
+                visible.start().format(TIME),
+                bandLine,
+                visible.stageName(),
+                lostAlternative,
+                visible.end().format(TIME)
+        );
+    }
+
+    String startTimeLine() {
+        return startTimeLine;
     }
 
     String bandLine() {
@@ -45,6 +67,10 @@ final class ScheduleBlockContent {
 
     Optional<String> lostAlternativeLine() {
         return lostAlternativeLine;
+    }
+
+    String endTimeLine() {
+        return endTimeLine;
     }
 
     private static String stars(int rating) {
