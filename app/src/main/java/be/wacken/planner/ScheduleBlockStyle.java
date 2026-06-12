@@ -2,9 +2,9 @@ package be.wacken.planner;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import be.wacken.planner.application.ScheduleDecisionCandidate;
-import be.wacken.planner.application.TimelineSlot;
 
 final class ScheduleBlockStyle {
     private static final int SCRATCH_OVERLAP_THRESHOLD_MINUTES = 15;
@@ -23,8 +23,8 @@ final class ScheduleBlockStyle {
         this.scratched = scratched;
     }
 
-    static ScheduleBlockStyle from(TimelineSlot slot, ScheduleDecisionCandidate visible) {
-        return new ScheduleBlockStyle(borderTone(visible.rating()), hasLongLostAlternativeOverlap(slot, visible));
+    static ScheduleBlockStyle from(ScheduleDecisionCandidate visible, List<ScheduleDecisionCandidate> visibleCandidates) {
+        return new ScheduleBlockStyle(borderTone(visible.rating()), losesVisibleOverlap(visible, visibleCandidates));
     }
 
     BorderTone borderTone() {
@@ -45,16 +45,15 @@ final class ScheduleBlockStyle {
         return BorderTone.RED;
     }
 
-    private static boolean hasLongLostAlternativeOverlap(TimelineSlot slot, ScheduleDecisionCandidate visible) {
-        if (slot.lostAlternativeBandName().isEmpty()) {
-            return false;
-        }
-        String lostAlternativeBandName = slot.lostAlternativeBandName().get();
-        for (ScheduleDecisionCandidate candidate : slot.candidates()) {
+    private static boolean losesVisibleOverlap(
+            ScheduleDecisionCandidate visible,
+            List<ScheduleDecisionCandidate> visibleCandidates
+    ) {
+        for (ScheduleDecisionCandidate candidate : visibleCandidates) {
             if (candidate.bandName().equals(visible.bandName())) {
                 continue;
             }
-            if (!candidate.bandName().equals(lostAlternativeBandName)) {
+            if (candidate.rating() <= visible.rating()) {
                 continue;
             }
             if (overlapMinutes(visible.start(), visible.end(), candidate.start(), candidate.end())

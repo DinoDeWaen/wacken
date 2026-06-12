@@ -168,7 +168,10 @@ public final class ScheduleActivity extends Activity {
         for (int index = 0; index < day.slots().size(); index++) {
             TimelineSlot slot = day.slots().get(index);
             ScheduleDecisionCandidate visible = manualSelections.visibleCandidate(slot);
-            calendar.addView(slotView(slot, visible, layout.durationMinutes(visible)), slotLayout(layout, visible));
+            calendar.addView(
+                    slotView(slot, visible, visibleCandidates, layout.durationMinutes(visible)),
+                    slotLayout(layout, visible)
+            );
             if (index < day.slots().size() - 1) {
                 ScheduleDecisionCandidate next = manualSelections.visibleCandidate(day.slots().get(index + 1));
                 calendar.addView(walkingMarker(slot), walkingMarkerLayout(layout, visible, next));
@@ -316,9 +319,14 @@ public final class ScheduleActivity extends Activity {
         return params;
     }
 
-    private LinearLayout slotView(TimelineSlot slot, ScheduleDecisionCandidate visible, int blockMinutes) {
+    private LinearLayout slotView(
+            TimelineSlot slot,
+            ScheduleDecisionCandidate visible,
+            java.util.List<ScheduleDecisionCandidate> visibleCandidates,
+            int blockMinutes
+    ) {
         ScheduleBlockContent content = ScheduleBlockContent.from(slot, visible, blockMinutes);
-        ScheduleBlockStyle style = ScheduleBlockStyle.from(slot, visible);
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(visible, visibleCandidates);
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setBackground(slotBackground(style));

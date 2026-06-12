@@ -6,21 +6,17 @@ import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.OptionalInt;
 
 import org.junit.Test;
 
 import be.wacken.planner.application.ScheduleDecisionCandidate;
-import be.wacken.planner.application.TimelineSlot;
-import be.wacken.planner.domain.GroupDecisionStatus;
 
 public final class ScheduleBlockStyleTest {
     @Test
     public void fiveStarVisibleActsUseGoldBorder() {
         ScheduleDecisionCandidate visible = candidate("Def Leppard", 5, 22, 0, 0);
 
-        ScheduleBlockStyle style = ScheduleBlockStyle.from(slot(visible, List.of(visible)), visible);
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(visible, List.of(visible));
 
         assertEquals(ScheduleBlockStyle.BorderTone.GOLD, style.borderTone());
     }
@@ -29,7 +25,7 @@ public final class ScheduleBlockStyleTest {
     public void twoStarVisibleActsUseLightGreyBorder() {
         ScheduleDecisionCandidate visible = candidate("Weak Winner", 2, 18, 0, 0);
 
-        ScheduleBlockStyle style = ScheduleBlockStyle.from(slot(visible, List.of(visible)), visible);
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(visible, List.of(visible));
 
         assertEquals(ScheduleBlockStyle.BorderTone.LIGHT_GREY, style.borderTone());
     }
@@ -38,61 +34,62 @@ public final class ScheduleBlockStyleTest {
     public void otherVisibleActsUseRedBorder() {
         ScheduleDecisionCandidate visible = candidate("Normal Winner", 4, 18, 0, 0);
 
-        ScheduleBlockStyle style = ScheduleBlockStyle.from(slot(visible, List.of(visible)), visible);
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(visible, List.of(visible));
 
         assertEquals(ScheduleBlockStyle.BorderTone.RED, style.borderTone());
     }
 
     @Test
-    public void scratchesVisibleBlockWhenLostAlternativeOverlapsMoreThanFifteenMinutes() {
-        ScheduleDecisionCandidate visible = candidate("Chosen", 4, 18, 0, 60);
-        ScheduleDecisionCandidate lost = candidate("Skipped", 5, 18, 20, 60, "LOST ALTERNATIVE", false);
+    public void scratchesOnlyLowerRatedVisibleBlockWhenOverlapIsMoreThanFifteenMinutes() {
+        ScheduleDecisionCandidate winner = candidate("Hämatom", 4, 22, 0, 120);
+        ScheduleDecisionCandidate lowerRatedOverlap = candidate("Kadavar", 3, 21, 15, 75);
 
-        ScheduleBlockStyle style = ScheduleBlockStyle.from(slot(visible, List.of(visible, lost)), visible);
+        ScheduleBlockStyle winnerStyle = ScheduleBlockStyle.from(winner, List.of(winner, lowerRatedOverlap));
+        ScheduleBlockStyle lowerRatedStyle = ScheduleBlockStyle.from(lowerRatedOverlap, List.of(winner, lowerRatedOverlap));
 
-        assertTrue(style.scratched());
+        assertFalse(winnerStyle.scratched());
+        assertTrue(lowerRatedStyle.scratched());
     }
 
     @Test
-    public void doesNotScratchWhenLostAlternativeOverlapIsFifteenMinutes() {
-        ScheduleDecisionCandidate visible = candidate("Chosen", 4, 18, 0, 60);
-        ScheduleDecisionCandidate lost = candidate("Skipped", 5, 18, 45, 60, "LOST ALTERNATIVE", false);
+    public void doesNotScratchWhenVisibleOverlapIsFifteenMinutes() {
+        ScheduleDecisionCandidate first = candidate("Yngwie Malmsteen", 5, 17, 30, 75);
+        ScheduleDecisionCandidate second = candidate("Storm Seeker", 4, 18, 30, 60);
 
-        ScheduleBlockStyle style = ScheduleBlockStyle.from(slot(visible, List.of(visible, lost)), visible);
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(second, List.of(first, second));
 
         assertFalse(style.scratched());
     }
 
     @Test
-    public void doesNotScratchWhenThereIsNoLostAlternative() {
-        ScheduleDecisionCandidate visible = candidate("Chosen", 4, 18, 0, 60);
-        ScheduleDecisionCandidate rejected = candidate("Rejected", 5, 18, 20, 60, "NOT SELECTED", false);
+    public void doesNotScratchWhenThereIsNoVisibleOverlap() {
+        ScheduleDecisionCandidate visible = candidate("Thundermother", 5, 15, 15, 60);
+        ScheduleDecisionCandidate other = candidate("Ricky Warwick", 4, 16, 45, 60);
 
-        ScheduleBlockStyle style = ScheduleBlockStyle.from(slot(visible, List.of(visible, rejected)), visible);
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(visible, List.of(visible, other));
 
         assertFalse(style.scratched());
     }
 
-    private TimelineSlot slot(
-            ScheduleDecisionCandidate visible,
-            List<ScheduleDecisionCandidate> candidates
-    ) {
-        Optional<String> lostAlternative = candidates.stream()
-                .filter(candidate -> "LOST ALTERNATIVE".equals(candidate.status()))
-                .map(ScheduleDecisionCandidate::bandName)
-                .findFirst();
-        return new TimelineSlot(
-                visible.bandName(),
-                visible.rating(),
-                visible.stageName(),
-                visible.start(),
-                visible.end(),
-                GroupDecisionStatus.GO,
-                lostAlternative,
-                Optional.of(5),
-                candidates,
-                OptionalInt.empty()
-        );
+    @Test
+    public void equalRatedVisibleOverlapsDoNotScratchEachOther() {
+        ScheduleDecisionCandidate first = candidate("Uli Jon Roth", 5, 16, 15, 90);
+        ScheduleDecisionCandidate second = candidate("Yngwie Malmsteen", 5, 17, 0, 105);
+
+        ScheduleBlockStyle firstStyle = ScheduleBlockStyle.from(first, List.of(first, second));
+        ScheduleBlockStyle secondStyle = ScheduleBlockStyle.from(second, List.of(first, second));
+
+        assertFalse(firstStyle.scratched());
+        assertFalse(secondStyle.scratched());
+    }
+
+    @Test
+    public void lostAlternativeTextAloneDoesNotScratchWinningBlock() {
+        ScheduleDecisionCandidate winner = candidate("Hämatom", 4, 22, 0, 120);
+
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(winner, List.of(winner));
+
+        assertFalse(style.scratched());
     }
 
     private ScheduleDecisionCandidate candidate(
