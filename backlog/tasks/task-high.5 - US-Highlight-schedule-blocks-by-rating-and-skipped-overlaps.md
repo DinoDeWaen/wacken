@@ -1,11 +1,11 @@
 ---
 id: task-high.5
 title: 'US: Highlight schedule blocks by rating and skipped overlaps'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-06-12 14:57'
-updated_date: '2026-06-12 15:05'
+updated_date: '2026-06-12 15:06'
 labels:
   - user-story
   - ui
