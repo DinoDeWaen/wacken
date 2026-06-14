@@ -50,6 +50,7 @@ public final class PerformanceConflictResolver {
                     Optional.empty(),
                     status,
                     Optional.empty(),
+                    false,
                     conflictSet.performances(),
                     reason
             );
@@ -59,6 +60,7 @@ public final class PerformanceConflictResolver {
         Optional<Performance> lostAlternative = selectable.size() > 1
                 ? Optional.of(selectable.get(1).performance())
                 : Optional.empty();
+        boolean lostAlternativeTied = selectable.size() > 1 && selected.tiesBeforeInputOrder(selectable.get(1));
         List<Performance> rejected = new ArrayList<>();
         for (Candidate candidate : candidates) {
             if (!candidate.performance().equals(selected.performance())) {
@@ -70,6 +72,7 @@ public final class PerformanceConflictResolver {
                 Optional.of(selected.performance()),
                 selected.conflictStatus(),
                 lostAlternative,
+                lostAlternativeTied,
                 rejected,
                 selected.reason()
         );
@@ -161,6 +164,14 @@ public final class PerformanceConflictResolver {
 
         int threeCount() {
             return ratingCount(3);
+        }
+
+        boolean tiesBeforeInputOrder(Candidate other) {
+            return tier() == other.tier()
+                    && fourCount() == other.fourCount()
+                    && vetoCount() == other.vetoCount()
+                    && threeCount() == other.threeCount()
+                    && distanceScore() == other.distanceScore();
         }
 
         private int ratingCount(int value) {

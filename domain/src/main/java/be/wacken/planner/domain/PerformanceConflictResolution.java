@@ -10,6 +10,7 @@ public record PerformanceConflictResolution(
         Optional<Performance> selected,
         GroupDecisionStatus status,
         Optional<Performance> lostAlternative,
+        boolean lostAlternativeTied,
         List<Performance> rejected,
         String reason
 ) {

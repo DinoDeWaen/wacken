@@ -142,8 +142,11 @@ public final class GenerateSharedScheduleUseCase {
         if (resolution.selected().isPresent()) {
             Performance selected = resolution.selected().get();
             candidates.add(candidate(selected, groupRatings, "CHOSEN", true));
+            visibleLostAlternative.ifPresent(lost ->
+                    candidates.add(candidate(lost, groupRatings, lostAlternativeStatus(resolution), false))
+            );
             for (Performance rejected : resolution.rejected()) {
-                if (overlaps(selected, rejected)) {
+                if (overlaps(selected, rejected) && !visibleLostAlternative.filter(rejected::equals).isPresent()) {
                     candidates.add(candidate(rejected, groupRatings, rejectedStatus(rejected, visibleLostAlternative), false));
                 }
             }
@@ -160,6 +163,10 @@ public final class GenerateSharedScheduleUseCase {
                 .filter(rejected::equals)
                 .map(ignored -> "LOST ALTERNATIVE")
                 .orElse("NOT SELECTED");
+    }
+
+    private String lostAlternativeStatus(PerformanceConflictResolution resolution) {
+        return resolution.lostAlternativeTied() ? "⚖ TIED ALTERNATIVE" : "LOST ALTERNATIVE";
     }
 
     private boolean overlaps(Performance first, Performance second) {

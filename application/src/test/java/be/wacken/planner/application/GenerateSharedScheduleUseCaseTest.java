@@ -166,6 +166,47 @@ class GenerateSharedScheduleUseCaseTest {
     }
 
     @Test
+    void marksTiedLostAlternativeAndListsItFirstAfterChosenAct() {
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Performance selected = performance("Future Palace", "Louder", 31, 13, 45, 14, 45);
+        Performance tied = performance("Grand Magus", "Headbangers Stage", 31, 14, 0, 14, 45);
+        Performance other = performance("Metaklapa", "Wackinger Stage", 31, 14, 15, 15, 0);
+        performances.replaceAll(List.of(selected, tied, other));
+        ratings.save("dino", selected.band(), Rating.of(4));
+        ratings.save("sofie", selected.band(), Rating.of(3));
+        ratings.save("dino", tied.band(), Rating.of(4));
+        ratings.save("sofie", tied.band(), Rating.of(3));
+        ratings.save("sofie", other.band(), Rating.of(3));
+
+        TimelineSlot slot = new GenerateSharedScheduleUseCase(performances, ratings).generate().days().get(0).slots().get(0);
+
+        assertEquals("Future Palace", slot.bandName());
+        assertEquals(Optional.of("Grand Magus"), slot.lostAlternativeBandName());
+        assertEquals(List.of("Future Palace", "Grand Magus", "Metaklapa"), slot.candidates().stream().map(ScheduleDecisionCandidate::bandName).toList());
+        assertEquals("⚖ TIED ALTERNATIVE", slot.candidates().get(1).status());
+        assertEquals("NOT SELECTED", slot.candidates().get(2).status());
+    }
+
+    @Test
+    void doesNotMarkLostAlternativeAsTieWhenWinnerHasBroaderGroupSupport() {
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Performance selected = performance("Any given Day", "Headbangers Stage", 31, 16, 0, 16, 45);
+        Performance lost = performance("Danko Jones", "Harder", 31, 15, 45, 16, 45);
+        performances.replaceAll(List.of(lost, selected));
+        ratings.save("sofie", lost.band(), Rating.of(4));
+        ratings.save("dino", selected.band(), Rating.of(4));
+        ratings.save("sofie", selected.band(), Rating.of(3));
+
+        TimelineSlot slot = new GenerateSharedScheduleUseCase(performances, ratings).generate().days().get(0).slots().get(0);
+
+        assertEquals("Any given Day", slot.bandName());
+        assertEquals(Optional.of("Danko Jones"), slot.lostAlternativeBandName());
+        assertEquals("LOST ALTERNATIVE", slot.candidates().get(1).status());
+    }
+
+    @Test
     void limitsDetailCandidatesToPerformancesThatDirectlyOverlapTheSelectedAct() {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
