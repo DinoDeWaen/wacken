@@ -117,9 +117,7 @@ public final class GenerateSharedScheduleUseCase {
 
     private Optional<TimelineSlot> toSlot(PerformanceConflictResolution resolution, Map<Band, List<Rating>> groupRatings) {
         return resolution.selected().map(selected -> {
-            Optional<Performance> visibleLostAlternative = resolution.lostAlternative()
-                    .filter(alternative -> overlaps(selected, alternative))
-                    .filter(alternative -> visibleAlternative(alternative, groupRatings));
+            VisibleLostAlternative visibleLostAlternative = visibleLostAlternative(selected, resolution, groupRatings);
             return new TimelineSlot(
                     selected.band().name(),
                     highestRating(selected.band(), groupRatings),
@@ -127,8 +125,8 @@ public final class GenerateSharedScheduleUseCase {
                     selected.start(),
                     selected.end(),
                     resolution.status(),
-                    visibleLostAlternative.map(alternative -> alternative.band().name()),
-                    visibleLostAlternative.map(alternative -> highestRating(alternative.band(), groupRatings)),
+                    visibleLostAlternative.performance().map(alternative -> alternative.band().name()),
+                    visibleLostAlternative.performance().map(alternative -> highestRating(alternative.band(), groupRatings)),
                     candidates(resolution, groupRatings, visibleLostAlternative)
             );
         });
@@ -137,19 +135,19 @@ public final class GenerateSharedScheduleUseCase {
     private List<ScheduleDecisionCandidate> candidates(
             PerformanceConflictResolution resolution,
             Map<Band, List<Rating>> groupRatings,
-            Optional<Performance> visibleLostAlternative
+            VisibleLostAlternative visibleLostAlternative
     ) {
         List<ScheduleDecisionCandidate> candidates = new ArrayList<>();
         if (resolution.selected().isPresent()) {
             Performance selected = resolution.selected().get();
             candidates.add(candidate(selected, groupRatings, "CHOSEN", true));
-            visibleLostAlternative.ifPresent(lost ->
-                    candidates.add(candidate(lost, groupRatings, lostAlternativeStatus(resolution), false))
+            visibleLostAlternative.performance().ifPresent(lost ->
+                    candidates.add(candidate(lost, groupRatings, lostAlternativeStatus(visibleLostAlternative), false))
             );
             for (Performance rejected : resolution.rejected()) {
                 if (overlaps(selected, rejected)
                         && visibleAlternative(rejected, groupRatings)
-                        && !visibleLostAlternative.filter(rejected::equals).isPresent()) {
+                        && !visibleLostAlternative.performance().filter(rejected::equals).isPresent()) {
                     candidates.add(candidate(rejected, groupRatings, rejectedStatus(rejected, visibleLostAlternative), false));
                 }
             }
@@ -163,15 +161,42 @@ public final class GenerateSharedScheduleUseCase {
         return candidates;
     }
 
-    private String rejectedStatus(Performance rejected, Optional<Performance> lostAlternative) {
-        return lostAlternative
+    private VisibleLostAlternative visibleLostAlternative(
+            Performance selected,
+            PerformanceConflictResolution resolution,
+            Map<Band, List<Rating>> groupRatings
+    ) {
+        List<Performance> directAlternatives = resolution.rejected()
+                .stream()
+                .filter(rejected -> overlaps(selected, rejected))
+                .filter(rejected -> visibleAlternative(rejected, groupRatings))
+                .collect(Collectors.toList());
+        if (directAlternatives.isEmpty()) {
+            return VisibleLostAlternative.none();
+        }
+
+        List<Performance> visibleConflict = new ArrayList<>();
+        visibleConflict.add(selected);
+        visibleConflict.addAll(directAlternatives);
+        PerformanceConflictResolution visibleResolution = conflictResolver.resolve(
+                new PerformanceConflictSet(visibleConflict),
+                groupRatings
+        );
+        if (visibleResolution.selected().filter(selected::equals).isPresent()) {
+            return new VisibleLostAlternative(visibleResolution.lostAlternative(), visibleResolution.lostAlternativeTied());
+        }
+        return new VisibleLostAlternative(visibleResolution.selected(), false);
+    }
+
+    private String rejectedStatus(Performance rejected, VisibleLostAlternative lostAlternative) {
+        return lostAlternative.performance()
                 .filter(rejected::equals)
                 .map(ignored -> "LOST ALTERNATIVE")
                 .orElse("NOT SELECTED");
     }
 
-    private String lostAlternativeStatus(PerformanceConflictResolution resolution) {
-        return resolution.lostAlternativeTied() ? "⚖ TIED ALTERNATIVE" : "LOST ALTERNATIVE";
+    private String lostAlternativeStatus(VisibleLostAlternative lostAlternative) {
+        return lostAlternative.tied() ? "⚖ TIED ALTERNATIVE" : "LOST ALTERNATIVE";
     }
 
     private boolean overlaps(Performance first, Performance second) {
@@ -244,5 +269,15 @@ public final class GenerateSharedScheduleUseCase {
             return time.toLocalDate().minusDays(1);
         }
         return time.toLocalDate();
+    }
+
+    private record VisibleLostAlternative(Optional<Performance> performance, boolean tied) {
+        private VisibleLostAlternative {
+            performance = performance == null ? Optional.empty() : performance;
+        }
+
+        static VisibleLostAlternative none() {
+            return new VisibleLostAlternative(Optional.empty(), false);
+        }
     }
 }

@@ -243,6 +243,26 @@ class GenerateSharedScheduleUseCaseTest {
     }
 
     @Test
+    void usesBestDirectOverlapAsLostAlternativeWhenGlobalRunnerUpDoesNotOverlapSelected() {
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Performance selected = performance("Selected Must See", "Harder", 31, 13, 0, 14, 0);
+        Performance directAlternative = performance("Direct Alternative", "Louder", 31, 13, 25, 14, 25);
+        Performance chainedRunnerUp = performance("Chained Runner Up", "Faster", 31, 13, 50, 14, 50);
+        performances.replaceAll(List.of(selected, directAlternative, chainedRunnerUp));
+        ratings.save("sofie", selected.band(), Rating.of(5));
+        ratings.save("dino", directAlternative.band(), Rating.of(4));
+        ratings.save("sofie", chainedRunnerUp.band(), Rating.of(5));
+
+        TimelineSlot slot = new GenerateSharedScheduleUseCase(performances, ratings).generate().days().get(0).slots().get(0);
+
+        assertEquals("Selected Must See", slot.bandName());
+        assertEquals(Optional.of("Direct Alternative"), slot.lostAlternativeBandName());
+        assertEquals(List.of("Selected Must See", "Direct Alternative"), slot.candidates().stream().map(ScheduleDecisionCandidate::bandName).toList());
+        assertEquals("LOST ALTERNATIVE", slot.candidates().get(1).status());
+    }
+
+    @Test
     void selectsDefLeppardWhenItOnlyOverlapsAnotherSelectedActOutsideTheMiddleThirtyMinutes() {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
