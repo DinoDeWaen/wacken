@@ -386,6 +386,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-073 | MVP walking-time defaults must include named nearby-stage groups. | Harder, Faster, and Louder are 5 minutes apart from each other; Headbangers Stage and W:E:T Stage are 5 minutes apart from each other; travel between these groups or to other stages defaults to 15 minutes unless the stage is the same. | Must |
 | BR-074 | The group schedule must show walking time between consecutive selected acts when known. | If the group moves between nearby stages in the same walking group, the schedule shows 5 minutes; if it moves between stage groups, the schedule shows 15 minutes. | Must |
 | BR-075 | The group schedule can locally hide 2-star-or-lower acts. | A user can toggle the schedule view so visible blocks and decision-detail candidates rated 2 stars or lower are hidden without changing ratings, generated decisions, manual choices, persistence, or sync data. | Must |
+| BR-076 | The group schedule can locally hide acts at or below a selected star threshold. | A user can choose an inclusive threshold such as 2 stars, and visible blocks plus decision-detail candidates rated at or below that threshold are hidden without changing ratings, generated decisions, manual choices, persistence, or sync data. | Must |
 
 ## Data and terminology
 

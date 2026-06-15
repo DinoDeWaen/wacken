@@ -53,6 +53,7 @@ public final class ScheduleActivity extends Activity {
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
     private final ScheduleManualSelections manualSelections = new ScheduleManualSelections();
     private boolean hideTwoStarOrLower;
+    private int selectedHideThreshold;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,7 +144,46 @@ public final class ScheduleActivity extends Activity {
             setContentView(render());
         });
         controls.addView(hideWeak);
-        return controls;
+        TextView thresholdLabel = new TextView(this);
+        thresholdLabel.setText("Hide <= ");
+        thresholdLabel.setTextColor(COLOR_MUTED);
+        thresholdLabel.setTextSize(12);
+        thresholdLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        thresholdLabel.setPadding(dp(8), 0, 0, 0);
+        controls.addView(thresholdLabel);
+        controls.addView(thresholdButton("Off", 0));
+        controls.addView(thresholdButton("1★", 1));
+        controls.addView(thresholdButton("2★", 2));
+        controls.addView(thresholdButton("3★", 3));
+        controls.addView(thresholdButton("4★", 4));
+        HorizontalScrollView scroll = new HorizontalScrollView(this);
+        scroll.setHorizontalScrollBarEnabled(false);
+        scroll.addView(controls);
+        return scroll;
+    }
+
+    private Button thresholdButton(String label, int threshold) {
+        Button button = new Button(this);
+        button.setAllCaps(false);
+        button.setText(label);
+        button.setTextColor(Color.WHITE);
+        button.setTextSize(11);
+        button.setTypeface(Typeface.DEFAULT_BOLD);
+        button.setMinWidth(0);
+        button.setMinHeight(0);
+        button.setPadding(dp(8), 0, dp(8), 0);
+        button.setBackgroundColor(selectedHideThreshold == threshold ? COLOR_ACCENT : Color.rgb(49, 56, 58));
+        button.setOnClickListener(view -> {
+            selectedHideThreshold = threshold;
+            setContentView(render());
+        });
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                dp(34)
+        );
+        params.setMargins(dp(4), 0, 0, 0);
+        button.setLayoutParams(params);
+        return button;
     }
 
     private TextView sectionTitle(String text) {
@@ -603,10 +643,8 @@ public final class ScheduleActivity extends Activity {
     }
 
     private ScheduleRatingFilter scheduleFilter() {
-        if (hideTwoStarOrLower) {
-            return ScheduleRatingFilter.hideAtOrBelow(2);
-        }
-        return ScheduleRatingFilter.none();
+        int threshold = Math.max(hideTwoStarOrLower ? 2 : 0, selectedHideThreshold);
+        return threshold > 0 ? ScheduleRatingFilter.hideAtOrBelow(threshold) : ScheduleRatingFilter.none();
     }
 
     private TextView message(String text, int color) {

@@ -50,6 +50,29 @@ public final class ScheduleRatingFilterTest {
         assertTrue(ScheduleRatingFilter.none().shows(twoStar));
     }
 
+    @Test
+    public void selectedTwoStarThresholdIsInclusive() {
+        List<ScheduleDecisionCandidate> visible = ScheduleRatingFilter.hideAtOrBelow(2).visibleCandidates(List.of(
+                candidate("Two Star", 2),
+                candidate("Three Star", 3),
+                candidate("Four Star", 4)
+        ));
+
+        assertEquals(List.of("Three Star", "Four Star"), names(visible));
+    }
+
+    @Test
+    public void selectedHigherThresholdHidesThatRatingAndBelow() {
+        List<ScheduleDecisionCandidate> visible = ScheduleRatingFilter.hideAtOrBelow(3).visibleCandidates(List.of(
+                candidate("Two Star", 2),
+                candidate("Three Star", 3),
+                candidate("Four Star", 4),
+                candidate("Five Star", 5)
+        ));
+
+        assertEquals(List.of("Four Star", "Five Star"), names(visible));
+    }
+
     private List<String> names(List<ScheduleDecisionCandidate> candidates) {
         return candidates.stream().map(ScheduleDecisionCandidate::bandName).toList();
     }
