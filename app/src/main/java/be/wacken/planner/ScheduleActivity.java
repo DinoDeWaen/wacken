@@ -52,7 +52,7 @@ public final class ScheduleActivity extends Activity {
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("EEEE yyyy-MM-dd", Locale.ENGLISH);
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
     private final ScheduleManualSelections manualSelections = new ScheduleManualSelections();
-    private boolean hideTwoStarOrLower;
+    private boolean hideBarred;
     private int selectedHideThreshold;
 
     @Override
@@ -133,17 +133,17 @@ public final class ScheduleActivity extends Activity {
         controls.setGravity(Gravity.CENTER_VERTICAL);
         controls.setPadding(0, dp(6), 0, dp(8));
 
-        CheckBox hideWeak = new CheckBox(this);
-        hideWeak.setText("Hide <=2★");
-        hideWeak.setTextColor(COLOR_TEXT);
-        hideWeak.setTextSize(13);
-        hideWeak.setTypeface(Typeface.DEFAULT_BOLD);
-        hideWeak.setChecked(hideTwoStarOrLower);
-        hideWeak.setOnCheckedChangeListener((button, checked) -> {
-            hideTwoStarOrLower = checked;
+        CheckBox hideBarredBox = new CheckBox(this);
+        hideBarredBox.setText("Hide barred");
+        hideBarredBox.setTextColor(COLOR_TEXT);
+        hideBarredBox.setTextSize(13);
+        hideBarredBox.setTypeface(Typeface.DEFAULT_BOLD);
+        hideBarredBox.setChecked(hideBarred);
+        hideBarredBox.setOnCheckedChangeListener((button, checked) -> {
+            hideBarred = checked;
             setContentView(render());
         });
-        controls.addView(hideWeak);
+        controls.addView(hideBarredBox);
         TextView thresholdLabel = new TextView(this);
         thresholdLabel.setText("Hide <= ");
         thresholdLabel.setTextColor(COLOR_MUTED);
@@ -203,12 +203,18 @@ public final class ScheduleActivity extends Activity {
             return empty;
         }
         ScheduleRatingFilter filter = scheduleFilter();
+        java.util.List<TimelineSlot> candidateSlots = new java.util.ArrayList<>();
+        java.util.List<ScheduleDecisionCandidate> candidateViews = new java.util.ArrayList<>();
+        for (TimelineSlot slot : day.slots()) {
+            candidateSlots.add(slot);
+            candidateViews.add(manualSelections.visibleCandidate(slot));
+        }
         java.util.List<TimelineSlot> visibleSlots = new java.util.ArrayList<>();
         java.util.List<ScheduleDecisionCandidate> visibleCandidates = new java.util.ArrayList<>();
-        for (TimelineSlot slot : day.slots()) {
-            ScheduleDecisionCandidate visible = manualSelections.visibleCandidate(slot);
-            if (filter.shows(visible)) {
-                visibleSlots.add(slot);
+        for (int index = 0; index < candidateSlots.size(); index++) {
+            ScheduleDecisionCandidate visible = candidateViews.get(index);
+            if (filter.shows(visible, candidateViews)) {
+                visibleSlots.add(candidateSlots.get(index));
                 visibleCandidates.add(visible);
             }
         }
@@ -643,8 +649,12 @@ public final class ScheduleActivity extends Activity {
     }
 
     private ScheduleRatingFilter scheduleFilter() {
-        int threshold = Math.max(hideTwoStarOrLower ? 2 : 0, selectedHideThreshold);
-        return threshold > 0 ? ScheduleRatingFilter.hideAtOrBelow(threshold) : ScheduleRatingFilter.none();
+        if (hideBarred) {
+            return ScheduleRatingFilter.hideBarred(selectedHideThreshold);
+        }
+        return selectedHideThreshold > 0
+                ? ScheduleRatingFilter.hideAtOrBelow(selectedHideThreshold)
+                : ScheduleRatingFilter.none();
     }
 
     private TextView message(String text, int color) {
