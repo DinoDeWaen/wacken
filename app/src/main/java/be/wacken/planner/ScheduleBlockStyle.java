@@ -8,43 +8,63 @@ import be.wacken.planner.application.ScheduleDecisionCandidate;
 import be.wacken.planner.domain.StageWalkingTimePolicy;
 
 final class ScheduleBlockStyle {
+    private static final int GOLD_BORDER = 0xFFFFD24A;
+    private static final int GOLD_FILL = 0xFF2F2A18;
+    private static final int METAL_RED_BORDER = 0xFFFF3B6B;
+    private static final int METAL_RED_FILL = 0xFF263033;
+    private static final int STEEL_BORDER = 0xFFAAB3B7;
+    private static final int STEEL_FILL = 0xFF20282A;
     private static final int SCRATCH_OVERLAP_THRESHOLD_MINUTES = 15;
     private static final int NEARBY_STAGE_WALKING_ALLOWANCE_MINUTES = 5;
 
-    enum BorderTone {
-        GOLD,
-        LIGHT_GREY,
-        RED
-    }
-
-    private final BorderTone borderTone;
+    private final int borderColor;
+    private final int fillColor;
     private final boolean scratched;
 
-    private ScheduleBlockStyle(BorderTone borderTone, boolean scratched) {
-        this.borderTone = borderTone;
+    private ScheduleBlockStyle(int borderColor, int fillColor, boolean scratched) {
+        this.borderColor = borderColor;
+        this.fillColor = fillColor;
         this.scratched = scratched;
     }
 
     static ScheduleBlockStyle from(ScheduleDecisionCandidate visible, List<ScheduleDecisionCandidate> visibleCandidates) {
-        return new ScheduleBlockStyle(borderTone(visible.rating()), losesVisibleOverlap(visible, visibleCandidates));
+        return new ScheduleBlockStyle(
+                borderColor(visible.rating()),
+                fillColor(visible.rating()),
+                losesVisibleOverlap(visible, visibleCandidates)
+        );
     }
 
-    BorderTone borderTone() {
-        return borderTone;
+    int borderColor() {
+        return borderColor;
+    }
+
+    int fillColor() {
+        return fillColor;
     }
 
     boolean scratched() {
         return scratched;
     }
 
-    private static BorderTone borderTone(int rating) {
+    private static int borderColor(int rating) {
         if (rating == 5) {
-            return BorderTone.GOLD;
+            return GOLD_BORDER;
         }
-        if (rating == 2) {
-            return BorderTone.LIGHT_GREY;
+        if (rating == 4) {
+            return METAL_RED_BORDER;
         }
-        return BorderTone.RED;
+        return STEEL_BORDER;
+    }
+
+    private static int fillColor(int rating) {
+        if (rating == 5) {
+            return GOLD_FILL;
+        }
+        if (rating == 4) {
+            return METAL_RED_FILL;
+        }
+        return STEEL_FILL;
     }
 
     private static boolean losesVisibleOverlap(

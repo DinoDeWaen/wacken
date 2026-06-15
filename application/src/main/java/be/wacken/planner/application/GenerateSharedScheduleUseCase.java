@@ -118,7 +118,8 @@ public final class GenerateSharedScheduleUseCase {
     private Optional<TimelineSlot> toSlot(PerformanceConflictResolution resolution, Map<Band, List<Rating>> groupRatings) {
         return resolution.selected().map(selected -> {
             Optional<Performance> visibleLostAlternative = resolution.lostAlternative()
-                    .filter(alternative -> overlaps(selected, alternative));
+                    .filter(alternative -> overlaps(selected, alternative))
+                    .filter(alternative -> visibleAlternative(alternative, groupRatings));
             return new TimelineSlot(
                     selected.band().name(),
                     highestRating(selected.band(), groupRatings),
@@ -146,14 +147,18 @@ public final class GenerateSharedScheduleUseCase {
                     candidates.add(candidate(lost, groupRatings, lostAlternativeStatus(resolution), false))
             );
             for (Performance rejected : resolution.rejected()) {
-                if (overlaps(selected, rejected) && !visibleLostAlternative.filter(rejected::equals).isPresent()) {
+                if (overlaps(selected, rejected)
+                        && visibleAlternative(rejected, groupRatings)
+                        && !visibleLostAlternative.filter(rejected::equals).isPresent()) {
                     candidates.add(candidate(rejected, groupRatings, rejectedStatus(rejected, visibleLostAlternative), false));
                 }
             }
             return candidates;
         }
         for (Performance rejected : resolution.rejected()) {
-            candidates.add(candidate(rejected, groupRatings, rejectedStatus(rejected, visibleLostAlternative), false));
+            if (visibleAlternative(rejected, groupRatings)) {
+                candidates.add(candidate(rejected, groupRatings, rejectedStatus(rejected, visibleLostAlternative), false));
+            }
         }
         return candidates;
     }
@@ -171,6 +176,10 @@ public final class GenerateSharedScheduleUseCase {
 
     private boolean overlaps(Performance first, Performance second) {
         return overlapPolicy.overlapsForScheduling(first, second);
+    }
+
+    private boolean visibleAlternative(Performance performance, Map<Band, List<Rating>> groupRatings) {
+        return highestRating(performance.band(), groupRatings) > 1;
     }
 
     private ScheduleDecisionCandidate candidate(

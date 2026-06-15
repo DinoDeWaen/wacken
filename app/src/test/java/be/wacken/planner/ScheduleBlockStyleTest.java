@@ -13,30 +13,37 @@ import be.wacken.planner.application.ScheduleDecisionCandidate;
 
 public final class ScheduleBlockStyleTest {
     @Test
-    public void fiveStarVisibleActsUseGoldBorder() {
+    public void fiveStarVisibleActsUseGoldBorderAndDarkGoldFill() {
         ScheduleDecisionCandidate visible = candidate("Def Leppard", 5, 22, 0, 0);
 
         ScheduleBlockStyle style = ScheduleBlockStyle.from(visible, List.of(visible));
 
-        assertEquals(ScheduleBlockStyle.BorderTone.GOLD, style.borderTone());
+        assertEquals(0xFFFFD24A, style.borderColor());
+        assertEquals(0xFF2F2A18, style.fillColor());
     }
 
     @Test
-    public void twoStarVisibleActsUseLightGreyBorder() {
-        ScheduleDecisionCandidate visible = candidate("Weak Winner", 2, 18, 0, 0);
-
-        ScheduleBlockStyle style = ScheduleBlockStyle.from(visible, List.of(visible));
-
-        assertEquals(ScheduleBlockStyle.BorderTone.LIGHT_GREY, style.borderTone());
-    }
-
-    @Test
-    public void otherVisibleActsUseRedBorder() {
+    public void fourStarVisibleActsUseMetalRedBorderAndDarkPanelFill() {
         ScheduleDecisionCandidate visible = candidate("Normal Winner", 4, 18, 0, 0);
 
         ScheduleBlockStyle style = ScheduleBlockStyle.from(visible, List.of(visible));
 
-        assertEquals(ScheduleBlockStyle.BorderTone.RED, style.borderTone());
+        assertEquals(0xFFFF3B6B, style.borderColor());
+        assertEquals(0xFF263033, style.fillColor());
+    }
+
+    @Test
+    public void twoAndThreeStarVisibleActsUseSteelBorderAndMutedFill() {
+        ScheduleDecisionCandidate twoStar = candidate("Weak Winner", 2, 18, 0, 0);
+        ScheduleDecisionCandidate threeStar = candidate("Optional Winner", 3, 19, 0, 0);
+
+        ScheduleBlockStyle twoStarStyle = ScheduleBlockStyle.from(twoStar, List.of(twoStar));
+        ScheduleBlockStyle threeStarStyle = ScheduleBlockStyle.from(threeStar, List.of(threeStar));
+
+        assertEquals(0xFFAAB3B7, twoStarStyle.borderColor());
+        assertEquals(0xFF20282A, twoStarStyle.fillColor());
+        assertEquals(0xFFAAB3B7, threeStarStyle.borderColor());
+        assertEquals(0xFF20282A, threeStarStyle.fillColor());
     }
 
     @Test

@@ -225,6 +225,24 @@ class GenerateSharedScheduleUseCaseTest {
     }
 
     @Test
+    void hidesVetoedRejectedActsFromScheduleDecisionCandidates() {
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Performance selected = performance("Danko Jones", "Harder", 31, 15, 45, 16, 45);
+        Performance visibleAlternative = performance("Any given Day", "Headbangers Stage", 31, 16, 0, 16, 45);
+        Performance vetoedAlternative = performance("Vetoed Act", "Louder", 31, 16, 0, 16, 45);
+        performances.replaceAll(List.of(selected, visibleAlternative, vetoedAlternative));
+        ratings.save("sofie", selected.band(), Rating.of(4));
+        ratings.save("dino", visibleAlternative.band(), Rating.of(3));
+        ratings.save("sofie", vetoedAlternative.band(), Rating.of(1));
+
+        TimelineSlot slot = new GenerateSharedScheduleUseCase(performances, ratings).generate().days().get(0).slots().get(0);
+
+        assertEquals(List.of("Danko Jones", "Any given Day"), slot.candidates().stream().map(ScheduleDecisionCandidate::bandName).toList());
+        assertEquals(Optional.of("Any given Day"), slot.lostAlternativeBandName());
+    }
+
+    @Test
     void selectsDefLeppardWhenItOnlyOverlapsAnotherSelectedActOutsideTheMiddleThirtyMinutes() {
         FakePerformanceRepository performances = new FakePerformanceRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();

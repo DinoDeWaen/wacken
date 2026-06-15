@@ -43,7 +43,6 @@ public final class ScheduleActivity extends Activity {
     private static final int COLOR_MUTED = Color.rgb(162, 169, 171);
     private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
     private static final int COLOR_AMBER = Color.rgb(255, 199, 44);
-    private static final int COLOR_LIGHT_GREY_BORDER = Color.rgb(206, 212, 214);
     private static final int HOUR_HEIGHT_DP = 72;
     private static final int TIME_LABEL_WIDTH_DP = 78;
     private static final int STAGE_COLUMN_WIDTH_DP = 190;
@@ -532,10 +531,10 @@ public final class ScheduleActivity extends Activity {
     }
 
     private Drawable slotBackground(ScheduleBlockStyle style) {
-        int borderColor = borderColor(style.borderTone());
+        int borderColor = style.borderColor();
         int scratchColor = scratchColor(borderColor);
         return new ScheduleBlockDrawable(
-                COLOR_PANEL,
+                style.fillColor(),
                 borderColor,
                 scratchColor,
                 style.scratched(),
@@ -544,14 +543,6 @@ public final class ScheduleActivity extends Activity {
                 dp(14),
                 dp(34)
         );
-    }
-
-    private int borderColor(ScheduleBlockStyle.BorderTone tone) {
-        return switch (tone) {
-            case GOLD -> COLOR_AMBER;
-            case LIGHT_GREY -> COLOR_LIGHT_GREY_BORDER;
-            case RED -> COLOR_ACCENT;
-        };
     }
 
     private int scratchColor(int borderColor) {
