@@ -385,6 +385,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-072 | Splash and sync feedback should use a stronger heavy-metal visual style. | Startup, reactivation, manual sync, and close sync feedback feel visually aligned with Wacken/metal branding rather than generic loading. | Should |
 | BR-073 | MVP walking-time defaults must include named nearby-stage groups. | Harder, Faster, and Louder are 5 minutes apart from each other; Headbangers Stage and W:E:T Stage are 5 minutes apart from each other; travel between these groups or to other stages defaults to 15 minutes unless the stage is the same. | Must |
 | BR-074 | The group schedule must show walking time between consecutive selected acts when known. | If the group moves between nearby stages in the same walking group, the schedule shows 5 minutes; if it moves between stage groups, the schedule shows 15 minutes. | Must |
+| BR-075 | The group schedule can locally hide 2-star-or-lower acts. | A user can toggle the schedule view so visible blocks and decision-detail candidates rated 2 stars or lower are hidden without changing ratings, generated decisions, manual choices, persistence, or sync data. | Must |
 
 ## Data and terminology
 

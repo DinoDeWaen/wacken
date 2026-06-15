@@ -18,6 +18,7 @@ import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
@@ -51,6 +52,7 @@ public final class ScheduleActivity extends Activity {
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("EEEE yyyy-MM-dd", Locale.ENGLISH);
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
     private final ScheduleManualSelections manualSelections = new ScheduleManualSelections();
+    private boolean hideTwoStarOrLower;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,11 +118,32 @@ public final class ScheduleActivity extends Activity {
             screen.addView(message("No selected performances are available yet.", COLOR_MUTED));
             return;
         }
+        screen.addView(filterControls());
         for (ScheduleDay day : schedule.days()) {
             TextView dayTitle = sectionTitle(day.date().format(DATE));
             screen.addView(dayTitle);
             screen.addView(dayCalendar(day));
         }
+    }
+
+    private View filterControls() {
+        LinearLayout controls = new LinearLayout(this);
+        controls.setOrientation(LinearLayout.HORIZONTAL);
+        controls.setGravity(Gravity.CENTER_VERTICAL);
+        controls.setPadding(0, dp(6), 0, dp(8));
+
+        CheckBox hideWeak = new CheckBox(this);
+        hideWeak.setText("Hide <=2★");
+        hideWeak.setTextColor(COLOR_TEXT);
+        hideWeak.setTextSize(13);
+        hideWeak.setTypeface(Typeface.DEFAULT_BOLD);
+        hideWeak.setChecked(hideTwoStarOrLower);
+        hideWeak.setOnCheckedChangeListener((button, checked) -> {
+            hideTwoStarOrLower = checked;
+            setContentView(render());
+        });
+        controls.addView(hideWeak);
+        return controls;
     }
 
     private TextView sectionTitle(String text) {
@@ -139,9 +162,20 @@ public final class ScheduleActivity extends Activity {
             empty.addView(message("No selected performances.", COLOR_MUTED));
             return empty;
         }
+        ScheduleRatingFilter filter = scheduleFilter();
+        java.util.List<TimelineSlot> visibleSlots = new java.util.ArrayList<>();
         java.util.List<ScheduleDecisionCandidate> visibleCandidates = new java.util.ArrayList<>();
         for (TimelineSlot slot : day.slots()) {
-            visibleCandidates.add(manualSelections.visibleCandidate(slot));
+            ScheduleDecisionCandidate visible = manualSelections.visibleCandidate(slot);
+            if (filter.shows(visible)) {
+                visibleSlots.add(slot);
+                visibleCandidates.add(visible);
+            }
+        }
+        if (visibleSlots.isEmpty()) {
+            FrameLayout empty = new FrameLayout(this);
+            empty.addView(message("No acts match the active filters.", COLOR_MUTED));
+            return empty;
         }
         ScheduleCalendarLayout layout = ScheduleCalendarLayout.forCandidates(visibleCandidates, day.date());
         int calendarHeight = dp(STAGE_HEADER_HEIGHT_DP + (layout.hourCount() * HOUR_HEIGHT_DP));
@@ -164,15 +198,15 @@ public final class ScheduleActivity extends Activity {
                 calendar.addView(halfHourGridLine(), halfHourGridLineLayout(layout, hour));
             }
         }
-        for (int index = 0; index < day.slots().size(); index++) {
-            TimelineSlot slot = day.slots().get(index);
+        for (int index = 0; index < visibleSlots.size(); index++) {
+            TimelineSlot slot = visibleSlots.get(index);
             ScheduleDecisionCandidate visible = manualSelections.visibleCandidate(slot);
             calendar.addView(
                     slotView(slot, visible, visibleCandidates, layout.durationMinutes(visible)),
                     slotLayout(layout, visible)
             );
-            if (index < day.slots().size() - 1) {
-                ScheduleDecisionCandidate next = manualSelections.visibleCandidate(day.slots().get(index + 1));
+            if (index < visibleSlots.size() - 1) {
+                ScheduleDecisionCandidate next = manualSelections.visibleCandidate(visibleSlots.get(index + 1));
                 calendar.addView(walkingMarker(slot), walkingMarkerLayout(layout, visible, next));
             }
         }
@@ -378,7 +412,12 @@ public final class ScheduleActivity extends Activity {
 
         detail.addView(detailText("Chosen act", COLOR_ACCENT, 12, true));
         final AlertDialog[] dialog = new AlertDialog[1];
-        java.util.List<ScheduleDecisionCandidate> candidates = manualSelections.detailCandidates(slot);
+        java.util.List<ScheduleDecisionCandidate> candidates = scheduleFilter()
+                .visibleCandidates(manualSelections.detailCandidates(slot));
+        if (candidates.isEmpty()) {
+            detail.addView(detailText("No acts match the active filters.", COLOR_MUTED, 14, false));
+            return;
+        }
         detail.addView(candidateView(slot, candidates.get(0), candidates, () -> dialog[0].dismiss()));
 
         detail.addView(detailText("Alternatives", COLOR_ACCENT, 12, true));
@@ -561,6 +600,13 @@ public final class ScheduleActivity extends Activity {
             text.append(index < safeRating ? "★" : "☆");
         }
         return text.toString();
+    }
+
+    private ScheduleRatingFilter scheduleFilter() {
+        if (hideTwoStarOrLower) {
+            return ScheduleRatingFilter.hideAtOrBelow(2);
+        }
+        return ScheduleRatingFilter.none();
     }
 
     private TextView message(String text, int color) {
