@@ -145,6 +145,8 @@ Before marking done:
 - Tests were added/updated where meaningful.
 - Legacy refactoring is protected by approval/characterization tests.
 - Relevant checks pass.
+- The previous local release APK is deleted and a fresh release APK is built
+  from the completed ticket state.
 - README, business requirements, diagram, and ADR impact use the canonical wording from `delivery-governance.md`.
 - Architecture approval is handled when required.
 - Implementation plan reflects actual work.
