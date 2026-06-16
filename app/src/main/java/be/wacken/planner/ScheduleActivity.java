@@ -26,6 +26,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.time.format.DateTimeFormatter;
+import java.io.IOException;
 import java.util.Locale;
 
 import be.wacken.planner.application.GenerateSharedScheduleUseCase;
@@ -51,7 +52,8 @@ public final class ScheduleActivity extends Activity {
     private static final int COLUMN_GAP_DP = 6;
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("EEEE yyyy-MM-dd", Locale.ENGLISH);
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
-    private final ScheduleManualSelections manualSelections = new ScheduleManualSelections();
+    private ScheduleManualSelections manualSelections = new ScheduleManualSelections();
+    private AppRepositories repositories;
     private boolean hideBarred;
     private int selectedHideThreshold;
 
@@ -93,7 +95,8 @@ public final class ScheduleActivity extends Activity {
         screen.addView(back, fullWidthButtonLayout());
 
         try {
-            AppRepositories repositories = new AppRepositories(this);
+            repositories = new AppRepositories(this);
+            manualSelections = new ScheduleManualSelections(repositories.scheduleLocks().pullGroupLocks());
             SharedSchedule schedule = new GenerateSharedScheduleUseCase(
                     repositories.performances(),
                     repositories.ratings(),
@@ -543,13 +546,46 @@ public final class ScheduleActivity extends Activity {
             select.setTypeface(Typeface.DEFAULT_BOLD);
             select.setBackground(slotBackground());
             select.setOnClickListener(view -> {
-                manualSelections.select(slot, candidate);
-                setContentView(render());
-                afterSelect.run();
+                try {
+                    repositories.scheduleLocks().saveGroupLock(
+                            ScheduleManualSelections.conflictKey(slot),
+                            ScheduleManualSelections.candidateKey(candidate)
+                    );
+                    manualSelections.select(slot, candidate);
+                    setContentView(render());
+                    afterSelect.run();
+                } catch (IOException error) {
+                    showError("Could not lock schedule choice: " + error.getMessage());
+                }
             });
             panel.addView(select);
+        } else if (manualSelections.isManual(slot)) {
+            Button unlock = new Button(this);
+            unlock.setAllCaps(false);
+            unlock.setText("Unlock generated choice");
+            unlock.setTextColor(COLOR_AMBER);
+            unlock.setTypeface(Typeface.DEFAULT_BOLD);
+            unlock.setBackground(slotBackground());
+            unlock.setOnClickListener(view -> {
+                try {
+                    repositories.scheduleLocks().clearGroupLock(ScheduleManualSelections.conflictKey(slot));
+                    manualSelections.clear(slot);
+                    setContentView(render());
+                    afterSelect.run();
+                } catch (IOException error) {
+                    showError("Could not unlock schedule choice: " + error.getMessage());
+                }
+            });
+            panel.addView(unlock);
         }
         return panel;
+    }
+
+    private void showError(String message) {
+        new AlertDialog.Builder(this)
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show();
     }
 
     private java.util.Optional<String> walkingContext(

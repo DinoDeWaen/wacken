@@ -41,6 +41,7 @@ final class AppRepositories {
     private final SyncedFoodOptionRepository foodOptions;
     private final RatingRepository ratings;
     private final SyncingRatingRepository syncingRatings;
+    private final ScheduleLockStore scheduleLocks;
 
     AppRepositories(Context context) {
         this(context, SourceMode.SUPABASE);
@@ -89,15 +90,18 @@ final class AppRepositories {
         this.distances = new SyncedStageDistanceRepository(distanceCache, distanceSource);
         this.foodOptions = new SyncedFoodOptionRepository(foodCache, foodSource);
         if (sourceMode == SourceMode.SUPABASE) {
+            SupabaseScheduleLockClient scheduleLockClient = new SupabaseScheduleLockClient(sessionManager);
             this.syncingRatings = new SyncingRatingRepository(
                     ratingCache,
                     new SupabaseRatingClient(sessionManager),
                     authSessionStore.load()
             );
             this.ratings = syncingRatings;
+            this.scheduleLocks = scheduleLockClient;
         } else {
             this.syncingRatings = null;
             this.ratings = ratingCache;
+            this.scheduleLocks = new ScheduleLockStore.NoOp();
         }
 
         if (sourceMode == SourceMode.TSV_FALLBACK) {
@@ -127,6 +131,10 @@ final class AppRepositories {
 
     RatingRepository ratings() {
         return ratings;
+    }
+
+    ScheduleLockStore scheduleLocks() {
+        return scheduleLocks;
     }
 
     void syncRatings() {

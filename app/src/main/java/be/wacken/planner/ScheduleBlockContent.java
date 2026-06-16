@@ -29,7 +29,8 @@ final class ScheduleBlockContent {
             ScheduleDecisionCandidate visible,
             int blockMinutes
     ) {
-        String bandLine = ScheduleBandDisplayName.clean(visible.bandName()) + " " + stars(visible.rating());
+        String lockPrefix = visible.status().contains("LOCKED") ? "🔒 " : "";
+        String bandLine = lockPrefix + ScheduleBandDisplayName.clean(visible.bandName()) + " " + stars(visible.rating());
         Optional<String> lostAlternative = Optional.empty();
         if (blockMinutes >= LOST_ALTERNATIVE_MINUTES) {
             lostAlternative = slot.lostAlternativeBandName()

@@ -21,7 +21,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - CSV/TSV fallback import path for local/admin data work.
 - Wacken-inspired overview/detail presentation with music links, imported metadata where available, and metal-themed sync feedback.
 - Compact per-person star details on the band overview when shared group ratings are available.
-- MVP2 group decision rules, conflict resolution, timeline generation, and Android schedule viewing for the current shared group.
+- MVP2 group decision rules, conflict resolution, timeline generation, group-wide locked manual schedule choices, and Android schedule viewing for the current shared group.
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
 
@@ -378,7 +378,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-065 | Opening a calendar performance block must show the conflict detail. | The detail shows the chosen act and all alternatives, with each band's stage and rating stars. | Must |
 | BR-066 | A user can select an alternative as the act the group is going to for the visible schedule screen. | Choosing an alternative updates the local visible schedule result so that act becomes selected for that conflict. | Must |
 | BR-067 | Manual schedule choices must not silently change the underlying rating rules. | Selecting an alternative changes the local visible schedule choice, but the original ratings and generated decision evidence remain visible. | Must |
-| BR-068 | MVP2 manual schedule choices are local-only visible overrides. | A signed-in user can change the current schedule screen result; the choice is not synced to Supabase, is not persisted across app restart, and is cleared by leaving or regenerating the schedule screen. | Must |
+| BR-068 | MVP2 manual schedule choices are group-wide locked overrides. | A signed-in group member can lock a conflict winner for the shared group; the lock is synced through Supabase, survives schedule regeneration and app restart, is shown with a lock icon, and remains until another group member changes or clears it. Ratings and generated decision evidence are not changed by the lock. | Must |
 | BR-069 | Calendar schedule days must include late-night festival time through 02:00 before the next festival day starts. | A performance ending at 02:00 appears in the intended festival day view instead of being hidden by a midnight cutoff. | Must |
 | BR-070 | Calendar schedule day headings must include the weekday name. | A day heading shows a weekday such as Monday or Tuesday together with the festival date. | Must |
 | BR-071 | Schedule decision details must use the Wacken dark/metal visual scheme. | Opening a performance block shows chosen act and alternatives on a dark themed surface with readable light text and accent colors, not a default white dialog. | Must |
@@ -425,7 +425,7 @@ Scenario: Inspect and change a schedule conflict choice
 | Settings page | Represents secondary app actions and operational controls. | Contains group/invite, import, and manual sync actions. |
 | Calendar schedule day | Represents one festival day in calendar form. | Contains hour lines and time-positioned performance blocks, including late-night festival time through 02:00 before the next festival day starts. |
 | Performance block | Represents a selected scheduled act in the calendar view. | Shows band, stage, rating stars, and opens the conflict detail. |
-| Manual schedule choice | Represents a user-selected act for a conflict. | Overrides the local visible selected act for that conflict without changing ratings, persistence, or synced group data. |
+| Manual schedule choice | Represents a group-locked selected act for a conflict. | Overrides the visible selected act for that conflict without changing ratings or generated decision evidence. |
 | Walking-time segment | Represents movement time between consecutive selected schedule entries. | Uses known stage distance data or MVP walking-time defaults and is shown in the schedule where known. |
 
 ## Future domain events
@@ -482,4 +482,4 @@ The current in-app output format is a day-based calendar schedule. A clear, prin
 - What exact token/deep-link format should future self-service friend invites use beyond the current plain-text MVP2 share instructions?
 - How long is the initial lunch block inside 12:00-14:00 before user-configurable lunch behavior is added?
 - What exact festival dates should be used for weekday display, and what date/time format should performances use?
-- Should a later shared-decision workflow sync manual schedule choices to Supabase, add permissions, and provide an explicit reset-to-generated action?
+- Should a later shared-decision workflow add audit history, owner/admin-only permissions, or richer reset flows for group-wide manual schedule locks?

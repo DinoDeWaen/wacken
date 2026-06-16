@@ -67,6 +67,24 @@ public final class ScheduleBlockContentTest {
         assertEquals("Lost alt: Year of the Goat ★★★★☆", content.lostAlternativeLine().get());
     }
 
+    @Test
+    public void lockedChoiceShowsLockIconInBandLine() {
+        TimelineSlot slot = slot(60);
+        ScheduleDecisionCandidate locked = new ScheduleDecisionCandidate(
+                "Alien Rockin Explosion",
+                4,
+                "Wackinger Stage",
+                slot.start(),
+                slot.end(),
+                "🔒 LOCKED CHOICE",
+                true
+        );
+
+        ScheduleBlockContent content = ScheduleBlockContent.from(slot, locked, 60);
+
+        assertEquals("🔒 Alien Rockin Explosion ★★★★☆", content.bandLine());
+    }
+
     private TimelineSlot slot(int minutes) {
         LocalDateTime start = LocalDateTime.of(2026, 7, 30, 13, 30);
         LocalDateTime end = start.plusMinutes(minutes);

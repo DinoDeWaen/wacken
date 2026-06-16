@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +26,7 @@ public final class ScheduleManualSelectionsTest {
 
         assertTrue(selections.isManual(slot));
         assertEquals("Airbourne", selections.visibleCandidate(slot).bandName());
-        assertEquals("MANUAL CHOICE", selections.visibleCandidate(slot).status());
+        assertEquals("🔒 LOCKED CHOICE", selections.visibleCandidate(slot).status());
         assertTrue(selections.visibleCandidate(slot).selected());
     }
 
@@ -38,7 +39,7 @@ public final class ScheduleManualSelectionsTest {
 
         List<ScheduleDecisionCandidate> detail = selections.detailCandidates(slot);
         assertEquals("Airbourne", detail.get(0).bandName());
-        assertEquals("MANUAL CHOICE", detail.get(0).status());
+        assertEquals("🔒 LOCKED CHOICE", detail.get(0).status());
         assertEquals("5th Avenue", detail.get(1).bandName());
         assertEquals("GENERATED CHOICE", detail.get(1).status());
         assertFalse(detail.get(1).selected());
@@ -57,6 +58,37 @@ public final class ScheduleManualSelectionsTest {
         assertEquals("Grand Magus", detail.get(1).bandName());
         assertEquals("⚖ TIED ALTERNATIVE", detail.get(1).status());
         assertFalse(detail.get(1).selected());
+    }
+
+    @Test
+    public void persistedLockOverridesGeneratedWinnerForSameConflict() {
+        TimelineSlot slot = slot();
+        ScheduleDecisionCandidate alternative = slot.candidates().get(1);
+        String conflictKey = ScheduleManualSelections.conflictKey(slot);
+        String candidateKey = ScheduleManualSelections.candidateKey(alternative);
+        ScheduleManualSelections selections = new ScheduleManualSelections(Map.of(conflictKey, candidateKey));
+
+        assertTrue(selections.isManual(slot));
+        assertEquals("Airbourne", selections.visibleCandidate(slot).bandName());
+        assertEquals("🔒 LOCKED CHOICE", selections.visibleCandidate(slot).status());
+    }
+
+    @Test
+    public void persistedLockStillAppliesWhenGeneratedWinnerChangesWithinSameConflict() {
+        TimelineSlot original = threeCandidateSlot("5th Avenue");
+        ScheduleDecisionCandidate selected = original.candidates().get(1);
+        ScheduleManualSelections selections = new ScheduleManualSelections(Map.of(
+                ScheduleManualSelections.conflictKey(original),
+                ScheduleManualSelections.candidateKey(selected)
+        ));
+        TimelineSlot recalculated = threeCandidateSlot("Black Sabbath");
+
+        List<ScheduleDecisionCandidate> detail = selections.detailCandidates(recalculated);
+
+        assertEquals("Airbourne", detail.get(0).bandName());
+        assertEquals("🔒 LOCKED CHOICE", detail.get(0).status());
+        assertEquals("Black Sabbath", detail.get(1).bandName());
+        assertEquals("GENERATED CHOICE", detail.get(1).status());
     }
 
     private TimelineSlot slot() {
@@ -124,6 +156,50 @@ public final class ScheduleManualSelectionsTest {
                 Optional.of("Grand Magus"),
                 Optional.of(4),
                 List.of(chosen, tied)
+        );
+    }
+
+    private TimelineSlot threeCandidateSlot(String generatedWinner) {
+        LocalDateTime start = LocalDateTime.of(2026, 7, 30, 18, 0);
+        LocalDateTime end = LocalDateTime.of(2026, 7, 30, 19, 0);
+        ScheduleDecisionCandidate blackSabbath = new ScheduleDecisionCandidate(
+                "Black Sabbath",
+                5,
+                "Faster",
+                start,
+                end,
+                generatedWinner.equals("Black Sabbath") ? "CHOSEN" : "LOST ALTERNATIVE",
+                generatedWinner.equals("Black Sabbath")
+        );
+        ScheduleDecisionCandidate oldLocked = new ScheduleDecisionCandidate(
+                "Airbourne",
+                4,
+                "Harder",
+                start.plusMinutes(30),
+                end.plusMinutes(30),
+                "LOST ALTERNATIVE",
+                false
+        );
+        ScheduleDecisionCandidate oldGenerated = new ScheduleDecisionCandidate(
+                "5th Avenue",
+                5,
+                "Faster",
+                start,
+                end,
+                generatedWinner.equals("5th Avenue") ? "CHOSEN" : "LOST ALTERNATIVE",
+                generatedWinner.equals("5th Avenue")
+        );
+        return new TimelineSlot(
+                generatedWinner,
+                5,
+                "Faster",
+                start,
+                end,
+                GroupDecisionStatus.GO,
+                Optional.of("Airbourne"),
+                Optional.of(4),
+                List.of(generatedWinner.equals("Black Sabbath") ? blackSabbath : oldGenerated, oldLocked,
+                        generatedWinner.equals("Black Sabbath") ? oldGenerated : blackSabbath)
         );
     }
 }
