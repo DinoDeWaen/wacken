@@ -29,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Locale;
+import java.util.Map;
 
 import be.wacken.planner.application.GenerateSharedScheduleUseCase;
 import be.wacken.planner.application.ScheduleDay;
@@ -58,6 +59,9 @@ public final class ScheduleActivity extends Activity {
     private boolean hideBarred;
     private int selectedHideThreshold;
     private LocalDate selectedScheduleDate;
+    private boolean scheduleLocksRequested;
+    private boolean scheduleLocksLoaded;
+    private String scheduleLockWarning;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +102,8 @@ public final class ScheduleActivity extends Activity {
 
         try {
             repositories = new AppRepositories(this);
-            manualSelections = loadScheduleLocks(screen);
+            requestScheduleLocks(repositories.scheduleLocks());
+            addScheduleLockStatus(screen);
             SharedSchedule schedule = new GenerateSharedScheduleUseCase(
                     repositories.performances(),
                     repositories.ratings(),
@@ -121,18 +126,47 @@ public final class ScheduleActivity extends Activity {
         return scrollView;
     }
 
-    private ScheduleManualSelections loadScheduleLocks(LinearLayout screen) {
-        try {
-            return new ScheduleManualSelections(repositories.scheduleLocks().pullGroupLocks());
-        } catch (Exception error) {
-            SupabaseDiagnostics.warn(
-                    "schedule",
-                    "lock_load_failed",
-                    "screen=group_schedule user_message=" + ScheduleErrorMessage.userMessage(error),
-                    error
-            );
-            screen.addView(message(ScheduleErrorMessage.lockLoadFailure(error), COLOR_AMBER));
-            return new ScheduleManualSelections();
+    private void requestScheduleLocks(ScheduleLockStore scheduleLocks) {
+        if (scheduleLocksRequested) {
+            return;
+        }
+        scheduleLocksRequested = true;
+        new Thread(() -> {
+            try {
+                Map<String, String> locks = scheduleLocks.pullGroupLocks();
+                runOnUiThread(() -> {
+                    if (isFinishing()) {
+                        return;
+                    }
+                    manualSelections = new ScheduleManualSelections(locks);
+                    scheduleLocksLoaded = true;
+                    scheduleLockWarning = null;
+                    setContentView(render());
+                });
+            } catch (Exception error) {
+                SupabaseDiagnostics.warn(
+                        "schedule",
+                        "lock_load_failed",
+                        "screen=group_schedule user_message=" + ScheduleErrorMessage.userMessage(error),
+                        error
+                );
+                runOnUiThread(() -> {
+                    if (isFinishing()) {
+                        return;
+                    }
+                    scheduleLocksLoaded = true;
+                    scheduleLockWarning = ScheduleErrorMessage.lockLoadFailure(error);
+                    setContentView(render());
+                });
+            }
+        }, "schedule-lock-loader").start();
+    }
+
+    private void addScheduleLockStatus(LinearLayout screen) {
+        if (scheduleLockWarning != null) {
+            screen.addView(message(scheduleLockWarning, COLOR_AMBER));
+        } else if (!scheduleLocksLoaded) {
+            screen.addView(message("Locked schedule choices are syncing. Showing generated schedule.", COLOR_MUTED));
         }
     }
 
@@ -292,44 +326,60 @@ public final class ScheduleActivity extends Activity {
         }
         ScheduleCalendarLayout layout = ScheduleCalendarLayout.forCandidates(visibleCandidates, day.date());
         int calendarHeight = dp(TIME_HEADER_HEIGHT_DP + (layout.stageRowCount() * STAGE_ROW_HEIGHT_DP));
-        int calendarWidth = dp(STAGE_LABEL_WIDTH_DP + (layout.hourCount() * HOUR_WIDTH_DP));
-        FrameLayout calendar = new FrameLayout(this);
-        calendar.setBackgroundColor(COLOR_BACKGROUND);
-        calendar.setLayoutParams(new FrameLayout.LayoutParams(
-                calendarWidth,
+        int timelineWidth = dp(layout.hourCount() * HOUR_WIDTH_DP);
+        LinearLayout schedule = new LinearLayout(this);
+        schedule.setOrientation(LinearLayout.HORIZONTAL);
+        schedule.setBackgroundColor(COLOR_BACKGROUND);
+
+        FrameLayout stageLabels = new FrameLayout(this);
+        stageLabels.setBackgroundColor(COLOR_BACKGROUND);
+        stageLabels.setLayoutParams(new LinearLayout.LayoutParams(
+                dp(STAGE_LABEL_WIDTH_DP),
+                calendarHeight
+        ));
+
+        FrameLayout timeline = new FrameLayout(this);
+        timeline.setBackgroundColor(COLOR_BACKGROUND);
+        timeline.setLayoutParams(new FrameLayout.LayoutParams(
+                timelineWidth,
                 calendarHeight
         ));
 
         for (int row = 0; row < layout.stageRows().size(); row++) {
-            calendar.addView(stageHeader(layout.stageRows().get(row)), stageHeaderLayout(row));
-            calendar.addView(stageRowLine(), stageRowLineLayout(layout, row));
+            stageLabels.addView(stageHeader(layout.stageRows().get(row)), stageHeaderLayout(row));
+            timeline.addView(stageRowLine(), stageRowLineLayout(layout, row));
         }
         for (int hour = 0; hour <= layout.hourCount(); hour++) {
-            calendar.addView(hourLabel(layout, hour), hourLabelLayout(hour));
-            calendar.addView(hourGridLine(), hourGridLineLayout(layout, hour));
+            timeline.addView(hourLabel(layout, hour), hourLabelLayout(hour));
+            timeline.addView(hourGridLine(), hourGridLineLayout(layout, hour));
             if (hour < layout.hourCount()) {
-                calendar.addView(halfHourNotch(), halfHourNotchLayout(hour));
-                calendar.addView(halfHourGridLine(), halfHourGridLineLayout(layout, hour));
+                timeline.addView(halfHourNotch(), halfHourNotchLayout(hour));
+                timeline.addView(halfHourGridLine(), halfHourGridLineLayout(layout, hour));
             }
         }
         for (int index = 0; index < visibleSlots.size(); index++) {
             TimelineSlot slot = visibleSlots.get(index);
             ScheduleDecisionCandidate visible = manualSelections.visibleCandidate(slot);
-            calendar.addView(
+            timeline.addView(
                     slotView(slot, visible, visibleCandidates, layout.durationMinutes(visible)),
                     slotLayout(layout, visible)
             );
             if (index < visibleSlots.size() - 1) {
                 ScheduleDecisionCandidate next = manualSelections.visibleCandidate(visibleSlots.get(index + 1));
-                calendar.addView(walkingMarker(slot), walkingMarkerLayout(layout, visible, next));
+                timeline.addView(walkingMarker(slot), walkingMarkerLayout(layout, visible, next));
             }
         }
         HorizontalScrollView horizontal = new HorizontalScrollView(this);
         horizontal.setHorizontalScrollBarEnabled(true);
         horizontal.setFillViewport(false);
         horizontal.setBackgroundColor(COLOR_BACKGROUND);
-        horizontal.addView(calendar);
-        return horizontal;
+        horizontal.addView(timeline);
+        schedule.addView(stageLabels);
+        schedule.addView(horizontal, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                calendarHeight
+        ));
+        return schedule;
     }
 
     private TextView stageHeader(String stageName) {
@@ -368,7 +418,7 @@ public final class ScheduleActivity extends Activity {
                 dp(64),
                 dp(TIME_HEADER_HEIGHT_DP)
         );
-        params.leftMargin = dp(STAGE_LABEL_WIDTH_DP + (hourOffset * HOUR_WIDTH_DP) - 28);
+        params.leftMargin = dp(Math.max(0, (hourOffset * HOUR_WIDTH_DP) - 28));
         params.topMargin = 0;
         return params;
     }
@@ -384,7 +434,7 @@ public final class ScheduleActivity extends Activity {
                 dp(1),
                 stageGridHeight(layout)
         );
-        params.leftMargin = dp(STAGE_LABEL_WIDTH_DP + (hourOffset * HOUR_WIDTH_DP));
+        params.leftMargin = dp(hourOffset * HOUR_WIDTH_DP);
         params.topMargin = dp(TIME_HEADER_HEIGHT_DP);
         return params;
     }
@@ -420,7 +470,7 @@ public final class ScheduleActivity extends Activity {
     }
 
     private int halfHourLeftMargin(int hourOffset) {
-        return dp(STAGE_LABEL_WIDTH_DP + (hourOffset * HOUR_WIDTH_DP) + (HOUR_WIDTH_DP / 2));
+        return dp((hourOffset * HOUR_WIDTH_DP) + (HOUR_WIDTH_DP / 2));
     }
 
     private int stageGridHeight(ScheduleCalendarLayout layout) {
@@ -438,7 +488,7 @@ public final class ScheduleActivity extends Activity {
                 dp(layout.hourCount() * HOUR_WIDTH_DP),
                 dp(1)
         );
-        params.leftMargin = dp(STAGE_LABEL_WIDTH_DP);
+        params.leftMargin = 0;
         params.topMargin = dp(TIME_HEADER_HEIGHT_DP + (row * STAGE_ROW_HEIGHT_DP));
         return params;
     }
@@ -448,7 +498,7 @@ public final class ScheduleActivity extends Activity {
                 dp(Math.max(88, layout.durationMinutes(candidate) * HOUR_WIDTH_DP / 60)),
                 dp(STAGE_ROW_HEIGHT_DP - ROW_GAP_DP)
         );
-        params.leftMargin = dp(STAGE_LABEL_WIDTH_DP + (layout.leftOffsetMinutes(candidate) * HOUR_WIDTH_DP / 60));
+        params.leftMargin = dp(layout.leftOffsetMinutes(candidate) * HOUR_WIDTH_DP / 60);
         params.topMargin = dp(TIME_HEADER_HEIGHT_DP + (layout.stageRowIndex(candidate) * STAGE_ROW_HEIGHT_DP) + 6);
         return params;
     }
@@ -477,8 +527,7 @@ public final class ScheduleActivity extends Activity {
                 dp(72),
                 dp(22)
         );
-        params.leftMargin = dp(STAGE_LABEL_WIDTH_DP
-                + Math.max(0, (layout.walkingMarkerOffsetMinutes(from, to) * HOUR_WIDTH_DP / 60) - 36));
+        params.leftMargin = dp(Math.max(0, (layout.walkingMarkerOffsetMinutes(from, to) * HOUR_WIDTH_DP / 60) - 36));
         params.topMargin = dp(TIME_HEADER_HEIGHT_DP
                 + Math.max(0, (Math.min(layout.stageRowIndex(from), layout.stageRowIndex(to)) * STAGE_ROW_HEIGHT_DP) - 2));
         return params;

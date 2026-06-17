@@ -171,7 +171,7 @@ Release assumptions:
 | Conflict resolution | Resolve overlapping performances according to the authoritative group rules. | Must | MVP 2 |
 | Timeline generation | Generate a day-based shared festival timeline. | Must | MVP 2 |
 | App navigation and settings | Keep primary actions compact and move secondary/admin actions into a settings page. | Must | MVP 2 |
-| Calendar schedule view | Show the group schedule as a day-filtered calendar with stages on the left and time columns across the top. | Must | MVP 2 |
+| Calendar schedule view | Show the group schedule as a day-filtered calendar with fixed stages on the left and horizontally scrollable time columns across the top. | Must | MVP 2 |
 | Manual schedule selection | Let the group choose an alternative act for a conflict and update the visible schedule result. | Must | MVP 2 |
 | Schedule visual polish | Keep calendar, decision detail, and sync/startup feedback consistent with the Wacken dark heavy-metal presentation. | Must | MVP 2 |
 | Walking-time schedule visibility | Apply the agreed MVP walking-time defaults and show movement time in the group schedule where known. | Must | MVP 3 |
@@ -371,7 +371,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-060 | The band overview and band detail should show available per-person group ratings as compact read-only detail. | A band row or detail screen can show each available person rating as small stars without changing the main editable rating workflow. | Should |
 | BR-061 | Primary app navigation must use compact icon actions for high-frequency destinations. | The overview shows a cog for settings, a calendar icon for the group schedule, and an exit action for sync-and-exit. | Must |
 | BR-062 | Secondary and admin-style actions must live on the settings page. | Group/invite actions, lineup import, and manual sync are moved out of the primary overview action area and into settings. | Must |
-| BR-063 | The group schedule must be shown as a day-filtered calendar. | The user chooses one festival day, and that view shows only that day's stage rows, time axis, and performance blocks. | Must |
+| BR-063 | The group schedule must be shown as a day-filtered calendar. | The user chooses one festival day, and that view shows only that day's fixed stage rows, horizontally scrollable time axis, and performance blocks. | Must |
 | BR-063a | The calendar schedule must use stage rows so overlapping or near-overlapping selected acts remain readable. Louder and Harder must be adjacent and shown before other stage rows when present. | If Louder, Harder, Faster, and Wackinger acts overlap, each act appears in its stage lane instead of being drawn on top of the others. | Must |
 | BR-064 | Calendar performance blocks must summarize the selected act. | A block shows compact `HH:mm-HH:mm` time range as its first line, then band name and rating stars; the stage is provided by the stage row rather than repeated inside the block. | Must |
 | BR-064a | The calendar time axis must keep hour markers clear and half-hour markers subtle. | The top axis labels only full hours, uses full vertical lines for hour columns across all stage rows, and uses a small notch with an unlabeled dotted vertical line across all stage rows for half-hour columns. | Must |

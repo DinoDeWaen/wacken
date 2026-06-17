@@ -26,6 +26,9 @@ final class ScheduleErrorMessage {
         if (error instanceof NullPointerException) {
             return "Unexpected missing schedule data. " + RECOVERY_HINT;
         }
+        if ("NetworkOnMainThreadException".equals(error.getClass().getSimpleName())) {
+            return "Schedule sync is still loading. Generated schedule is shown while locked choices sync.";
+        }
         return "Unexpected schedule error (" + error.getClass().getSimpleName() + "). " + RECOVERY_HINT;
     }
 }
