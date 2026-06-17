@@ -17,7 +17,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - Room local cache for fast app reads and offline continuity.
 - Supabase Auth for user identity.
 - Supabase Postgres/Flyway backend for central master data, group membership, and ratings.
-- Supabase sync for bands, stages, performances, stage distances, food options, and group ratings on app start, overview reactivation, manual sync, and close.
+- Supabase sync for bands, stages, performances, stage distances, food options, and group ratings on app start, overview reactivation, manual sync, and close, with cached app data shown before lifecycle sync completes.
 - CSV/TSV fallback import path for local/admin data work.
 - Wacken-inspired overview/detail presentation with music links, imported metadata where available, and metal-themed sync feedback.
 - Compact per-person star details on the band overview and band detail screen when shared group ratings are available.
@@ -365,7 +365,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-054a | Returning from band detail must keep the selected overview band row visible after refresh. | A user opens Skyline, changes or reviews the rating, goes back, and sees the Skyline row instead of being moved to the top of the band list. | Must |
 | BR-055 | External music links must not destroy or replace the app’s internal navigation state. | Opening YouTube or Spotify and returning restores the previous Wacken Planner context. | Must |
 | BR-056 | Authenticated Supabase calls must renew expired access tokens when the refresh token is still valid. | Master-data sync and rating sync continue after normal JWT expiry; if refresh fails, the local session is cleared and the user returns to login. | Must |
-| BR-057 | The signed-in app must sync Supabase master data and group ratings when the band overview starts or is reactivated. | A user opening the app on a second Android device sees ratings from the shared Supabase group without needing to force-close the first device. | Must |
+| BR-057 | The signed-in app must sync Supabase master data and group ratings when the band overview starts or is reactivated without blocking cached app usage. | A user opening the app on a second Android device sees locally cached data immediately while Supabase refreshes in the background; when sync succeeds, shared group ratings refresh without needing to force-close the first device. | Must |
 | BR-058 | The app must provide a close action that attempts Supabase sync before closing. | Tapping close pushes local pending ratings and pulls group ratings before the app exits; if sync fails, local ratings remain available and the app stays open with a clear failure message. | Must |
 | BR-059 | Sync operations must show clear Wacken/metal-themed feedback and prevent conflicting sync/close actions while in progress. | Startup, reactivation, manual sync, and close sync show visible progress instead of a blank or frozen screen. | Must |
 | BR-060 | The band overview and band detail should show available per-person group ratings as compact read-only detail. | A band row or detail screen can show each available person rating as small stars without changing the main editable rating workflow. | Should |

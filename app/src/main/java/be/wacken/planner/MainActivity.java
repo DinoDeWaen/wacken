@@ -122,13 +122,19 @@ public final class MainActivity extends Activity {
         if (subtitle != null) {
             subtitle.setText("Line-up ratings for " + currentSession.email());
         }
-        if (!syncInProgress) {
-            syncFromSupabase(false, "Forging latest ratings...");
+        LifecycleSyncDecision syncDecision = LifecycleSyncDecision.onResume(syncInProgress, adapter != null, reloadNeeded);
+        if (syncDecision.renderCache()) {
+            showLoadingState();
+            bandList.post(() -> {
+                loadBandList();
+                if (syncDecision.startBackgroundSync()) {
+                    syncFromSupabase(false, "Refreshing from Supabase...", false);
+                }
+            });
             return;
         }
-        if (reloadNeeded || adapter == null) {
-            showLoadingState();
-            bandList.post(this::loadBandList);
+        if (syncDecision.startBackgroundSync()) {
+            syncFromSupabase(false, "Refreshing from Supabase...", false);
         }
     }
 
@@ -183,9 +189,6 @@ public final class MainActivity extends Activity {
         reloadNeeded = false;
         status.setVisibility(cachedBands.isEmpty() ? View.VISIBLE : View.GONE);
         status.setText(cachedBands.isEmpty() ? getString(R.string.empty_band_list) : "");
-        if (cachedBands.isEmpty() && !syncAttempted) {
-            syncMasterDataFromSupabase();
-        }
     }
 
     private void showLoadingState() {
@@ -262,11 +265,11 @@ public final class MainActivity extends Activity {
         return button;
     }
 
-    private void syncMasterDataFromSupabase() {
-        syncFromSupabase(false, "Forging latest festival data...");
+    private void syncFromSupabase(boolean closeAfterSync, String message) {
+        syncFromSupabase(closeAfterSync, message, true);
     }
 
-    private void syncFromSupabase(boolean closeAfterSync, String message) {
+    private void syncFromSupabase(boolean closeAfterSync, String message, boolean showOverlay) {
         if (syncInProgress) {
             return;
         }
@@ -276,7 +279,9 @@ public final class MainActivity extends Activity {
         setSyncActionsEnabled(false);
         status.setVisibility(View.VISIBLE);
         status.setText(message);
-        showSyncOverlay(message, visualMode);
+        if (showOverlay) {
+            showSyncOverlay(message, visualMode);
+        }
         new Thread(() -> {
             try {
                 AppRepositories repositories = new AppRepositories(this);
@@ -291,14 +296,18 @@ public final class MainActivity extends Activity {
                         finishAndRemoveTask();
                     } else {
                         loadBandList();
-                        hideSyncOverlay();
+                        if (showOverlay) {
+                            hideSyncOverlay();
+                        }
                     }
                 });
             } catch (Exception error) {
                 runOnUiThread(() -> {
                     syncInProgress = false;
                     setSyncActionsEnabled(true);
-                    hideSyncOverlay();
+                    if (showOverlay) {
+                        hideSyncOverlay();
+                    }
                     if (!loadCurrentSession()) {
                         redirectToLogin();
                         return;

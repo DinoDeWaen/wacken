@@ -6,12 +6,12 @@
 
 ## Basic Functionality (MVP 1)
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
-- Sync centrally managed festival master data from Supabase into the local Room cache on app start, overview reactivation, manual sync, and close.
+- Show locally cached lineup, ratings, and schedule data first on app start/reactivation, while Supabase sync refreshes the Room cache in the background.
 - List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.
 - Hide generic Metal Battle placeholder acts from rating lists and rating allocation counts while preserving imported master data.
 - Show compact read-only per-person star details on band overview rows and band detail screens when group ratings are available.
 - Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars, and clear a previous rating back to unrated.
-- Save rating changes and clears locally immediately and sync pending/group ratings with Supabase when the app starts, reactivates, syncs manually, or closes.
+- Save rating changes and clears locally immediately and sync pending/group ratings with Supabase in the background on start/reactivation, on manual sync, or before close.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show imported English band biography/explanation and available band image metadata on the detail screen when `bands.csv` provides it.
 - Return from band detail to the same overview band row after refresh so users can continue rating without losing their place.
@@ -36,6 +36,7 @@
 - Release process: [`release-process.md`](backlog/docs/release-process.md).
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
+- V2.13 release notes: [`releases/v2.13.md`](releases/v2.13.md).
 - V2.12 release notes: [`releases/v2.12.md`](releases/v2.12.md).
 - V2.11 release notes: [`releases/v2.11.md`](releases/v2.11.md).
 - V2.10 release notes: [`releases/v2.10.md`](releases/v2.10.md).
