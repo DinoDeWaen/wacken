@@ -98,7 +98,7 @@ public final class ScheduleActivity extends Activity {
 
         try {
             repositories = new AppRepositories(this);
-            manualSelections = new ScheduleManualSelections(repositories.scheduleLocks().pullGroupLocks());
+            manualSelections = loadScheduleLocks(screen);
             SharedSchedule schedule = new GenerateSharedScheduleUseCase(
                     repositories.performances(),
                     repositories.ratings(),
@@ -106,13 +106,34 @@ public final class ScheduleActivity extends Activity {
             ).generate();
             addSchedule(screen, schedule);
         } catch (Exception error) {
-            screen.addView(message("Schedule could not be generated: " + error.getMessage(), COLOR_ACCENT));
+            SupabaseDiagnostics.warn(
+                    "schedule",
+                    "generation_failed",
+                    "screen=group_schedule user_message=" + ScheduleErrorMessage.userMessage(error),
+                    error
+            );
+            screen.addView(message(ScheduleErrorMessage.generationFailure(error), COLOR_ACCENT));
         }
 
         ScrollView scrollView = new ScrollView(this);
         scrollView.setBackgroundColor(COLOR_BACKGROUND);
         scrollView.addView(screen);
         return scrollView;
+    }
+
+    private ScheduleManualSelections loadScheduleLocks(LinearLayout screen) {
+        try {
+            return new ScheduleManualSelections(repositories.scheduleLocks().pullGroupLocks());
+        } catch (Exception error) {
+            SupabaseDiagnostics.warn(
+                    "schedule",
+                    "lock_load_failed",
+                    "screen=group_schedule user_message=" + ScheduleErrorMessage.userMessage(error),
+                    error
+            );
+            screen.addView(message(ScheduleErrorMessage.lockLoadFailure(error), COLOR_AMBER));
+            return new ScheduleManualSelections();
+        }
     }
 
     private void addSchedule(LinearLayout screen, SharedSchedule schedule) {
