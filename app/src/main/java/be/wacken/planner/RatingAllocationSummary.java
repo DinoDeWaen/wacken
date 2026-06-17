@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import be.wacken.planner.domain.BandVisibilityPolicy;
 import be.wacken.planner.domain.SavedRating;
 
 final class RatingAllocationSummary {
@@ -14,7 +15,9 @@ final class RatingAllocationSummary {
         Map<Integer, Integer> counts = emptyCounts();
         for (SavedRating rating : ratings) {
             int value = rating.rating().value();
-            if (rating.userName().equals(userName) && counts.containsKey(value)) {
+            if (rating.userName().equals(userName)
+                    && counts.containsKey(value)
+                    && BandVisibilityPolicy.isVisibleInRatingLists(rating.band())) {
                 counts.put(value, counts.get(value) + 1);
             }
         }

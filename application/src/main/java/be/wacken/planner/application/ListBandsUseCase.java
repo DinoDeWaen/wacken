@@ -1,6 +1,7 @@
 package be.wacken.planner.application;
 
 import be.wacken.planner.domain.Band;
+import be.wacken.planner.domain.BandVisibilityPolicy;
 import be.wacken.planner.domain.BandRepository;
 import be.wacken.planner.domain.Performance;
 import be.wacken.planner.domain.PerformanceRepository;
@@ -35,6 +36,7 @@ public final class ListBandsUseCase {
         if (!importedPerformances.isEmpty()) {
             return importedPerformances
                 .stream()
+                .filter(performance -> BandVisibilityPolicy.isVisibleInRatingLists(performance.band()))
                 .map(this::toBandListItem)
                 .sorted(Comparator.comparing(BandListItem::bandName, String.CASE_INSENSITIVE_ORDER))
                 .collect(Collectors.toList());
@@ -42,6 +44,7 @@ public final class ListBandsUseCase {
 
         return bands.findAll()
                 .stream()
+                .filter(BandVisibilityPolicy::isVisibleInRatingLists)
                 .map(this::toUnscheduledBandListItem)
                 .sorted(Comparator.comparing(BandListItem::bandName, String.CASE_INSENSITIVE_ORDER))
                 .collect(Collectors.toList());

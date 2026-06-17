@@ -12,7 +12,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 
 ### Current Implemented Capabilities
 
-- Android band overview and detail screens.
+- Android band overview and detail screens, with generic Metal Battle placeholder entries hidden from rating lists.
 - 1-5 band ratings with default unrated value of `0`, including clearing a prior rating back to unrated.
 - Room local cache for fast app reads and offline continuity.
 - Supabase Auth for user identity.
@@ -357,6 +357,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-048 | The Wacken-themed band overview must keep the rating workflow reachable. | Tapping a band card opens the band detail/rating screen. | Must |
 | BR-049 | The band overview must feel responsive and must not leave the user staring at a blank or frozen screen. | If loading or rendering is not immediate, a loading indication appears quickly. | Must |
 | BR-050 | The band overview must sort bands alphabetically by band name unless the user explicitly chooses another sort later. | 5th Avenue appears before Airbourne regardless of import order or performance time. | Must |
+| BR-050a | Generic Metal Battle placeholder acts must be hidden from rating lists. | Imported entries whose names are generic Metal Battle placeholders, such as `Metal Battle` or `Metal Battle tba.`, are preserved in master data but are not shown in the band overview or counted in rating allocation summaries. Real named bands that only mention Metal Battle are not hidden by this rule. | Must |
 | BR-051 | Band detail biography should prefer English source text when available. | If `biography` and `biographyDe` both exist in imported source data, the detail screen shows the English text. | Must |
 | BR-052 | Band detail should show available band image metadata and must not show broken image placeholders. | If a band has an image URL, it is shown; if not, no broken image is displayed. | Must |
 | BR-053 | Band detail layout should place the image and primary band controls together, with the explanation below, while remaining usable on phone screens. | Image is left and rating/stage/time/actions are right when space allows; narrow screens stack cleanly. | Must |

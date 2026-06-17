@@ -24,22 +24,24 @@ Before starting release packaging, confirm:
 - The next semantic app version is known.
 - Android `versionCode` is one higher than the previous official release.
 - Android `versionName` matches the release tag without the `v` prefix.
-- The release keystore file exists locally.
+- The release keystore file exists locally. Run `scripts/ensure-release-keystore.sh`
+  before release validation to create or verify the stable local keystore path.
 - The release signing passwords are available through local environment
   variables, local Gradle properties, or an approved secret store.
 - GitHub CLI authentication can push tags and publish releases.
 
-For the current V2.9+ release-key line, signing uses:
+For the current local release-key line, signing uses the stable gitignored
+keystore path managed by `scripts/ensure-release-keystore.sh`:
 
 ```text
-WACKEN_RELEASE_STORE_FILE=/private/tmp/wacken-v2.9-release.jks
+WACKEN_RELEASE_STORE_FILE=/Users/dino/Documents/backlog/wacken/.local/release/wacken-release.jks
 WACKEN_RELEASE_STORE_PASSWORD=<local secret>
 WACKEN_RELEASE_KEY_ALIAS=wacken-v2-9
 WACKEN_RELEASE_KEY_PASSWORD=<local secret>
 ```
 
-The current local V2.9 signing values are also stored in the macOS keychain
-under these service names:
+The current local signing values are stored in the macOS keychain under these
+service names:
 
 ```text
 WACKEN_RELEASE_STORE_FILE
@@ -50,6 +52,14 @@ WACKEN_RELEASE_KEY_PASSWORD
 
 Never commit keystores, passwords, token files, or generated secret-bearing
 configuration.
+
+Important: the original V2.9+ keystore path was
+`/private/tmp/wacken-v2.9-release.jks`. That file was temporary and is no longer
+available locally. The stable `.local/release/wacken-release.jks` key enables
+repeatable future releases from this machine, but APKs signed with this newly
+generated key cannot update installations signed by the missing old key. Those
+devices must uninstall the old app once, install the new signed APK, and sync
+from Supabase. Future APKs signed with this stable key can update each other.
 
 ## Backlog Task
 
@@ -91,7 +101,7 @@ Run the full validation and release build with signing variables configured:
 
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 21) \
-WACKEN_RELEASE_STORE_FILE=/private/tmp/wacken-v2.9-release.jks \
+WACKEN_RELEASE_STORE_FILE=$(security find-generic-password -s WACKEN_RELEASE_STORE_FILE -w) \
 WACKEN_RELEASE_STORE_PASSWORD=<local secret> \
 WACKEN_RELEASE_KEY_ALIAS=wacken-v2-9 \
 WACKEN_RELEASE_KEY_PASSWORD=<local secret> \
@@ -191,8 +201,11 @@ If signing credentials are unavailable:
 1. Leave the release task `In Progress`.
 2. Record the blocker in task notes.
 3. Keep any release metadata edits untagged and unpublished.
-4. Ask for the existing release-key passwords or explicit approval to generate
-   a new release key.
+4. Run `scripts/ensure-release-keystore.sh` if the keychain secrets exist but
+   the keystore path is missing or still points to `/private/tmp`.
+5. Ask for the existing release-key passwords or explicit approval to generate
+   a new release key when keychain secrets are missing or key rotation has not
+   been approved.
 
 Generating a new release key is allowed only with explicit approval because
 Android will not install the new APK over previous releases signed with a

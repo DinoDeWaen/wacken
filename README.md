@@ -8,6 +8,7 @@
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
 - Sync centrally managed festival master data from Supabase into the local Room cache on app start, overview reactivation, manual sync, and close.
 - List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.
+- Hide generic Metal Battle placeholder acts from rating lists and rating allocation counts while preserving imported master data.
 - Show a compact read-only per-person star detail on band overview rows when group ratings are available.
 - Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars, and clear a previous rating back to unrated.
 - Save rating changes and clears locally immediately and sync pending/group ratings with Supabase when the app starts, reactivates, syncs manually, or closes.
@@ -171,6 +172,15 @@ Useful focused checks:
 ./gradlew :domain:jacocoTestCoverageVerification :application:jacocoTestCoverageVerification
 ./gradlew qaTest
 ```
+
+Before building official signed release APKs, verify the local release keystore:
+
+```bash
+scripts/ensure-release-keystore.sh
+```
+
+The script keeps the keystore in `.local/release/`, which is ignored by git,
+and updates the macOS keychain `WACKEN_RELEASE_STORE_FILE` path when needed.
 
 ## Backend Database
 

@@ -68,6 +68,46 @@ class ListBandsUseCaseTest {
     }
 
     @Test
+    void hidesGenericMetalBattlePlaceholdersFromScheduledBandList() {
+        FakePerformanceRepository performances = new FakePerformanceRepository();
+        performances.save(performance("Metal Battle tba.", "W:E:T Stage", 12, 40, 13, 0));
+        performances.save(performance("Metal Battle Germany", "Headbangers Stage", 13, 0, 13, 20));
+        performances.save(performance("Battle Beast", "Louder", 14, 0, 15, 0));
+
+        ListBandsUseCase useCase = new ListBandsUseCase(
+                new FakeBandRepository(),
+                performances,
+                new FakeRatingRepository(),
+                "dino"
+        );
+
+        assertEquals(
+                List.of(new BandListItem("Battle Beast", "Louder", "2026-07-30T14:00", "2026-07-30T15:00", 0, true)),
+                useCase.listBands()
+        );
+    }
+
+    @Test
+    void hidesGenericMetalBattlePlaceholdersFromUnscheduledBandList() {
+        FakeBandRepository bands = new FakeBandRepository();
+        bands.save(new Band("Metal Battle"));
+        bands.save(new Band("Metal Battle tba."));
+        bands.save(new Band("The Metal Battle Alumni"));
+
+        ListBandsUseCase useCase = new ListBandsUseCase(
+                bands,
+                new FakePerformanceRepository(),
+                new FakeRatingRepository(),
+                "dino"
+        );
+
+        assertEquals(
+                List.of(new BandListItem("The Metal Battle Alumni", "Not scheduled yet", "TBA", "TBA", 0, true)),
+                useCase.listBands()
+        );
+    }
+
+    @Test
     void includesStoredRatingForCurrentUserAsExplicit() {
         FakeBandRepository bands = new FakeBandRepository();
         FakePerformanceRepository performances = new FakePerformanceRepository();

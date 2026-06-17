@@ -49,6 +49,24 @@ public final class RatingAllocationSummaryTest {
     }
 
     @Test
+    public void ignoresHiddenMetalBattlePlaceholders() {
+        Map<Integer, Integer> counts = RatingAllocationSummary.countForUser("dino", List.of(
+                rating("dino", "Metal Battle tba.", 5),
+                rating("dino", "Metal Battle Germany", 4),
+                rating("dino", "Battle Beast", 5)
+        ));
+
+        assertEquals(Map.of(
+                5, 1,
+                4, 0,
+                3, 0,
+                2, 0,
+                1, 0
+        ), counts);
+    }
+
+
+    @Test
     public void formatsCountsForSettingsDisplay() {
         String summary = RatingAllocationSummary.format(Map.of(
                 5, 2,
