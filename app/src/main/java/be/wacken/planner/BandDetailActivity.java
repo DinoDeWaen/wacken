@@ -143,6 +143,7 @@ public final class BandDetailActivity extends Activity {
             }
         });
         facts.addView(clearRating);
+        facts.addView(groupRatingsView(detail));
 
         facts.addView(sectionTitle("Running Order"));
         facts.addView(infoLine("Stage", valueExtra(EXTRA_STAGE)));
@@ -217,6 +218,18 @@ public final class BandDetailActivity extends Activity {
         line.setGravity(Gravity.CENTER_HORIZONTAL);
         line.setPadding(0, dp(3), 0, dp(3));
         return line;
+    }
+
+    private TextView groupRatingsView(BandDetailItem detail) {
+        TextView ratings = new TextView(this);
+        ratings.setText(detail.hasPersonRatings()
+                ? "Group: " + detail.personRatingSummary()
+                : "Group ratings: not synced yet");
+        ratings.setTextColor(COLOR_TEXT);
+        ratings.setTextSize(13);
+        ratings.setGravity(Gravity.CENTER_HORIZONTAL);
+        ratings.setPadding(0, dp(4), 0, dp(2));
+        return ratings;
     }
 
     private Button homeButton() {

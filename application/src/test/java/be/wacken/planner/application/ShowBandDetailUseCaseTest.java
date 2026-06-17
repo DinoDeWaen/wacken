@@ -4,6 +4,7 @@ import be.wacken.planner.domain.Band;
 import be.wacken.planner.domain.BandRepository;
 import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.RatingRepository;
+import be.wacken.planner.domain.SavedRating;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
@@ -22,7 +23,7 @@ class ShowBandDetailUseCaseTest {
 
         Optional<BandDetailItem> detail = useCase.showBand("dino", "5th Avenue", MusicLinks.none());
 
-        assertEquals(Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 0, true, Optional.empty(), Optional.empty())), detail);
+        assertEquals(Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 0, true, Optional.empty(), Optional.empty(), List.of())), detail);
     }
 
     @Test
@@ -36,7 +37,7 @@ class ShowBandDetailUseCaseTest {
 
         Optional<BandDetailItem> detail = useCase.showBand("dino", "5th Avenue", MusicLinks.none());
 
-        assertEquals(Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 4, false, Optional.empty(), Optional.empty())), detail);
+        assertEquals(Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 4, false, Optional.empty(), Optional.empty(), List.of(new PersonRatingStars("dino", 4)))), detail);
     }
 
     @Test
@@ -59,7 +60,8 @@ class ShowBandDetailUseCaseTest {
                         0,
                         true,
                         Optional.of("https://youtube.example/5th"),
-                        Optional.of("https://spotify.example/5th")
+                        Optional.of("https://spotify.example/5th"),
+                        List.of()
                 )),
                 detail
         );
@@ -77,7 +79,7 @@ class ShowBandDetailUseCaseTest {
                 new MusicLinks(Optional.of(" "), Optional.empty())
         );
 
-        assertEquals(Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 0, true, Optional.empty(), Optional.empty())), detail);
+        assertEquals(Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 0, true, Optional.empty(), Optional.empty(), List.of())), detail);
     }
 
     @Test
@@ -102,10 +104,45 @@ class ShowBandDetailUseCaseTest {
                         0,
                         true,
                         Optional.of("https://youtube.example/stored"),
-                        Optional.of("https://spotify.example/stored")
+                        Optional.of("https://spotify.example/stored"),
+                        List.of()
                 )),
                 detail
         );
+    }
+
+    @Test
+    void includesReadOnlyGroupRatingsForSelectedBand() {
+        FakeBandRepository bands = new FakeBandRepository();
+        FakeRatingRepository ratings = new FakeRatingRepository();
+        Band band = new Band("5th Avenue");
+        bands.save(band);
+        ratings.save("sofie", band, Rating.of(5));
+        ratings.save("dino", band, Rating.of(3));
+        ratings.save("alex", band, Rating.of(0));
+        ratings.save("sofie", new Band("Other Band"), Rating.of(4));
+        ShowBandDetailUseCase useCase = new ShowBandDetailUseCase(bands, ratings);
+
+        Optional<BandDetailItem> detail = useCase.showBand("dino", "5th Avenue", MusicLinks.none());
+
+        assertEquals(
+                List.of(
+                        new PersonRatingStars("dino", 3),
+                        new PersonRatingStars("sofie", 5)
+                ),
+                detail.orElseThrow().personRatings()
+        );
+    }
+
+    @Test
+    void keepsNoGroupRatingsStateWhenRatingsAreUnavailable() {
+        FakeBandRepository bands = new FakeBandRepository();
+        bands.save(new Band("5th Avenue"));
+        ShowBandDetailUseCase useCase = new ShowBandDetailUseCase(bands, new FakeRatingRepository());
+
+        Optional<BandDetailItem> detail = useCase.showBand("dino", "5th Avenue", MusicLinks.none());
+
+        assertEquals(List.of(), detail.orElseThrow().personRatings());
     }
 
     @Test
@@ -151,6 +188,14 @@ class ShowBandDetailUseCaseTest {
         @Override
         public Optional<Rating> findByUserAndBand(String userName, Band band) {
             return Optional.ofNullable(ratings.get(new Key(userName, band)));
+        }
+
+        @Override
+        public List<SavedRating> findAll() {
+            return ratings.entrySet()
+                    .stream()
+                    .map(entry -> new SavedRating(entry.getKey().userName(), entry.getKey().band(), entry.getValue()))
+                    .toList();
         }
 
         private record Key(String userName, Band band) {

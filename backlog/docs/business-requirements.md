@@ -20,7 +20,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - Supabase sync for bands, stages, performances, stage distances, food options, and group ratings on app start, overview reactivation, manual sync, and close.
 - CSV/TSV fallback import path for local/admin data work.
 - Wacken-inspired overview/detail presentation with music links, imported metadata where available, and metal-themed sync feedback.
-- Compact per-person star details on the band overview when shared group ratings are available.
+- Compact per-person star details on the band overview and band detail screen when shared group ratings are available.
 - MVP2 group decision rules, conflict resolution, timeline generation, group-wide locked manual schedule choices, and Android schedule viewing for the current shared group.
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
@@ -161,7 +161,7 @@ Release assumptions:
 | --- | --- | --- | --- |
 | Band rating | Let users rate bands on the 1-5 preference scale, with `0` reserved for unrated bands. This is the first product priority. | Must | MVP 1 |
 | Band listing | Show bands in a responsive Wacken-themed overview with alphabetical sorting by band name, rating, stage, time information when available, loading feedback when needed, and same-row music-link actions. | Must | MVP 1 |
-| Band detail view | Show band details in a style inspired by the official Wacken band detail screen, with English biography when available, image metadata when available, rating stars, schedule information, and optional YouTube and Spotify links. | Must | MVP 1 |
+| Band detail view | Show band details in a style inspired by the official Wacken band detail screen, with English biography when available, image metadata when available, editable own rating stars, read-only group member ratings when available, schedule information, and optional YouTube and Spotify links. | Must | MVP 1 |
 | Initial lineup import | Import or scrape the current Wacken band list before final stages and times are available. Band-only imports must be visible and rateable. English biography and image metadata are meaningful UI inputs when available. | Must | MVP 1 |
 | Festival data import | Import validated CSV files for bands, stages, performances, distances, and food options through Android file upload once final lineup data is available. Re-import updates festival master data while preserving user ratings. | Must | MVP 1 |
 | Data review grid | Propose scraped or imported data changes in a user-validated data grid, with line-by-line validation. | Should | MVP 1 |
@@ -368,7 +368,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-057 | The signed-in app must sync Supabase master data and group ratings when the band overview starts or is reactivated. | A user opening the app on a second Android device sees ratings from the shared Supabase group without needing to force-close the first device. | Must |
 | BR-058 | The app must provide a close action that attempts Supabase sync before closing. | Tapping close pushes local pending ratings and pulls group ratings before the app exits; if sync fails, local ratings remain available and the app stays open with a clear failure message. | Must |
 | BR-059 | Sync operations must show clear Wacken/metal-themed feedback and prevent conflicting sync/close actions while in progress. | Startup, reactivation, manual sync, and close sync show visible progress instead of a blank or frozen screen. | Must |
-| BR-060 | The band overview should show available per-person group ratings as a compact read-only detail. | A band row can show each available person rating as small stars without changing the main rating workflow. | Should |
+| BR-060 | The band overview and band detail should show available per-person group ratings as compact read-only detail. | A band row or detail screen can show each available person rating as small stars without changing the main editable rating workflow. | Should |
 | BR-061 | Primary app navigation must use compact icon actions for high-frequency destinations. | The overview shows a cog for settings, a calendar icon for the group schedule, and an exit action for sync-and-exit. | Must |
 | BR-062 | Secondary and admin-style actions must live on the settings page. | Group/invite actions, lineup import, and manual sync are moved out of the primary overview action area and into settings. | Must |
 | BR-063 | The group schedule must be shown as a day-based calendar. | Each festival day appears as a calendar-like view with hour lines and performance blocks positioned by time. | Must |

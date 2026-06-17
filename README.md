@@ -9,7 +9,7 @@
 - Sync centrally managed festival master data from Supabase into the local Room cache on app start, overview reactivation, manual sync, and close.
 - List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.
 - Hide generic Metal Battle placeholder acts from rating lists and rating allocation counts while preserving imported master data.
-- Show a compact read-only per-person star detail on band overview rows when group ratings are available.
+- Show compact read-only per-person star details on band overview rows and band detail screens when group ratings are available.
 - Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars, and clear a previous rating back to unrated.
 - Save rating changes and clears locally immediately and sync pending/group ratings with Supabase when the app starts, reactivates, syncs manually, or closes.
 - Open available YouTube and Spotify links from overview rows and band detail screens.

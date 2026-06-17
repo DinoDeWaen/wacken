@@ -31,7 +31,7 @@ class RatingConsistencyUseCaseTest {
                 .showBand("dino", "5th Avenue", MusicLinks.none());
 
         assertEquals(
-                Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 4, false, Optional.empty(), Optional.empty())),
+                Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 4, false, Optional.empty(), Optional.empty(), List.of())),
                 detail
         );
     }
