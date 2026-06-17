@@ -27,6 +27,7 @@ import android.widget.TextView;
 
 import java.time.format.DateTimeFormatter;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Locale;
 
 import be.wacken.planner.application.GenerateSharedScheduleUseCase;
@@ -45,17 +46,18 @@ public final class ScheduleActivity extends Activity {
     private static final int COLOR_MUTED = Color.rgb(162, 169, 171);
     private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
     private static final int COLOR_AMBER = Color.rgb(255, 199, 44);
-    private static final int HOUR_HEIGHT_DP = 72;
-    private static final int TIME_LABEL_WIDTH_DP = 78;
-    private static final int STAGE_COLUMN_WIDTH_DP = 190;
-    private static final int STAGE_HEADER_HEIGHT_DP = 32;
-    private static final int COLUMN_GAP_DP = 6;
+    private static final int HOUR_WIDTH_DP = 156;
+    private static final int STAGE_LABEL_WIDTH_DP = 142;
+    private static final int STAGE_ROW_HEIGHT_DP = 92;
+    private static final int TIME_HEADER_HEIGHT_DP = 38;
+    private static final int ROW_GAP_DP = 8;
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("EEEE yyyy-MM-dd", Locale.ENGLISH);
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm");
     private ScheduleManualSelections manualSelections = new ScheduleManualSelections();
     private AppRepositories repositories;
     private boolean hideBarred;
     private int selectedHideThreshold;
+    private LocalDate selectedScheduleDate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,11 +125,52 @@ public final class ScheduleActivity extends Activity {
             return;
         }
         screen.addView(filterControls());
-        for (ScheduleDay day : schedule.days()) {
-            TextView dayTitle = sectionTitle(day.date().format(DATE));
-            screen.addView(dayTitle);
-            screen.addView(dayCalendar(day));
+        java.util.Optional<ScheduleDay> selected = ScheduleDaySelection.selectedDay(schedule.days(), selectedScheduleDate);
+        if (selected.isEmpty()) {
+            screen.addView(message("No selected performances are available yet.", COLOR_MUTED));
+            return;
         }
+        selectedScheduleDate = selected.get().date();
+        screen.addView(daySelector(schedule.days(), selected.get()));
+        TextView dayTitle = sectionTitle(selected.get().date().format(DATE));
+        screen.addView(dayTitle);
+        screen.addView(dayCalendar(selected.get()));
+    }
+
+    private View daySelector(java.util.List<ScheduleDay> days, ScheduleDay selected) {
+        LinearLayout buttons = new LinearLayout(this);
+        buttons.setOrientation(LinearLayout.HORIZONTAL);
+        buttons.setGravity(Gravity.CENTER_VERTICAL);
+        buttons.setPadding(0, 0, 0, dp(8));
+        DateTimeFormatter weekday = DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH);
+        for (ScheduleDay day : days) {
+            Button button = new Button(this);
+            button.setAllCaps(false);
+            button.setText(day.date().format(weekday) + " " + day.date().getDayOfMonth());
+            button.setTextColor(Color.WHITE);
+            button.setTextSize(12);
+            button.setTypeface(Typeface.DEFAULT_BOLD);
+            button.setMinWidth(0);
+            button.setMinHeight(0);
+            button.setPadding(dp(10), 0, dp(10), 0);
+            button.setBackgroundColor(ScheduleDaySelection.isSelected(day, selected)
+                    ? COLOR_ACCENT
+                    : Color.rgb(49, 56, 58));
+            button.setOnClickListener(view -> {
+                selectedScheduleDate = day.date();
+                setContentView(render());
+            });
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    dp(36)
+            );
+            params.setMargins(0, 0, dp(6), 0);
+            buttons.addView(button, params);
+        }
+        HorizontalScrollView scroll = new HorizontalScrollView(this);
+        scroll.setHorizontalScrollBarEnabled(false);
+        scroll.addView(buttons);
+        return scroll;
     }
 
     private View filterControls() {
@@ -227,8 +270,8 @@ public final class ScheduleActivity extends Activity {
             return empty;
         }
         ScheduleCalendarLayout layout = ScheduleCalendarLayout.forCandidates(visibleCandidates, day.date());
-        int calendarHeight = dp(STAGE_HEADER_HEIGHT_DP + (layout.hourCount() * HOUR_HEIGHT_DP));
-        int calendarWidth = dp(TIME_LABEL_WIDTH_DP + (layout.stageColumnCount() * STAGE_COLUMN_WIDTH_DP));
+        int calendarHeight = dp(TIME_HEADER_HEIGHT_DP + (layout.stageRowCount() * STAGE_ROW_HEIGHT_DP));
+        int calendarWidth = dp(STAGE_LABEL_WIDTH_DP + (layout.hourCount() * HOUR_WIDTH_DP));
         FrameLayout calendar = new FrameLayout(this);
         calendar.setBackgroundColor(COLOR_BACKGROUND);
         calendar.setLayoutParams(new FrameLayout.LayoutParams(
@@ -236,8 +279,9 @@ public final class ScheduleActivity extends Activity {
                 calendarHeight
         ));
 
-        for (int column = 0; column < layout.stageColumns().size(); column++) {
-            calendar.addView(stageHeader(layout.stageColumns().get(column)), stageHeaderLayout(column));
+        for (int row = 0; row < layout.stageRows().size(); row++) {
+            calendar.addView(stageHeader(layout.stageRows().get(row)), stageHeaderLayout(row));
+            calendar.addView(stageRowLine(), stageRowLineLayout(layout, row));
         }
         for (int hour = 0; hour <= layout.hourCount(); hour++) {
             calendar.addView(hourLabel(layout, hour), hourLabelLayout(hour));
@@ -271,21 +315,21 @@ public final class ScheduleActivity extends Activity {
         TextView header = new TextView(this);
         header.setText(stageName);
         header.setTextColor(COLOR_AMBER);
-        header.setTextSize(12);
+        header.setTextSize(13);
         header.setTypeface(Typeface.DEFAULT_BOLD);
-        header.setGravity(Gravity.CENTER);
-        header.setSingleLine(true);
+        header.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
+        header.setSingleLine(false);
         header.setEllipsize(TextUtils.TruncateAt.END);
-        header.setBackgroundColor(Color.rgb(24, 30, 32));
+        header.setPadding(0, 0, dp(10), 0);
         return header;
     }
 
-    private FrameLayout.LayoutParams stageHeaderLayout(int column) {
+    private FrameLayout.LayoutParams stageHeaderLayout(int row) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                dp(STAGE_COLUMN_WIDTH_DP - COLUMN_GAP_DP),
-                dp(STAGE_HEADER_HEIGHT_DP - 4)
+                dp(STAGE_LABEL_WIDTH_DP),
+                dp(STAGE_ROW_HEIGHT_DP - ROW_GAP_DP)
         );
-        params.leftMargin = dp(TIME_LABEL_WIDTH_DP + (column * STAGE_COLUMN_WIDTH_DP));
+        params.topMargin = dp(TIME_HEADER_HEIGHT_DP + (row * STAGE_ROW_HEIGHT_DP));
         return params;
     }
 
@@ -300,10 +344,11 @@ public final class ScheduleActivity extends Activity {
 
     private FrameLayout.LayoutParams hourLabelLayout(int hourOffset) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                dp(TIME_LABEL_WIDTH_DP),
-                dp(18)
+                dp(64),
+                dp(TIME_HEADER_HEIGHT_DP)
         );
-        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (hourOffset * HOUR_HEIGHT_DP));
+        params.leftMargin = dp(STAGE_LABEL_WIDTH_DP + (hourOffset * HOUR_WIDTH_DP) - 28);
+        params.topMargin = 0;
         return params;
     }
 
@@ -315,11 +360,11 @@ public final class ScheduleActivity extends Activity {
 
     private FrameLayout.LayoutParams hourGridLineLayout(ScheduleCalendarLayout layout, int hourOffset) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                stageGridWidth(layout),
-                dp(1)
+                dp(1),
+                stageGridHeight(layout)
         );
-        params.leftMargin = dp(TIME_LABEL_WIDTH_DP);
-        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (hourOffset * HOUR_HEIGHT_DP) + 9);
+        params.leftMargin = dp(STAGE_LABEL_WIDTH_DP + (hourOffset * HOUR_WIDTH_DP));
+        params.topMargin = dp(TIME_HEADER_HEIGHT_DP);
         return params;
     }
 
@@ -331,43 +376,59 @@ public final class ScheduleActivity extends Activity {
 
     private FrameLayout.LayoutParams halfHourNotchLayout(int hourOffset) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                dp(12),
-                dp(1)
+                dp(1),
+                dp(12)
         );
-        params.leftMargin = dp(TIME_LABEL_WIDTH_DP - 16);
-        params.topMargin = halfHourTopMargin(hourOffset);
+        params.leftMargin = halfHourLeftMargin(hourOffset);
+        params.topMargin = dp(TIME_HEADER_HEIGHT_DP - 12);
         return params;
     }
 
     private View halfHourGridLine() {
-        return new DottedLineView(this, COLOR_GRID);
+        return new VerticalDottedLineView(this, COLOR_GRID);
     }
 
     private FrameLayout.LayoutParams halfHourGridLineLayout(ScheduleCalendarLayout layout, int hourOffset) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                stageGridWidth(layout),
-                dp(8)
+                dp(8),
+                stageGridHeight(layout)
         );
-        params.leftMargin = dp(TIME_LABEL_WIDTH_DP);
-        params.topMargin = halfHourTopMargin(hourOffset) - dp(4);
+        params.leftMargin = halfHourLeftMargin(hourOffset) - dp(4);
+        params.topMargin = dp(TIME_HEADER_HEIGHT_DP);
         return params;
     }
 
-    private int halfHourTopMargin(int hourOffset) {
-        return dp(STAGE_HEADER_HEIGHT_DP + (hourOffset * HOUR_HEIGHT_DP) + (HOUR_HEIGHT_DP / 2) + 9);
+    private int halfHourLeftMargin(int hourOffset) {
+        return dp(STAGE_LABEL_WIDTH_DP + (hourOffset * HOUR_WIDTH_DP) + (HOUR_WIDTH_DP / 2));
     }
 
-    private int stageGridWidth(ScheduleCalendarLayout layout) {
-        return dp(layout.stageColumnCount() * STAGE_COLUMN_WIDTH_DP);
+    private int stageGridHeight(ScheduleCalendarLayout layout) {
+        return dp(layout.stageRowCount() * STAGE_ROW_HEIGHT_DP);
+    }
+
+    private View stageRowLine() {
+        View line = new View(this);
+        line.setBackgroundColor(Color.rgb(49, 57, 60));
+        return line;
+    }
+
+    private FrameLayout.LayoutParams stageRowLineLayout(ScheduleCalendarLayout layout, int row) {
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                dp(layout.hourCount() * HOUR_WIDTH_DP),
+                dp(1)
+        );
+        params.leftMargin = dp(STAGE_LABEL_WIDTH_DP);
+        params.topMargin = dp(TIME_HEADER_HEIGHT_DP + (row * STAGE_ROW_HEIGHT_DP));
+        return params;
     }
 
     private FrameLayout.LayoutParams slotLayout(ScheduleCalendarLayout layout, ScheduleDecisionCandidate candidate) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                dp(STAGE_COLUMN_WIDTH_DP - COLUMN_GAP_DP),
-                dp(Math.max(58, layout.durationMinutes(candidate) * HOUR_HEIGHT_DP / 60))
+                dp(Math.max(88, layout.durationMinutes(candidate) * HOUR_WIDTH_DP / 60)),
+                dp(STAGE_ROW_HEIGHT_DP - ROW_GAP_DP)
         );
-        params.leftMargin = dp(TIME_LABEL_WIDTH_DP + (layout.stageColumnIndex(candidate) * STAGE_COLUMN_WIDTH_DP));
-        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP + (layout.topOffsetMinutes(candidate) * HOUR_HEIGHT_DP / 60));
+        params.leftMargin = dp(STAGE_LABEL_WIDTH_DP + (layout.leftOffsetMinutes(candidate) * HOUR_WIDTH_DP / 60));
+        params.topMargin = dp(TIME_HEADER_HEIGHT_DP + (layout.stageRowIndex(candidate) * STAGE_ROW_HEIGHT_DP) + 6);
         return params;
     }
 
@@ -392,12 +453,13 @@ public final class ScheduleActivity extends Activity {
             ScheduleDecisionCandidate to
     ) {
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                dp(TIME_LABEL_WIDTH_DP),
+                dp(72),
                 dp(22)
         );
-        params.leftMargin = 0;
-        params.topMargin = dp(STAGE_HEADER_HEIGHT_DP
-                + Math.max(0, (layout.walkingMarkerOffsetMinutes(from, to) * HOUR_HEIGHT_DP / 60) - 11));
+        params.leftMargin = dp(STAGE_LABEL_WIDTH_DP
+                + Math.max(0, (layout.walkingMarkerOffsetMinutes(from, to) * HOUR_WIDTH_DP / 60) - 36));
+        params.topMargin = dp(TIME_HEADER_HEIGHT_DP
+                + Math.max(0, (Math.min(layout.stageRowIndex(from), layout.stageRowIndex(to)) * STAGE_ROW_HEIGHT_DP) - 2));
         return params;
     }
 
@@ -715,10 +777,10 @@ public final class ScheduleActivity extends Activity {
         return (int) (value * getResources().getDisplayMetrics().density);
     }
 
-    private static final class DottedLineView extends View {
+    private static final class VerticalDottedLineView extends View {
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-        DottedLineView(Context context, int color) {
+        VerticalDottedLineView(Context context, int color) {
             super(context);
             float density = context.getResources().getDisplayMetrics().density;
             paint.setColor(color);
@@ -730,8 +792,8 @@ public final class ScheduleActivity extends Activity {
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
-            float y = getHeight() / 2f;
-            canvas.drawLine(0f, y, getWidth(), y, paint);
+            float x = getWidth() / 2f;
+            canvas.drawLine(x, 0f, x, getHeight(), paint);
         }
     }
 

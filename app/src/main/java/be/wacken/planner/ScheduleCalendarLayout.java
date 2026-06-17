@@ -88,13 +88,25 @@ final class ScheduleCalendarLayout {
         return stageColumns;
     }
 
+    List<String> stageRows() {
+        return stageColumns();
+    }
+
     int stageColumnCount() {
         return Math.max(1, stageColumns.size());
+    }
+
+    int stageRowCount() {
+        return stageColumnCount();
     }
 
     int stageColumnIndex(ScheduleDecisionCandidate candidate) {
         int index = stageColumns.indexOf(candidate.stageName());
         return Math.max(0, index);
+    }
+
+    int stageRowIndex(ScheduleDecisionCandidate candidate) {
+        return stageColumnIndex(candidate);
     }
 
     int topOffsetMinutes(TimelineSlot slot) {
@@ -108,6 +120,10 @@ final class ScheduleCalendarLayout {
 
     int topOffsetMinutes(ScheduleDecisionCandidate candidate) {
         return Math.max(0, minutesFromStart(candidate.start()));
+    }
+
+    int leftOffsetMinutes(ScheduleDecisionCandidate candidate) {
+        return topOffsetMinutes(candidate);
     }
 
     int durationMinutes(ScheduleDecisionCandidate candidate) {

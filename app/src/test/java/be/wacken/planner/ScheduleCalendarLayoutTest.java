@@ -99,6 +99,19 @@ public final class ScheduleCalendarLayoutTest {
     }
 
     @Test
+    public void exposesStageRowsForRotatedSchedule() {
+        be.wacken.planner.application.ScheduleDecisionCandidate wackinger = candidate(slot("Storm Seeker", "Wackinger Stage", 18, 0, 19, 0));
+        be.wacken.planner.application.ScheduleDecisionCandidate louder = candidate(slot("Future Palace", "Louder", 13, 45, 14, 30));
+
+        ScheduleCalendarLayout layout = ScheduleCalendarLayout.forCandidates(List.of(wackinger, louder), LocalDate.of(2026, 7, 30));
+
+        assertEquals(List.of("Louder", "Wackinger Stage"), layout.stageRows());
+        assertEquals(0, layout.stageRowIndex(louder));
+        assertEquals(1, layout.stageRowIndex(wackinger));
+        assertEquals(2, layout.stageRowCount());
+    }
+
+    @Test
     public void assignsOverlappingDifferentStageActsToDifferentColumns() {
         be.wacken.planner.application.ScheduleDecisionCandidate louder = candidate(slot("Future Palace", "Louder", 13, 45, 14, 30));
         be.wacken.planner.application.ScheduleDecisionCandidate faster = candidate(slot("Paradise Lost", "Faster", 14, 0, 15, 30));
@@ -109,6 +122,19 @@ public final class ScheduleCalendarLayoutTest {
         assertEquals(1, layout.stageColumnIndex(faster));
         assertEquals(45, layout.topOffsetMinutes(louder));
         assertEquals(60, layout.topOffsetMinutes(faster));
+    }
+
+    @Test
+    public void positionsRotatedBlocksByMinutesFromFirstHour() {
+        be.wacken.planner.application.ScheduleDecisionCandidate louder = candidate(slot("Future Palace", "Louder", 13, 45, 14, 30));
+        be.wacken.planner.application.ScheduleDecisionCandidate faster = candidate(slot("Paradise Lost", "Faster", 14, 0, 15, 30));
+
+        ScheduleCalendarLayout layout = ScheduleCalendarLayout.forCandidates(List.of(louder, faster), LocalDate.of(2026, 7, 30));
+
+        assertEquals(45, layout.leftOffsetMinutes(louder));
+        assertEquals(60, layout.leftOffsetMinutes(faster));
+        assertEquals(45, layout.durationMinutes(louder));
+        assertEquals(90, layout.durationMinutes(faster));
     }
 
     private be.wacken.planner.application.ScheduleDecisionCandidate candidate(TimelineSlot slot) {
