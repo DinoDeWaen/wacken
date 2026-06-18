@@ -51,4 +51,18 @@ public final class ScheduleErrorMessageTest {
         assertFalse(message.contains("NetworkOnMainThreadException"));
         assertFalse(ScheduleErrorMessage.lockLoadFailure(error).contains("null"));
     }
+
+    @Test
+    public void postgrestMissingScheduleLockTableDoesNotLeakSchemaDetails() {
+        RuntimeException error = new RuntimeException(
+                "Could not find the table 'public.group_schedule_locks' in the schema cache"
+        );
+
+        String message = ScheduleErrorMessage.lockLoadFailure(error);
+
+        assertTrue(message.contains("Locked schedule choices are not available yet."));
+        assertTrue(message.contains("Generated schedule is shown."));
+        assertFalse(message.contains("public.group_schedule_locks"));
+        assertFalse(message.contains("schema cache"));
+    }
 }

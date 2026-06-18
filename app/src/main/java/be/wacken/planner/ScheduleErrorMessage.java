@@ -21,6 +21,9 @@ final class ScheduleErrorMessage {
         }
         String message = error.getMessage();
         if (message != null && !message.isBlank() && !"null".equalsIgnoreCase(message.trim())) {
+            if (isMissingScheduleLockTable(message)) {
+                return "Locked schedule choices are not available yet. Generated schedule is shown.";
+            }
             return message;
         }
         if (error instanceof NullPointerException) {
@@ -30,5 +33,11 @@ final class ScheduleErrorMessage {
             return "Schedule sync is still loading. Generated schedule is shown while locked choices sync.";
         }
         return "Unexpected schedule error (" + error.getClass().getSimpleName() + "). " + RECOVERY_HINT;
+    }
+
+    private static boolean isMissingScheduleLockTable(String message) {
+        String normalized = message.toLowerCase();
+        return normalized.contains("group_schedule_locks")
+                && (normalized.contains("schema cache") || normalized.contains("could not find the table"));
     }
 }

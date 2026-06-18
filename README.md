@@ -214,6 +214,15 @@ The script uses locally installed `flyway` when available and falls back to
 Docker otherwise. Band import uses local `psql`; set `PSQL_BIN` if `psql` is
 installed but not on `PATH`.
 
+If the app reports that locked schedule choices are unavailable because
+`group_schedule_locks` is missing from the PostgREST schema cache, verify that
+Flyway migrations `V007__group_schedule_locks.sql` and
+`V008__refresh_postgrest_schema_cache.sql` have run against the active Supabase
+project. If `backend/flyway/run-flyway.sh info` cannot resolve or route to the
+direct Supabase database host, run the same migration from a network with
+database connectivity or update `.env.supabase.local` with the correct Supabase
+pooler JDBC URL and pooler user for the project.
+
 Upload the generated Wacken bands CSV to Supabase:
 
 ```bash
