@@ -135,7 +135,7 @@ public final class BandDetailActivity extends Activity {
             }
         });
         facts.addView(ratingStars, new LinearLayout.LayoutParams(dp(150), dp(42)));
-        Button clearRating = baseIconButton("0", "Clear rating", COLOR_GRID);
+        Button clearRating = baseIconButton("Reset", "Clear rating", COLOR_GRID);
         clearRating.setOnClickListener(view -> {
             RateBandResult result = new RateBandUseCase(ratings).rateBand(currentUser(), selectedBand, 0);
             if (result.success()) {
