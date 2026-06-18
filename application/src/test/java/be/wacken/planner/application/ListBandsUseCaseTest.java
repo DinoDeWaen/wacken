@@ -231,7 +231,7 @@ class ListBandsUseCaseTest {
         assertEquals("18:05 - 19:10", scheduled.displayTime());
         assertEquals(true, scheduled.explicitRating());
         assertEquals(true, scheduled.hasPersonRatings());
-        assertEquals("dino ★★★★  sofie ★★★★★", scheduled.personRatingSummary());
+        assertEquals("D ★★★★  S ★★★★★", scheduled.personRatingSummary());
         assertEquals("TBA", unscheduled.displayDate());
         assertEquals("TBA", unscheduled.displayTime());
         assertEquals(false, unscheduled.explicitRating());
