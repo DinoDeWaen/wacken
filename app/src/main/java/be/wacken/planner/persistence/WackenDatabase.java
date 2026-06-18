@@ -15,9 +15,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 RoomPerformance.class,
                 RoomStageDistance.class,
                 RoomFoodOption.class,
-                RoomRating.class
+                RoomRating.class,
+                RoomScheduleLock.class
         },
-        version = 3,
+        version = 4,
         exportSchema = false
 )
 public abstract class WackenDatabase extends RoomDatabase {
@@ -35,6 +36,21 @@ public abstract class WackenDatabase extends RoomDatabase {
             database.execSQL("UPDATE ratings SET value = value + 1 WHERE value BETWEEN 0 AND 4");
         }
     };
+    private static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS schedule_locks (
+                        groupId TEXT NOT NULL,
+                        conflictKey TEXT NOT NULL,
+                        selectedCandidateKey TEXT NOT NULL,
+                        syncStatus TEXT NOT NULL,
+                        operation TEXT NOT NULL,
+                        PRIMARY KEY(groupId, conflictKey)
+                    )
+                    """);
+        }
+    };
 
     public abstract RoomBandDao bands();
 
@@ -48,6 +64,8 @@ public abstract class WackenDatabase extends RoomDatabase {
 
     public abstract RoomRatingDao ratings();
 
+    public abstract RoomScheduleLockDao scheduleLocks();
+
     public static WackenDatabase get(Context context) {
         if (instance == null) {
             synchronized (WackenDatabase.class) {
@@ -57,7 +75,7 @@ public abstract class WackenDatabase extends RoomDatabase {
                                     WackenDatabase.class,
                                     "wacken-cache.db"
                             )
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                             .allowMainThreadQueries()
                             .build();
                 }

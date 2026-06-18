@@ -148,6 +148,7 @@ public final class SettingsActivity extends Activity {
                 AppRepositories repositories = new AppRepositories(this);
                 repositories.syncMasterDataFromSource();
                 repositories.syncRatings();
+                repositories.syncScheduleLocks();
                 runOnUiThread(() -> {
                     syncButton.setEnabled(true);
                     stopSyncAnimation();

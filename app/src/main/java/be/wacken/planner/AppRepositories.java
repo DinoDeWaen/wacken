@@ -24,6 +24,7 @@ import be.wacken.planner.persistence.RoomBandRepository;
 import be.wacken.planner.persistence.RoomFoodOptionRepository;
 import be.wacken.planner.persistence.RoomPerformanceRepository;
 import be.wacken.planner.persistence.RoomRatingRepository;
+import be.wacken.planner.persistence.RoomScheduleLockStore;
 import be.wacken.planner.persistence.RoomStageDistanceRepository;
 import be.wacken.planner.persistence.RoomStageRepository;
 import be.wacken.planner.persistence.WackenDatabase;
@@ -41,6 +42,7 @@ final class AppRepositories {
     private final SyncedFoodOptionRepository foodOptions;
     private final RatingRepository ratings;
     private final SyncingRatingRepository syncingRatings;
+    private final SyncingScheduleLockStore syncingScheduleLocks;
     private final ScheduleLockStore scheduleLocks;
 
     AppRepositories(Context context) {
@@ -61,6 +63,7 @@ final class AppRepositories {
         RoomStageDistanceRepository distanceCache = new RoomStageDistanceRepository(database);
         RoomFoodOptionRepository foodCache = new RoomFoodOptionRepository(database);
         RoomRatingRepository ratingCache = new RoomRatingRepository(database);
+        RoomScheduleLockStore scheduleLockCache = new RoomScheduleLockStore(database);
 
         BandRepository bandSource;
         StageRepository stageSource;
@@ -91,15 +94,18 @@ final class AppRepositories {
         this.foodOptions = new SyncedFoodOptionRepository(foodCache, foodSource);
         if (sourceMode == SourceMode.SUPABASE) {
             SupabaseScheduleLockClient scheduleLockClient = new SupabaseScheduleLockClient(sessionManager);
+            AuthSession session = authSessionStore.load();
             this.syncingRatings = new SyncingRatingRepository(
                     ratingCache,
                     new SupabaseRatingClient(sessionManager),
-                    authSessionStore.load()
+                    session
             );
             this.ratings = syncingRatings;
-            this.scheduleLocks = scheduleLockClient;
+            this.syncingScheduleLocks = new SyncingScheduleLockStore(scheduleLockCache, scheduleLockClient, session);
+            this.scheduleLocks = syncingScheduleLocks;
         } else {
             this.syncingRatings = null;
+            this.syncingScheduleLocks = null;
             this.ratings = ratingCache;
             this.scheduleLocks = new ScheduleLockStore.NoOp();
         }
@@ -135,6 +141,21 @@ final class AppRepositories {
 
     ScheduleLockStore scheduleLocks() {
         return scheduleLocks;
+    }
+
+    void syncScheduleLocks() {
+        if (syncingScheduleLocks == null) {
+            SupabaseDiagnostics.info("schedule_lock_sync", "skipped", "remote_repository=false");
+            return;
+        }
+        try {
+            SupabaseDiagnostics.info("schedule_lock_sync", "start", "remote_repository=true");
+            syncingScheduleLocks.pullGroupLocks();
+            SupabaseDiagnostics.info("schedule_lock_sync", "success", "remote_repository=true");
+        } catch (Exception error) {
+            SupabaseDiagnostics.warn("schedule_lock_sync", "failed", "remote_repository=true", error);
+            throw new SupabaseSyncException(error.getMessage(), error);
+        }
     }
 
     void syncRatings() {

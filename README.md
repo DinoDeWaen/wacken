@@ -6,12 +6,12 @@
 
 ## Basic Functionality (MVP 1)
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
-- Show locally cached lineup, ratings, and schedule data first on app start/reactivation, while Supabase sync refreshes the Room cache in the background.
+- Show locally cached lineup, ratings, schedule data, and manual schedule locks first, while Supabase sync refreshes Room in the background.
 - List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.
 - Hide generic Metal Battle placeholder acts from rating lists and rating allocation counts while preserving imported master data.
 - Show compact read-only per-person star details on band overview rows and band detail screens when group ratings are available.
 - Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars, and clear a previous rating back to unrated.
-- Save rating changes and clears locally immediately and sync pending/group ratings with Supabase in the background on start/reactivation, on manual sync, or before close.
+- Save rating and manual schedule-lock changes locally immediately, queue them as pending offline operations, and sync them with Supabase in the background on start/reactivation, on manual sync, or before close.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show imported English band biography/explanation and available band image metadata on the detail screen when `bands.csv` provides it.
 - Return from band detail to the same overview band row after refresh so users can continue rating without losing their place.
@@ -32,10 +32,12 @@
 - ADR: [`0007-room-local-cache-with-tsv-backend-source.md`](backlog/decisions/0007-room-local-cache-with-tsv-backend-source.md).
 - ADR: [`0008-supabase-postgres-flyway-migrations.md`](backlog/decisions/0008-supabase-postgres-flyway-migrations.md).
 - ADR: [`0009-supabase-group-schedule-winner-locks.md`](backlog/decisions/0009-supabase-group-schedule-winner-locks.md).
+- ADR: [`0010-offline-first-sync-boundary.md`](backlog/decisions/0010-offline-first-sync-boundary.md).
 - CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
 - Release process: [`release-process.md`](backlog/docs/release-process.md).
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
+- V2.14 release notes: [`releases/v2.14.md`](releases/v2.14.md).
 - V2.13 release notes: [`releases/v2.13.md`](releases/v2.13.md).
 - V2.12 release notes: [`releases/v2.12.md`](releases/v2.12.md).
 - V2.11 release notes: [`releases/v2.11.md`](releases/v2.11.md).
@@ -82,7 +84,7 @@ Current modules:
 | `infrastructure` | Java library | TSV backend-like source adapters, in-memory test adapters, and sync/write-through decorators. Depends inward on `application` and `domain`. |
 | `app` | Android application | Android UI/bootstrap, APK packaging, and Room local-cache adapters. |
 
-Current repositories cover bands, stages, performances, stage distances, food options, and ratings. The app reads lineup data from Room. Supabase is the primary master-data source for bands and schedule metadata; the CSV/TSV path remains as an explicit fallback/import tool. Android wiring composes Supabase or TSV source adapters, Room cache adapters, and sync decorators behind the existing domain repository ports.
+Current repositories cover bands, stages, performances, stage distances, food options, ratings, and group schedule locks. The app reads lineup and mutable shared data from Room first. Supabase is the primary master-data and shared-data sync backend; the CSV/TSV path remains as an explicit fallback/import tool. Android wiring composes Supabase or TSV source adapters, Room cache adapters, and sync decorators behind the existing domain repository ports.
 
 ### Technologies
 - Language: Java

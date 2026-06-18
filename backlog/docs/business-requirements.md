@@ -14,10 +14,10 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 
 - Android band overview and detail screens, with generic Metal Battle placeholder entries hidden from rating lists.
 - 1-5 band ratings with default unrated value of `0`, including clearing a prior rating back to unrated.
-- Room local cache for fast app reads and offline continuity.
+- Room local cache for fast app reads, offline continuity, and queued pending shared-data changes.
 - Supabase Auth for user identity.
 - Supabase Postgres/Flyway backend for central master data, group membership, and ratings.
-- Supabase sync for bands, stages, performances, stage distances, food options, and group ratings on app start, overview reactivation, manual sync, and close, with cached app data shown before lifecycle sync completes.
+- Supabase sync for bands, stages, performances, stage distances, food options, group ratings, and group schedule locks on app start, overview reactivation, manual sync, and close, with cached app data shown before lifecycle sync completes.
 - CSV/TSV fallback import path for local/admin data work.
 - Wacken-inspired overview/detail presentation with music links, imported metadata where available, and metal-themed sync feedback.
 - Compact per-person star details on the band overview and band detail screen when shared group ratings are available.
@@ -365,7 +365,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-054a | Returning from band detail must keep the selected overview band row visible after refresh. | A user opens Skyline, changes or reviews the rating, goes back, and sees the Skyline row instead of being moved to the top of the band list. | Must |
 | BR-055 | External music links must not destroy or replace the app’s internal navigation state. | Opening YouTube or Spotify and returning restores the previous Wacken Planner context. | Must |
 | BR-056 | Authenticated Supabase calls must renew expired access tokens when the refresh token is still valid. | Master-data sync and rating sync continue after normal JWT expiry; if refresh fails, the local session is cleared and the user returns to login. | Must |
-| BR-057 | The signed-in app must sync Supabase master data and group ratings when the band overview starts or is reactivated without blocking cached app usage. | A user opening the app on a second Android device sees locally cached data immediately while Supabase refreshes in the background; when sync succeeds, shared group ratings refresh without needing to force-close the first device. | Must |
+| BR-057 | The signed-in app must sync Supabase master data, group ratings, and group schedule locks when the app starts or is reactivated without blocking cached app usage. | A user opening the app on a second Android device sees locally cached data immediately while Supabase refreshes in the background; when sync succeeds, shared group ratings and manual schedule locks refresh without needing to force-close the first device. | Must |
 | BR-058 | The app must provide a close action that attempts Supabase sync before closing. | Tapping close pushes local pending ratings and pulls group ratings before the app exits; if sync fails, local ratings remain available and the app stays open with a clear failure message. | Must |
 | BR-059 | Sync operations must show clear Wacken/metal-themed feedback and prevent conflicting sync/close actions while in progress. | Startup, reactivation, manual sync, and close sync show visible progress instead of a blank or frozen screen. | Must |
 | BR-060 | The band overview and band detail should show available per-person group ratings as compact read-only detail. | A band row or detail screen can show each available person rating as small stars without changing the main editable rating workflow. | Should |
@@ -379,7 +379,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-065 | Opening a calendar performance block must show the conflict detail. | The detail shows the chosen act and all alternatives, with each band's stage and rating stars. | Must |
 | BR-066 | A user can select an alternative as the act the group is going to for the visible schedule screen. | Choosing an alternative updates the local visible schedule result so that act becomes selected for that conflict. | Must |
 | BR-067 | Manual schedule choices must not silently change the underlying rating rules. | Selecting an alternative changes the local visible schedule choice, but the original ratings and generated decision evidence remain visible. | Must |
-| BR-068 | MVP2 manual schedule choices are group-wide locked overrides. | A signed-in group member can lock a conflict winner for the shared group; the lock is synced through Supabase, survives schedule regeneration and app restart, is shown with a lock icon, and remains until another group member changes or clears it. Ratings and generated decision evidence are not changed by the lock. | Must |
+| BR-068 | MVP2 manual schedule choices are group-wide locked overrides with offline-first local persistence. | A signed-in group member can lock a conflict winner for the shared group; the lock is saved locally immediately, queued for Supabase sync when offline, survives schedule regeneration and app restart, is shown with a lock icon, and remains until another group member changes or clears it. Ratings and generated decision evidence are not changed by the lock. | Must |
 | BR-069 | Calendar schedule days must include late-night festival time through 02:00 before the next festival day starts. | A performance ending at 02:00 appears in the intended festival day view instead of being hidden by a midnight cutoff. | Must |
 | BR-070 | Calendar schedule day headings must include the weekday name. | A day heading shows a weekday such as Monday or Tuesday together with the festival date. | Must |
 | BR-071 | Schedule decision details must use the Wacken dark/metal visual scheme. | Opening a performance block shows chosen act and alternatives on a dark themed surface with readable light text and accent colors, not a default white dialog. | Must |

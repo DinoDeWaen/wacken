@@ -287,6 +287,7 @@ public final class MainActivity extends Activity {
                 AppRepositories repositories = new AppRepositories(this);
                 repositories.syncMasterDataFromSource();
                 repositories.syncRatings();
+                repositories.syncScheduleLocks();
                 runOnUiThread(() -> {
                     syncInProgress = false;
                     setSyncActionsEnabled(true);
