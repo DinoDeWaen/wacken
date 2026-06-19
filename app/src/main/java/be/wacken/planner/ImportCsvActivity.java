@@ -24,6 +24,7 @@ import be.wacken.planner.application.ImportFestivalCsvResult;
 import be.wacken.planner.application.ImportFestivalCsvUseCase;
 
 public final class ImportCsvActivity extends Activity {
+    static final String EXTRA_IMPORT_FEEDBACK = "be.wacken.planner.IMPORT_FEEDBACK";
     private static final int REQUEST_BANDS = 100;
     private static final int REQUEST_STAGES = 101;
     private static final int REQUEST_PERFORMANCES = 102;
@@ -143,10 +144,18 @@ public final class ImportCsvActivity extends Activity {
 
         if (result.success()) {
             resultMessage.setTextColor(WackenTheme.AMBER);
-            resultMessage.setText("Import successful. Existing ratings were preserved.");
+            String feedback = SettingsFeedback.importSuccess();
+            resultMessage.setText(feedback);
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra(EXTRA_IMPORT_FEEDBACK, feedback);
+            setResult(RESULT_OK, resultIntent);
         } else {
             resultMessage.setTextColor(WackenTheme.RED);
-            resultMessage.setText(String.join("\n", result.errors()));
+            String feedback = "Import failed. Existing cached data remains usable offline. Next: correct the CSV and import again.";
+            resultMessage.setText(feedback + "\n" + String.join("\n", result.errors()));
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra(EXTRA_IMPORT_FEEDBACK, feedback);
+            setResult(RESULT_CANCELED, resultIntent);
         }
     }
 

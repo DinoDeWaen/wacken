@@ -12,12 +12,17 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+
 public final class SettingsActivity extends Activity {
     private static final int COLOR_BACKGROUND = WackenTheme.BACKGROUND;
     private static final int COLOR_TEXT = WackenTheme.TEXT;
     private static final int COLOR_MUTED = WackenTheme.MUTED;
     private static final int COLOR_ACCENT = WackenTheme.RED;
     private static final int COLOR_AMBER = WackenTheme.AMBER;
+    private static final int REQUEST_IMPORT = 101;
+    private static final DateTimeFormatter SYNC_TIME = DateTimeFormatter.ofPattern("HH:mm");
 
     private AuthSessionStore sessionStore;
     private AuthSession currentSession;
@@ -111,8 +116,9 @@ public final class SettingsActivity extends Activity {
         screen.addView(syncSection);
 
         LinearLayout adminSection = section("Admin");
+        adminSection.addView(infoText("Imports update shared festival data. Ratings are preserved."));
         adminSection.addView(actionButton("Import lineup CSV files", WackenTheme.ButtonStyle.PREMIUM, view -> {
-            startActivity(new Intent(this, ImportCsvActivity.class));
+            startActivityForResult(new Intent(this, ImportCsvActivity.class), REQUEST_IMPORT);
         }));
         screen.addView(adminSection);
 
@@ -124,6 +130,20 @@ public final class SettingsActivity extends Activity {
     protected void onDestroy() {
         stopSyncAnimation();
         super.onDestroy();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != REQUEST_IMPORT || data == null) {
+            return;
+        }
+        String feedback = data.getStringExtra(ImportCsvActivity.EXTRA_IMPORT_FEEDBACK);
+        if (feedback == null || feedback.isBlank()) {
+            return;
+        }
+        status.setTextColor(resultCode == RESULT_OK ? WackenTheme.SUCCESS_GREEN : COLOR_AMBER);
+        status.setText(feedback);
     }
 
     private Button actionButton(String text, WackenTheme.ButtonStyle style, android.view.View.OnClickListener listener) {
@@ -189,7 +209,10 @@ public final class SettingsActivity extends Activity {
                 runOnUiThread(() -> {
                     syncButton.setEnabled(true);
                     stopSyncAnimation();
-                    refreshSyncStatus("Up to date", WackenTheme.SUCCESS_GREEN);
+                    showStatus(SettingsFeedback.syncSuccess(
+                            LocalTime.now().format(SYNC_TIME),
+                            repositories.pendingSyncSummary().description()
+                    ), WackenTheme.SUCCESS_GREEN);
                     refreshRatingAllocation();
                 });
             } catch (Exception error) {
@@ -200,7 +223,7 @@ public final class SettingsActivity extends Activity {
                         redirectToLogin();
                         return;
                     }
-                    refreshSyncStatus("Offline - cached data", COLOR_AMBER);
+                    showStatus(SettingsFeedback.offlineRecovery("Sync"), COLOR_AMBER);
                 });
             }
         }).start();
@@ -249,12 +272,16 @@ public final class SettingsActivity extends Activity {
         if (status == null) {
             return;
         }
-        status.setTextColor(color);
         try {
-            status.setText(state + " · " + new AppRepositories(this).pendingSyncSummary().description());
+            showStatus(state + " · " + new AppRepositories(this).pendingSyncSummary().description(), color);
         } catch (Exception error) {
-            status.setText(state + " · Cached data remains available.");
+            showStatus(state + " · Cached data remains available.", color);
         }
+    }
+
+    private void showStatus(String message, int color) {
+        status.setTextColor(color);
+        status.setText(message);
     }
 
     private int dp(int value) {
