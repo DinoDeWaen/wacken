@@ -174,6 +174,7 @@ public final class ScheduleActivity extends Activity {
             return;
         }
         screen.addView(filterControls());
+        screen.addView(scheduleLegend());
         java.util.Optional<ScheduleDay> selected = ScheduleDaySelection.selectedDay(schedule.days(), selectedScheduleDate);
         if (selected.isEmpty()) {
             screen.addView(message("No selected performances are available yet.", COLOR_MUTED));
@@ -193,22 +194,19 @@ public final class ScheduleActivity extends Activity {
         buttons.setPadding(0, 0, 0, dp(8));
         DateTimeFormatter weekday = DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH);
         for (ScheduleDay day : days) {
-            Button button = new Button(this);
-            button.setAllCaps(false);
-            button.setText(day.date().format(weekday) + " " + day.date().getDayOfMonth());
+            boolean selectedDay = ScheduleDaySelection.isSelected(day, selected);
+            Button button = WackenTheme.actionButton(
+                    this,
+                    day.date().format(weekday) + " " + day.date().getDayOfMonth(),
+                    selectedDay ? WackenTheme.ButtonStyle.PRIMARY : WackenTheme.ButtonStyle.SECONDARY,
+                    view -> {
+                        selectedScheduleDate = day.date();
+                        setContentView(render());
+                    }
+            );
             button.setTextColor(Color.WHITE);
             button.setTextSize(12);
-            button.setTypeface(Typeface.DEFAULT_BOLD);
-            button.setMinWidth(0);
-            button.setMinHeight(0);
             button.setPadding(dp(10), 0, dp(10), 0);
-            button.setBackgroundColor(ScheduleDaySelection.isSelected(day, selected)
-                    ? COLOR_ACCENT
-                    : WackenTheme.PANEL);
-            button.setOnClickListener(view -> {
-                selectedScheduleDate = day.date();
-                setContentView(render());
-            });
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     dp(36)
@@ -226,7 +224,8 @@ public final class ScheduleActivity extends Activity {
         LinearLayout controls = new LinearLayout(this);
         controls.setOrientation(LinearLayout.HORIZONTAL);
         controls.setGravity(Gravity.CENTER_VERTICAL);
-        controls.setPadding(0, dp(6), 0, dp(8));
+        controls.setPadding(dp(10), dp(8), dp(10), dp(8));
+        controls.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, COLOR_GRID, 6));
 
         CheckBox hideBarredBox = new CheckBox(this);
         hideBarredBox.setText("Hide barred");
@@ -253,25 +252,24 @@ public final class ScheduleActivity extends Activity {
         controls.addView(thresholdButton("4★", 4));
         HorizontalScrollView scroll = new HorizontalScrollView(this);
         scroll.setHorizontalScrollBarEnabled(false);
+        scroll.setPadding(0, dp(4), 0, dp(8));
         scroll.addView(controls);
         return scroll;
     }
 
     private Button thresholdButton(String label, int threshold) {
-        Button button = new Button(this);
-        button.setAllCaps(false);
-        button.setText(label);
+        Button button = WackenTheme.actionButton(
+                this,
+                label,
+                selectedHideThreshold == threshold ? WackenTheme.ButtonStyle.PRIMARY : WackenTheme.ButtonStyle.SECONDARY,
+                view -> {
+                    selectedHideThreshold = threshold;
+                    setContentView(render());
+                }
+        );
         button.setTextColor(Color.WHITE);
         button.setTextSize(11);
-        button.setTypeface(Typeface.DEFAULT_BOLD);
-        button.setMinWidth(0);
-        button.setMinHeight(0);
         button.setPadding(dp(8), 0, dp(8), 0);
-        button.setBackgroundColor(selectedHideThreshold == threshold ? COLOR_ACCENT : WackenTheme.PANEL);
-        button.setOnClickListener(view -> {
-            selectedHideThreshold = threshold;
-            setContentView(render());
-        });
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 dp(34)
@@ -279,6 +277,39 @@ public final class ScheduleActivity extends Activity {
         params.setMargins(dp(4), 0, 0, 0);
         button.setLayoutParams(params);
         return button;
+    }
+
+    private View scheduleLegend() {
+        LinearLayout legend = new LinearLayout(this);
+        legend.setOrientation(LinearLayout.VERTICAL);
+        legend.setPadding(dp(12), dp(10), dp(12), dp(10));
+        legend.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, COLOR_GRID, 6));
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        layout.setMargins(0, 0, 0, dp(8));
+        legend.setLayoutParams(layout);
+
+        TextView title = detailText("Legend", COLOR_AMBER, 13, true);
+        title.setPadding(0, 0, 0, dp(4));
+        legend.addView(title);
+
+        legend.addView(legendLine("Gold border", "5★ must see", WackenTheme.GOLD));
+        legend.addView(legendLine("Red border", "4★ strong choice", WackenTheme.RED));
+        legend.addView(legendLine("Grey border", "2-3★ optional", WackenTheme.STEEL_GREY));
+        legend.addView(legendLine("Scratched", "lower-rated visible overlap to skip", WackenTheme.RED));
+        legend.addView(legendLine("🔒", "locked group choice", COLOR_MUTED));
+        legend.addView(legendLine("≡", "tie shown first in alternatives", COLOR_MUTED));
+        legend.addView(legendLine("Filters", "hide barred acts or acts at/below selected stars", COLOR_MUTED));
+        return legend;
+    }
+
+    private TextView legendLine(String label, String description, int accent) {
+        TextView line = detailText(label + "  " + description, COLOR_TEXT, 11, false);
+        line.setTextColor(accent == COLOR_MUTED ? COLOR_MUTED : COLOR_TEXT);
+        line.setPadding(0, dp(1), 0, dp(1));
+        return line;
     }
 
     private TextView sectionTitle(String text) {
@@ -509,6 +540,8 @@ public final class ScheduleActivity extends Activity {
         marker.setGravity(Gravity.CENTER_VERTICAL);
         marker.setSingleLine(true);
         marker.setEllipsize(TextUtils.TruncateAt.END);
+        marker.setPadding(dp(4), 0, dp(4), 0);
+        marker.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, COLOR_AMBER, 4));
         return marker;
     }
 
@@ -582,10 +615,11 @@ public final class ScheduleActivity extends Activity {
         detail.setBackground(detailDialogBackground());
 
         TextView title = detailText(ScheduleBandDisplayName.clean(slot.bandName()), COLOR_TEXT, 24, true);
+        title.setTextColor(COLOR_AMBER);
         title.setPadding(0, 0, 0, dp(14));
         detail.addView(title);
 
-        detail.addView(detailText("Chosen act", COLOR_ACCENT, 12, true));
+        detail.addView(detailSection("Chosen act"));
         final AlertDialog[] dialog = new AlertDialog[1];
         java.util.List<ScheduleDecisionCandidate> candidates = scheduleFilter()
                 .visibleCandidates(manualSelections.detailCandidates(slot));
@@ -595,7 +629,7 @@ public final class ScheduleActivity extends Activity {
         }
         detail.addView(candidateView(slot, candidates.get(0), candidates, () -> dialog[0].dismiss()));
 
-        detail.addView(detailText("Alternatives", COLOR_ACCENT, 12, true));
+        detail.addView(detailSection("Alternatives"));
         boolean hasAlternatives = false;
         for (int index = 1; index < candidates.size(); index++) {
             ScheduleDecisionCandidate candidate = candidates.get(index);
@@ -607,13 +641,7 @@ public final class ScheduleActivity extends Activity {
         if (!hasAlternatives) {
             detail.addView(detailText("No alternatives available.", COLOR_MUTED, 14, false));
         }
-        Button close = new Button(this);
-        close.setAllCaps(false);
-        close.setText("Close");
-        close.setTextColor(COLOR_AMBER);
-        close.setTypeface(Typeface.DEFAULT_BOLD);
-        close.setBackground(slotBackground());
-        close.setOnClickListener(view -> dialog[0].dismiss());
+        Button close = WackenTheme.actionButton(this, "Close", WackenTheme.ButtonStyle.SECONDARY, view -> dialog[0].dismiss());
         LinearLayout.LayoutParams closeLayout = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -638,7 +666,19 @@ public final class ScheduleActivity extends Activity {
     ) {
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setPadding(0, dp(6), 0, dp(10));
+        panel.setPadding(dp(10), dp(8), dp(10), dp(10));
+        panel.setBackground(WackenTheme.panelBackground(
+                this,
+                candidate.selected() ? WackenTheme.ELEVATED_PANEL : WackenTheme.PANEL,
+                candidate.selected() ? COLOR_ACCENT : COLOR_GRID,
+                6
+        ));
+        LinearLayout.LayoutParams panelLayout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        panelLayout.setMargins(0, dp(6), 0, dp(8));
+        panel.setLayoutParams(panelLayout);
 
         TextView name = detailText(ScheduleBandDisplayName.clean(candidate.bandName()) + " " + stars(candidate.rating()),
                 candidate.selected() ? COLOR_TEXT : COLOR_MUTED,
@@ -675,12 +715,7 @@ public final class ScheduleActivity extends Activity {
                 panel.addView(detailText(context, COLOR_AMBER, 12, true))
         );
         if (!candidate.selected()) {
-            Button select = new Button(this);
-            select.setAllCaps(false);
-            select.setText("Select as act");
-            select.setTextColor(Color.WHITE);
-            select.setTypeface(Typeface.DEFAULT_BOLD);
-            select.setBackground(slotBackground());
+            Button select = WackenTheme.actionButton(this, "Select as act", WackenTheme.ButtonStyle.PRIMARY, null);
             select.setOnClickListener(view -> {
                 try {
                     repositories.scheduleLocks().saveGroupLock(
@@ -696,12 +731,7 @@ public final class ScheduleActivity extends Activity {
             });
             panel.addView(select);
         } else if (manualSelections.isManual(slot)) {
-            Button unlock = new Button(this);
-            unlock.setAllCaps(false);
-            unlock.setText("Unlock generated choice");
-            unlock.setTextColor(COLOR_AMBER);
-            unlock.setTypeface(Typeface.DEFAULT_BOLD);
-            unlock.setBackground(slotBackground());
+            Button unlock = WackenTheme.actionButton(this, "Unlock generated choice", WackenTheme.ButtonStyle.SECONDARY, null);
             unlock.setOnClickListener(view -> {
                 try {
                     repositories.scheduleLocks().clearGroupLock(ScheduleManualSelections.conflictKey(slot));
@@ -762,6 +792,12 @@ public final class ScheduleActivity extends Activity {
             view.setTypeface(Typeface.DEFAULT_BOLD);
         }
         return view;
+    }
+
+    private TextView detailSection(String text) {
+        TextView section = detailText(text, COLOR_ACCENT, 12, true);
+        section.setPadding(0, dp(10), 0, dp(4));
+        return section;
     }
 
     private GradientDrawable detailDialogBackground() {
