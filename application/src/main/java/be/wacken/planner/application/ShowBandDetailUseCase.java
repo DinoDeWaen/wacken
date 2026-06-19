@@ -28,7 +28,7 @@ public final class ShowBandDetailUseCase {
                     EffectiveRating rating = ratings.resolve(userName, band);
                     return new BandDetailItem(
                             band.name(),
-                            band.biography(),
+                            BiographyText.readable(band.biography()),
                             band.imageUrl(),
                             rating.value(),
                             !rating.explicit(),

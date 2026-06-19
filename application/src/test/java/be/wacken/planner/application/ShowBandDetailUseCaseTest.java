@@ -112,6 +112,26 @@ class ShowBandDetailUseCaseTest {
     }
 
     @Test
+    void rendersHtmlBiographyAsReadableText() {
+        FakeBandRepository bands = new FakeBandRepository();
+        bands.save(new Band(
+                "Thundermother",
+                Optional.of("<p>Swedish&nbsp;rock &amp; roll<br />Back at Wacken.</p><p>&quot;Louder&quot; &#39;again&#39; &#x21;</p>"),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()
+        ));
+        ShowBandDetailUseCase useCase = new ShowBandDetailUseCase(bands, new FakeRatingRepository());
+
+        Optional<BandDetailItem> detail = useCase.showBand("dino", "Thundermother", MusicLinks.none());
+
+        assertEquals(
+                Optional.of("Swedish rock & roll\nBack at Wacken.\n\n\"Louder\" 'again' !"),
+                detail.orElseThrow().biography()
+        );
+    }
+
+    @Test
     void includesReadOnlyGroupRatingsForSelectedBand() {
         FakeBandRepository bands = new FakeBandRepository();
         FakeRatingRepository ratings = new FakeRatingRepository();
