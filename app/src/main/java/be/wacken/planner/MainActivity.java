@@ -53,6 +53,7 @@ public final class MainActivity extends Activity {
 
     private ListView bandList;
     private TextView status;
+    private TextView syncStatus;
     private TextView subtitle;
     private AuthSessionStore sessionStore;
     private AuthSession currentSession;
@@ -89,6 +90,12 @@ public final class MainActivity extends Activity {
 
         screen.addView(header());
         screen.addView(actionRow());
+        syncStatus = new TextView(this);
+        syncStatus.setTextColor(COLOR_MUTED);
+        syncStatus.setTextSize(13);
+        syncStatus.setGravity(Gravity.CENTER_HORIZONTAL);
+        syncStatus.setPadding(0, 0, 0, dp(10));
+        screen.addView(syncStatus);
         screen.addView(tableHeader());
 
         status = new TextView(this);
@@ -189,6 +196,7 @@ public final class MainActivity extends Activity {
         reloadNeeded = false;
         status.setVisibility(cachedBands.isEmpty() ? View.VISIBLE : View.GONE);
         status.setText(cachedBands.isEmpty() ? getString(R.string.empty_band_list) : "");
+        refreshSyncStatus(repositories, "Cached data", COLOR_MUTED);
     }
 
     private void showLoadingState() {
@@ -273,6 +281,7 @@ public final class MainActivity extends Activity {
         setSyncActionsEnabled(false);
         status.setVisibility(View.VISIBLE);
         status.setText(message);
+        refreshSyncStatus(new AppRepositories(this), "Syncing", WackenTheme.AMBER);
         if (showOverlay) {
             showSyncOverlay(message, visualMode);
         }
@@ -291,6 +300,7 @@ public final class MainActivity extends Activity {
                         finishAndRemoveTask();
                     } else {
                         loadBandList();
+                        refreshSyncStatus(repositories, "Up to date", WackenTheme.SUCCESS_GREEN);
                         if (showOverlay) {
                             hideSyncOverlay();
                         }
@@ -312,6 +322,7 @@ public final class MainActivity extends Activity {
                     if (reloadNeeded || adapter == null) {
                         loadBandList();
                     }
+                    refreshSyncStatus(new AppRepositories(this), "Offline - cached data", WackenTheme.AMBER);
                 });
             }
         }).start();
@@ -321,6 +332,14 @@ public final class MainActivity extends Activity {
         if (closeButton != null) {
             closeButton.setEnabled(enabled);
         }
+    }
+
+    private void refreshSyncStatus(AppRepositories repositories, String state, int color) {
+        if (syncStatus == null) {
+            return;
+        }
+        syncStatus.setTextColor(color);
+        syncStatus.setText(state + " · " + repositories.pendingSyncSummary().description());
     }
 
     private FrameLayout syncOverlay() {

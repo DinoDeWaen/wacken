@@ -106,7 +106,7 @@ public final class SettingsActivity extends Activity {
         status.setTextColor(COLOR_MUTED);
         status.setGravity(Gravity.START);
         status.setPadding(0, dp(8), 0, 0);
-        status.setText("Cached data remains available if sync fails.");
+        refreshSyncStatus("Cached data", COLOR_MUTED);
         syncSection.addView(status);
         screen.addView(syncSection);
 
@@ -179,8 +179,7 @@ public final class SettingsActivity extends Activity {
     private void syncFromSupabase() {
         syncButton.setEnabled(false);
         startSyncAnimation();
-        status.setTextColor(COLOR_MUTED);
-        status.setText("Forging latest ratings...");
+        refreshSyncStatus("Syncing", COLOR_AMBER);
         new Thread(() -> {
             try {
                 AppRepositories repositories = new AppRepositories(this);
@@ -190,8 +189,7 @@ public final class SettingsActivity extends Activity {
                 runOnUiThread(() -> {
                     syncButton.setEnabled(true);
                     stopSyncAnimation();
-                    status.setTextColor(WackenTheme.SUCCESS_GREEN);
-                    status.setText("Sync complete. Cached data is up to date.");
+                    refreshSyncStatus("Up to date", WackenTheme.SUCCESS_GREEN);
                     refreshRatingAllocation();
                 });
             } catch (Exception error) {
@@ -202,8 +200,7 @@ public final class SettingsActivity extends Activity {
                         redirectToLogin();
                         return;
                     }
-                    status.setTextColor(COLOR_ACCENT);
-                    status.setText("Sync failed. Cached data remains available. " + error.getMessage());
+                    refreshSyncStatus("Offline - cached data", COLOR_AMBER);
                 });
             }
         }).start();
@@ -245,6 +242,18 @@ public final class SettingsActivity extends Activity {
             ratingAllocation.setText(RatingAllocationSummary.format(
                     RatingAllocationSummary.countForUser(currentSession.userId(), java.util.List.of())
             ));
+        }
+    }
+
+    private void refreshSyncStatus(String state, int color) {
+        if (status == null) {
+            return;
+        }
+        status.setTextColor(color);
+        try {
+            status.setText(state + " · " + new AppRepositories(this).pendingSyncSummary().description());
+        } catch (Exception error) {
+            status.setText(state + " · Cached data remains available.");
         }
     }
 

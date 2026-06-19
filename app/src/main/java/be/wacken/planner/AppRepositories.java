@@ -44,6 +44,9 @@ final class AppRepositories {
     private final SyncingRatingRepository syncingRatings;
     private final SyncingScheduleLockStore syncingScheduleLocks;
     private final ScheduleLockStore scheduleLocks;
+    private final RatingSyncLocalStore ratingCache;
+    private final ScheduleLockLocalStore scheduleLockCache;
+    private final AuthSession session;
 
     AppRepositories(Context context) {
         this(context, SourceMode.SUPABASE);
@@ -64,6 +67,8 @@ final class AppRepositories {
         RoomFoodOptionRepository foodCache = new RoomFoodOptionRepository(database);
         RoomRatingRepository ratingCache = new RoomRatingRepository(database);
         RoomScheduleLockStore scheduleLockCache = new RoomScheduleLockStore(database);
+        this.ratingCache = ratingCache;
+        this.scheduleLockCache = scheduleLockCache;
 
         BandRepository bandSource;
         StageRepository stageSource;
@@ -72,6 +77,7 @@ final class AppRepositories {
         FoodOptionRepository foodSource;
         AuthSessionStore authSessionStore = new AuthSessionStore(context);
         SupabaseSessionManager sessionManager = new SupabaseSessionManager(authSessionStore, new SupabaseAuthClient());
+        this.session = authSessionStore.load();
         if (sourceMode == SourceMode.SUPABASE) {
             SupabaseMasterDataClient client = new SupabaseMasterDataClient(sessionManager);
             bandSource = new SupabaseBandRepository(client);
@@ -94,7 +100,6 @@ final class AppRepositories {
         this.foodOptions = new SyncedFoodOptionRepository(foodCache, foodSource);
         if (sourceMode == SourceMode.SUPABASE) {
             SupabaseScheduleLockClient scheduleLockClient = new SupabaseScheduleLockClient(sessionManager);
-            AuthSession session = authSessionStore.load();
             this.syncingRatings = new SyncingRatingRepository(
                     ratingCache,
                     new SupabaseRatingClient(sessionManager),
@@ -141,6 +146,16 @@ final class AppRepositories {
 
     ScheduleLockStore scheduleLocks() {
         return scheduleLocks;
+    }
+
+    PendingSyncSummary pendingSyncSummary() {
+        if (!session.isPresent()) {
+            return PendingSyncSummary.of(0, 0);
+        }
+        int pendingRatings = ratingCache.findPending(session.groupId(), session.userId()).size();
+        int pendingScheduleChoices = scheduleLockCache.findPendingSelections(session.groupId()).size()
+                + scheduleLockCache.findPendingClears(session.groupId()).size();
+        return PendingSyncSummary.of(pendingRatings, pendingScheduleChoices);
     }
 
     void syncScheduleLocks() {
