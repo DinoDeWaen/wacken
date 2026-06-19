@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 public final class SettingsActivity extends Activity {
@@ -47,11 +48,15 @@ public final class SettingsActivity extends Activity {
         finish();
     }
 
-    private LinearLayout content() {
+    private ScrollView content() {
+        ScrollView scroll = new ScrollView(this);
+        scroll.setBackgroundColor(COLOR_BACKGROUND);
+
         LinearLayout screen = new LinearLayout(this);
         screen.setOrientation(LinearLayout.VERTICAL);
         screen.setBackgroundColor(COLOR_BACKGROUND);
         screen.setPadding(dp(16), dp(16), dp(16), dp(16));
+        scroll.addView(screen);
 
         TextView title = new TextView(this);
         title.setText("Settings");
@@ -68,23 +73,25 @@ public final class SettingsActivity extends Activity {
         subtitle.setPadding(0, dp(4), 0, dp(18));
         screen.addView(subtitle);
 
-        ratingAllocation = new TextView(this);
+        LinearLayout groupSection = section("Group");
+        groupSection.addView(infoText("Signed in as " + currentSession.email()));
+        groupSection.addView(actionButton("Share group invite", WackenTheme.ButtonStyle.SECONDARY, view -> shareGroupInvite()));
+        screen.addView(groupSection);
+
+        LinearLayout ratingSection = section("Rating allocation");
         ratingAllocation.setTextColor(COLOR_TEXT);
         ratingAllocation.setTextSize(15);
         ratingAllocation.setTypeface(Typeface.DEFAULT_BOLD);
-        ratingAllocation.setGravity(Gravity.CENTER_HORIZONTAL);
-        ratingAllocation.setPadding(0, 0, 0, dp(18));
-        screen.addView(ratingAllocation);
+        ratingAllocation.setGravity(Gravity.START);
+        ratingAllocation.setPadding(0, dp(4), 0, 0);
+        ratingSection.addView(ratingAllocation);
+        screen.addView(ratingSection);
         refreshRatingAllocation();
 
-        screen.addView(actionButton("Share group invite", WackenTheme.ButtonStyle.SECONDARY, view -> shareGroupInvite()));
-        screen.addView(actionButton("Import lineup CSV files", WackenTheme.ButtonStyle.PREMIUM, view -> {
-            startActivity(new Intent(this, ImportCsvActivity.class));
-        }));
+        LinearLayout syncSection = section("Sync");
         syncButton = actionButton("Sync from Supabase", WackenTheme.ButtonStyle.SECONDARY,
                 view -> syncFromSupabase());
-        screen.addView(syncButton);
-        screen.addView(actionButton("Back to bands", WackenTheme.ButtonStyle.SECONDARY, view -> finish()));
+        syncSection.addView(syncButton);
 
         syncIndicator = new TextView(this);
         syncIndicator.setText("⚡");
@@ -93,14 +100,24 @@ public final class SettingsActivity extends Activity {
         syncIndicator.setTypeface(Typeface.DEFAULT_BOLD);
         syncIndicator.setGravity(Gravity.CENTER_HORIZONTAL);
         syncIndicator.setVisibility(android.view.View.GONE);
-        screen.addView(syncIndicator);
+        syncSection.addView(syncIndicator);
 
         status = new TextView(this);
         status.setTextColor(COLOR_MUTED);
-        status.setGravity(Gravity.CENTER_HORIZONTAL);
-        status.setPadding(0, dp(18), 0, 0);
-        screen.addView(status);
-        return screen;
+        status.setGravity(Gravity.START);
+        status.setPadding(0, dp(8), 0, 0);
+        status.setText("Cached data remains available if sync fails.");
+        syncSection.addView(status);
+        screen.addView(syncSection);
+
+        LinearLayout adminSection = section("Admin");
+        adminSection.addView(actionButton("Import lineup CSV files", WackenTheme.ButtonStyle.PREMIUM, view -> {
+            startActivity(new Intent(this, ImportCsvActivity.class));
+        }));
+        screen.addView(adminSection);
+
+        screen.addView(actionButton("Back to bands", WackenTheme.ButtonStyle.SECONDARY, view -> finish()));
+        return scroll;
     }
 
     @Override
@@ -118,6 +135,37 @@ public final class SettingsActivity extends Activity {
         layout.setMargins(0, 0, 0, dp(10));
         button.setLayoutParams(layout);
         return button;
+    }
+
+    private LinearLayout section(String title) {
+        LinearLayout section = new LinearLayout(this);
+        section.setOrientation(LinearLayout.VERTICAL);
+        section.setPadding(dp(12), dp(10), dp(12), dp(12));
+        section.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        layout.setMargins(0, 0, 0, dp(12));
+        section.setLayoutParams(layout);
+
+        TextView heading = new TextView(this);
+        heading.setText(title);
+        heading.setTextColor(COLOR_AMBER);
+        heading.setTextSize(15);
+        heading.setTypeface(Typeface.DEFAULT_BOLD);
+        heading.setPadding(0, 0, 0, dp(6));
+        section.addView(heading);
+        return section;
+    }
+
+    private TextView infoText(String text) {
+        TextView info = new TextView(this);
+        info.setText(text);
+        info.setTextColor(COLOR_MUTED);
+        info.setTextSize(13);
+        info.setPadding(0, 0, 0, dp(8));
+        return info;
     }
 
     private void shareGroupInvite() {
@@ -142,8 +190,8 @@ public final class SettingsActivity extends Activity {
                 runOnUiThread(() -> {
                     syncButton.setEnabled(true);
                     stopSyncAnimation();
-                    status.setTextColor(COLOR_TEXT);
-                    status.setText("Sync complete.");
+                    status.setTextColor(WackenTheme.SUCCESS_GREEN);
+                    status.setText("Sync complete. Cached data is up to date.");
                     refreshRatingAllocation();
                 });
             } catch (Exception error) {
@@ -155,7 +203,7 @@ public final class SettingsActivity extends Activity {
                         return;
                     }
                     status.setTextColor(COLOR_ACCENT);
-                    status.setText("Supabase sync failed: " + error.getMessage());
+                    status.setText("Sync failed. Cached data remains available. " + error.getMessage());
                 });
             }
         }).start();

@@ -57,7 +57,7 @@ public final class ImportCsvActivity extends Activity {
 
         TextView subtitle = new TextView(this);
         subtitle.setText("Select CSV files. Imported festival data is updated; existing ratings stay untouched.");
-        subtitle.setTextColor(Color.LTGRAY);
+        subtitle.setTextColor(WackenTheme.MUTED);
         subtitle.setPadding(0, dp(8), 0, dp(16));
         form.addView(subtitle);
 
@@ -76,9 +76,16 @@ public final class ImportCsvActivity extends Activity {
         form.addView(backButton);
 
         resultMessage = new TextView(this);
-        resultMessage.setTextColor(Color.WHITE);
-        resultMessage.setPadding(0, dp(16), 0, 0);
-        form.addView(resultMessage);
+        resultMessage.setTextColor(WackenTheme.TEXT);
+        resultMessage.setPadding(dp(12), dp(10), dp(12), dp(10));
+        resultMessage.setText("Select files to import festival data.");
+        resultMessage.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
+        LinearLayout.LayoutParams resultLayout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        resultLayout.setMargins(0, dp(12), 0, 0);
+        form.addView(resultMessage, resultLayout);
 
         ScrollView scrollView = new ScrollView(this);
         scrollView.setBackgroundColor(WackenTheme.BACKGROUND);
@@ -105,6 +112,7 @@ public final class ImportCsvActivity extends Activity {
             selection.label.setText(selection.fileName);
             selection.label.setTextColor(Color.WHITE);
         } catch (IOException error) {
+            resultMessage.setTextColor(WackenTheme.RED);
             resultMessage.setText("Could not read " + selection.expectedName + ": " + error.getMessage());
         }
     }
@@ -145,7 +153,14 @@ public final class ImportCsvActivity extends Activity {
     private LinearLayout filePicker(String title, CsvSelection selection, int requestCode) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.VERTICAL);
-        row.setPadding(0, dp(10), 0, dp(10));
+        row.setPadding(dp(12), dp(10), dp(12), dp(10));
+        row.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
+        LinearLayout.LayoutParams rowLayout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        rowLayout.setMargins(0, 0, 0, dp(10));
+        row.setLayoutParams(rowLayout);
 
         Button button = secondaryButton("Choose " + title + " CSV");
         button.setOnClickListener(view -> openCsvPicker(requestCode));

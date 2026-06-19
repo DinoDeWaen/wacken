@@ -37,7 +37,7 @@ public final class LoginActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText("Wacken Planner");
-        title.setTextColor(Color.WHITE);
+        title.setTextColor(WackenTheme.AMBER);
         title.setTextSize(28);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -50,19 +50,34 @@ public final class LoginActivity extends Activity {
         subtitle.setPadding(0, dp(6), 0, dp(18));
         screen.addView(subtitle);
 
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(dp(12), dp(12), dp(12), dp(12));
+        panel.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
+        screen.addView(panel, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+
         email = input("Email", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
         password = input("Password", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        screen.addView(email);
-        screen.addView(password);
+        panel.addView(email);
+        panel.addView(password);
 
         signIn = WackenTheme.actionButton(this, "Sign in", WackenTheme.ButtonStyle.PREMIUM, view -> signIn());
-        screen.addView(signIn);
+        panel.addView(signIn);
 
         message = new TextView(this);
         message.setTextColor(COLOR_TEXT);
-        message.setGravity(Gravity.CENTER_HORIZONTAL);
-        message.setPadding(0, dp(14), 0, 0);
-        screen.addView(message);
+        message.setGravity(Gravity.START);
+        message.setPadding(dp(10), dp(10), dp(10), dp(10));
+        message.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
+        LinearLayout.LayoutParams messageLayout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        messageLayout.setMargins(0, dp(12), 0, 0);
+        screen.addView(message, messageLayout);
 
         setContentView(screen);
     }
