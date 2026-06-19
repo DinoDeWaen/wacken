@@ -62,6 +62,7 @@ public final class ScheduleActivity extends Activity {
     private boolean scheduleLocksRequested;
     private boolean scheduleLocksLoaded;
     private String scheduleLockWarning;
+    private boolean scheduleKeyVisible;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -174,7 +175,10 @@ public final class ScheduleActivity extends Activity {
             return;
         }
         screen.addView(filterControls());
-        screen.addView(scheduleLegend());
+        screen.addView(scheduleKeyToggle());
+        if (scheduleKeyVisible) {
+            screen.addView(scheduleLegend());
+        }
         java.util.Optional<ScheduleDay> selected = ScheduleDaySelection.selectedDay(schedule.days(), selectedScheduleDate);
         if (selected.isEmpty()) {
             screen.addView(message("No selected performances are available yet.", COLOR_MUTED));
@@ -228,7 +232,7 @@ public final class ScheduleActivity extends Activity {
         controls.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, COLOR_GRID, 6));
 
         CheckBox hideBarredBox = new CheckBox(this);
-        hideBarredBox.setText("Hide barred");
+        hideBarredBox.setText(ScheduleLegendContent.hideBarredLabel());
         hideBarredBox.setTextColor(COLOR_TEXT);
         hideBarredBox.setTextSize(13);
         hideBarredBox.setTypeface(Typeface.DEFAULT_BOLD);
@@ -239,7 +243,7 @@ public final class ScheduleActivity extends Activity {
         });
         controls.addView(hideBarredBox);
         TextView thresholdLabel = new TextView(this);
-        thresholdLabel.setText("Hide <= ");
+        thresholdLabel.setText(ScheduleLegendContent.ratingThresholdLabel());
         thresholdLabel.setTextColor(COLOR_MUTED);
         thresholdLabel.setTextSize(12);
         thresholdLabel.setTypeface(Typeface.DEFAULT_BOLD);
@@ -301,8 +305,36 @@ public final class ScheduleActivity extends Activity {
         legend.addView(legendLine("Scratched", "lower-rated visible overlap to skip", WackenTheme.RED));
         legend.addView(legendLine("🔒", "locked group choice", COLOR_MUTED));
         legend.addView(legendLine("≡", "tie shown first in alternatives", COLOR_MUTED));
-        legend.addView(legendLine("Filters", "hide barred acts or acts at/below selected stars", COLOR_MUTED));
+        legend.addView(legendLine("Filters", "hide barred overlaps or ratings at/below selected stars", COLOR_MUTED));
         return legend;
+    }
+
+    private View scheduleKeyToggle() {
+        LinearLayout key = new LinearLayout(this);
+        key.setGravity(Gravity.CENTER_VERTICAL);
+        key.setPadding(dp(10), dp(4), dp(10), dp(8));
+        key.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, COLOR_GRID, 6));
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        layout.setMargins(0, 0, 0, dp(8));
+        key.setLayoutParams(layout);
+
+        TextView label = detailText("Schedule key", COLOR_MUTED, 12, true);
+        key.addView(label, new LinearLayout.LayoutParams(0, dp(34), 1));
+        Button toggle = WackenTheme.actionButton(
+                this,
+                scheduleKeyVisible ? "Hide" : "Show",
+                WackenTheme.ButtonStyle.SECONDARY,
+                view -> {
+                    scheduleKeyVisible = !scheduleKeyVisible;
+                    setContentView(render());
+                }
+        );
+        toggle.setTextSize(12);
+        key.addView(toggle, new LinearLayout.LayoutParams(dp(72), dp(34)));
+        return key;
     }
 
     private TextView legendLine(String label, String description, int accent) {
