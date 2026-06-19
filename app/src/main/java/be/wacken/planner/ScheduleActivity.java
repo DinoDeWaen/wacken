@@ -40,13 +40,13 @@ import be.wacken.planner.application.TimelineSlot;
 import be.wacken.planner.domain.StageWalkingTimePolicy;
 
 public final class ScheduleActivity extends Activity {
-    private static final int COLOR_BACKGROUND = Color.rgb(29, 36, 38);
-    private static final int COLOR_PANEL = Color.rgb(38, 46, 48);
-    private static final int COLOR_GRID = Color.rgb(67, 75, 78);
-    private static final int COLOR_TEXT = Color.rgb(220, 224, 225);
-    private static final int COLOR_MUTED = Color.rgb(162, 169, 171);
-    private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
-    private static final int COLOR_AMBER = Color.rgb(255, 199, 44);
+    private static final int COLOR_BACKGROUND = WackenTheme.BACKGROUND;
+    private static final int COLOR_PANEL = WackenTheme.ELEVATED_PANEL;
+    private static final int COLOR_GRID = WackenTheme.GRID;
+    private static final int COLOR_TEXT = WackenTheme.TEXT;
+    private static final int COLOR_MUTED = WackenTheme.MUTED;
+    private static final int COLOR_ACCENT = WackenTheme.RED;
+    private static final int COLOR_AMBER = WackenTheme.AMBER;
     private static final int HOUR_WIDTH_DP = 156;
     private static final int STAGE_LABEL_WIDTH_DP = 142;
     private static final int STAGE_ROW_HEIGHT_DP = 92;
@@ -91,13 +91,7 @@ public final class ScheduleActivity extends Activity {
         subtitle.setPadding(0, dp(4), 0, dp(16));
         screen.addView(subtitle);
 
-        Button back = new Button(this);
-        back.setAllCaps(false);
-        back.setText("Back to bands");
-        back.setTextColor(Color.WHITE);
-        back.setTypeface(Typeface.DEFAULT_BOLD);
-        back.setBackgroundColor(Color.rgb(49, 56, 58));
-        back.setOnClickListener(view -> finish());
+        Button back = WackenTheme.actionButton(this, "Back to bands", WackenTheme.ButtonStyle.SECONDARY, view -> finish());
         screen.addView(back, fullWidthButtonLayout());
 
         try {
@@ -210,7 +204,7 @@ public final class ScheduleActivity extends Activity {
             button.setPadding(dp(10), 0, dp(10), 0);
             button.setBackgroundColor(ScheduleDaySelection.isSelected(day, selected)
                     ? COLOR_ACCENT
-                    : Color.rgb(49, 56, 58));
+                    : WackenTheme.PANEL);
             button.setOnClickListener(view -> {
                 selectedScheduleDate = day.date();
                 setContentView(render());
@@ -273,7 +267,7 @@ public final class ScheduleActivity extends Activity {
         button.setMinWidth(0);
         button.setMinHeight(0);
         button.setPadding(dp(8), 0, dp(8), 0);
-        button.setBackgroundColor(selectedHideThreshold == threshold ? COLOR_ACCENT : Color.rgb(49, 56, 58));
+        button.setBackgroundColor(selectedHideThreshold == threshold ? COLOR_ACCENT : WackenTheme.PANEL);
         button.setOnClickListener(view -> {
             selectedHideThreshold = threshold;
             setContentView(render());
@@ -479,7 +473,7 @@ public final class ScheduleActivity extends Activity {
 
     private View stageRowLine() {
         View line = new View(this);
-        line.setBackgroundColor(Color.rgb(49, 57, 60));
+        line.setBackgroundColor(WackenTheme.GRID);
         return line;
     }
 

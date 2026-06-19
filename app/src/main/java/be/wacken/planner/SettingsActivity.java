@@ -12,11 +12,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public final class SettingsActivity extends Activity {
-    private static final int COLOR_BACKGROUND = Color.rgb(29, 36, 38);
-    private static final int COLOR_TEXT = Color.rgb(220, 224, 225);
-    private static final int COLOR_MUTED = Color.rgb(162, 169, 171);
-    private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
-    private static final int COLOR_AMBER = Color.rgb(255, 199, 44);
+    private static final int COLOR_BACKGROUND = WackenTheme.BACKGROUND;
+    private static final int COLOR_TEXT = WackenTheme.TEXT;
+    private static final int COLOR_MUTED = WackenTheme.MUTED;
+    private static final int COLOR_ACCENT = WackenTheme.RED;
+    private static final int COLOR_AMBER = WackenTheme.AMBER;
 
     private AuthSessionStore sessionStore;
     private AuthSession currentSession;
@@ -77,14 +77,14 @@ public final class SettingsActivity extends Activity {
         screen.addView(ratingAllocation);
         refreshRatingAllocation();
 
-        screen.addView(actionButton("Share group invite", Color.rgb(78, 67, 50), view -> shareGroupInvite()));
-        screen.addView(actionButton("Import lineup CSV files", COLOR_AMBER, view -> {
+        screen.addView(actionButton("Share group invite", WackenTheme.ButtonStyle.SECONDARY, view -> shareGroupInvite()));
+        screen.addView(actionButton("Import lineup CSV files", WackenTheme.ButtonStyle.PREMIUM, view -> {
             startActivity(new Intent(this, ImportCsvActivity.class));
-        }, Color.BLACK));
-        syncButton = actionButton("Sync from Supabase", Color.rgb(49, 56, 58),
+        }));
+        syncButton = actionButton("Sync from Supabase", WackenTheme.ButtonStyle.SECONDARY,
                 view -> syncFromSupabase());
         screen.addView(syncButton);
-        screen.addView(actionButton("Back to bands", Color.rgb(64, 76, 79), view -> finish()));
+        screen.addView(actionButton("Back to bands", WackenTheme.ButtonStyle.SECONDARY, view -> finish()));
 
         syncIndicator = new TextView(this);
         syncIndicator.setText("⚡");
@@ -109,18 +109,8 @@ public final class SettingsActivity extends Activity {
         super.onDestroy();
     }
 
-    private Button actionButton(String text, int color, android.view.View.OnClickListener listener) {
-        return actionButton(text, color, listener, Color.WHITE);
-    }
-
-    private Button actionButton(String text, int color, android.view.View.OnClickListener listener, int textColor) {
-        Button button = new Button(this);
-        button.setAllCaps(false);
-        button.setText(text);
-        button.setTextColor(textColor);
-        button.setTypeface(Typeface.DEFAULT_BOLD);
-        button.setBackgroundColor(color);
-        button.setOnClickListener(listener);
+    private Button actionButton(String text, WackenTheme.ButtonStyle style, android.view.View.OnClickListener listener) {
+        Button button = WackenTheme.actionButton(this, text, style, listener);
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT

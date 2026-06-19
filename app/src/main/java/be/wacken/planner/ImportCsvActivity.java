@@ -44,13 +44,13 @@ public final class ImportCsvActivity extends Activity {
 
         LinearLayout form = new LinearLayout(this);
         form.setOrientation(LinearLayout.VERTICAL);
-        form.setBackgroundColor(Color.rgb(15, 15, 15));
+        form.setBackgroundColor(WackenTheme.BACKGROUND);
         int padding = dp(18);
         form.setPadding(padding, padding, padding, padding);
 
         TextView title = new TextView(this);
         title.setText("Wacken CSV Import");
-        title.setTextColor(Color.rgb(255, 199, 44));
+        title.setTextColor(WackenTheme.AMBER);
         title.setTextSize(28);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
         form.addView(title);
@@ -81,7 +81,7 @@ public final class ImportCsvActivity extends Activity {
         form.addView(resultMessage);
 
         ScrollView scrollView = new ScrollView(this);
-        scrollView.setBackgroundColor(Color.rgb(15, 15, 15));
+        scrollView.setBackgroundColor(WackenTheme.BACKGROUND);
         scrollView.addView(form);
         setContentView(scrollView);
     }
@@ -111,7 +111,7 @@ public final class ImportCsvActivity extends Activity {
 
     private void importCsv() {
         if (bandsCsv.contents.isBlank()) {
-            resultMessage.setTextColor(Color.rgb(255, 115, 115));
+            resultMessage.setTextColor(WackenTheme.RED);
             resultMessage.setText("Select at least bands.csv before importing.");
             return;
         }
@@ -134,10 +134,10 @@ public final class ImportCsvActivity extends Activity {
         ));
 
         if (result.success()) {
-            resultMessage.setTextColor(Color.rgb(255, 199, 44));
+            resultMessage.setTextColor(WackenTheme.AMBER);
             resultMessage.setText("Import successful. Existing ratings were preserved.");
         } else {
-            resultMessage.setTextColor(Color.rgb(255, 115, 115));
+            resultMessage.setTextColor(WackenTheme.RED);
             resultMessage.setText(String.join("\n", result.errors()));
         }
     }
@@ -153,7 +153,7 @@ public final class ImportCsvActivity extends Activity {
 
         selection.label = new TextView(this);
         selection.label.setText("No file selected (" + selection.expectedName + ")");
-        selection.label.setTextColor(Color.rgb(170, 170, 170));
+        selection.label.setTextColor(WackenTheme.MUTED);
         selection.label.setPadding(dp(8), dp(6), dp(8), 0);
         row.addView(selection.label);
 
@@ -220,21 +220,11 @@ public final class ImportCsvActivity extends Activity {
     }
 
     private Button actionButton(String text) {
-        Button button = new Button(this);
-        button.setAllCaps(false);
-        button.setText(text);
-        button.setTextColor(Color.BLACK);
-        button.setBackgroundColor(Color.rgb(255, 199, 44));
-        return button;
+        return WackenTheme.actionButton(this, text, WackenTheme.ButtonStyle.PREMIUM, null);
     }
 
     private Button secondaryButton(String text) {
-        Button button = new Button(this);
-        button.setAllCaps(false);
-        button.setText(text);
-        button.setTextColor(Color.WHITE);
-        button.setBackgroundColor(Color.rgb(45, 45, 45));
-        return button;
+        return WackenTheme.actionButton(this, text, WackenTheme.ButtonStyle.SECONDARY, null);
     }
 
     private int dp(int value) {

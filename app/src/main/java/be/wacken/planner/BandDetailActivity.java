@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -37,11 +36,10 @@ public final class BandDetailActivity extends Activity {
     public static final String EXTRA_TIME = "be.wacken.planner.TIME";
 
     private static final String TBA = "TBA";
-    private static final int COLOR_BACKGROUND = Color.rgb(29, 36, 38);
-    private static final int COLOR_PANEL = Color.rgb(32, 39, 41);
-    private static final int COLOR_GRID = Color.rgb(67, 75, 78);
-    private static final int COLOR_TEXT = Color.rgb(220, 224, 225);
-    private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
+    private static final int COLOR_BACKGROUND = WackenTheme.BACKGROUND;
+    private static final int COLOR_GRID = WackenTheme.GRID;
+    private static final int COLOR_TEXT = WackenTheme.TEXT;
+    private static final int COLOR_ACCENT = WackenTheme.RED;
 
     private BandRepository bands;
     private RatingRepository ratings;
@@ -156,7 +154,7 @@ public final class BandDetailActivity extends Activity {
         links.setGravity(Gravity.CENTER);
         links.addView(homeButton());
         detail.youtubeUrl().ifPresent(url -> links.addView(iconButton("▶", "Open YouTube", COLOR_ACCENT, url)));
-        detail.spotifyUrl().ifPresent(url -> links.addView(iconButton("♬", "Open Spotify", Color.rgb(30, 215, 96), url)));
+        detail.spotifyUrl().ifPresent(url -> links.addView(iconButton("♬", "Open Spotify", WackenTheme.SUCCESS_GREEN, url)));
         facts.addView(links);
 
         detail.biography().ifPresent(biography -> screen.addView(paragraph(biography)));
@@ -169,7 +167,7 @@ public final class BandDetailActivity extends Activity {
         image.setAdjustViewBounds(true);
         image.setScaleType(ImageView.ScaleType.CENTER_CROP);
         image.setContentDescription("Band image");
-        image.setBackground(iconBackground(COLOR_GRID));
+        image.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, COLOR_GRID, 5));
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(dp(140), dp(140));
         layout.setMargins(0, 0, dp(10), 0);
         image.setLayoutParams(layout);
@@ -233,7 +231,7 @@ public final class BandDetailActivity extends Activity {
     }
 
     private Button homeButton() {
-        Button button = baseIconButton("⌂", "Home", Color.WHITE);
+        Button button = baseIconButton("⌂", "Home", WackenTheme.WHITE);
         button.setOnClickListener(view -> finish());
         return button;
     }
@@ -245,26 +243,7 @@ public final class BandDetailActivity extends Activity {
     }
 
     private Button baseIconButton(String icon, String description, int accentColor) {
-        Button button = new Button(this);
-        button.setText(icon);
-        button.setTextSize(22);
-        button.setTextColor(Color.WHITE);
-        button.setTypeface(Typeface.DEFAULT_BOLD);
-        button.setContentDescription(description);
-        button.setPadding(0, 0, 0, 0);
-        button.setBackground(iconBackground(accentColor));
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(dp(44), dp(42));
-        layout.setMargins(dp(4), 0, dp(4), 0);
-        button.setLayoutParams(layout);
-        return button;
-    }
-
-    private GradientDrawable iconBackground(int accentColor) {
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(COLOR_PANEL);
-        drawable.setStroke(dp(1), accentColor == Color.WHITE ? COLOR_GRID : accentColor);
-        drawable.setCornerRadius(dp(5));
-        return drawable;
+        return WackenTheme.iconButton(this, icon, description, accentColor, 44, null);
     }
 
     private String valueExtra(String key) {

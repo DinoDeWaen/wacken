@@ -41,13 +41,13 @@ import be.wacken.planner.domain.Band;
 
 public final class MainActivity extends Activity {
     private static final String STATE_PENDING_SCROLL_BAND_NAME = "pending_scroll_band_name";
-    private static final int COLOR_BACKGROUND = Color.rgb(29, 36, 38);
-    private static final int COLOR_ROW_DARK = Color.rgb(32, 39, 41);
-    private static final int COLOR_ROW_LIGHT = Color.rgb(41, 48, 50);
-    private static final int COLOR_GRID = Color.rgb(67, 75, 78);
-    private static final int COLOR_TEXT = Color.rgb(220, 224, 225);
-    private static final int COLOR_MUTED = Color.rgb(162, 169, 171);
-    private static final int COLOR_ACCENT = Color.rgb(255, 56, 92);
+    private static final int COLOR_BACKGROUND = WackenTheme.BACKGROUND;
+    private static final int COLOR_ROW_DARK = WackenTheme.PANEL;
+    private static final int COLOR_ROW_LIGHT = WackenTheme.ELEVATED_PANEL;
+    private static final int COLOR_GRID = WackenTheme.GRID;
+    private static final int COLOR_TEXT = WackenTheme.TEXT;
+    private static final int COLOR_MUTED = WackenTheme.MUTED;
+    private static final int COLOR_ACCENT = WackenTheme.RED;
     private static final int TABLE_HEADER_HEIGHT_DP = 44;
     private static final int BAND_ROW_HEIGHT_DP = 58;
 
@@ -233,25 +233,19 @@ public final class MainActivity extends Activity {
         actions.setOrientation(LinearLayout.HORIZONTAL);
         actions.setGravity(Gravity.CENTER_VERTICAL);
         actions.setPadding(0, 0, 0, dp(14));
-        actions.addView(topActionButton("⚙", "Settings", Color.rgb(78, 67, 50),
+        actions.addView(topActionButton("⚙", "Settings", WackenTheme.ButtonStyle.SECONDARY,
                 view -> startActivity(new Intent(this, SettingsActivity.class))));
-        actions.addView(topActionButton("📅", "Group schedule", Color.rgb(64, 76, 79),
+        actions.addView(topActionButton("📅", "Group schedule", WackenTheme.ButtonStyle.SECONDARY,
                 view -> startActivity(new Intent(this, ScheduleActivity.class))));
-        actions.addView(topActionButton("⏻", "Sync and exit", Color.rgb(91, 27, 39),
+        actions.addView(topActionButton("⏻", "Sync and exit", WackenTheme.ButtonStyle.DANGER,
                 view -> syncFromSupabase(true, "Sealing scores before exit...")));
         return actions;
     }
 
-    private Button topActionButton(String icon, String description, int color, View.OnClickListener listener) {
-        Button button = new Button(this);
-        button.setAllCaps(false);
-        button.setText(icon);
+    private Button topActionButton(String icon, String description, WackenTheme.ButtonStyle style, View.OnClickListener listener) {
+        Button button = WackenTheme.actionButton(this, icon, style, listener);
         button.setTextSize(22);
         button.setContentDescription(description);
-        button.setTextColor(Color.WHITE);
-        button.setTypeface(Typeface.DEFAULT_BOLD);
-        button.setBackgroundColor(color);
-        button.setOnClickListener(listener);
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
                 0,
                 dp(48),
@@ -519,7 +513,7 @@ public final class MainActivity extends Activity {
         actions.setPadding(dp(2), 0, dp(2), 0);
         actions.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.45f));
         band.flatMap(Band::youtubeUrl).ifPresent(url -> actions.addView(iconButton("▶", "Open YouTube", COLOR_ACCENT, url, dp(26))));
-        band.flatMap(Band::spotifyUrl).ifPresent(url -> actions.addView(iconButton("♬", "Open Spotify", Color.rgb(30, 215, 96), url, dp(26))));
+        band.flatMap(Band::spotifyUrl).ifPresent(url -> actions.addView(iconButton("♬", "Open Spotify", WackenTheme.SUCCESS_GREEN, url, dp(26))));
         return actions;
     }
 
@@ -541,7 +535,7 @@ public final class MainActivity extends Activity {
 
     private GradientDrawable iconBackground(int accentColor) {
         GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(Color.rgb(49, 56, 58));
+        drawable.setColor(WackenTheme.PANEL);
         drawable.setStroke(dp(1), accentColor);
         drawable.setCornerRadius(dp(4));
         return drawable;
@@ -597,8 +591,8 @@ public final class MainActivity extends Activity {
             ring.setStrokeWidth(activity.getResources().getDisplayMetrics().density * 7f);
             ring.setStrokeCap(Paint.Cap.ROUND);
             inner.setStyle(Paint.Style.FILL);
-            inner.setColor(Color.rgb(29, 36, 38));
-            bolt.setColor(Color.rgb(255, 56, 92));
+            inner.setColor(WackenTheme.BACKGROUND);
+            bolt.setColor(WackenTheme.RED);
             bolt.setTextAlign(Paint.Align.CENTER);
             bolt.setTypeface(Typeface.DEFAULT_BOLD);
             bolt.setTextSize(activity.getResources().getDisplayMetrics().density * 54f);
@@ -620,11 +614,11 @@ public final class MainActivity extends Activity {
                     center,
                     center,
                     new int[]{
-                            Color.rgb(77, 83, 85),
+                            WackenTheme.GRID,
                             Color.WHITE,
-                            Color.rgb(132, 140, 143),
-                            Color.rgb(255, 56, 92),
-                            Color.rgb(77, 83, 85)
+                            WackenTheme.STEEL_GREY,
+                            WackenTheme.RED,
+                            WackenTheme.GRID
                     },
                     null
             ));
@@ -637,12 +631,12 @@ public final class MainActivity extends Activity {
             inner.setShader(new SweepGradient(
                     center,
                     center,
-                    Color.rgb(84, 92, 95),
-                    Color.rgb(14, 17, 18)
+                    WackenTheme.GRID,
+                    WackenTheme.VOID
             ));
             canvas.drawCircle(center, center, size * 0.25f, inner);
             inner.setShader(null);
-            bolt.setShadowLayer(12f, 0f, 0f, Color.rgb(255, 56, 92));
+            bolt.setShadowLayer(12f, 0f, 0f, WackenTheme.RED);
             canvas.drawText("⚡", center, center + (bolt.getTextSize() * 0.34f), bolt);
         }
     }

@@ -14,10 +14,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public final class LoginActivity extends Activity {
-    private static final int COLOR_BACKGROUND = Color.rgb(29, 36, 38);
-    private static final int COLOR_TEXT = Color.rgb(220, 224, 225);
-    private static final int COLOR_MUTED = Color.rgb(162, 169, 171);
-    private static final int COLOR_ACCENT = Color.rgb(255, 199, 44);
+    private static final int COLOR_BACKGROUND = WackenTheme.BACKGROUND;
+    private static final int COLOR_TEXT = WackenTheme.TEXT;
+    private static final int COLOR_MUTED = WackenTheme.MUTED;
+    private static final int COLOR_ACCENT = WackenTheme.GOLD;
 
     private EditText email;
     private EditText password;
@@ -55,13 +55,7 @@ public final class LoginActivity extends Activity {
         screen.addView(email);
         screen.addView(password);
 
-        signIn = new Button(this);
-        signIn.setAllCaps(false);
-        signIn.setText("Sign in");
-        signIn.setTextColor(Color.BLACK);
-        signIn.setTypeface(Typeface.DEFAULT_BOLD);
-        signIn.setBackgroundColor(COLOR_ACCENT);
-        signIn.setOnClickListener(view -> signIn());
+        signIn = WackenTheme.actionButton(this, "Sign in", WackenTheme.ButtonStyle.PREMIUM, view -> signIn());
         screen.addView(signIn);
 
         message = new TextView(this);
@@ -80,7 +74,7 @@ public final class LoginActivity extends Activity {
         input.setInputType(inputType);
         input.setTextColor(Color.WHITE);
         input.setHintTextColor(COLOR_MUTED);
-        input.setBackgroundColor(Color.rgb(41, 48, 50));
+        input.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
         input.setPadding(dp(10), 0, dp(10), 0);
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -95,7 +89,7 @@ public final class LoginActivity extends Activity {
         String enteredEmail = email.getText().toString().trim();
         String enteredPassword = password.getText().toString();
         if (enteredEmail.isBlank() || enteredPassword.isBlank()) {
-            message.setTextColor(Color.rgb(255, 115, 115));
+            message.setTextColor(WackenTheme.RED);
             message.setText("Enter email and password.");
             return;
         }
@@ -114,7 +108,7 @@ public final class LoginActivity extends Activity {
             } catch (Exception error) {
                 runOnUiThread(() -> {
                     signIn.setEnabled(true);
-                    message.setTextColor(Color.rgb(255, 115, 115));
+                    message.setTextColor(WackenTheme.RED);
                     message.setText(error.getMessage());
                 });
             }
