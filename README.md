@@ -9,7 +9,7 @@
 - Show locally cached lineup, ratings, schedule data, and manual schedule locks first, while Supabase sync refreshes Room in the background.
 - List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.
 - Hide generic Metal Battle placeholder acts from rating lists and rating allocation counts while preserving imported master data.
-- Show compact read-only per-person star details on band overview rows and band detail screens when group ratings are available.
+- Show compact read-only per-person star details on band detail and schedule decision detail screens when group ratings are available.
 - Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars, and clear a previous rating back to unrated.
 - Save rating and manual schedule-lock changes locally immediately, queue them as pending offline operations, and sync them with Supabase in the background on start/reactivation, on manual sync, or before close.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
@@ -37,6 +37,7 @@
 - Release process: [`release-process.md`](backlog/docs/release-process.md).
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
+- V2.17 release notes: [`releases/v2.17.md`](releases/v2.17.md).
 - V2.16 release notes: [`releases/v2.16.md`](releases/v2.16.md).
 - V2.15 release notes: [`releases/v2.15.md`](releases/v2.15.md).
 - V2.14 release notes: [`releases/v2.14.md`](releases/v2.14.md).

@@ -656,6 +656,16 @@ public final class ScheduleActivity extends Activity {
             afterSelect.run();
         });
         panel.addView(name);
+        if (candidate.hasPersonRatings()) {
+            TextView personRatings = detailText(
+                    candidate.personRatingSummary(),
+                    COLOR_MUTED,
+                    12,
+                    false
+            );
+            personRatings.setPadding(0, dp(2), 0, dp(2));
+            panel.addView(personRatings);
+        }
 
         TextView facts = detailText(
                 candidate.stageName() + " | " + candidate.start().format(TIME) + " - " + candidate.end().format(TIME),

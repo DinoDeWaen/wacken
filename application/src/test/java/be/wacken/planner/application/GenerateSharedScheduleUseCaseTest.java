@@ -148,7 +148,10 @@ class GenerateSharedScheduleUseCaseTest {
         Performance lost = performance("Airbourne", 30, 18, 20, 19, 20);
         performances.replaceAll(List.of(selected, lost));
         ratings.save("sofie", selected.band(), Rating.of(5));
+        ratings.save("dino", selected.band(), Rating.of(4));
+        ratings.save("alex", selected.band(), Rating.of(0));
         ratings.save("dino", lost.band(), Rating.of(4));
+        ratings.save("sofie", lost.band(), Rating.of(3));
 
         TimelineSlot slot = new GenerateSharedScheduleUseCase(performances, ratings).generate().days().get(0).slots().get(0);
 
@@ -158,11 +161,13 @@ class GenerateSharedScheduleUseCaseTest {
         assertEquals(5, slot.candidates().get(0).rating());
         assertEquals("CHOSEN", slot.candidates().get(0).status());
         assertEquals(true, slot.candidates().get(0).selected());
+        assertEquals("D ★★★★  S ★★★★★", slot.candidates().get(0).personRatingSummary());
         assertEquals("Airbourne", slot.candidates().get(1).bandName());
         assertEquals("Stage Airbourne", slot.candidates().get(1).stageName());
         assertEquals(4, slot.candidates().get(1).rating());
         assertEquals("LOST ALTERNATIVE", slot.candidates().get(1).status());
         assertEquals(false, slot.candidates().get(1).selected());
+        assertEquals("D ★★★★  S ★★★", slot.candidates().get(1).personRatingSummary());
     }
 
     @Test

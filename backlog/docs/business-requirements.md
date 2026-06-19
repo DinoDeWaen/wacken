@@ -20,7 +20,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - Supabase sync for bands, stages, performances, stage distances, food options, group ratings, and group schedule locks on app start, overview reactivation, manual sync, and close, with cached app data shown before lifecycle sync completes.
 - CSV/TSV fallback import path for local/admin data work.
 - Wacken-inspired overview/detail presentation with music links, imported metadata where available, and metal-themed sync feedback.
-- Compact per-person star details on the band overview and band detail screen when shared group ratings are available.
+- Compact per-person star details on the band detail and schedule decision detail screens when shared group ratings are available.
 - MVP2 group decision rules, conflict resolution, timeline generation, group-wide locked manual schedule choices, and Android schedule viewing for the current shared group.
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
@@ -368,7 +368,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-057 | The signed-in app must sync Supabase master data, group ratings, and group schedule locks when the app starts or is reactivated without blocking cached app usage. | A user opening the app on a second Android device sees locally cached data immediately while Supabase refreshes in the background; when sync succeeds, shared group ratings and manual schedule locks refresh without needing to force-close the first device. | Must |
 | BR-058 | The app must provide a close action that attempts Supabase sync before closing. | Tapping close pushes local pending ratings and pulls group ratings before the app exits; if sync fails, local ratings remain available and the app stays open with a clear failure message. | Must |
 | BR-059 | Sync operations must show clear Wacken/metal-themed feedback and prevent conflicting sync/close actions while in progress. | Startup, reactivation, manual sync, and close sync show visible progress instead of a blank or frozen screen. | Must |
-| BR-060 | The band overview and band detail should show available per-person group ratings as compact read-only detail. | A band row or detail screen can show each available person rating as small stars without changing the main editable rating workflow. | Should |
+| BR-060 | Band detail and schedule decision detail should show available per-person group ratings as compact read-only detail under the user's or candidate's main rating. | Detail screens can show each available person rating as small stars without changing the main editable rating workflow, while the band overview stays clean. | Should |
 | BR-061 | Primary app navigation must use compact icon actions for high-frequency destinations. | The overview shows a cog for settings, a calendar icon for the group schedule, and an exit action for sync-and-exit. | Must |
 | BR-062 | Secondary and admin-style actions must live on the settings page. | Group/invite actions, lineup import, and manual sync are moved out of the primary overview action area and into settings. | Must |
 | BR-063 | The group schedule must be shown as a day-filtered calendar. | The user chooses one festival day, and that view shows only that day's fixed stage rows, horizontally scrollable time axis, and performance blocks. | Must |

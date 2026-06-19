@@ -1,6 +1,7 @@
 package be.wacken.planner.application;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record ScheduleDecisionCandidate(
         String bandName,
@@ -9,8 +10,21 @@ public record ScheduleDecisionCandidate(
         LocalDateTime start,
         LocalDateTime end,
         String status,
-        boolean selected
+        boolean selected,
+        List<PersonRatingStars> personRatings
 ) {
+    public ScheduleDecisionCandidate(
+            String bandName,
+            int rating,
+            String stageName,
+            LocalDateTime start,
+            LocalDateTime end,
+            String status,
+            boolean selected
+    ) {
+        this(bandName, rating, stageName, start, end, status, selected, List.of());
+    }
+
     public ScheduleDecisionCandidate {
         if (bandName == null || bandName.isBlank()) {
             throw new IllegalArgumentException("Schedule decision candidate band name must not be blank.");
@@ -30,5 +44,17 @@ public record ScheduleDecisionCandidate(
         if (status == null || status.isBlank()) {
             throw new IllegalArgumentException("Schedule decision candidate status must not be blank.");
         }
+        personRatings = List.copyOf(personRatings == null ? List.of() : personRatings);
+    }
+
+    public boolean hasPersonRatings() {
+        return !personRatings.isEmpty();
+    }
+
+    public String personRatingSummary() {
+        return personRatings.stream()
+                .map(PersonRatingStars::displayText)
+                .reduce((left, right) -> left + "  " + right)
+                .orElse("");
     }
 }

@@ -492,7 +492,7 @@ public final class MainActivity extends Activity {
         return cell;
     }
 
-    private LinearLayout bandNameCell(TextView name, TextView personRatings) {
+    private LinearLayout bandNameCell(TextView name) {
         LinearLayout cell = new LinearLayout(this);
         cell.setOrientation(LinearLayout.VERTICAL);
         cell.setGravity(Gravity.CENTER_VERTICAL);
@@ -505,16 +505,7 @@ public final class MainActivity extends Activity {
         name.setTextSize(12);
         name.setTypeface(Typeface.DEFAULT_BOLD);
 
-        personRatings.setSingleLine(true);
-        personRatings.setEllipsize(TextUtils.TruncateAt.END);
-        personRatings.setTextColor(COLOR_MUTED);
-        personRatings.setTextSize(9);
-
         cell.addView(name, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        ));
-        cell.addView(personRatings, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         ));
@@ -702,8 +693,7 @@ public final class MainActivity extends Activity {
             row.setFocusable(true);
 
             TextView name = new TextView(MainActivity.this);
-            TextView personRatings = new TextView(MainActivity.this);
-            LinearLayout bandName = bandNameCell(name, personRatings);
+            LinearLayout bandName = bandNameCell(name);
             RatingStarsView rating = new RatingStarsView(MainActivity.this, 0, false, COLOR_ACCENT);
             rating.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.75f));
             LinearLayout actions = new LinearLayout(MainActivity.this);
@@ -718,7 +708,7 @@ public final class MainActivity extends Activity {
             row.addView(stage);
             row.addView(date);
             row.addView(time);
-            return new RowHolder(row, name, personRatings, rating, actions, stage, date, time);
+            return new RowHolder(row, name, rating, actions, stage, date, time);
         }
 
         private void bindRow(RowHolder holder, int position) {
@@ -731,8 +721,6 @@ public final class MainActivity extends Activity {
             });
 
             holder.name.setText(band.bandName());
-            holder.personRatings.setText(band.personRatingSummary());
-            holder.personRatings.setVisibility(band.hasPersonRatings() ? View.VISIBLE : View.GONE);
             holder.rating.bind(band.rating(), band.explicitRating());
             holder.rating.setOnRatingSelected(selectedRating -> saveRating(position, band, holder.rating, selectedRating));
             holder.row.setOnHoverListener((view, event) -> {
@@ -807,7 +795,6 @@ public final class MainActivity extends Activity {
     private record RowHolder(
             LinearLayout row,
             TextView name,
-            TextView personRatings,
             RatingStarsView rating,
             LinearLayout actions,
             TextView stage,

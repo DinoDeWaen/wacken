@@ -220,8 +220,19 @@ public final class GenerateSharedScheduleUseCase {
                 performance.start(),
                 performance.end(),
                 status,
-                selected
+                selected,
+                personRatingsFor(performance.band())
         );
+    }
+
+    private List<PersonRatingStars> personRatingsFor(Band band) {
+        return ratings.findAll()
+                .stream()
+                .filter(rating -> rating.band().equals(band))
+                .filter(rating -> rating.rating().value() > 0)
+                .sorted(Comparator.comparing(SavedRating::userName, String.CASE_INSENSITIVE_ORDER))
+                .map(rating -> new PersonRatingStars(rating.userName(), rating.rating().value()))
+                .collect(Collectors.toList());
     }
 
     private int highestRating(Band band, Map<Band, List<Rating>> groupRatings) {
