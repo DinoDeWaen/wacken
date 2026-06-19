@@ -213,8 +213,8 @@ public final class MainActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText("Bands");
-        title.setTextColor(COLOR_MUTED);
-        title.setTextSize(24);
+        title.setTextColor(WackenTheme.AMBER);
+        title.setTextSize(28);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.START);
         header.addView(title);
@@ -452,7 +452,7 @@ public final class MainActivity extends Activity {
         TextView cell = cell(text, Typeface.DEFAULT_BOLD, weight);
         cell.setTextColor(COLOR_TEXT);
         cell.setTextSize(13);
-        cell.setBackground(columnHeaderBackground());
+        cell.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, COLOR_GRID, 4));
         return cell;
     }
 
@@ -481,7 +481,7 @@ public final class MainActivity extends Activity {
         cell.setTextSize(12);
         cell.setTypeface(typeface);
         cell.setGravity(Gravity.CENTER_VERTICAL);
-        cell.setPadding(dp(5), 0, dp(5), 0);
+        cell.setPadding(dp(6), 0, dp(6), 0);
         cell.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, weight));
         return cell;
     }
@@ -518,34 +518,12 @@ public final class MainActivity extends Activity {
     }
 
     private Button iconButton(String icon, String description, int accentColor, String url, int size) {
-        Button button = new Button(this);
-        button.setText(icon);
+        Button button = WackenTheme.iconButton(this, icon, description, accentColor, Math.max(26, Math.round(size / getResources().getDisplayMetrics().density)), view -> ExternalLinks.open(this, url));
         button.setTextSize(14);
-        button.setTypeface(Typeface.DEFAULT_BOLD);
-        button.setTextColor(Color.WHITE);
-        button.setContentDescription(description);
-        button.setPadding(0, 0, 0, 0);
-        button.setBackground(iconBackground(accentColor));
-        button.setOnClickListener(view -> ExternalLinks.open(this, url));
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(size, size);
         layout.setMargins(dp(1), 0, dp(1), 0);
         button.setLayoutParams(layout);
         return button;
-    }
-
-    private GradientDrawable iconBackground(int accentColor) {
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(WackenTheme.PANEL);
-        drawable.setStroke(dp(1), accentColor);
-        drawable.setCornerRadius(dp(4));
-        return drawable;
-    }
-
-    private GradientDrawable columnHeaderBackground() {
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(COLOR_BACKGROUND);
-        drawable.setStroke(dp(1), COLOR_GRID);
-        return drawable;
     }
 
     private void openBandDetail(Map<String, Band> bandsByName, BandListItem band) {

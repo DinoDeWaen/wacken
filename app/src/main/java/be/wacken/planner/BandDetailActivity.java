@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -93,7 +94,7 @@ public final class BandDetailActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText(detail.bandName());
-        title.setTextColor(Color.WHITE);
+        title.setTextColor(WackenTheme.AMBER);
         title.setTextSize(26);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -101,9 +102,10 @@ public final class BandDetailActivity extends Activity {
         screen.addView(title);
 
         LinearLayout main = new LinearLayout(this);
-        main.setOrientation(LinearLayout.HORIZONTAL);
+        main.setOrientation(narrowScreen() ? LinearLayout.VERTICAL : LinearLayout.HORIZONTAL);
         main.setGravity(Gravity.CENTER);
-        main.setPadding(0, dp(10), 0, dp(12));
+        main.setPadding(dp(12), dp(12), dp(12), dp(14));
+        main.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, COLOR_GRID, 6));
         screen.addView(main, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -114,11 +116,11 @@ public final class BandDetailActivity extends Activity {
         LinearLayout facts = new LinearLayout(this);
         facts.setOrientation(LinearLayout.VERTICAL);
         facts.setGravity(Gravity.CENTER_HORIZONTAL);
-        facts.setPadding(dp(8), 0, 0, 0);
+        facts.setPadding(narrowScreen() ? 0 : dp(10), 0, 0, 0);
         facts.setLayoutParams(new LinearLayout.LayoutParams(
-                0,
+                narrowScreen() ? LinearLayout.LayoutParams.MATCH_PARENT : 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
-                1
+                narrowScreen() ? 0 : 1
         ));
         main.addView(facts);
 
@@ -157,7 +159,7 @@ public final class BandDetailActivity extends Activity {
         detail.spotifyUrl().ifPresent(url -> links.addView(iconButton("♬", "Open Spotify", WackenTheme.SUCCESS_GREEN, url)));
         facts.addView(links);
 
-        detail.biography().ifPresent(biography -> screen.addView(paragraph(biography)));
+        detail.biography().ifPresent(biography -> screen.addView(paragraphPanel(biography)));
 
         return scroll;
     }
@@ -169,7 +171,7 @@ public final class BandDetailActivity extends Activity {
         image.setContentDescription("Band image");
         image.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, COLOR_GRID, 5));
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(dp(140), dp(140));
-        layout.setMargins(0, 0, dp(10), 0);
+        layout.setMargins(0, 0, narrowScreen() ? 0 : dp(10), narrowScreen() ? dp(12) : 0);
         image.setLayoutParams(layout);
         loadImage(url, image);
         return image;
@@ -189,30 +191,40 @@ public final class BandDetailActivity extends Activity {
     private TextView sectionTitle(String text) {
         TextView title = new TextView(this);
         title.setText(text);
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(20);
+        title.setTextColor(WackenTheme.AMBER);
+        title.setTextSize(18);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
-        title.setPadding(0, dp(20), 0, dp(6));
+        title.setPadding(0, dp(16), 0, dp(6));
         return title;
     }
 
-    private TextView paragraph(String text) {
+    private View paragraphPanel(String text) {
+        FrameLayout panel = new FrameLayout(this);
+        panel.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, COLOR_GRID, 6));
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        layout.setMargins(0, dp(14), 0, 0);
+        panel.setLayoutParams(layout);
+
         TextView paragraph = new TextView(this);
         paragraph.setText(text);
         paragraph.setTextColor(COLOR_TEXT);
         paragraph.setTextSize(15);
-        paragraph.setGravity(Gravity.CENTER_HORIZONTAL);
+        paragraph.setGravity(Gravity.START);
         paragraph.setLineSpacing(dp(2), 1.0f);
-        paragraph.setPadding(0, dp(8), 0, dp(8));
-        return paragraph;
+        paragraph.setPadding(dp(14), dp(12), dp(14), dp(12));
+        panel.addView(paragraph);
+        return panel;
     }
 
     private TextView infoLine(String label, String value) {
         TextView line = new TextView(this);
         line.setText(label + ": " + value);
         line.setTextColor(COLOR_TEXT);
-        line.setTextSize(18);
+        line.setTextSize(15);
         line.setGravity(Gravity.CENTER_HORIZONTAL);
         line.setPadding(0, dp(3), 0, dp(3));
         return line;
@@ -226,7 +238,7 @@ public final class BandDetailActivity extends Activity {
         ratings.setTextColor(COLOR_TEXT);
         ratings.setTextSize(13);
         ratings.setGravity(Gravity.CENTER_HORIZONTAL);
-        ratings.setPadding(0, dp(4), 0, dp(2));
+        ratings.setPadding(0, dp(6), 0, dp(2));
         return ratings;
     }
 
@@ -263,5 +275,9 @@ public final class BandDetailActivity extends Activity {
 
     private int dp(int value) {
         return (int) (value * getResources().getDisplayMetrics().density);
+    }
+
+    private boolean narrowScreen() {
+        return getResources().getConfiguration().screenWidthDp < 520;
     }
 }
