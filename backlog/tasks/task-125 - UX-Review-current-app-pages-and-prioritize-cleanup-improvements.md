@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@codex'
 created_date: '2026-06-19 05:57'
-updated_date: '2026-06-19 06:04'
+updated_date: '2026-06-19 06:14'
 labels:
   - ux
   - review
@@ -72,4 +72,10 @@ README impact: none, because this review only created backlog follow-up work.
 Business requirements impact: none, because no behavior was changed by the review itself.
 Diagram impact: none, because no architecture or flow changed.
 ADR impact: none, because this is not architecture-significant.
+
+## Design addendum
+
+The UX review must also be interpreted as a frontend visual-design review. Future UX work should evaluate the overall aesthetic quality, visual consistency, and professional metal identity of the app, not only task flow usability. The target is a uniform, premium, dark metal/festival design across all screens with consistent typography, spacing, iconography, controls, panels, colors, rating states, schedule states, empty states, and error/sync feedback.
+
+Created task-130 to define the visual design system and identify the highest-impact implementation tickets.
 <!-- SECTION:NOTES:END -->
