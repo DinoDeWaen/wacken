@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-06-17 20:23'
-updated_date: '2026-06-30 16:05'
+updated_date: '2026-06-30 18:00'
 labels:
   - defect
   - backend
@@ -75,4 +75,13 @@ Validation run:
 - `git diff --check` passed.
 
 Current blocker remains: AC1 and AC5 require a functioning Supabase database/PostgREST schema state. The app fallback remains valid, but synced group-wide schedule locks cannot be accepted as complete until `public.group_schedule_locks` is migrated and visible through PostgREST.
+
+## Retry 2026-06-30
+
+Retried backend verification for task-117. The blocker is unchanged:
+
+- `backend/flyway/verify-schedule-locks.sh` returns HTTP 404 / `PGRST205`: PostgREST cannot find `public.group_schedule_locks` in the schema cache.
+- `backend/flyway/run-flyway.sh info` still cannot connect to the direct Supabase database host and fails with `NoRouteToHostException` for `db.dwyunoyaqwxkfbwscxhe.supabase.co:5432`.
+
+Conclusion: AC1 and AC5 remain blocked by Supabase-side database connectivity/schema state. The next required input is a working Supabase database connection string/pooler configuration or a Supabase-side migration/schema-cache fix.
 <!-- SECTION:NOTES:END -->
