@@ -37,7 +37,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 | Area | Rules | Read when |
 | --- | --- | --- |
 | Ratings and group decisions | BR-001 to BR-021 | Rating, veto, effective rating, group decision, conflict resolution |
-| Travel, lunch, and timeline | BR-022 to BR-032, BR-073 to BR-074 | Scheduling, walking time, lunch, food suggestions, printable timeline |
+| Schedule timeline | BR-022 to BR-032, BR-073 to BR-074 | Scheduling, walking-time context, conflict alternatives |
 | Festival data import | BR-033 to BR-046 | CSV import, Supabase master data, Room cache, admin data, band-only imports |
 | Overview, detail, and app state | BR-047 to BR-072 | Wacken UI, metadata, music links, loading, sync feedback, settings, calendar schedule, returning to app context |
 
@@ -63,14 +63,14 @@ Project-specific boundary notes:
 
 - Business logic must not live in Android UI, Activities, or Fragments.
 - Domain, application, infrastructure, and UI concerns must remain strictly separated.
-- Business rules for ratings, vetoes, conflicts, travel feasibility, and lunch belong in the domain/application core, not in UI or infrastructure code.
+- Business rules for ratings, vetoes, conflicts, walking-time context, and manual group choices belong in the domain/application core, not in UI or infrastructure code.
 
 ## Business goals
 
 - Goal 1: Enable a group of friends to combine individual band preferences into one shared festival schedule.
-- Goal 2: Prevent schedules that are impossible because of overlapping performances or infeasible travel between stages.
-- Goal 3: Respect strong preferences, must-see ratings, vetoes, and lunch constraints when producing the schedule.
-- Goal 4: Make the final schedule clear enough to use during the festival and suitable for printing.
+- Goal 2: Prevent schedules that are confusing or unusable because overlapping performances are not handled clearly.
+- Goal 3: Respect strong preferences, must-see ratings, vetoes, walking-time context, and manual group choices when producing the schedule.
+- Goal 4: Make the final in-app schedule clear enough to use during the festival.
 - Goal 5: Get the band rating feature working first so the group can begin scoring the lineup before final stage times are available.
 - Goal 6: Support reliable festival data import so bands, stages, performances, distances, and food options can be planned from validated file-based CSV uploads or proposed website-scraped changes.
 - Goal 7: Present the band overview with a Wacken-inspired visual style so early rating feels like a festival lineup experience rather than a technical data table.
@@ -83,7 +83,7 @@ Product name: Wacken Planner 2026.
 
 Wacken Planner 2026 is an Android application for Wacken Open Air 2026. It helps a group of friends rate bands and automatically compute a shared, conflict-aware festival schedule.
 
-The app considers individual preferences, group veto rules, stage distances, walking-time feasibility, lunch time constraints, and PDF schedule output.
+The app considers individual preferences, group veto rules, overlapping performances, stage distances where available, walking-time context, and group-wide manual schedule choices.
 
 Target users:
 
@@ -95,14 +95,14 @@ Target users:
 Business problem:
 
 - Groups need a practical way to turn individual band preferences into one shared plan.
-- Manually planning around overlaps, vetoes, travel time, and lunch constraints is error-prone.
+- Manually planning around overlaps, vetoes, and walking time is error-prone.
 - Without schedule feasibility rules, the group may choose performances that cannot realistically be attended together.
 
 Desired outcome:
 
 - Users can rate bands on a shared 1-5 scale, with `0` reserved for unrated bands.
-- The app can propose a shared schedule that respects decision rules, conflicts, travel feasibility, and lunch.
-- The final timeline is clear, day-based, and exportable as a PDF.
+- The app can propose a shared schedule that respects decision rules, conflicts, walking-time context, and manual group choices.
+- The final timeline is clear, day-based, and usable on Android during the festival.
 
 Constraints:
 
@@ -139,8 +139,6 @@ The delivery roadmap captures the planned or completed increments for the curren
 | --- | --- | --- |
 | MVP 1 | Establish the Android foundation, CI, domain model, band listing, first-priority band ratings, initial lineup import, and unit test setup. | Not specified in `project.md` |
 | MVP 2 | Enable one-group planning with a decision engine, conflict resolution, and timeline generation. | Not specified in `project.md` |
-| MVP 3 | Add stage distance, travel feasibility, lunch logic, and food suggestions. | Not specified in `project.md` |
-| MVP 4 | Improve the user experience with printable schedule output, visual hierarchy, and performance optimization. | Not specified in `project.md` |
 
 Future production direction, not implemented:
 
@@ -174,11 +172,7 @@ Release assumptions:
 | Calendar schedule view | Show the group schedule as a day-filtered calendar with fixed stages on the left and horizontally scrollable time columns across the top. | Must | MVP 2 |
 | Manual schedule selection | Let the group choose an alternative act for a conflict and update the visible schedule result. | Must | MVP 2 |
 | Schedule visual polish | Keep calendar, decision detail, and sync/startup feedback consistent with the Wacken dark heavy-metal presentation. | Must | MVP 2 |
-| Walking-time schedule visibility | Apply the agreed MVP walking-time defaults and show movement time in the group schedule where known. | Must | MVP 3 |
-| Travel feasibility | Exclude or re-evaluate options that cannot be reached in time between stages. | Must | MVP 3 |
-| Lunch planning | Insert lunch into the schedule and consider food options near relevant stages. | Must | MVP 3 |
-| Food suggestions | Show food options close to the previous and next stages. | Must | MVP 3 |
-| PDF schedule export | Produce a clear printable timeline as a PDF. | Must | MVP 4 |
+| Walking-time schedule visibility | Apply the agreed MVP walking-time defaults and show movement time in the group schedule where known. | Must | MVP 2 |
 
 ## Domain context
 
@@ -190,10 +184,8 @@ In scope:
 - Combining individual ratings into group decisions.
 - Supporting one shared group for the current version.
 - Resolving overlapping performances.
-- Checking travel feasibility between stages.
-- Planning lunch during the 12:00-14:00 lunch window.
-- Showing nearby food options.
-- Producing a day-based printable timeline.
+- Showing walking-time context between selected performances.
+- Producing a clear day-based in-app timeline.
 - Importing and validating festival data from CSV files or proposed website-scraped changes.
 
 Out of scope:
@@ -267,14 +259,14 @@ Scenario: Return to the previous Wacken Planner screen
 
 ### Workflow 5: Compute a shared schedule
 
-The app combines group ratings, conflicts, travel feasibility, and lunch constraints to produce a timeline.
+The app combines group ratings, conflicts, walking-time context, and manual group choices to produce a timeline.
 
 ```gherkin
 Scenario: Generate a conflict-aware group schedule
   Given a group has rated bands for a festival day
-  And performances may overlap or require travel between stages
+  And performances may overlap or require walking between stages
   When the schedule is generated
-  Then the timeline respects group decision rules, conflicts, travel feasibility, and lunch constraints
+  Then the timeline respects group decision rules, conflicts, walking-time context, and manual group choices
 ```
 
 ### Workflow 6: Use the calendar schedule
@@ -312,7 +304,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-007 | If any group member rates a band `5`, the single-band decision is `GO`. | One must-see rating is enough to go. | Must |
 | BR-008 | If the maximum rating is `4`, the single-band decision is `GO` unless there are 2 or more vetoes. | Two vetoes block a band whose highest rating is `4`. | Must |
 | BR-009 | If the maximum rating is `3`, the single-band decision is `GO` unless there is any veto. | One veto blocks a band whose highest rating is `3`. | Must |
-| BR-010 | If the maximum rating is `3` during the 12:00-14:00 lunch window, the single-band decision is `OPTIONAL`. | A liked-but-missable lunch-window performance is optional. | Must |
+| BR-010 | Reserved for future use. | No active MVP2 lunch-window requirement. | Could |
 | BR-011 | If the maximum rating is `2`, the single-band decision is `OPTIONAL`. | A group that is only indifferent may optionally attend. | Must |
 | BR-012 | If the maximum rating is `0`, the band has no ratings yet and is treated as unrated. | A fully unrated band is not treated as vetoed. | Must |
 | BR-013 | For overlapping performances, prefer any band with a `5`. | A must-see band wins over lower-rated alternatives. | Must |
@@ -325,16 +317,16 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-019 | If overlapping options only have ratings of `2`, the result is `OPTIONAL`. | Indifferent choices do not become mandatory. | Must |
 | BR-020 | An unrated band member rating defaults to `0`. | If someone has not rated a band, that missing rating is stored as unrated and does not count as a veto. | Must |
 | BR-021 | If all overlapping options are vetoed, no performance is selected. | All-vetoed conflicts produce no selection. | Must |
-| BR-022 | A performance is invalid if `previousEndTime + travelTime > nextStartTime`. | A group cannot attend the next band if travel makes arrival late. | Must |
-| BR-023 | Travel feasibility uses walking minutes by default. | A 15-minute walk must fit between the previous end time and next start time. | Must |
+| BR-022 | The schedule must show walking-time context between consecutive selected performances when known. | A move between stage groups shows 15 minutes; a move within a nearby group shows 5 minutes. | Must |
+| BR-023 | Walking-time context uses walking minutes by default. | Known imported distances can be used; otherwise MVP nearby-stage defaults apply. | Must |
 | BR-024 | Walking time may become a user setting later. | A future user can tune travel assumptions to their walking speed. | Could |
-| BR-025 | If a performance is infeasible, conflict resolution must be re-run excluding infeasible options. | The schedule chooses only from reachable options. | Must |
-| BR-026 | When choosing between equal `4`-rated options, prefer the one closest to the previous `5`-rated performance. | Travel proximity to a previous must-see band breaks the tie. | Must |
-| BR-027 | The schedule must start with a lunch block during 12:00-14:00. | A daily timeline visibly includes lunch in the lunch window. | Must |
-| BR-028 | Lunch timing is expected to be refined later with user input. | A later version can let users tune lunch placement or duration. | Should |
-| BR-029 | Lunch planning must show food options close to the previous stage and close to the next stage when such options exist. | Food suggestions are relevant to the user's route. | Must |
-| BR-030 | If no food option is close to the previous or next stage, the app does not need to show a substitute suggestion. | No nearby food means no nearby-food recommendation. | Must |
-| BR-031 | Each timeline slot must show selected band, winner rating stars, stage, time range, travel time to next stage, lost alternative with rating stars, and lunch where applicable. | Users can understand the plan, why the winner was selected, and whether the closest rejected option is still worth considering. | Must |
+| BR-025 | Visible overlap marking may account for walking time between nearby performances. | If overlap plus required movement makes two visible acts impractical, the lower-rated visible act can be scratched. | Must |
+| BR-026 | When choosing between equal `4`-rated options, prefer the one closest to the previous `5`-rated performance when distance context is available. | Travel proximity to a previous must-see band breaks the tie. | Must |
+| BR-027 | Reserved for future use. | No active MVP2 requirement. | Could |
+| BR-028 | Reserved for future use. | No active MVP2 requirement. | Could |
+| BR-029 | Reserved for future use. | No active MVP2 requirement. | Could |
+| BR-030 | Reserved for future use. | No active MVP2 requirement. | Could |
+| BR-031 | Each timeline slot must show selected band, winner rating stars, stage, time range, walking time to next stage, and lost alternative with rating stars where applicable. | Users can understand the plan, why the winner was selected, and whether the closest rejected option is still worth considering. | Must |
 | BR-032 | A lost alternative is the second-highest band: the performance that lost to the selected performance and could still be chosen manually if preferred. | If the winning band is not good enough, the user can inspect the runner-up. | Must |
 | BR-032a | If the lost alternative tied the winner on all existing conflict criteria before the final input-order fallback, it must be marked as a tied alternative and shown first after the chosen act in decision details. | Users can see when the app chose between equal options rather than a clearly better winner. | Must |
 | BR-033 | CSV import validation must detect missing references, overlaps, and unknown stages. | An imported performance cannot reference an unknown stage without validation feedback. | Must |
@@ -345,7 +337,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-038 | Multi-group support is deferred to next year. | Separate friend groups are not part of the current scope. | Must |
 | BR-038a | Existing app users must belong to the `Sofie and Dino` shared group for MVP2. | Ratings from Sofie, Dino, and any existing signed-in users participate in one shared schedule. | Must |
 | BR-038b | The MVP2 invite action must share onboarding text for the single `Sofie and Dino` group without secrets or token links. | A friend receives instructions to install the APK, sign in with a provisioned Supabase account, and sync ratings into the shared group. | Must |
-| BR-039 | Printable timeline output must be PDF. | The generated festival plan can be exported as a PDF. | Must |
+| BR-039 | Reserved for future use. | No active MVP2 requirement. | Could |
 | BR-040 | MVP CSV import must be file-upload based in Android, not paste-text based. | The user selects `bands.csv` and companion CSV files with the Android document picker. | Must |
 | BR-041 | The import screen must show which CSV files were selected before import. | After selecting `bands.csv`, the screen shows the chosen file name. | Must |
 | BR-042 | A successful CSV import updates festival master data for bands, stages, performances, distances, and food. | Re-importing a newer Wacken band list replaces the stored lineup data. | Must |
@@ -397,13 +389,13 @@ Scenario: Inspect and change a schedule conflict choice
 | Band | A musical act at Wacken Open Air 2026. | Name, optional English biography, optional image metadata, optional music links, optional schedule status | Can be associated with one or more performances; can also exist before performances are known. |
 | Performance | A scheduled band appearance. | Band, stage, time range | Must reference known band and stage data. |
 | Stage | A festival podium or location where performances happen. | Name or identifier | Must be known before performances can reference it. |
-| Distance | Travel information between stages. | From stage, to stage, walking minutes by default | Used to determine travel feasibility. |
+| Distance | Travel information between stages. | From stage, to stage, walking minutes by default | Used to show walking-time context and support tie-breaking. |
 | User | A festival attendee who can rate bands. | User identity details are not finalized. | Can provide ratings; missing ratings default to `0` unrated. |
 | Group of friends | The single shared group for the current version. | Members are not fully specified. | Group decisions use all member ratings; multiple groups are deferred. |
 | Rating | A user's preference for a band. | Value from 1 to 5 when explicit; `0` only represents unrated/no explicit rating. | Must use the defined rating scale. |
-| Food option | A food location or option used for lunch planning. | Location near stages is implied but not specified in detail | Used for suggestions near previous and next stages when nearby options exist. |
-| Schedule | A conflict-aware festival plan. | Day, slots, lunch block, selected performances, alternatives, travel time | Must respect decision rules, conflicts, travel feasibility, and lunch constraints. |
-| Timeline slot | One visible item in the daily schedule. | Selected band, stage, time range, travel time, lost alternative | Must be clear enough for timeline display and PDF export. |
+| Food option | Imported festival food master data. | Name and optional location metadata | Preserved for future planning but not active in MVP2 schedule behavior. |
+| Schedule | A conflict-aware festival plan. | Day, slots, selected performances, alternatives, walking time | Must respect decision rules, conflicts, walking-time context, and manual group choices. |
+| Timeline slot | One visible item in the daily schedule. | Selected band, stage, time range, walking time, lost alternative | Must be clear enough for in-app timeline display. |
 | Festival master data | Imported lineup data used for planning. | Bands, stages, performances, distances, food options | Can be replaced by a successful CSV re-import. Must not include user ratings. |
 | User rating data | Group preference data for bands. | User/group identity, band, rating value | Must be preserved when festival master data is updated. |
 | Band overview row | Visual representation of a band in the overview. | Band name, schedule status, effective rating, optional music-link actions | Must open band details, support the rating workflow, and keep same-row actions clear. |
@@ -419,9 +411,9 @@ Scenario: Inspect and change a schedule conflict choice
 | User | Represents an attendee participating in planning. | Provides ratings; may belong to a group. |
 | Group | Represents the current single friend group making shared decisions. | Contains users and their ratings; produces group decisions. Multiple independent groups are deferred. |
 | Rating | Represents a user's preference or veto for a band. | Belongs to a user and band; feeds decision rules. |
-| Schedule | Represents the selected day-by-day plan. | Contains timeline slots and lunch blocks; can be exported as PDF. |
+| Schedule | Represents the selected day-by-day plan. | Contains timeline slots, selected performances, alternatives, and walking-time context. |
 | Timeline Slot | Represents a selected schedule entry. | Shows performance, travel time, and the lost alternative. |
-| Food Option | Represents a lunch option. | Is suggested based on proximity to previous and next stages. |
+| Food Option | Represents imported festival food master data. | Reserved for future planning behavior. |
 | Festival Master Data | Represents imported source data for the festival. | Is updated by CSV import; excludes ratings. |
 | Band Overview Row | Represents a visible, tappable band summary. | Opens band detail and displays effective rating, schedule status, and optional music-link actions. |
 | Settings page | Represents secondary app actions and operational controls. | Contains group/invite, import, and manual sync actions. |
@@ -442,21 +434,19 @@ No domain events are specified in `project.md`.
 
 No reporting or audit needs are specified.
 
-The current in-app output format is a day-based calendar schedule. A clear, printable day-based PDF timeline remains a later export requirement.
+The current output format is a day-based in-app calendar schedule. Printable export is outside the active MVP2 scope.
 
 ## Edge cases
 
 - A band has any `5` rating.
 - A band with maximum rating `4` has 2 or more vetoes.
 - A band with maximum rating `3` has any veto.
-- A band with maximum rating `3` occurs during the 12:00-14:00 lunch window.
 - Overlapping performances include multiple bands with `5` ratings.
 - Overlapping must-see performances have different travel impact from the previous or next selected band.
 - Overlapping performances with ratings of `4` tie on count.
 - Overlapping performances with ratings of `4` tie on count and veto count.
 - A group member has not rated a band.
-- Travel time makes the next performance infeasible.
-- Conflict resolution must be re-run after excluding infeasible performances.
+- Walking time makes a visible overlap impractical.
 - All overlapping options are vetoed.
 - CSV data contains missing references.
 - CSV data contains overlaps.
@@ -472,8 +462,6 @@ The current in-app output format is a day-based calendar schedule. A clear, prin
 - Imported band metadata contains English and German biography text.
 - Imported band metadata has no image, no biography, or missing music links.
 - Scraped website data proposes a change that the user wants to reject.
-- Food options need to be found near both previous and next stages.
-- No food option is close to the previous or next stage.
 
 ## Open questions
 
@@ -482,6 +470,5 @@ The current in-app output format is a day-based calendar schedule. A clear, prin
 - How should the proposed data grid be implemented in the Android app, and which validation states should each row support?
 - How are users identified inside the one current shared group, and where are their ratings stored or shared?
 - What exact token/deep-link format should future self-service friend invites use beyond the current plain-text MVP2 share instructions?
-- How long is the initial lunch block inside 12:00-14:00 before user-configurable lunch behavior is added?
 - What exact festival dates should be used for weekday display, and what date/time format should performances use?
 - Should a later shared-decision workflow add audit history, owner/admin-only permissions, or richer reset flows for group-wide manual schedule locks?

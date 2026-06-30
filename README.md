@@ -2,7 +2,7 @@
 
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
-- Respects travel times between stages, lunch window, and veto rules when proposing timelines.
+- Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.
 
 ## Basic Functionality (MVP 1)
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
@@ -19,7 +19,6 @@
 - Keep the band overview focused with compact settings, schedule, and sync-exit icon actions; settings contains group invite, lineup import, and manual Supabase sync.
 - Share plain-text invite instructions for the single shared `Sofie and Dino` planning group through Android's share sheet.
 - Generate and view an MVP2 day-filtered calendar schedule with fixed stage labels on the left and horizontally scrollable time columns across the top, using shared ratings, middle-30-minute conflict rules, optional decisions, winner stars, and lost-alternative stars; the view can locally hide barred overlapping acts or acts at/below a selected star threshold; tapping a performance block opens the chosen act and alternatives, and alternatives can be selected as Supabase-synced locked group winners.
-- Prepare groundwork for printable timelines.
 
 ## Architecture
 - Clean Architecture with DDD boundaries: domain, application, infrastructure, and Android UI modules.
@@ -226,7 +225,9 @@ If the app reports that locked schedule choices are unavailable because
 `group_schedule_locks` is missing from the PostgREST schema cache, verify that
 Flyway migrations `V007__group_schedule_locks.sql` and
 `V008__refresh_postgrest_schema_cache.sql` have run against the active Supabase
-project. If `backend/flyway/run-flyway.sh info` cannot resolve or route to the
+project. Use `backend/flyway/verify-schedule-locks.sh` to check PostgREST
+visibility and, when `psql` can reach the database, the physical table and RLS
+policies. If `backend/flyway/run-flyway.sh info` cannot resolve or route to the
 direct Supabase database host, run the same migration from a network with
 database connectivity or update `.env.supabase.local` with the correct Supabase
 pooler JDBC URL and pooler user for the project.
