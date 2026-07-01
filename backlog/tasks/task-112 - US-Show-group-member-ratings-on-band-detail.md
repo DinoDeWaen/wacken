@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@codex'
 created_date: '2026-06-16 20:01'
-updated_date: '2026-06-17 06:33'
+updated_date: '2026-06-30 09:40'
 labels:
   - band-detail
   - ratings
@@ -78,15 +78,6 @@ Band detail now shows compact read-only group member ratings below the current u
 
 - `JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :application:test :app:testDebugUnitTest :app:compileDebugJavaWithJavac`
 - `git diff --check`
-- Deleted previous `app/build/outputs/apk/release/app-release.apk` and rebuilt signed release APK.
-- `JAVA_HOME=$(/usr/libexec/java_home -v 21) WACKEN_RELEASE_STORE_FILE=$(security find-generic-password -s WACKEN_RELEASE_STORE_FILE -w) WACKEN_RELEASE_STORE_PASSWORD=$(security find-generic-password -s WACKEN_RELEASE_STORE_PASSWORD -w) WACKEN_RELEASE_KEY_ALIAS=$(security find-generic-password -s WACKEN_RELEASE_KEY_ALIAS -w) WACKEN_RELEASE_KEY_PASSWORD=$(security find-generic-password -s WACKEN_RELEASE_KEY_PASSWORD -w) ./gradlew assembleRelease`
-- `/Users/dino/Library/Android/sdk/build-tools/36.0.0/apksigner verify --verbose app/build/outputs/apk/release/app-release.apk`
-- `/Users/dino/Library/Android/sdk/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/release/app-release.apk`
-- `shasum -a 256 app/build/outputs/apk/release/app-release.apk`
-
-APK metadata: package `be.wacken.planner`, `versionCode=15`, `versionName=2.12`, minSdk `23`, targetSdk `36`.
-
-APK SHA-256: `142369447d367690d0821c416e1cde9f3c2e5ef56ca0dc240542f09b7de35559`.
 
 ### Manual validation
 
