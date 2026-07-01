@@ -4,13 +4,12 @@ title: 'REL: Finalise MVP2 official release'
 status: To Do
 assignee: []
 created_date: '2026-06-30 15:46'
-updated_date: '2026-06-30 15:49'
+updated_date: '2026-07-01 02:46'
 labels:
   - release
   - mvp2
   - apk
 dependencies:
-  - task-117
   - task-136
   - task-137
   - task-139
@@ -20,9 +19,9 @@ priority: high
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-As the product owner, I want one final official MVP2 release package after remaining backend, documentation, and UAT work is complete, so that the installable APK represents the completed MVP2 scope.
+As the product owner, I want one final official MVP2 release package after remaining documentation and UAT work is complete, so that the installable APK represents the completed MVP2 scope.
 
-Scope: run the standard release process after task-117, task-136, task-137, and task-139 are complete; build a signed official APK, verify metadata/signatures/checksum, publish release notes, push the release artifacts/tags to GitHub, and record validation evidence.
+Scope: run the standard release process after task-136, task-137, and task-139 are complete; build a signed official APK, verify metadata/signatures/checksum, publish release notes, push the release artifacts/tags to GitHub, and record validation evidence. Task-117 was cancelled because the Supabase schema-cache error no longer reproduces.
 
 Out of scope: adding MVP3/MVP4 capabilities or changing product behavior outside defects found during MVP2 validation.
 <!-- SECTION:DESCRIPTION:END -->

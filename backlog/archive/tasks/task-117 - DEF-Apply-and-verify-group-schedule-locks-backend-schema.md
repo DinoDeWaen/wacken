@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-06-17 20:23'
-updated_date: '2026-06-30 18:00'
+updated_date: '2026-07-01 02:46'
 labels:
   - defect
   - backend
@@ -35,17 +35,13 @@ Business value: group-wide locked schedule choices cannot sync until the backend
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Inspect V007 group_schedule_locks migration, Supabase lock client, and backend scripts.
-2. Run Flyway info to determine whether V007 is applied in the active Supabase database.
-3. Run Flyway migrate if V007 is pending.
-4. Verify the physical table and RLS policies exist in Postgres without exposing credentials.
-5. Verify PostgREST schema visibility for group_schedule_locks and refresh schema cache if needed.
-6. Add a repeatable verification script or documentation if current commands are manual-only.
-7. Run focused Android tests for schedule lock warning behavior and client parsing.
-8. Record migration/status commands, README/business impact, and close the task.
+1. Cancelled task after user confirmed the schema-cache error no longer reproduces.
+2. Removed task-specific verifier script and README troubleshooting reference.
+3. Removed the task-specific PostgREST missing-table regression assertion.
+4. Kept core manual schedule-lock feature tests and implementation because group-wide locks remain MVP2 scope.
+5. Removed task-117 dependencies from MVP2 validation/release follow-up tasks.
 
-Architecture impact: backend schema/operations significant but already covered by ADR 0008 and ADR 0009; no new architecture style is introduced.
-Treatment: standard, because this touches production database schema visibility and operational verification.
+Deviation: task was archived/cancelled rather than completed; AC1 and AC5 were intentionally left unchecked because the defect is obsolete, not accepted as implemented.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -84,4 +80,8 @@ Retried backend verification for task-117. The blocker is unchanged:
 - `backend/flyway/run-flyway.sh info` still cannot connect to the direct Supabase database host and fails with `NoRouteToHostException` for `db.dwyunoyaqwxkfbwscxhe.supabase.co:5432`.
 
 Conclusion: AC1 and AC5 remain blocked by Supabase-side database connectivity/schema state. The next required input is a working Supabase database connection string/pooler configuration or a Supabase-side migration/schema-cache fix.
+
+## Cancellation 2026-07-01
+
+User confirmed the `group_schedule_locks` schema-cache error no longer occurs. The defect is cancelled instead of completed. Task-specific cleanup removed the repeatable verifier script and the PostgREST missing-table regression assertion added for this defect. Core schedule-lock feature tests were kept because manual group locks remain MVP2 scope.
 <!-- SECTION:NOTES:END -->
