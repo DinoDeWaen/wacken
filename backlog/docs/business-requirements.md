@@ -8,7 +8,7 @@ Use this section for most tasks. Read deeper sections only when the active task 
 
 ### Current Product Scope
 
-Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken bands and prepare a conflict-aware festival schedule. The current implementation focuses on band import, band listing, band detail, 1-5 ratings with unrated state, local cache behavior, Supabase-backed lifecycle master-data sync, Supabase Auth, and shared rating sync.
+Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken bands and prepare a conflict-aware festival schedule. The current implementation focuses on band import, band listing, band detail, 1-5 ratings with unrated state, local cache behavior, Supabase-backed lifecycle master-data sync, Supabase Auth, shared rating sync, and MVP2 schedule planning. MVP3 extends the product toward festival-field use with rating export, post-show real ratings, and stronger no-Wi-Fi operation.
 
 ### Current Implemented Capabilities
 
@@ -24,6 +24,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - MVP2 group decision rules, conflict resolution, timeline generation, group-wide locked manual schedule choices, and Android schedule viewing for the current shared group.
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
+- Planned MVP3 capabilities include exporting ratings to CSV from settings, recording a separate real post-show rating on band detail, and using cached/imported data without Wi-Fi during the festival.
 
 ### Current Non-Goals
 
@@ -40,6 +41,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 | Schedule timeline | BR-022 to BR-032, BR-073 to BR-074 | Scheduling, walking-time context, conflict alternatives |
 | Festival data import | BR-033 to BR-046 | CSV import, Supabase master data, Room cache, admin data, band-only imports |
 | Overview, detail, and app state | BR-047 to BR-072 | Wacken UI, metadata, music links, loading, sync feedback, settings, calendar schedule, returning to app context |
+| MVP3 field use and export | BR-077 to BR-080 | Rating export, real post-show ratings, and no-Wi-Fi festival use |
 
 ### Requirement Drift Markers
 
@@ -76,6 +78,8 @@ Project-specific boundary notes:
 - Goal 7: Present the band overview with a Wacken-inspired visual style so early rating feels like a festival lineup experience rather than a technical data table.
 - Goal 8: Keep the rating workflow responsive and stateful so users understand when data is loading and can return to the same app context after switching apps or opening music links.
 - Goal 9: Keep persistence backend-replaceable by treating MVP TSV storage as a backend-like source and using a local device cache for fast app reads.
+- Goal 10: Let users take their ratings and festival experience data home by exporting ratings and recording the real rating after seeing a band.
+- Goal 11: Keep the app useful at Wacken when Wi-Fi or mobile data is unavailable, as long as the needed festival and group data has already been cached or imported.
 
 ## Product context
 
@@ -139,6 +143,7 @@ The delivery roadmap captures the planned or completed increments for the curren
 | --- | --- | --- |
 | MVP 1 | Establish the Android foundation, CI, domain model, band listing, first-priority band ratings, initial lineup import, and unit test setup. | Not specified in `project.md` |
 | MVP 2 | Enable one-group planning with a decision engine, conflict resolution, and timeline generation. | Not specified in `project.md` |
+| MVP 3 | Improve festival-field usefulness with rating CSV export, post-show real ratings, and no-Wi-Fi cached operation. | Planned |
 
 Future production direction, not implemented:
 
@@ -173,6 +178,9 @@ Release assumptions:
 | Manual schedule selection | Let the group choose an alternative act for a conflict and update the visible schedule result. | Must | MVP 2 |
 | Schedule visual polish | Keep calendar, decision detail, and sync/startup feedback consistent with the Wacken dark heavy-metal presentation. | Must | MVP 2 |
 | Walking-time schedule visibility | Apply the agreed MVP walking-time defaults and show movement time in the group schedule where known. | Must | MVP 2 |
+| Rating export | Export all locally available band ratings to a CSV file from settings. | Must | MVP 3 |
+| Post-show real rating | Let a user record a separate real rating after seeing a band, without changing the planning rating used for group scheduling. | Must | MVP 3 |
+| No-Wi-Fi field mode | Keep cached lineup, band details, own ratings, real ratings, and generated schedules usable without Wi-Fi or mobile data after initial data is available. | Must | MVP 3 |
 
 ## Domain context
 
@@ -281,6 +289,44 @@ Scenario: View calendar festival schedule
   And selected performances are shown as blocks with band, stage, and rating stars
 ```
 
+### Workflow 7: Export ratings
+
+A user exports rating data from settings so it can be reviewed outside the app.
+
+```gherkin
+Scenario: Export all locally available band ratings
+  Given the app has locally available band and rating data
+  When the user exports ratings from settings
+  Then a CSV file is created through Android file sharing or saving
+  And every locally known band is represented
+  And planning ratings, real post-show ratings, group member ratings where locally cached, and schedule metadata are included where available
+```
+
+### Workflow 8: Record a real post-show rating
+
+After seeing a band, a user records how good the performance really was.
+
+```gherkin
+Scenario: Rate a band after seeing it
+  Given a user has opened a band detail screen
+  When the user sets a real post-show rating
+  Then the real rating is saved separately from the planning rating
+  And the group schedule decision rules are not recalculated from the real rating
+```
+
+### Workflow 9: Use the app without Wi-Fi
+
+During the festival, a user can keep using cached app data without a network connection.
+
+```gherkin
+Scenario: Use cached festival data offline
+  Given the app has previously synced or imported festival data
+  And the device has no Wi-Fi or mobile data connection
+  When the user opens the app
+  Then cached band details, ratings, real ratings, and group schedule remain usable
+  And edits are saved locally and queued for later sync where sync is applicable
+```
+
 ```gherkin
 Scenario: Inspect and change a schedule conflict choice
   Given a selected performance has alternatives
@@ -381,6 +427,10 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-074 | The group schedule must show walking time between consecutive selected acts when known. | If the group moves between nearby stages in the same walking group, the schedule shows 5 minutes; if it moves between stage groups, the schedule shows 15 minutes. | Must |
 | BR-075 | The group schedule can locally hide barred overlapping acts. | A user can toggle the schedule view so visible blocks and decision-detail candidates marked as barred/scratched because they lose an overlap to a higher-rated visible act are hidden without changing ratings, generated decisions, manual choices, persistence, or sync data. | Must |
 | BR-076 | The group schedule can locally hide acts at or below a selected star threshold. | A user can choose an inclusive threshold such as 2 stars, and visible blocks plus decision-detail candidates rated at or below that threshold are hidden without changing ratings, generated decisions, manual choices, persistence, or sync data. | Must |
+| BR-077 | MVP3 settings must provide a CSV export for all locally known bands and ratings. | The export contains one row per locally known band and includes stable band identity, display name, planning rating, real post-show rating, available group member ratings, stage/date/time where known, and schedule status where known. | Must |
+| BR-078 | A real post-show rating is separate from the planning rating. | A user can rate a band `5` for planning but later give the actual performance a real rating of `3`; the group schedule still uses the planning rating unless a future requirement says otherwise. | Must |
+| BR-079 | Real post-show ratings use the same visible 1-5 scale with `0`/empty as unrated. | A band not yet seen has no real rating; setting or resetting the real rating must not clear the planning rating. | Must |
+| BR-080 | The app must remain useful without Wi-Fi or mobile data after festival data has been cached or imported. | A user at Wacken with no connection can open cached lineup, band detail, ratings, real ratings, settings, and group schedule; changes are stored locally and queued for later sync when sync is supported. | Must |
 
 ## Data and terminology
 
@@ -411,12 +461,14 @@ Scenario: Inspect and change a schedule conflict choice
 | User | Represents an attendee participating in planning. | Provides ratings; may belong to a group. |
 | Group | Represents the current single friend group making shared decisions. | Contains users and their ratings; produces group decisions. Multiple independent groups are deferred. |
 | Rating | Represents a user's preference or veto for a band. | Belongs to a user and band; feeds decision rules. |
+| Real post-show rating | Represents a user's actual assessment after seeing a band. | Belongs to a user and band; does not feed planning decision rules unless a future requirement explicitly changes that. |
 | Schedule | Represents the selected day-by-day plan. | Contains timeline slots, selected performances, alternatives, and walking-time context. |
 | Timeline Slot | Represents a selected schedule entry. | Shows performance, travel time, and the lost alternative. |
 | Food Option | Represents imported festival food master data. | Reserved for future planning behavior. |
 | Festival Master Data | Represents imported source data for the festival. | Is updated by CSV import; excludes ratings. |
 | Band Overview Row | Represents a visible, tappable band summary. | Opens band detail and displays effective rating, schedule status, and optional music-link actions. |
 | Settings page | Represents secondary app actions and operational controls. | Contains group/invite, import, and manual sync actions. |
+| Rating export | Represents a generated CSV snapshot of locally available band and rating data. | Is created from cached app data and can be shared or saved through Android. |
 | Calendar schedule day | Represents one selected festival day in calendar form. | Contains stage rows, a horizontal time axis, and time-positioned performance blocks, including late-night festival time through 02:00 before the next festival day starts. |
 | Performance block | Represents a selected scheduled act in the calendar view. | Shows time range, band, rating stars, and opens the conflict detail; the stage is provided by the row label. |
 | Manual schedule choice | Represents a group-locked selected act for a conflict. | Overrides the visible selected act for that conflict without changing ratings or generated decision evidence. |
@@ -432,7 +484,7 @@ No domain events are specified in `project.md`.
 
 ## Reporting or audit needs
 
-No reporting or audit needs are specified.
+MVP3 adds a lightweight reporting need: users can export a CSV snapshot of locally available band and rating data from the settings screen.
 
 The current output format is a day-based in-app calendar schedule. Printable export is outside the active MVP2 scope.
 
@@ -462,6 +514,12 @@ The current output format is a day-based in-app calendar schedule. Printable exp
 - Imported band metadata contains English and German biography text.
 - Imported band metadata has no image, no biography, or missing music links.
 - Scraped website data proposes a change that the user wants to reject.
+- A user exports ratings while offline.
+- A user exports before all group member ratings have synced.
+- A band has a planning rating but no real post-show rating.
+- A user resets a real post-show rating without changing the planning rating.
+- The app starts with no network and no locally cached festival data.
+- The app starts with no network after a successful previous sync/import.
 
 ## Open questions
 
@@ -472,3 +530,4 @@ The current output format is a day-based in-app calendar schedule. Printable exp
 - What exact token/deep-link format should future self-service friend invites use beyond the current plain-text MVP2 share instructions?
 - What exact festival dates should be used for weekday display, and what date/time format should performances use?
 - Should a later shared-decision workflow add audit history, owner/admin-only permissions, or richer reset flows for group-wide manual schedule locks?
+- Should MVP3 real post-show ratings sync to Supabase for the group, or remain personal/local until a later release?
