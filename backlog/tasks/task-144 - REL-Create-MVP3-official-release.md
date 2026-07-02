@@ -4,6 +4,7 @@ title: 'REL: Create MVP3 official release'
 status: To Do
 assignee: []
 created_date: '2026-07-02 08:28'
+updated_date: '2026-07-02 08:45'
 labels:
   - mvp3
   - release
@@ -13,7 +14,7 @@ dependencies:
   - task-141
   - task-142
   - task-143
-priority: high
+priority: low
 ---
 
 ## Description

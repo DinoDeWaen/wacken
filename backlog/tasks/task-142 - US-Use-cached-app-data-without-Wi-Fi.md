@@ -4,12 +4,13 @@ title: 'US: Use cached app data without Wi-Fi'
 status: To Do
 assignee: []
 created_date: '2026-07-02 08:26'
+updated_date: '2026-07-02 08:45'
 labels:
   - mvp3
   - offline
   - sync
 dependencies: []
-priority: high
+priority: medium
 ---
 
 ## Description
