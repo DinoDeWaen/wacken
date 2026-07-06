@@ -1,0 +1,37 @@
+package be.wacken.planner;
+
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+import org.junit.Test;
+
+public final class SettingsActivityRegressionTest {
+    @Test
+    public void initializesRatingAllocationTextBeforeStylingIt() throws IOException {
+        String source = new String(Files.readAllBytes(settingsActivitySource()), StandardCharsets.UTF_8);
+
+        int initialization = source.indexOf("ratingAllocation = new TextView(this);");
+        int firstStyleUse = source.indexOf("ratingAllocation.setTextColor");
+        int addedToSection = source.indexOf("ratingSection.addView(ratingAllocation)");
+
+        assertTrue("SettingsActivity must initialize ratingAllocation before styling it.", initialization >= 0);
+        assertTrue("SettingsActivity must style ratingAllocation after initialization.", initialization < firstStyleUse);
+        assertTrue("SettingsActivity must add ratingAllocation after initialization.", initialization < addedToSection);
+    }
+
+    private Path settingsActivitySource() {
+        return List.of(
+                        Path.of("app/src/main/java/be/wacken/planner/SettingsActivity.java"),
+                        Path.of("src/main/java/be/wacken/planner/SettingsActivity.java")
+                )
+                .stream()
+                .filter(Files::exists)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("SettingsActivity source file not found."));
+    }
+}

@@ -92,6 +92,7 @@ public final class SettingsActivity extends Activity {
         screen.addView(groupSection);
 
         LinearLayout ratingSection = section("Rating allocation");
+        ratingAllocation = new TextView(this);
         ratingAllocation.setTextColor(COLOR_TEXT);
         ratingAllocation.setTextSize(15);
         ratingAllocation.setTypeface(Typeface.DEFAULT_BOLD);
