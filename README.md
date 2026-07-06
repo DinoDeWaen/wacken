@@ -39,6 +39,7 @@
 - Release process: [`release-process.md`](backlog/docs/release-process.md).
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
+- V2.22 release notes: [`releases/v2.22.md`](releases/v2.22.md).
 - V2.21 release notes: [`releases/v2.21.md`](releases/v2.21.md).
 - V2.20 release notes: [`releases/v2.20.md`](releases/v2.20.md).
 - V2.19 release notes: [`releases/v2.19.md`](releases/v2.19.md).
