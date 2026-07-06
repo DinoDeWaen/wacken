@@ -24,7 +24,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - MVP2 group decision rules, conflict resolution, timeline generation, group-wide locked manual schedule choices, and Android schedule viewing for the current shared group.
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
-- Planned MVP3 capabilities include exporting ratings to CSV from settings, recording a separate real post-show rating on band detail, and using cached/imported data without Wi-Fi during the festival.
+- Implemented MVP3 field-use capability includes recording a separate local real post-show rating on band detail. Remaining planned MVP3 capabilities include exporting ratings to CSV from settings and hardening cached/imported data without Wi-Fi during the festival.
 
 ### Current Non-Goals
 
@@ -530,4 +530,4 @@ The current output format is a day-based in-app calendar schedule. Printable exp
 - What exact token/deep-link format should future self-service friend invites use beyond the current plain-text MVP2 share instructions?
 - What exact festival dates should be used for weekday display, and what date/time format should performances use?
 - Should a later shared-decision workflow add audit history, owner/admin-only permissions, or richer reset flows for group-wide manual schedule locks?
-- Should MVP3 real post-show ratings sync to Supabase for the group, or remain personal/local until a later release?
+- Should a later release sync real post-show ratings to Supabase for the group? Current MVP3 behavior stores them personal/local until a future story changes that.

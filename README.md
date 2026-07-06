@@ -6,11 +6,12 @@
 
 ## Basic Functionality (MVP 1)
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
-- Show locally cached lineup, ratings, schedule data, and manual schedule locks first, while Supabase sync refreshes Room in the background.
+- Show locally cached lineup, planning ratings, real post-show ratings, schedule data, and manual schedule locks first, while Supabase sync refreshes Room in the background.
 - List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.
 - Hide generic Metal Battle placeholder acts from rating lists and rating allocation counts while preserving imported master data.
 - Show compact read-only per-person star details on band detail and schedule decision detail screens when group ratings are available.
 - Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars, and clear a previous rating back to unrated.
+- Let users record a separate real post-show rating on band detail after seeing a band, with its own 1-5 scale and reset-to-unrated behavior; real ratings are local/offline-first and do not affect group schedule decisions.
 - Save rating and manual schedule-lock changes locally immediately, queue them as pending offline operations, and sync them with Supabase in the background on start/reactivation, on manual sync, or before close.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show readable imported English band biography/explanation and available band image metadata on the detail screen when source data provides it, without leaking raw HTML tags.
@@ -90,7 +91,7 @@ Current modules:
 | `infrastructure` | Java library | TSV backend-like source adapters, in-memory test adapters, and sync/write-through decorators. Depends inward on `application` and `domain`. |
 | `app` | Android application | Android UI/bootstrap, APK packaging, and Room local-cache adapters. |
 
-Current repositories cover bands, stages, performances, stage distances, food options, ratings, and group schedule locks. The app reads lineup and mutable shared data from Room first. Supabase is the primary master-data and shared-data sync backend; the CSV/TSV path remains as an explicit fallback/import tool. Android wiring composes Supabase or TSV source adapters, Room cache adapters, and sync decorators behind the existing domain repository ports.
+Current repositories cover bands, stages, performances, stage distances, food options, planning ratings, real post-show ratings, and group schedule locks. The app reads lineup and mutable shared data from Room first. Supabase is the primary master-data and shared-data sync backend; the CSV/TSV path remains as an explicit fallback/import tool. Real post-show ratings are stored locally in Room and are intentionally separate from Supabase-synced planning ratings until a future requirement decides whether they should sync. Android wiring composes Supabase or TSV source adapters, Room cache adapters, and sync decorators behind the existing domain repository ports.
 
 ### Technologies
 - Language: Java

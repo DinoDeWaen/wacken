@@ -8,6 +8,7 @@ import be.wacken.planner.domain.BandRepository;
 import be.wacken.planner.domain.FoodOptionRepository;
 import be.wacken.planner.domain.PerformanceRepository;
 import be.wacken.planner.domain.RatingRepository;
+import be.wacken.planner.domain.RealRatingRepository;
 import be.wacken.planner.domain.StageDistanceRepository;
 import be.wacken.planner.domain.StageRepository;
 import be.wacken.planner.infrastructure.FileBackedBandRepository;
@@ -24,6 +25,7 @@ import be.wacken.planner.persistence.RoomBandRepository;
 import be.wacken.planner.persistence.RoomFoodOptionRepository;
 import be.wacken.planner.persistence.RoomPerformanceRepository;
 import be.wacken.planner.persistence.RoomRatingRepository;
+import be.wacken.planner.persistence.RoomRealRatingRepository;
 import be.wacken.planner.persistence.RoomScheduleLockStore;
 import be.wacken.planner.persistence.RoomStageDistanceRepository;
 import be.wacken.planner.persistence.RoomStageRepository;
@@ -41,6 +43,7 @@ final class AppRepositories {
     private final SyncedStageDistanceRepository distances;
     private final SyncedFoodOptionRepository foodOptions;
     private final RatingRepository ratings;
+    private final RealRatingRepository realRatings;
     private final SyncingRatingRepository syncingRatings;
     private final SyncingScheduleLockStore syncingScheduleLocks;
     private final ScheduleLockStore scheduleLocks;
@@ -66,8 +69,10 @@ final class AppRepositories {
         RoomStageDistanceRepository distanceCache = new RoomStageDistanceRepository(database);
         RoomFoodOptionRepository foodCache = new RoomFoodOptionRepository(database);
         RoomRatingRepository ratingCache = new RoomRatingRepository(database);
+        RoomRealRatingRepository realRatingCache = new RoomRealRatingRepository(database);
         RoomScheduleLockStore scheduleLockCache = new RoomScheduleLockStore(database);
         this.ratingCache = ratingCache;
+        this.realRatings = realRatingCache;
         this.scheduleLockCache = scheduleLockCache;
 
         BandRepository bandSource;
@@ -142,6 +147,10 @@ final class AppRepositories {
 
     RatingRepository ratings() {
         return ratings;
+    }
+
+    RealRatingRepository realRatings() {
+        return realRatings;
     }
 
     ScheduleLockStore scheduleLocks() {

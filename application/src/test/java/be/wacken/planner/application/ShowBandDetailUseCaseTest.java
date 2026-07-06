@@ -4,6 +4,7 @@ import be.wacken.planner.domain.Band;
 import be.wacken.planner.domain.BandRepository;
 import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.RatingRepository;
+import be.wacken.planner.domain.RealRatingRepository;
 import be.wacken.planner.domain.SavedRating;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +39,25 @@ class ShowBandDetailUseCaseTest {
         Optional<BandDetailItem> detail = useCase.showBand("dino", "5th Avenue", MusicLinks.none());
 
         assertEquals(Optional.of(new BandDetailItem("5th Avenue", Optional.empty(), Optional.empty(), 4, false, Optional.empty(), Optional.empty(), List.of(new PersonRatingStars("dino", 4)))), detail);
+    }
+
+    @Test
+    void displaysRealPostShowRatingSeparatelyFromPlanningRating() {
+        FakeBandRepository bands = new FakeBandRepository();
+        FakeRatingRepository planningRatings = new FakeRatingRepository();
+        FakeRealRatingRepository realRatings = new FakeRealRatingRepository();
+        Band band = new Band("5th Avenue");
+        bands.save(band);
+        planningRatings.save("dino", band, Rating.of(5));
+        realRatings.save("dino", band, Rating.of(3));
+        ShowBandDetailUseCase useCase = new ShowBandDetailUseCase(bands, planningRatings, realRatings);
+
+        BandDetailItem detail = useCase.showBand("dino", "5th Avenue", MusicLinks.none()).orElseThrow();
+
+        assertEquals(5, detail.rating());
+        assertEquals(false, detail.defaultRating());
+        assertEquals(3, detail.realRating());
+        assertEquals(false, detail.defaultRealRating());
     }
 
     @Test
@@ -216,6 +236,23 @@ class ShowBandDetailUseCaseTest {
                     .stream()
                     .map(entry -> new SavedRating(entry.getKey().userName(), entry.getKey().band(), entry.getValue()))
                     .toList();
+        }
+
+        private record Key(String userName, Band band) {
+        }
+    }
+
+    private static final class FakeRealRatingRepository implements RealRatingRepository {
+        private final Map<Key, Rating> ratings = new LinkedHashMap<>();
+
+        @Override
+        public void save(String userName, Band band, Rating rating) {
+            ratings.put(new Key(userName, band), rating);
+        }
+
+        @Override
+        public Optional<Rating> findByUserAndBand(String userName, Band band) {
+            return Optional.ofNullable(ratings.get(new Key(userName, band)));
         }
 
         private record Key(String userName, Band band) {

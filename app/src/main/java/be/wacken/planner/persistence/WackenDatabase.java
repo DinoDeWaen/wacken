@@ -16,9 +16,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 RoomStageDistance.class,
                 RoomFoodOption.class,
                 RoomRating.class,
+                RoomRealRating.class,
                 RoomScheduleLock.class
         },
-        version = 4,
+        version = 5,
         exportSchema = false
 )
 public abstract class WackenDatabase extends RoomDatabase {
@@ -51,6 +52,19 @@ public abstract class WackenDatabase extends RoomDatabase {
                     """);
         }
     };
+    private static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS real_ratings (
+                        userName TEXT NOT NULL,
+                        bandName TEXT NOT NULL,
+                        value INTEGER NOT NULL,
+                        PRIMARY KEY(userName, bandName)
+                    )
+                    """);
+        }
+    };
 
     public abstract RoomBandDao bands();
 
@@ -64,6 +78,8 @@ public abstract class WackenDatabase extends RoomDatabase {
 
     public abstract RoomRatingDao ratings();
 
+    public abstract RoomRealRatingDao realRatings();
+
     public abstract RoomScheduleLockDao scheduleLocks();
 
     public static WackenDatabase get(Context context) {
@@ -75,7 +91,7 @@ public abstract class WackenDatabase extends RoomDatabase {
                                     WackenDatabase.class,
                                     "wacken-cache.db"
                             )
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                             .allowMainThreadQueries()
                             .build();
                 }
