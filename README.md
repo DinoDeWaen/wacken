@@ -12,6 +12,7 @@
 - Show compact read-only per-person star details on band detail and schedule decision detail screens when group ratings are available.
 - Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars, and clear a previous rating back to unrated.
 - Let users record a separate real post-show rating on band detail after seeing a band, with its own 1-5 scale and reset-to-unrated behavior; real ratings are local/offline-first and do not affect group schedule decisions.
+- Export all locally cached band rating data from Settings as a CSV file for Android share/save targets, including planning ratings, real post-show ratings, cached group member ratings, and schedule metadata where known.
 - Save rating and manual schedule-lock changes locally immediately, queue them as pending offline operations, and sync them with Supabase in the background on start/reactivation, on manual sync, or before close.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show readable imported English band biography/explanation and available band image metadata on the detail screen when source data provides it, without leaking raw HTML tags.
@@ -97,6 +98,7 @@ Current repositories cover bands, stages, performances, stage distances, food op
 - Language: Java
 - Build: Gradle (Android)
 - Local cache: AndroidX Room
+- File sharing: AndroidX Core `FileProvider` for Settings CSV export
 - Backend database: Supabase Postgres, managed by Flyway SQL migrations
 - Testing: JUnit 5, Mockito/fakes, JaCoCo coverage gates, and a dedicated `qaTest` scenario suite
 - Output: Debug APK via `./gradlew assembleDebug`

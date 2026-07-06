@@ -5,6 +5,7 @@ import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.widget.Button;
@@ -14,6 +15,13 @@ import android.widget.TextView;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
+
+import androidx.core.content.FileProvider;
+
+import be.wacken.planner.application.ExportRatingsCsvUseCase;
 
 public final class SettingsActivity extends Activity {
     private static final int COLOR_BACKGROUND = WackenTheme.BACKGROUND;
@@ -90,6 +98,7 @@ public final class SettingsActivity extends Activity {
         ratingAllocation.setGravity(Gravity.START);
         ratingAllocation.setPadding(0, dp(4), 0, 0);
         ratingSection.addView(ratingAllocation);
+        ratingSection.addView(actionButton("Export ratings CSV", WackenTheme.ButtonStyle.PREMIUM, view -> exportRatingsCsv()));
         screen.addView(ratingSection);
         refreshRatingAllocation();
 
@@ -227,6 +236,44 @@ public final class SettingsActivity extends Activity {
                 });
             }
         }).start();
+    }
+
+    private void exportRatingsCsv() {
+        try {
+            AppRepositories repositories = new AppRepositories(this);
+            String csv = new ExportRatingsCsvUseCase(
+                    repositories.bands(),
+                    repositories.performances(),
+                    repositories.ratings(),
+                    repositories.realRatings()
+            ).export(currentSession.userId());
+            File exportFile = writeExportFile(csv);
+            Intent share = new Intent(Intent.ACTION_SEND);
+            share.setType("text/csv");
+            share.putExtra(Intent.EXTRA_SUBJECT, "Wacken ratings export");
+            share.putExtra(Intent.EXTRA_STREAM, exportUri(exportFile));
+            share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(share, "Export ratings CSV"));
+            showStatus("Ratings CSV ready. Choose where to share or save it.", WackenTheme.SUCCESS_GREEN);
+        } catch (Exception error) {
+            showStatus("Export failed. Cached data remains unchanged.", COLOR_AMBER);
+        }
+    }
+
+    private File writeExportFile(String csv) throws java.io.IOException {
+        File directory = new File(getCacheDir(), "exports");
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw new java.io.IOException("Export directory could not be created.");
+        }
+        File exportFile = new File(directory, "wacken-ratings.csv");
+        try (FileOutputStream output = new FileOutputStream(exportFile)) {
+            output.write(csv.getBytes(StandardCharsets.UTF_8));
+        }
+        return exportFile;
+    }
+
+    private Uri exportUri(File exportFile) {
+        return FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", exportFile);
     }
 
     private void startSyncAnimation() {

@@ -24,7 +24,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - MVP2 group decision rules, conflict resolution, timeline generation, group-wide locked manual schedule choices, and Android schedule viewing for the current shared group.
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
-- Implemented MVP3 field-use capability includes recording a separate local real post-show rating on band detail. Remaining planned MVP3 capabilities include exporting ratings to CSV from settings and hardening cached/imported data without Wi-Fi during the festival.
+- Implemented MVP3 field-use capabilities include recording a separate local real post-show rating on band detail and exporting locally cached rating data to CSV from settings. Remaining planned MVP3 capability is hardening cached/imported data without Wi-Fi during the festival.
 
 ### Current Non-Goals
 
