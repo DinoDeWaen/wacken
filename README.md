@@ -323,7 +323,9 @@ The app stores Supabase access and refresh tokens locally. Authenticated
 Supabase requests refresh an expired access token before sending the request and
 retry once when Supabase rejects a request because the JWT expired. If the
 refresh token is invalid, expired, or revoked, the local session is cleared and
-the user is sent back to login.
+the user is sent back to login. If token refresh or an authenticated Supabase
+request fails because Supabase cannot be reached, the stored session is kept so
+cached data remains usable and pending local edits can sync later.
 
 Coverage gates:
 

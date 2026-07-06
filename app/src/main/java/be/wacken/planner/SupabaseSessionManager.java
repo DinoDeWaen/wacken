@@ -64,10 +64,13 @@ final class SupabaseSessionManager {
             sessions.save(refreshed);
             SupabaseDiagnostics.info("auth", "refresh_success", "expires_at=" + refreshed.expiresAtEpochSeconds());
             return refreshed;
-        } catch (IOException error) {
+        } catch (InvalidAuthSessionException error) {
             sessions.clear();
             SupabaseDiagnostics.warn("auth", "refresh_failed_session_cleared", "session_cleared=true", error);
             throw new AuthenticationRequiredException("Supabase session expired. Please sign in again.", error);
+        } catch (IOException error) {
+            SupabaseDiagnostics.warn("auth", "refresh_failed_session_preserved", "session_cleared=false", error);
+            throw error;
         }
     }
 }

@@ -3,6 +3,7 @@ package be.wacken.planner;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,15 +45,46 @@ public final class SupabaseSessionManagerTest {
     }
 
     @Test
-    public void clearsSessionWhenRefreshFails() {
+    public void preservesSessionWhenRefreshFailsBecauseNetworkIsUnavailable() {
         FakeSessionRepository sessions = new FakeSessionRepository(EXPIRED);
-        FakeAuthGateway auth = new FakeAuthGateway(new IOException("invalid refresh token"));
+        FakeAuthGateway auth = new FakeAuthGateway(new UnknownHostException("supabase.test"));
+        SupabaseSessionManager manager = new SupabaseSessionManager(sessions, auth, () -> NOW);
+
+        IOException error = assertThrows(IOException.class, manager::requireFreshSession);
+
+        assertEquals("supabase.test", error.getMessage());
+        assertFalse(sessions.cleared);
+        assertEquals(EXPIRED.accessToken(), sessions.load().accessToken());
+    }
+
+    @Test
+    public void clearsSessionWhenRefreshTokenIsRejected() {
+        FakeSessionRepository sessions = new FakeSessionRepository(EXPIRED);
+        FakeAuthGateway auth = new FakeAuthGateway(new InvalidAuthSessionException("invalid refresh token"));
         SupabaseSessionManager manager = new SupabaseSessionManager(sessions, auth, () -> NOW);
 
         assertThrows(AuthenticationRequiredException.class, manager::requireFreshSession);
 
         assertTrue(sessions.cleared);
         assertFalse(sessions.load().isPresent());
+    }
+
+    @Test
+    public void preservesSessionWhenRejectedRequestCannotRefreshBecauseNetworkIsUnavailable() {
+        AuthSession staleSession = session("stale-access", "refresh", NOW + 3_600);
+        FakeSessionRepository sessions = new FakeSessionRepository(staleSession);
+        FakeAuthGateway auth = new FakeAuthGateway(new UnknownHostException("supabase.test"));
+        SupabaseSessionManager manager = new SupabaseSessionManager(sessions, auth, () -> NOW);
+        SupabaseAuthenticatedRequest request = new SupabaseAuthenticatedRequest(manager, "Supabase sync failed");
+
+        IOException error = assertThrows(IOException.class, () -> request.execute(session ->
+                new SupabaseAuthenticatedRequest.Response(401, "{\"message\":\"JWT expired\"}")
+        ));
+
+        assertEquals("supabase.test", error.getMessage());
+        assertFalse(sessions.cleared);
+        assertEquals(staleSession.accessToken(), sessions.load().accessToken());
+        assertEquals(1, auth.refreshCount);
     }
 
     @Test

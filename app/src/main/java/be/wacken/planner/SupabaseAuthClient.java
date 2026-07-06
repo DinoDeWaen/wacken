@@ -36,7 +36,7 @@ final class SupabaseAuthClient implements SupabaseAuthGateway {
     @Override
     public AuthSession refresh(AuthSession session) throws IOException {
         if (session.refreshToken() == null || session.refreshToken().isBlank()) {
-            throw new IOException("Cannot refresh Supabase session without a refresh token.");
+            throw new InvalidAuthSessionException("Cannot refresh Supabase session without a refresh token.");
         }
         try {
             JSONObject body = new JSONObject()
@@ -48,6 +48,11 @@ final class SupabaseAuthClient implements SupabaseAuthGateway {
                     null
             );
             return sessionFromTokenResponse(response, session.email(), session);
+        } catch (SupabaseHttpException error) {
+            if (error.authenticationFailure()) {
+                throw new InvalidAuthSessionException(error.getMessage());
+            }
+            throw error;
         } catch (JSONException error) {
             throw new IOException("Supabase refresh response could not be read.", error);
         }
@@ -126,7 +131,7 @@ final class SupabaseAuthClient implements SupabaseAuthGateway {
         int status = connection.getResponseCode();
         String response = read(status >= 400 ? connection.getErrorStream() : connection.getInputStream());
         if (status >= 400) {
-            throw new IOException(errorMessage(response, status));
+            throw new SupabaseHttpException(status, errorMessage(response, status));
         }
         return response;
     }
@@ -158,5 +163,18 @@ final class SupabaseAuthClient implements SupabaseAuthGateway {
     }
 
     private record Membership(String groupId, String role) {
+    }
+
+    private static final class SupabaseHttpException extends IOException {
+        private final int status;
+
+        private SupabaseHttpException(int status, String message) {
+            super(message);
+            this.status = status;
+        }
+
+        private boolean authenticationFailure() {
+            return status == 400 || status == 401 || status == 403;
+        }
     }
 }
