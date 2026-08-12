@@ -5,6 +5,7 @@ import android.content.Context;
 import java.nio.file.Path;
 
 import be.wacken.planner.domain.BandRepository;
+import be.wacken.planner.domain.FestivalRepository;
 import be.wacken.planner.domain.FoodOptionRepository;
 import be.wacken.planner.domain.PerformanceRepository;
 import be.wacken.planner.domain.RatingRepository;
@@ -22,6 +23,7 @@ import be.wacken.planner.infrastructure.SyncedPerformanceRepository;
 import be.wacken.planner.infrastructure.SyncedStageDistanceRepository;
 import be.wacken.planner.infrastructure.SyncedStageRepository;
 import be.wacken.planner.persistence.RoomBandRepository;
+import be.wacken.planner.persistence.RoomFestivalRepository;
 import be.wacken.planner.persistence.RoomFoodOptionRepository;
 import be.wacken.planner.persistence.RoomPerformanceRepository;
 import be.wacken.planner.persistence.RoomRatingRepository;
@@ -42,6 +44,7 @@ final class AppRepositories {
     private final SyncedPerformanceRepository performances;
     private final SyncedStageDistanceRepository distances;
     private final SyncedFoodOptionRepository foodOptions;
+    private final FestivalRepository festivals;
     private final RatingRepository ratings;
     private final RealRatingRepository realRatings;
     private final SyncingRatingRepository syncingRatings;
@@ -68,10 +71,13 @@ final class AppRepositories {
         RoomPerformanceRepository performanceCache = new RoomPerformanceRepository(database);
         RoomStageDistanceRepository distanceCache = new RoomStageDistanceRepository(database);
         RoomFoodOptionRepository foodCache = new RoomFoodOptionRepository(database);
+        RoomFestivalRepository festivalCache = new RoomFestivalRepository(database);
         RoomRatingRepository ratingCache = new RoomRatingRepository(database);
         RoomRealRatingRepository realRatingCache = new RoomRealRatingRepository(database);
         RoomScheduleLockStore scheduleLockCache = new RoomScheduleLockStore(database);
         this.ratingCache = ratingCache;
+        festivalCache.seedDefaultActiveFestivalIfEmpty();
+        this.festivals = festivalCache;
         this.realRatings = realRatingCache;
         this.scheduleLockCache = scheduleLockCache;
 
@@ -143,6 +149,10 @@ final class AppRepositories {
 
     FoodOptionRepository foodOptions() {
         return foodOptions;
+    }
+
+    FestivalRepository festivals() {
+        return festivals;
     }
 
     RatingRepository ratings() {

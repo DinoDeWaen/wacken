@@ -13,6 +13,7 @@
 - Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars, and clear a previous rating back to unrated.
 - Let users record a separate real post-show rating on band detail after seeing a band, with its own 1-5 scale and reset-to-unrated behavior; real ratings are local/offline-first and do not affect group schedule decisions.
 - Export all locally cached band rating data from Settings as a CSV file for Android share/save targets, including planning ratings, real post-show ratings, cached group member ratings, and schedule metadata where known.
+- Start on the active festival band list, with `Wacken Open Air 2026` seeded as the default active festival. The top action row includes **Archive**; archiving the active festival immediately moves the app to a no-active-festival start state that lists archived festivals as read-only and shows the next add-festival entry point.
 - Save rating and manual schedule-lock changes locally immediately, queue them as pending offline operations, and sync them with Supabase in the background on start/reactivation, on manual sync, or before close.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show readable imported English band biography/explanation and available band image metadata on the detail screen when source data provides it, without leaking raw HTML tags.
@@ -97,7 +98,7 @@ Current modules:
 
 Current repositories cover bands, stages, performances, stage distances, food options, planning ratings, real post-show ratings, and group schedule locks. The app reads lineup and mutable shared data from Room first. Supabase is the primary master-data and shared-data sync backend; the CSV/TSV path remains as an explicit fallback/import tool. Real post-show ratings are stored locally in Room in the current release.
 
-The accepted post-MVP3 architecture direction in ADR 0011 adds explicit festivals, archived festival state, festival lineup entries, festival planning ratings, and synced personal band rating events. Implementation stories must evolve the current name-keyed rating repositories and Wacken-only persistence model to pass festival context explicitly while keeping Room as the offline-first read/write model.
+The first implemented post-MVP3 slice adds explicit festival lifecycle state. Room stores the seeded active `Wacken Open Air 2026` festival and archived festival status, while Flyway migration `V009__festivals.sql` creates the matching Supabase `festivals` contract. The remaining ADR 0011 work still needs to evolve lineup entries, festival planning ratings, and synced personal band rating events.
 
 ### Technologies
 - Language: Java

@@ -33,10 +33,13 @@ import java.util.Optional;
 import java.util.OptionalInt;
 
 import be.wacken.planner.application.BandListItem;
+import be.wacken.planner.application.ArchiveActiveFestivalUseCase;
+import be.wacken.planner.application.FestivalStartState;
 import be.wacken.planner.application.ListBandsUseCase;
 import be.wacken.planner.application.PersonRatingStars;
 import be.wacken.planner.application.RateBandResult;
 import be.wacken.planner.application.RateBandUseCase;
+import be.wacken.planner.application.ShowFestivalStartUseCase;
 import be.wacken.planner.domain.Band;
 
 public final class MainActivity extends Activity {
@@ -53,11 +56,16 @@ public final class MainActivity extends Activity {
 
     private ListView bandList;
     private TextView status;
+    private TextView title;
     private TextView syncStatus;
     private TextView subtitle;
+    private View tableHeader;
     private AuthSessionStore sessionStore;
     private AuthSession currentSession;
     private Button closeButton;
+    private Button archiveButton;
+    private Button scheduleButton;
+    private Button addFestivalButton;
     private FrameLayout syncOverlay;
     private ImageView syncSplash;
     private View syncScrim;
@@ -96,7 +104,8 @@ public final class MainActivity extends Activity {
         syncStatus.setGravity(Gravity.CENTER_HORIZONTAL);
         syncStatus.setPadding(0, 0, 0, dp(10));
         screen.addView(syncStatus);
-        screen.addView(tableHeader());
+        tableHeader = tableHeader();
+        screen.addView(tableHeader);
 
         status = new TextView(this);
         status.setTextColor(COLOR_MUTED);
@@ -125,9 +134,6 @@ public final class MainActivity extends Activity {
         if (!loadCurrentSession()) {
             redirectToLogin();
             return;
-        }
-        if (subtitle != null) {
-            subtitle.setText("Line-up ratings for " + currentSession.email());
         }
         LifecycleSyncDecision syncDecision = LifecycleSyncDecision.onResume(syncInProgress, adapter != null, reloadNeeded);
         if (syncDecision.renderCache()) {
@@ -182,6 +188,19 @@ public final class MainActivity extends Activity {
 
     private void loadBandList() {
         AppRepositories repositories = new AppRepositories(this);
+        FestivalStartState startState = new ShowFestivalStartUseCase(repositories.festivals()).show();
+        renderFestivalStartState(startState);
+        if (!startState.hasActiveFestival()) {
+            cachedBands = List.of();
+            cachedBandsByName = Map.of();
+            adapter = new BandAdapter(repositories, cachedBands, cachedBandsByName);
+            bandList.setAdapter(adapter);
+            loading = false;
+            reloadNeeded = false;
+            status.setVisibility(View.VISIBLE);
+            refreshSyncStatus(repositories, "Cached data", COLOR_MUTED);
+            return;
+        }
         cachedBands = new ListBandsUseCase(
                 repositories.bands(),
                 repositories.performances(),
@@ -197,6 +216,28 @@ public final class MainActivity extends Activity {
         status.setVisibility(cachedBands.isEmpty() ? View.VISIBLE : View.GONE);
         status.setText(cachedBands.isEmpty() ? getString(R.string.empty_band_list) : "");
         refreshSyncStatus(repositories, "Cached data", COLOR_MUTED);
+    }
+
+    private void renderFestivalStartState(FestivalStartState state) {
+        FestivalStartScreenContent content = FestivalStartScreenContent.from(state, currentSession.email());
+        title.setText(content.title());
+        subtitle.setText(content.subtitle());
+        status.setText(content.statusText());
+        if (archiveButton != null) {
+            archiveButton.setVisibility(content.showArchiveAction() ? View.VISIBLE : View.GONE);
+        }
+        if (addFestivalButton != null) {
+            addFestivalButton.setVisibility(content.showAddFestivalAction() ? View.VISIBLE : View.GONE);
+        }
+        if (scheduleButton != null) {
+            scheduleButton.setEnabled(content.showBandList());
+        }
+        if (tableHeader != null) {
+            tableHeader.setVisibility(content.showBandList() ? View.VISIBLE : View.GONE);
+        }
+        if (bandList != null) {
+            bandList.setVisibility(content.showBandList() ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void showLoadingState() {
@@ -219,7 +260,7 @@ public final class MainActivity extends Activity {
         header.setGravity(Gravity.CENTER_HORIZONTAL);
         header.setPadding(0, dp(8), 0, dp(18));
 
-        TextView title = new TextView(this);
+        title = new TextView(this);
         title.setText("Bands");
         title.setTextColor(WackenTheme.AMBER);
         title.setTextSize(28);
@@ -241,13 +282,42 @@ public final class MainActivity extends Activity {
         actions.setOrientation(LinearLayout.HORIZONTAL);
         actions.setGravity(Gravity.CENTER_VERTICAL);
         actions.setPadding(0, 0, 0, dp(14));
+        archiveButton = topActionButton("Archive", "Archive active festival", WackenTheme.ButtonStyle.DANGER,
+                view -> archiveActiveFestival());
+        archiveButton.setTextSize(13);
+        archiveButton.setSingleLine(true);
+        actions.addView(archiveButton);
+        addFestivalButton = topActionButton("+", "Add festival", WackenTheme.ButtonStyle.SECONDARY,
+                view -> status.setText("Add festival will be implemented in the next story."));
+        addFestivalButton.setVisibility(View.GONE);
+        actions.addView(addFestivalButton);
         actions.addView(topActionButton("⚙", "Settings", WackenTheme.ButtonStyle.SECONDARY,
                 view -> startActivity(new Intent(this, SettingsActivity.class))));
-        actions.addView(topActionButton("📅", "Group schedule", WackenTheme.ButtonStyle.SECONDARY,
-                view -> startActivity(new Intent(this, ScheduleActivity.class))));
+        scheduleButton = topActionButton("📅", "Group schedule", WackenTheme.ButtonStyle.SECONDARY,
+                view -> startActivity(new Intent(this, ScheduleActivity.class)));
+        actions.addView(scheduleButton);
         actions.addView(topActionButton("⏻", "Sync and exit", WackenTheme.ButtonStyle.DANGER,
                 view -> syncFromSupabase(true, "Sealing scores before exit...")));
         return actions;
+    }
+
+    private void archiveActiveFestival() {
+        AppRepositories repositories = new AppRepositories(this);
+        try {
+            FestivalStartState state = new ArchiveActiveFestivalUseCase(repositories.festivals()).archiveActiveFestival();
+            renderFestivalStartState(state);
+            cachedBands = List.of();
+            cachedBandsByName = Map.of();
+            adapter = new BandAdapter(repositories, cachedBands, cachedBandsByName);
+            bandList.setAdapter(adapter);
+            loading = false;
+            reloadNeeded = false;
+            status.setVisibility(View.VISIBLE);
+            refreshSyncStatus(repositories, "Cached data", COLOR_MUTED);
+        } catch (RuntimeException error) {
+            status.setVisibility(View.VISIBLE);
+            status.setText(error.getMessage());
+        }
     }
 
     private Button topActionButton(String icon, String description, WackenTheme.ButtonStyle style, View.OnClickListener listener) {
@@ -331,6 +401,12 @@ public final class MainActivity extends Activity {
     private void setSyncActionsEnabled(boolean enabled) {
         if (closeButton != null) {
             closeButton.setEnabled(enabled);
+        }
+        if (archiveButton != null) {
+            archiveButton.setEnabled(enabled);
+        }
+        if (scheduleButton != null && bandList != null) {
+            scheduleButton.setEnabled(enabled && bandList.getVisibility() == View.VISIBLE);
         }
     }
 

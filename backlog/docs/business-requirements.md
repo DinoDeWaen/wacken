@@ -27,6 +27,7 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
 - Implemented MVP3 field-use capabilities include recording a separate local real post-show rating on band detail, exporting locally cached rating data to CSV from settings, and keeping cached/imported data usable without Wi-Fi during the festival.
+- Implemented post-MVP3 festival lifecycle foundation includes a seeded active `Wacken Open Air 2026` festival, a manual Archive action on the active festival start screen, and a no-active-festival archive state that lists archived festivals as read-only with an add-festival entry point.
 
 ### Current Non-Goals
 

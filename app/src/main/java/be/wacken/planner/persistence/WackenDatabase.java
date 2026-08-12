@@ -17,9 +17,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 RoomFoodOption.class,
                 RoomRating.class,
                 RoomRealRating.class,
-                RoomScheduleLock.class
+                RoomScheduleLock.class,
+                RoomFestival.class
         },
-        version = 5,
+        version = 6,
         exportSchema = false
 )
 public abstract class WackenDatabase extends RoomDatabase {
@@ -65,6 +66,24 @@ public abstract class WackenDatabase extends RoomDatabase {
                     """);
         }
     };
+    private static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS festivals (
+                        id TEXT NOT NULL,
+                        name TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        PRIMARY KEY(id)
+                    )
+                    """);
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS idx_festivals_one_active ON festivals(status) WHERE status = 'ACTIVE'");
+            database.execSQL("""
+                    INSERT OR IGNORE INTO festivals (id, name, status)
+                    VALUES ('wacken-2026', 'Wacken Open Air 2026', 'ACTIVE')
+                    """);
+        }
+    };
 
     public abstract RoomBandDao bands();
 
@@ -75,6 +94,8 @@ public abstract class WackenDatabase extends RoomDatabase {
     public abstract RoomStageDistanceDao stageDistances();
 
     public abstract RoomFoodOptionDao foodOptions();
+
+    public abstract RoomFestivalDao festivals();
 
     public abstract RoomRatingDao ratings();
 
@@ -91,7 +112,7 @@ public abstract class WackenDatabase extends RoomDatabase {
                                     WackenDatabase.class,
                                     "wacken-cache.db"
                             )
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                             .allowMainThreadQueries()
                             .build();
                 }
