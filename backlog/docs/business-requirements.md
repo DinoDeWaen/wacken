@@ -10,6 +10,8 @@ Use this section for most tasks. Read deeper sections only when the active task 
 
 Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken bands and prepare a conflict-aware festival schedule. The current implementation focuses on band import, band listing, band detail, 1-5 ratings with unrated state, local cache behavior, Supabase-backed lifecycle master-data sync, Supabase Auth, shared rating sync, and MVP2 schedule planning. MVP3 extends the product toward festival-field use with rating export, post-show real ratings, and stronger no-Wi-Fi operation.
 
+The validated post-MVP3 direction keeps the product for one friend group and extends it from a Wacken-only planning app into a festival-over-time rating archive. Users can archive the completed active festival, add the next festival, reuse known bands across festivals, sync personal band rating history to Supabase, and prefill new festival planning ratings from the latest personal band rating.
+
 ### Current Implemented Capabilities
 
 - Android band overview and detail screens, with generic Metal Battle placeholder entries hidden from rating lists.
@@ -24,11 +26,16 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 - MVP2 group decision rules, conflict resolution, timeline generation, group-wide locked manual schedule choices, and Android schedule viewing for the current shared group.
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
-- Implemented MVP3 field-use capabilities include recording a separate local real post-show rating on band detail and exporting locally cached rating data to CSV from settings. Remaining planned MVP3 capability is hardening cached/imported data without Wi-Fi during the festival.
+- Implemented MVP3 field-use capabilities include recording a separate local real post-show rating on band detail, exporting locally cached rating data to CSV from settings, and keeping cached/imported data usable without Wi-Fi during the festival.
 
 ### Current Non-Goals
 
 - Multiple independent groups in the current version.
+- New friend-invite, invite-token, or invite deep-link flows.
+- Managing multiple upcoming festivals at the same time in the first post-Wacken version.
+- Editing archived festivals in the first post-Wacken version.
+- Fuzzy band linking and band aliases in the first post-Wacken version.
+- Wacken website scraping and Android data-grid validation in the current roadmap.
 - Play Store distribution before a later delivery phase.
 - Business logic in Android UI, Activities, or Fragments.
 - Android instrumentation tests unless a future task makes them meaningful.
@@ -42,6 +49,7 @@ Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken
 | Festival data import | BR-033 to BR-046 | CSV import, Supabase master data, Room cache, admin data, band-only imports |
 | Overview, detail, and app state | BR-047 to BR-072 | Wacken UI, metadata, music links, loading, sync feedback, settings, calendar schedule, returning to app context |
 | MVP3 field use and export | BR-077 to BR-080 | Rating export, real post-show ratings, and no-Wi-Fi festival use |
+| Post-MVP3 festival archive and personal rating history | BR-081 to BR-102 | Festival lifecycle, archived festivals, reusable bands, personal band ratings, planning ratings, rating prefill |
 
 ### Requirement Drift Markers
 
@@ -74,12 +82,13 @@ Project-specific boundary notes:
 - Goal 3: Respect strong preferences, must-see ratings, vetoes, walking-time context, and manual group choices when producing the schedule.
 - Goal 4: Make the final in-app schedule clear enough to use during the festival.
 - Goal 5: Get the band rating feature working first so the group can begin scoring the lineup before final stage times are available.
-- Goal 6: Support reliable festival data import so bands, stages, performances, distances, and food options can be planned from validated file-based CSV uploads or proposed website-scraped changes.
+- Goal 6: Support reliable festival data import so bands, stages, performances, distances, and food options can be planned from validated file-based CSV uploads.
 - Goal 7: Present the band overview with a Wacken-inspired visual style so early rating feels like a festival lineup experience rather than a technical data table.
 - Goal 8: Keep the rating workflow responsive and stateful so users understand when data is loading and can return to the same app context after switching apps or opening music links.
 - Goal 9: Keep persistence backend-replaceable by treating MVP TSV storage as a backend-like source and using a local device cache for fast app reads.
 - Goal 10: Let users take their ratings and festival experience data home by exporting ratings and recording the real rating after seeing a band.
 - Goal 11: Keep the app useful at Wacken when Wi-Fi or mobile data is unavailable, as long as the needed festival and group data has already been cached or imported.
+- Goal 12: Preserve festival history and personal band ratings over time so future festival planning can start from what each user already knows about bands they have seen.
 
 ## Product context
 
@@ -121,7 +130,7 @@ Existing integration:
 
 | System | Purpose | Direction | Notes |
 | --- | --- | --- | --- |
-| Wacken line-up website | Provides current band list and later detailed lineup data when available. | Inbound | Initial import may scrape the official band list and propose changes for user validation. The official pages inspected were the Wacken band list and artist detail URLs, but the dynamic artist-card data still needs schema investigation. |
+| Wacken line-up website | Historical reference for possible future festival data discovery. | Inbound | Wacken website scraping is out of the current roadmap. Current and planned imports use validated CSV files instead. |
 | Festival CSV files | Provide bands, stages, performances, distances, and food data. | Inbound | CSVs are uploaded through Android file selection. They must be validated for missing references, overlaps, and unknown stages once final stage and time data is available. |
 | MVP TSV source | Acts as the current backend-like persistence source for imported festival data and ratings. | Internal source | The app caches data locally in Room and writes through to TSV files so the TSV source can later be replaced by a backend API without changing domain behavior. |
 | Supabase Postgres | Central backend database for shared ratings and admin-managed festival data. | Backend | Schema is managed through Flyway migrations. Bands can be uploaded from the repository CSV through an idempotent backend import script. |
@@ -133,7 +142,12 @@ Existing integration:
 - Non-goal 2: Do not put business logic in Android UI, Activities, or Fragments.
 - Non-goal 3: Do not build Play Store distribution before the later optional delivery phase.
 - Non-goal 4: Do not implement UI tests where they are not meaningful; features start with domain tests and application tests.
-- Non-goal 5: Do not support multiple independent groups in the current version; multi-group support is deferred to next year.
+- Non-goal 5: Do not support multiple independent groups; the app remains for one friend group.
+- Non-goal 6: Do not build new invite-token, invite deep-link, or self-service group onboarding flows.
+- Non-goal 7: Do not support multiple upcoming festivals at the same time in the first post-Wacken version.
+- Non-goal 8: Do not support editing archived festivals in the first post-Wacken version.
+- Non-goal 9: Do not build fuzzy band linking or alias storage in the first post-Wacken version.
+- Non-goal 10: Do not build Wacken scraping or Android data-grid validation in the current roadmap.
 
 ## Delivery roadmap
 
@@ -143,14 +157,17 @@ The delivery roadmap captures the planned or completed increments for the curren
 | --- | --- | --- |
 | MVP 1 | Establish the Android foundation, CI, domain model, band listing, first-priority band ratings, initial lineup import, and unit test setup. | Not specified in `project.md` |
 | MVP 2 | Enable one-group planning with a decision engine, conflict resolution, and timeline generation. | Not specified in `project.md` |
-| MVP 3 | Improve festival-field usefulness with rating CSV export, post-show real ratings, and no-Wi-Fi cached operation. | Planned |
+| MVP 3 | Improve festival-field usefulness with rating CSV export, post-show real ratings, and no-Wi-Fi cached operation. | Completed |
+| Post-MVP3 | Archive completed festivals, add the next festival, sync personal band rating history, and prefill future festival planning ratings from personal band ratings. | Planned |
 
 Future production direction, not implemented:
 
 - Free distribution through Play Store or an internal testing track.
 - Web app, only if it significantly simplifies early delivery.
 - Android instrumentation tests as a later-phase option for the QA suite.
-- Multiple independent groups for next year's version.
+- Multiple independent groups.
+- Multiple upcoming festivals at the same time.
+- Fuzzy band matching and alias management.
 
 Release assumptions:
 
@@ -165,11 +182,11 @@ Release assumptions:
 | Band rating | Let users rate bands on the 1-5 preference scale, with `0` reserved for unrated bands. This is the first product priority. | Must | MVP 1 |
 | Band listing | Show bands in a responsive Wacken-themed overview with alphabetical sorting by band name, rating, stage, time information when available, loading feedback when needed, and same-row music-link actions. | Must | MVP 1 |
 | Band detail view | Show band details in a style inspired by the official Wacken band detail screen, with English biography when available, image metadata when available, editable own rating stars, read-only group member ratings when available, schedule information, and optional YouTube and Spotify links. | Must | MVP 1 |
-| Initial lineup import | Import or scrape the current Wacken band list before final stages and times are available. Band-only imports must be visible and rateable. English biography and image metadata are meaningful UI inputs when available. | Must | MVP 1 |
+| Initial lineup import | Import the current Wacken band list before final stages and times are available. Band-only imports must be visible and rateable. English biography and image metadata are meaningful UI inputs when available. | Must | MVP 1 |
 | Festival data import | Import validated CSV files for bands, stages, performances, distances, and food options through Android file upload once final lineup data is available. Re-import updates festival master data while preserving user ratings. | Must | MVP 1 |
-| Data review grid | Propose scraped or imported data changes in a user-validated data grid, with line-by-line validation. | Should | MVP 1 |
+| Data review grid | Historical candidate for reviewing proposed imported data changes line by line. | Could | Out of scope |
 | One-group planning | Combine ratings from one shared friend group into shared decisions. | Must | MVP 2 |
-| Friend invites | Allow friends to join the shared group through the most useful shareable invite format for Android. | Should | MVP 2 |
+| Friend onboarding text | Keep the existing Android share-sheet onboarding text for provisioned accounts in the one shared group. New invite-token, invite deep-link, or self-service onboarding flows are out of scope. | Should | MVP 2 |
 | Decision engine | Decide whether the group should go, optionally go, or not go to a band. | Must | MVP 2 |
 | Conflict resolution | Resolve overlapping performances according to the authoritative group rules. | Must | MVP 2 |
 | Timeline generation | Generate a day-based shared festival timeline. | Must | MVP 2 |
@@ -181,6 +198,12 @@ Release assumptions:
 | Rating export | Export all locally available band ratings to a CSV file from settings. | Must | MVP 3 |
 | Post-show real rating | Let a user record a separate real rating after seeing a band, without changing the planning rating used for group scheduling. | Must | MVP 3 |
 | No-Wi-Fi field mode | Keep cached lineup, band details, own ratings, real ratings, and generated schedules usable without Wi-Fi or mobile data after initial data is available. | Must | MVP 3 |
+| Festival archive lifecycle | Archive the completed active festival, show archived festivals when none is active, and add the next festival after archiving. | Must | Post-MVP3 |
+| Reusable band catalog | Store bands independently from festival lineups so the same band can appear across festivals. | Must | Post-MVP3 |
+| Personal band rating history | Store and sync historical personal band ratings by user, band, festival, and created date. | Must | Post-MVP3 |
+| Festival planning ratings | Store and sync editable per-festival planning ratings separately from personal band ratings. | Must | Post-MVP3 |
+| Future festival rating prefill | Prefill planning ratings for known bands from the user's latest personal band rating. | Must | Post-MVP3 |
+| Fuzzy band linking and aliases | Later propose likely existing bands for new lineup names and store aliases after user confirmation. | Could | Future |
 
 ## Domain context
 
@@ -194,21 +217,28 @@ In scope:
 - Resolving overlapping performances.
 - Showing walking-time context between selected performances.
 - Producing a clear day-based in-app timeline.
-- Importing and validating festival data from CSV files or proposed website-scraped changes.
+- Importing and validating festival data from CSV files.
+- Post-MVP3: archiving a completed festival and adding the next festival after the archive.
+- Post-MVP3: syncing personal band rating history and using it to prefill future festival planning ratings.
 
 Out of scope:
 
 - Play Store distribution for the MVP.
 - Primary web application delivery.
-- Multiple independent groups in the current version.
+- Multiple independent groups.
+- New friend-invite, invite-token, or invite deep-link flows.
+- Multiple upcoming festivals at the same time in the first post-Wacken version.
+- Editing archived festivals in the first post-Wacken version.
+- Fuzzy band linking and alias storage in the first post-Wacken version.
+- Wacken website scraping and Android data-grid validation in the current roadmap.
 - Business logic in Android UI components.
-- Production persistence, API, messaging, authentication, or payment behavior; none is specified in `project.md`.
+- Payment behavior and unrelated production messaging.
 
 ## Key workflows
 
-### Workflow 1: Import or propose festival data
+### Workflow 1: Import festival data
 
-An admin uploads CSV files or asks the app to scrape the Wacken line-up website. CSV file upload is the MVP import path. Later scraped or reviewed changes may be proposed in a grid so the user can validate updates line by line.
+An admin uploads CSV files through Android file selection. CSV file upload is the MVP and post-MVP3 import path.
 
 ```gherkin
 Scenario: Import festival data from selected CSV files
@@ -336,6 +366,58 @@ Scenario: Inspect and change a schedule conflict choice
   And the visible schedule result changes to that selection
 ```
 
+### Workflow 10: Archive the active festival
+
+A user archives the completed active festival so it remains available as read-only history and no longer drives the default planning workflow.
+
+```gherkin
+Scenario: Archive the active festival
+  Given a festival is active
+  When a user archives the festival
+  Then the festival becomes read-only history
+  And it is no longer the active festival on the start screen
+  And no archive confirmation is required in the first version
+```
+
+### Workflow 11: Add the next festival
+
+After the active festival has been archived, a user can add the next festival and upload its lineup.
+
+```gherkin
+Scenario: Add a new festival after archiving the current one
+  Given no festival is active
+  When a user adds a new festival and uploads its lineup
+  Then the new festival becomes the active festival
+  And exact-name band matches reuse existing band records
+  And unmatched band names create new band records
+```
+
+### Workflow 12: Prefill planning ratings from personal band ratings
+
+Future festival planning starts from each user's own historical band experience, while festival context stays editable.
+
+```gherkin
+Scenario: Prefill a new festival planning rating
+  Given a user has a latest personal band rating for Airbourne
+  And Airbourne is uploaded in a new festival lineup
+  When the new festival becomes active
+  Then the user's planning rating for Airbourne is prefilled from the latest personal band rating
+  And changing the planning rating does not change the personal band rating
+```
+
+### Workflow 13: Preserve personal band rating history
+
+Seen ratings are historical personal band rating events with festival and created-date context.
+
+```gherkin
+Scenario: Rate the same band after seeing it at different festivals
+  Given the user rated Airbourne after seeing them at Wacken
+  When the user later rates Airbourne after seeing them at Rock am Ring
+  Then both personal band ratings remain visible
+  And each rating shows the festival and created date for reference
+  And the current personal band rating is the latest personal band rating by created date
+```
+
 ## Business rules
 
 | Rule ID | Rule | Example | Priority |
@@ -376,7 +458,7 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-032 | A lost alternative is the second-highest band: the performance that lost to the selected performance and could still be chosen manually if preferred. | If the winning band is not good enough, the user can inspect the runner-up. | Must |
 | BR-032a | If the lost alternative tied the winner on all existing conflict criteria before the final input-order fallback, it must be marked as a tied alternative and shown first after the chosen act in decision details. | Users can see when the app chose between equal options rather than a clearly better winner. | Must |
 | BR-033 | CSV import validation must detect missing references, overlaps, and unknown stages. | An imported performance cannot reference an unknown stage without validation feedback. | Must |
-| BR-034 | Scraped or imported data changes should be proposed in a data grid for line-by-line user validation. | The user can accept or reject each proposed band or performance update. | Should |
+| BR-034 | Reserved for possible future imported-data review. | Android data-grid validation for proposed scraped or imported changes is out of the current roadmap. | Could |
 | BR-035 | The initial lineup import may contain only bands before final stage and time data is available. | Early rating can start from a band list without performance times. | Must |
 | BR-036 | The band rating screen should follow the official Wacken band detail style where practical, adding rating stars and optional YouTube and Spotify links. | A band detail page shows band information plus star rating controls. | Must |
 | BR-037 | The current version supports one shared group, not multiple independent groups. | All ratings belong to "my group" for now. | Must |
@@ -428,40 +510,67 @@ Scenario: Inspect and change a schedule conflict choice
 | BR-075 | The group schedule can locally hide barred overlapping acts. | A user can toggle the schedule view so visible blocks and decision-detail candidates marked as barred/scratched because they lose an overlap to a higher-rated visible act are hidden without changing ratings, generated decisions, manual choices, persistence, or sync data. | Must |
 | BR-076 | The group schedule can locally hide acts at or below a selected star threshold. | A user can choose an inclusive threshold such as 2 stars, and visible blocks plus decision-detail candidates rated at or below that threshold are hidden without changing ratings, generated decisions, manual choices, persistence, or sync data. | Must |
 | BR-077 | MVP3 settings must provide a CSV export for all locally known bands and ratings. | The export contains one row per locally known band and includes stable band identity, display name, planning rating, real post-show rating, available group member ratings, stage/date/time where known, and schedule status where known. | Must |
-| BR-078 | A real post-show rating is separate from the planning rating. | A user can rate a band `5` for planning but later give the actual performance a real rating of `3`; the group schedule still uses the planning rating unless a future requirement says otherwise. | Must |
+| BR-078 | A real post-show rating is separate from the planning rating. | A user can rate a band `5` for planning but later give the actual performance a real rating of `3`; the group schedule still uses the planning rating. | Must |
 | BR-079 | Real post-show ratings use the same visible 1-5 scale with `0`/empty as unrated. | A band not yet seen has no real rating; setting or resetting the real rating must not clear the planning rating. | Must |
 | BR-080 | The app must remain useful without Wi-Fi or mobile data after festival data has been cached or imported. | A user at Wacken with no connection can open cached lineup, band detail, ratings, real ratings, settings, and group schedule without being logged out only because Supabase cannot be reached; changes are stored locally and queued for later sync when sync is supported. | Must |
+| BR-081 | The app supports multiple festivals over time. | Wacken can be archived after completion, and a later festival such as Rock am Ring or Rock im Park can be added for new planning. | Must |
+| BR-082 | Only one festival can be active at a time. | The active festival is the default start screen and editable planning workflow. | Must |
+| BR-083 | The start screen shows the active festival when one exists. | The active festival band list is shown by default with an Archive action at the top. | Must |
+| BR-084 | If no festival is active, the start screen shows archived festivals and an add-festival path. | After Wacken is archived, the user sees historical festivals and can add the next festival. | Must |
+| BR-085 | A festival can be manually archived by a user. | Archiving marks the active festival as historical without requiring confirmation in the first version. | Must |
+| BR-086 | Archived festivals are read-only in the first post-Wacken version. | Users can inspect historical lineups and ratings, but cannot edit archived festival data yet. | Must |
+| BR-087 | A new festival can be added after the active festival is archived. | The first post-Wacken version does not manage multiple active or upcoming festivals at the same time. | Must |
+| BR-088 | The app remains for one friend group only. | Multi-group support, new invite flows, invite tokens, and invite deep links are out of scope. | Must |
+| BR-089 | Bands are stored independently from festivals. | A band such as Airbourne exists once in the band table and can appear in multiple festival lineups. | Must |
+| BR-090 | Festival lineups link festivals to bands. | Uploading a festival lineup creates festival-band entries and links them to band records. | Must |
+| BR-091 | The first post-Wacken version matches bands by exact name. | If an uploaded band name exactly matches an existing band name, the app reuses the existing band; otherwise it creates a new band. | Must |
+| BR-092 | Fuzzy band linking and aliases are deferred. | A future version may propose likely existing bands and store aliases after user confirmation, but the first version does not do this. | Could |
+| BR-093 | Ratings are personal per user. | Each user's ratings belong to that user. The one friend group's schedule still combines personal planning ratings. | Must |
+| BR-094 | Personal band ratings sync to Supabase. | A user's overall opinion of a band is synced for backup, cross-device continuity, and future festival prefilling. | Must |
+| BR-095 | Festival planning ratings sync to Supabase. | Planning ratings are per user, festival, and band, and are used for group schedule decisions. | Must |
+| BR-096 | Personal band ratings and festival planning ratings are independent. | Changing a festival planning rating must not change the personal band rating. | Must |
+| BR-097 | Festival context can override personal preference for planning. | A user may personally rate a band low but set a high planning rating for one festival because of special context, such as a final show. | Must |
+| BR-098 | Real or seen ratings are stored as personal band rating events. | If a user rates Airbourne after Wacken and later after Rock am Ring, both ratings remain visible with festival and created-date reference. | Must |
+| BR-099 | The current personal band rating is the latest personal band rating event by created date. | Festival planning ratings never overwrite the current personal band rating. | Must |
+| BR-100 | New festival lineups prefill planning ratings from personal band ratings only. | When a known band appears in a new festival lineup, the user's planning rating starts from the latest personal band rating; if none exists, it stays unrated. | Must |
+| BR-101 | Prefilled planning ratings remain editable for the active festival. | Editing the prefilled planning rating affects only that festival's planning decision and does not change personal band history. | Must |
+| BR-102 | Archived festival ratings remain visible with context. | Historical planning ratings and personal band rating events can be inspected with band, festival, and created-date reference. | Must |
 
 ## Data and terminology
 
 | Concept | Description | Important fields | Invariants |
 | --- | --- | --- | --- |
-| Band | A musical act at Wacken Open Air 2026. | Name, optional English biography, optional image metadata, optional music links, optional schedule status | Can be associated with one or more performances; can also exist before performances are known. |
-| Performance | A scheduled band appearance. | Band, stage, time range | Must reference known band and stage data. |
+| Festival | A music festival event planned or archived in the app. | Name, status, optional date range | Exactly one festival can be active at a time in the first post-Wacken version. |
+| Archived festival | A completed festival kept for historical reference. | Festival, lineups, performances, planning ratings, personal band rating events | Read-only in the first post-Wacken version. |
+| Band | A musical act that can appear at one or more festivals. | Stable identity, canonical name, optional English biography, optional image metadata, optional music links | Exists independently from festival lineups. Exact name matching reuses a band in the first post-Wacken version. |
+| Festival lineup entry | A relationship between a festival and a band. | Festival, band, uploaded festival-specific display name | Must reference one festival and one band. |
+| Performance | A scheduled band appearance at a festival. | Festival, band, stage, time range | Must reference known festival, band, and stage data. |
 | Stage | A festival podium or location where performances happen. | Name or identifier | Must be known before performances can reference it. |
 | Distance | Travel information between stages. | From stage, to stage, walking minutes by default | Used to show walking-time context and support tie-breaking. |
-| User | A festival attendee who can rate bands. | User identity details are not finalized. | Can provide ratings; missing ratings default to `0` unrated. |
-| Group of friends | The single shared group for the current version. | Members are not fully specified. | Group decisions use all member ratings; multiple groups are deferred. |
-| Rating | A user's preference for a band. | Value from 1 to 5 when explicit; `0` only represents unrated/no explicit rating. | Must use the defined rating scale. |
+| User | A festival attendee who can rate bands. | Supabase user identity, display label where available | Can provide personal band ratings and festival planning ratings; missing ratings default to `0` unrated. |
+| Group of friends | The single shared group for the app. | Fixed friend group membership | Group decisions use all member planning ratings; multiple groups and invite flows are out of scope. |
+| Festival planning rating | A user's intent to see a band at one festival. | User, festival, band, value, sync status | Must use the 1-5 scale with `0` unrated; used for group schedule decisions; independent from personal band ratings. |
+| Personal band rating event | A user's personal assessment of a band after seeing or rating it. | User, band, festival reference where known, value, created date, sync status | Must use the 1-5 scale with `0` unrated; latest by created date is the user's current personal band rating. |
 | Food option | Imported festival food master data. | Name and optional location metadata | Preserved for future planning but not active in MVP2 schedule behavior. |
 | Schedule | A conflict-aware festival plan. | Day, slots, selected performances, alternatives, walking time | Must respect decision rules, conflicts, walking-time context, and manual group choices. |
 | Timeline slot | One visible item in the daily schedule. | Selected band, stage, time range, walking time, lost alternative | Must be clear enough for in-app timeline display. |
-| Festival master data | Imported lineup data used for planning. | Bands, stages, performances, distances, food options | Can be replaced by a successful CSV re-import. Must not include user ratings. |
-| User rating data | Group preference data for bands. | User/group identity, band, rating value | Must be preserved when festival master data is updated. |
+| Festival master data | Imported lineup data used for planning. | Festival, lineup entries, stages, performances, distances, food options | Can be replaced by a successful CSV re-import for the active festival. Must not include user ratings. |
+| User rating data | Personal user rating data. | User identity, festival, band, rating value, created date where applicable | Must be preserved when festival master data is updated. |
 | Band overview row | Visual representation of a band in the overview. | Band name, schedule status, effective rating, optional music-link actions | Must open band details, support the rating workflow, and keep same-row actions clear. |
 
 ## Business object model
 
 | Object | Responsibility | Relationships |
 | --- | --- | --- |
-| Festival | Provides the overall Wacken Open Air 2026 planning context. | Contains bands, stages, performances, distances, and food options. |
-| Band | Represents an act that users can rate and potentially attend. | Has performances; receives ratings from users. |
-| Performance | Represents when and where a band plays. | Belongs to a band and a stage; may overlap other performances. |
+| Festival | Provides the planning and archive context for one event. | Contains lineup entries, stages, performances, distances, food options, planning ratings, and personal band rating events. |
+| Band | Represents an act that users can rate and potentially attend across festivals. | Has festival lineup entries and performances; receives personal band rating events and festival planning ratings. |
+| Festival Lineup Entry | Represents a band appearing at one festival. | Belongs to one festival and one band. |
+| Performance | Represents when and where a band plays at a festival. | Belongs to a festival, a band, and a stage; may overlap other performances. |
 | Stage | Represents a festival location or podium. | Has performances; has distances to other stages. |
 | User | Represents an attendee participating in planning. | Provides ratings; may belong to a group. |
-| Group | Represents the current single friend group making shared decisions. | Contains users and their ratings; produces group decisions. Multiple independent groups are deferred. |
-| Rating | Represents a user's preference or veto for a band. | Belongs to a user and band; feeds decision rules. |
-| Real post-show rating | Represents a user's actual assessment after seeing a band. | Belongs to a user and band; does not feed planning decision rules unless a future requirement explicitly changes that. |
+| Group | Represents the single friend group making shared decisions. | Contains users and their festival planning ratings; produces group decisions. Multiple independent groups and invite flows are out of scope. |
+| Festival Planning Rating | Represents a user's intent to see a band at one festival. | Belongs to a user, festival, and band; feeds decision rules. |
+| Personal Band Rating Event | Represents a user's personal assessment of a band after seeing or rating it. | Belongs to a user and band, and can reference a festival; latest by created date supplies future planning prefill. |
 | Schedule | Represents the selected day-by-day plan. | Contains timeline slots, selected performances, alternatives, and walking-time context. |
 | Timeline Slot | Represents a selected schedule entry. | Shows performance, travel time, and the lost alternative. |
 | Food Option | Represents imported festival food master data. | Reserved for future planning behavior. |
@@ -487,6 +596,8 @@ No domain events are specified in `project.md`.
 MVP3 adds a lightweight reporting need: users can export a CSV snapshot of locally available band and rating data from the settings screen.
 
 The current output format is a day-based in-app calendar schedule. Printable export is outside the active MVP2 scope.
+
+Post-MVP3 adds historical reference needs: archived festivals must remain readable, and personal band rating events must show band, festival, rating, and created-date context so a user can understand how their opinion changed over time.
 
 ## Edge cases
 
@@ -520,14 +631,32 @@ The current output format is a day-based in-app calendar schedule. Printable exp
 - A user resets a real post-show rating without changing the planning rating.
 - The app starts with no network and no locally cached festival data.
 - The app starts with no network after a successful previous sync/import.
+- A user archives the active festival and no active festival remains.
+- A user tries to edit an archived festival in the first post-Wacken version.
+- A user uploads a new festival lineup after archiving the previous active festival.
+- An uploaded lineup contains a band whose name exactly matches an existing band.
+- An uploaded lineup contains a similar but not exact band name, such as a suffix or alias.
+- A known band has no personal band rating history when added to a new festival.
+- A known band has a latest personal band rating that should prefill a new festival planning rating.
+- A user changes a prefilled planning rating because festival context makes the band more or less important to see.
+- A user rates the same band after seeing it at more than one festival.
+- Two personal band rating events have different created dates for the same band.
+
+## Resolved out-of-scope decisions
+
+These topics are intentionally out of scope unless a future task explicitly reopens them:
+
+- Final Wacken running-order schema changes beyond the current documented CSV contracts.
+- Wacken website scraping.
+- Android data-grid validation for proposed scraped/imported changes.
+- Multi-group support and unspecified future group identity modeling.
+- New self-service friend invites, invite tokens, or invite deep links.
+- New festival date/time-format decisions beyond values supplied by uploaded festival data.
+- Audit history, owner/admin-only permissions, or richer reset flows for group-wide manual schedule locks.
+- Editing archived festivals in the first post-Wacken version.
+- Managing multiple upcoming festivals at the same time in the first post-Wacken version.
+- Fuzzy band linking and alias storage in the first post-Wacken version.
 
 ## Open questions
 
-- What exact final running-order fields will Wacken publish for stages and performance times, and will they require schema changes beyond the current documented CSV contracts?
-- What exact fields can be scraped from the Wacken band list and band detail pages, and what are the legal/technical constraints for scraping those pages?
-- How should the proposed data grid be implemented in the Android app, and which validation states should each row support?
-- How are users identified inside the one current shared group, and where are their ratings stored or shared?
-- What exact token/deep-link format should future self-service friend invites use beyond the current plain-text MVP2 share instructions?
-- What exact festival dates should be used for weekday display, and what date/time format should performances use?
-- Should a later shared-decision workflow add audit history, owner/admin-only permissions, or richer reset flows for group-wide manual schedule locks?
-- Should a later release sync real post-show ratings to Supabase for the group? Current MVP3 behavior stores them personal/local until a future story changes that.
+No active open questions are currently recorded. Real post-show rating sync is no longer open; it is part of the post-MVP3 personal band rating history scope.
