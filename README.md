@@ -34,6 +34,7 @@
 - ADR: [`0008-supabase-postgres-flyway-migrations.md`](backlog/decisions/0008-supabase-postgres-flyway-migrations.md).
 - ADR: [`0009-supabase-group-schedule-winner-locks.md`](backlog/decisions/0009-supabase-group-schedule-winner-locks.md).
 - ADR: [`0010-offline-first-sync-boundary.md`](backlog/decisions/0010-offline-first-sync-boundary.md).
+- ADR: [`0011-post-wacken-festival-rating-model.md`](backlog/decisions/0011-post-wacken-festival-rating-model.md) defines the accepted post-MVP3 festival archive, reusable band, planning rating, and personal rating history direction.
 - CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
 - Visual design system: [`visual-design-system.md`](backlog/docs/visual-design-system.md).
 - Release process: [`release-process.md`](backlog/docs/release-process.md).
@@ -94,7 +95,9 @@ Current modules:
 | `infrastructure` | Java library | TSV backend-like source adapters, in-memory test adapters, and sync/write-through decorators. Depends inward on `application` and `domain`. |
 | `app` | Android application | Android UI/bootstrap, APK packaging, and Room local-cache adapters. |
 
-Current repositories cover bands, stages, performances, stage distances, food options, planning ratings, real post-show ratings, and group schedule locks. The app reads lineup and mutable shared data from Room first. Supabase is the primary master-data and shared-data sync backend; the CSV/TSV path remains as an explicit fallback/import tool. Real post-show ratings are stored locally in Room and are intentionally separate from Supabase-synced planning ratings until a future requirement decides whether they should sync. Android wiring composes Supabase or TSV source adapters, Room cache adapters, and sync decorators behind the existing domain repository ports.
+Current repositories cover bands, stages, performances, stage distances, food options, planning ratings, real post-show ratings, and group schedule locks. The app reads lineup and mutable shared data from Room first. Supabase is the primary master-data and shared-data sync backend; the CSV/TSV path remains as an explicit fallback/import tool. Real post-show ratings are stored locally in Room in the current release.
+
+The accepted post-MVP3 architecture direction in ADR 0011 adds explicit festivals, archived festival state, festival lineup entries, festival planning ratings, and synced personal band rating events. Implementation stories must evolve the current name-keyed rating repositories and Wacken-only persistence model to pass festival context explicitly while keeping Room as the offline-first read/write model.
 
 ### Technologies
 - Language: Java
@@ -117,12 +120,10 @@ C4Context
     }
     System_Ext(supabase, "Supabase Postgres", "Central bands, schedule metadata, auth, groups, ratings")
     System_Ext(csvSource, "Festival CSV Files", "Fallback import files for bands, stages, performances, distances, food")
-    System_Ext(wackenSite, "Wacken Line-Up Website", "Band list and artist metadata")
     Rel(attendee, mobile, "Rates bands, views lineup and schedule")
     Rel(admin, mobile, "Manages/imports validated festival datasets")
     Rel(supabase, mobile, "Provides authenticated master-data sync", "HTTPS/PostgREST")
     Rel(csvSource, mobile, "Provides fallback festival datasets", "CSV")
-    Rel(wackenSite, mobile, "Provides initial band metadata", "JSON/user-reviewed import")
 ```
 
 ### C4: Level 2 (Container)
@@ -134,7 +135,6 @@ C4Container
     Person(admin, "Admin")
     System_Ext(supabase, "Supabase Postgres", "Central master data and shared group data")
     System_Ext(csvSource, "Festival CSV Files", "Validated fallback master data")
-    System_Ext(wackenSite, "Wacken Line-Up JSON", "Initial band metadata")
 
     System_Boundary(app, "Wacken Planner 2026") {
         Container(ui, "Android UI", "Java", "Screens for band list, ratings, imports, schedule")
@@ -154,7 +154,6 @@ C4Container
     Rel(infra, supabase, "Syncs master data", "HTTPS/PostgREST")
     Rel(infra, tsv, "Uses only for explicit fallback CSV import")
     Rel(csvSource, infra, "Supplies fallback import files", "CSV")
-    Rel(wackenSite, infra, "Supplies proposed band metadata", "JSON")
 ```
 
 ## Setup and Run
