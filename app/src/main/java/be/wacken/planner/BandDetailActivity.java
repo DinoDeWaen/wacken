@@ -16,6 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.time.Clock;
 import java.net.URL;
 import java.util.Optional;
 
@@ -23,10 +24,12 @@ import be.wacken.planner.application.BandDetailItem;
 import be.wacken.planner.application.MusicLinks;
 import be.wacken.planner.application.RateBandResult;
 import be.wacken.planner.application.RateBandUseCase;
-import be.wacken.planner.application.RateRealBandUseCase;
+import be.wacken.planner.application.RecordPersonalBandRatingUseCase;
 import be.wacken.planner.application.ShowBandDetailUseCase;
 import be.wacken.planner.domain.Band;
 import be.wacken.planner.domain.BandRepository;
+import be.wacken.planner.domain.FestivalRepository;
+import be.wacken.planner.domain.PersonalBandRatingHistoryRepository;
 import be.wacken.planner.domain.RatingRepository;
 import be.wacken.planner.domain.RealRatingRepository;
 
@@ -47,6 +50,8 @@ public final class BandDetailActivity extends Activity {
     private BandRepository bands;
     private RatingRepository ratings;
     private RealRatingRepository realRatings;
+    private FestivalRepository festivals;
+    private PersonalBandRatingHistoryRepository personalRatings;
     private Band selectedBand;
     private RatingStarsView ratingStars;
     private RatingStarsView realRatingStars;
@@ -66,13 +71,15 @@ public final class BandDetailActivity extends Activity {
         bands = repositories.bands();
         ratings = repositories.ratings();
         realRatings = repositories.realRatings();
+        festivals = repositories.festivals();
+        personalRatings = repositories.personalBandRatings();
 
         selectedBand = new Band(getIntent().getStringExtra(EXTRA_BAND_NAME));
         if (bands.findByName(selectedBand.name()).isEmpty()) {
             bands.save(selectedBand);
         }
 
-        ShowBandDetailUseCase showBand = new ShowBandDetailUseCase(bands, ratings, realRatings);
+        ShowBandDetailUseCase showBand = new ShowBandDetailUseCase(bands, ratings, realRatings, festivals, personalRatings);
         BandDetailItem detail = showBand.showBand(currentUser(), selectedBand.name(), musicLinksFromIntent())
                 .orElseThrow(() -> new IllegalStateException("Band detail could not be loaded."));
         setContentView(render(detail));
@@ -130,6 +137,9 @@ public final class BandDetailActivity extends Activity {
 
         detailSections.addView(ratingSection(detail));
         detailSections.addView(realRatingSection(detail));
+        if (detail.hasPersonalRatingHistory()) {
+            detailSections.addView(personalRatingHistorySection(detail));
+        }
         detailSections.addView(runningOrderSection());
         detailSections.addView(linksSection(detail));
 
@@ -182,7 +192,7 @@ public final class BandDetailActivity extends Activity {
         realRatingStars.setPadding(dp(12), 0, dp(12), 0);
         realRatingStars.showAvailableRating();
         realRatingStars.setOnRatingSelected(rating -> {
-            RateBandResult result = new RateRealBandUseCase(realRatings).rateBand(currentUser(), selectedBand, rating);
+            RateBandResult result = new RecordPersonalBandRatingUseCase(festivals, personalRatings, realRatings, Clock.systemUTC()).rateBand(currentUser(), selectedBand, rating);
             if (result.success()) {
                 realRatingStars.applySavedRating(rating);
             }
@@ -199,7 +209,7 @@ public final class BandDetailActivity extends Activity {
         resetRealRating.setContentDescription("Reset real rating");
         resetRealRating.setTextSize(13);
         resetRealRating.setOnClickListener(view -> {
-            RateBandResult result = new RateRealBandUseCase(realRatings).rateBand(currentUser(), selectedBand, 0);
+            RateBandResult result = new RecordPersonalBandRatingUseCase(festivals, personalRatings, realRatings, Clock.systemUTC()).rateBand(currentUser(), selectedBand, 0);
             if (result.success()) {
                 realRatingStars.applySavedRating(0);
             }
@@ -208,6 +218,21 @@ public final class BandDetailActivity extends Activity {
         resetLayout.gravity = Gravity.CENTER_HORIZONTAL;
         resetLayout.setMargins(0, dp(2), 0, dp(4));
         section.addView(resetRealRating, resetLayout);
+        return section;
+    }
+
+    private LinearLayout personalRatingHistorySection(BandDetailItem detail) {
+        LinearLayout section = detailSection();
+        section.addView(sectionTitle("Personal History", false));
+        for (var item : detail.personalRatingHistory()) {
+            TextView line = new TextView(this);
+            line.setText(item.displayText());
+            line.setTextColor(COLOR_TEXT);
+            line.setTextSize(14);
+            line.setGravity(Gravity.CENTER_HORIZONTAL);
+            line.setPadding(0, dp(3), 0, dp(3));
+            section.addView(line);
+        }
         return section;
     }
 

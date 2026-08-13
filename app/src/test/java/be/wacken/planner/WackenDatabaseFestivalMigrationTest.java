@@ -15,11 +15,17 @@ public final class WackenDatabaseFestivalMigrationTest {
     public void migratesExistingDatabasesToSeedActiveWackenFestival() throws IOException {
         String source = new String(Files.readAllBytes(databaseSource()), StandardCharsets.UTF_8);
 
-        assertTrue(source.contains("version = 6"));
+        assertTrue(source.contains("version = 7"));
         assertTrue(source.contains("CREATE TABLE IF NOT EXISTS festivals"));
         assertTrue(source.contains("idx_festivals_one_active"));
         assertTrue(source.contains("VALUES ('wacken-2026', 'Wacken Open Air 2026', 'ACTIVE')"));
         assertTrue(source.contains("MIGRATION_5_6"));
+        assertTrue(source.contains("CREATE TABLE IF NOT EXISTS festival_lineup_entries"));
+        assertTrue(source.contains("CREATE TABLE IF NOT EXISTS festival_planning_ratings"));
+        assertTrue(source.contains("CREATE TABLE IF NOT EXISTS personal_band_rating_events"));
+        assertTrue(source.contains("SELECT 'wacken-2026', name, name FROM bands"));
+        assertTrue(source.contains("strftime('%Y-%m-%dT%H:%M:%fZ', 'now')"));
+        assertTrue(source.contains("MIGRATION_6_7"));
     }
 
     private Path databaseSource() {

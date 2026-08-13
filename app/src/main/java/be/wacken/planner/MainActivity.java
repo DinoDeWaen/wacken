@@ -35,6 +35,7 @@ import java.util.OptionalInt;
 import be.wacken.planner.application.BandListItem;
 import be.wacken.planner.application.ArchiveActiveFestivalUseCase;
 import be.wacken.planner.application.FestivalStartState;
+import be.wacken.planner.application.ListActiveFestivalBandsUseCase;
 import be.wacken.planner.application.ListBandsUseCase;
 import be.wacken.planner.application.PersonRatingStars;
 import be.wacken.planner.application.RateBandResult;
@@ -60,6 +61,7 @@ public final class MainActivity extends Activity {
     private TextView syncStatus;
     private TextView subtitle;
     private View tableHeader;
+    private LinearLayout archiveList;
     private AuthSessionStore sessionStore;
     private AuthSession currentSession;
     private Button closeButton;
@@ -112,6 +114,11 @@ public final class MainActivity extends Activity {
         status.setGravity(Gravity.CENTER_HORIZONTAL);
         status.setPadding(0, dp(20), 0, dp(20));
         screen.addView(status);
+
+        archiveList = new LinearLayout(this);
+        archiveList.setOrientation(LinearLayout.VERTICAL);
+        archiveList.setVisibility(View.GONE);
+        screen.addView(archiveList);
 
         bandList = new ListView(this);
         bandList.setDivider(null);
@@ -201,12 +208,21 @@ public final class MainActivity extends Activity {
             refreshSyncStatus(repositories, "Cached data", COLOR_MUTED);
             return;
         }
-        cachedBands = new ListBandsUseCase(
-                repositories.bands(),
+        cachedBands = new ListActiveFestivalBandsUseCase(
+                repositories.festivals(),
+                repositories.festivalLineups(),
                 repositories.performances(),
                 repositories.ratings(),
                 currentUser()
         ).listBands();
+        if (cachedBands.isEmpty()) {
+            cachedBands = new ListBandsUseCase(
+                    repositories.bands(),
+                    repositories.performances(),
+                    repositories.ratings(),
+                    currentUser()
+            ).listBands();
+        }
         cachedBandsByName = bandsByName(repositories);
         adapter = new BandAdapter(repositories, cachedBands, cachedBandsByName);
         bandList.setAdapter(adapter);
@@ -238,6 +254,40 @@ public final class MainActivity extends Activity {
         if (bandList != null) {
             bandList.setVisibility(content.showBandList() ? View.VISIBLE : View.GONE);
         }
+        renderArchiveList(state, content.showAddFestivalAction());
+    }
+
+    private void renderArchiveList(FestivalStartState state, boolean showArchiveList) {
+        if (archiveList == null) {
+            return;
+        }
+        archiveList.removeAllViews();
+        archiveList.setVisibility(showArchiveList ? View.VISIBLE : View.GONE);
+        if (!showArchiveList) {
+            return;
+        }
+        for (var festival : state.archivedFestivals()) {
+            Button archive = WackenTheme.actionButton(
+                    this,
+                    festival.name(),
+                    WackenTheme.ButtonStyle.SECONDARY,
+                    view -> openArchivedFestival(festival.id())
+            );
+            archive.setContentDescription("Open archived festival " + festival.name());
+            archive.setTextSize(13);
+            LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(42)
+            );
+            layout.setMargins(0, 0, 0, dp(8));
+            archiveList.addView(archive, layout);
+        }
+    }
+
+    private void openArchivedFestival(String festivalId) {
+        Intent intent = new Intent(this, ArchivedFestivalActivity.class);
+        intent.putExtra(ArchivedFestivalActivity.EXTRA_FESTIVAL_ID, festivalId);
+        startActivity(intent);
     }
 
     private void showLoadingState() {
@@ -288,7 +338,12 @@ public final class MainActivity extends Activity {
         archiveButton.setSingleLine(true);
         actions.addView(archiveButton);
         addFestivalButton = topActionButton("+", "Add festival", WackenTheme.ButtonStyle.SECONDARY,
-                view -> status.setText("Add festival will be implemented in the next story."));
+                view -> {
+                    reloadNeeded = true;
+                    Intent intent = new Intent(this, ImportCsvActivity.class);
+                    intent.putExtra(ImportCsvActivity.EXTRA_ADD_FESTIVAL_MODE, true);
+                    startActivity(intent);
+                });
         addFestivalButton.setVisibility(View.GONE);
         actions.addView(addFestivalButton);
         actions.addView(topActionButton("⚙", "Settings", WackenTheme.ButtonStyle.SECONDARY,

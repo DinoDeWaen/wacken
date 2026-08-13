@@ -4,9 +4,13 @@ import android.content.Context;
 
 import java.nio.file.Path;
 
+import be.wacken.planner.application.ActiveFestivalRatingRepository;
 import be.wacken.planner.domain.BandRepository;
+import be.wacken.planner.domain.FestivalLineupRepository;
+import be.wacken.planner.domain.FestivalPlanningRatingRepository;
 import be.wacken.planner.domain.FestivalRepository;
 import be.wacken.planner.domain.FoodOptionRepository;
+import be.wacken.planner.domain.PersonalBandRatingHistoryRepository;
 import be.wacken.planner.domain.PerformanceRepository;
 import be.wacken.planner.domain.RatingRepository;
 import be.wacken.planner.domain.RealRatingRepository;
@@ -23,8 +27,11 @@ import be.wacken.planner.infrastructure.SyncedPerformanceRepository;
 import be.wacken.planner.infrastructure.SyncedStageDistanceRepository;
 import be.wacken.planner.infrastructure.SyncedStageRepository;
 import be.wacken.planner.persistence.RoomBandRepository;
+import be.wacken.planner.persistence.RoomFestivalLineupRepository;
+import be.wacken.planner.persistence.RoomFestivalPlanningRatingRepository;
 import be.wacken.planner.persistence.RoomFestivalRepository;
 import be.wacken.planner.persistence.RoomFoodOptionRepository;
+import be.wacken.planner.persistence.RoomPersonalBandRatingHistoryRepository;
 import be.wacken.planner.persistence.RoomPerformanceRepository;
 import be.wacken.planner.persistence.RoomRatingRepository;
 import be.wacken.planner.persistence.RoomRealRatingRepository;
@@ -45,12 +52,18 @@ final class AppRepositories {
     private final SyncedStageDistanceRepository distances;
     private final SyncedFoodOptionRepository foodOptions;
     private final FestivalRepository festivals;
+    private final FestivalLineupRepository festivalLineups;
+    private final FestivalPlanningRatingRepository festivalPlanningRatings;
+    private final PersonalBandRatingHistoryRepository personalBandRatings;
     private final RatingRepository ratings;
     private final RealRatingRepository realRatings;
-    private final SyncingRatingRepository syncingRatings;
+    private final SyncingFestivalPlanningRatingRepository syncingPlanningRatings;
+    private final SyncingPersonalBandRatingHistoryRepository syncingPersonalRatings;
     private final SyncingScheduleLockStore syncingScheduleLocks;
     private final ScheduleLockStore scheduleLocks;
     private final RatingSyncLocalStore ratingCache;
+    private final RoomFestivalPlanningRatingRepository festivalPlanningRatingCache;
+    private final RoomPersonalBandRatingHistoryRepository personalRatingCache;
     private final ScheduleLockLocalStore scheduleLockCache;
     private final AuthSession session;
 
@@ -72,12 +85,18 @@ final class AppRepositories {
         RoomStageDistanceRepository distanceCache = new RoomStageDistanceRepository(database);
         RoomFoodOptionRepository foodCache = new RoomFoodOptionRepository(database);
         RoomFestivalRepository festivalCache = new RoomFestivalRepository(database);
+        RoomFestivalLineupRepository lineupCache = new RoomFestivalLineupRepository(database);
+        RoomFestivalPlanningRatingRepository planningRatingCache = new RoomFestivalPlanningRatingRepository(database);
+        RoomPersonalBandRatingHistoryRepository personalRatingCache = new RoomPersonalBandRatingHistoryRepository(database);
         RoomRatingRepository ratingCache = new RoomRatingRepository(database);
         RoomRealRatingRepository realRatingCache = new RoomRealRatingRepository(database);
         RoomScheduleLockStore scheduleLockCache = new RoomScheduleLockStore(database);
         this.ratingCache = ratingCache;
         festivalCache.seedDefaultActiveFestivalIfEmpty();
         this.festivals = festivalCache;
+        this.festivalLineups = lineupCache;
+        this.festivalPlanningRatingCache = planningRatingCache;
+        this.personalRatingCache = personalRatingCache;
         this.realRatings = realRatingCache;
         this.scheduleLockCache = scheduleLockCache;
 
@@ -111,18 +130,28 @@ final class AppRepositories {
         this.foodOptions = new SyncedFoodOptionRepository(foodCache, foodSource);
         if (sourceMode == SourceMode.SUPABASE) {
             SupabaseScheduleLockClient scheduleLockClient = new SupabaseScheduleLockClient(sessionManager);
-            this.syncingRatings = new SyncingRatingRepository(
-                    ratingCache,
-                    new SupabaseRatingClient(sessionManager),
+            this.syncingPlanningRatings = new SyncingFestivalPlanningRatingRepository(
+                    planningRatingCache,
+                    new SupabaseFestivalPlanningRatingClient(sessionManager),
                     session
             );
-            this.ratings = syncingRatings;
+            this.festivalPlanningRatings = syncingPlanningRatings;
+            this.ratings = new ActiveFestivalRatingRepository(festivals, festivalPlanningRatings, session.groupId());
+            this.syncingPersonalRatings = new SyncingPersonalBandRatingHistoryRepository(
+                    personalRatingCache,
+                    new SupabasePersonalBandRatingClient(sessionManager),
+                    session
+            );
+            this.personalBandRatings = syncingPersonalRatings;
             this.syncingScheduleLocks = new SyncingScheduleLockStore(scheduleLockCache, scheduleLockClient, session);
             this.scheduleLocks = syncingScheduleLocks;
         } else {
-            this.syncingRatings = null;
+            this.syncingPlanningRatings = null;
+            this.syncingPersonalRatings = null;
+            this.festivalPlanningRatings = planningRatingCache;
+            this.ratings = new ActiveFestivalRatingRepository(festivals, festivalPlanningRatings, "local");
+            this.personalBandRatings = personalRatingCache;
             this.syncingScheduleLocks = null;
-            this.ratings = ratingCache;
             this.scheduleLocks = new ScheduleLockStore.NoOp();
         }
 
@@ -155,6 +184,18 @@ final class AppRepositories {
         return festivals;
     }
 
+    FestivalLineupRepository festivalLineups() {
+        return festivalLineups;
+    }
+
+    FestivalPlanningRatingRepository festivalPlanningRatings() {
+        return festivalPlanningRatings;
+    }
+
+    PersonalBandRatingHistoryRepository personalBandRatings() {
+        return personalBandRatings;
+    }
+
     RatingRepository ratings() {
         return ratings;
     }
@@ -171,7 +212,9 @@ final class AppRepositories {
         if (!session.isPresent()) {
             return PendingSyncSummary.of(0, 0);
         }
-        int pendingRatings = ratingCache.findPending(session.groupId(), session.userId()).size();
+        int pendingRatings = ratingCache.findPending(session.groupId(), session.userId()).size()
+                + festivalPlanningRatingCache.findPending(session.groupId(), session.userId()).size()
+                + personalRatingCache.findPending(session.userId()).size();
         int pendingScheduleChoices = scheduleLockCache.findPendingSelections(session.groupId()).size()
                 + scheduleLockCache.findPendingClears(session.groupId()).size();
         return PendingSyncSummary.of(pendingRatings, pendingScheduleChoices);
@@ -193,14 +236,18 @@ final class AppRepositories {
     }
 
     void syncRatings() {
-        if (syncingRatings == null) {
+        if (syncingPlanningRatings == null) {
             SupabaseDiagnostics.info("ratings_sync", "skipped", "remote_repository=false");
             return;
         }
         try {
             SupabaseDiagnostics.info("ratings_sync", "start", "remote_repository=true");
-            syncingRatings.syncPendingRatings();
-            syncingRatings.pullGroupRatings();
+            syncingPlanningRatings.syncPendingRatings();
+            syncingPlanningRatings.pullGroupRatings();
+            if (syncingPersonalRatings != null) {
+                syncingPersonalRatings.syncPendingEvents();
+                syncingPersonalRatings.pullUserEvents();
+            }
             SupabaseDiagnostics.info("ratings_sync", "success", "remote_repository=true");
         } catch (Exception error) {
             SupabaseDiagnostics.warn("ratings_sync", "failed", "remote_repository=true", error);

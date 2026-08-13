@@ -18,9 +18,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 RoomRating.class,
                 RoomRealRating.class,
                 RoomScheduleLock.class,
-                RoomFestival.class
+                RoomFestival.class,
+                RoomFestivalLineupEntry.class,
+                RoomFestivalPlanningRating.class,
+                RoomPersonalBandRatingEvent.class
         },
-        version = 6,
+        version = 7,
         exportSchema = false
 )
 public abstract class WackenDatabase extends RoomDatabase {
@@ -84,6 +87,56 @@ public abstract class WackenDatabase extends RoomDatabase {
                     """);
         }
     };
+    private static final Migration MIGRATION_6_7 = new Migration(6, 7) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS festival_lineup_entries (
+                        festivalId TEXT NOT NULL,
+                        bandName TEXT NOT NULL,
+                        uploadedDisplayName TEXT NOT NULL,
+                        PRIMARY KEY(festivalId, bandName)
+                    )
+                    """);
+            database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS festival_planning_ratings (
+                        groupId TEXT NOT NULL,
+                        userName TEXT NOT NULL,
+                        festivalId TEXT NOT NULL,
+                        bandName TEXT NOT NULL,
+                        value INTEGER NOT NULL,
+                        syncStatus TEXT NOT NULL,
+                        PRIMARY KEY(groupId, userName, festivalId, bandName)
+                    )
+                    """);
+            database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS personal_band_rating_events (
+                        id TEXT NOT NULL,
+                        userName TEXT NOT NULL,
+                        bandName TEXT NOT NULL,
+                        festivalId TEXT,
+                        value INTEGER NOT NULL,
+                        createdAt TEXT NOT NULL,
+                        syncStatus TEXT NOT NULL,
+                        PRIMARY KEY(id)
+                    )
+                    """);
+            database.execSQL("""
+                    INSERT OR IGNORE INTO festival_lineup_entries (festivalId, bandName, uploadedDisplayName)
+                    SELECT 'wacken-2026', name, name FROM bands
+                    """);
+            database.execSQL("""
+                    INSERT OR IGNORE INTO festival_planning_ratings (groupId, userName, festivalId, bandName, value, syncStatus)
+                    SELECT groupId, userName, 'wacken-2026', bandName, value, syncStatus FROM ratings
+                    """);
+            database.execSQL("""
+                    INSERT OR IGNORE INTO personal_band_rating_events (id, userName, bandName, festivalId, value, createdAt, syncStatus)
+                    SELECT userName || ':' || bandName || ':legacy-real', userName, bandName, 'wacken-2026', value, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), 'PENDING'
+                    FROM real_ratings
+                    WHERE value > 0
+                    """);
+        }
+    };
 
     public abstract RoomBandDao bands();
 
@@ -96,6 +149,12 @@ public abstract class WackenDatabase extends RoomDatabase {
     public abstract RoomFoodOptionDao foodOptions();
 
     public abstract RoomFestivalDao festivals();
+
+    public abstract RoomFestivalLineupEntryDao festivalLineups();
+
+    public abstract RoomFestivalPlanningRatingDao festivalPlanningRatings();
+
+    public abstract RoomPersonalBandRatingEventDao personalBandRatingEvents();
 
     public abstract RoomRatingDao ratings();
 
@@ -112,7 +171,7 @@ public abstract class WackenDatabase extends RoomDatabase {
                                     WackenDatabase.class,
                                     "wacken-cache.db"
                             )
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                             .allowMainThreadQueries()
                             .build();
                 }

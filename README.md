@@ -12,8 +12,10 @@
 - Show compact read-only per-person star details on band detail and schedule decision detail screens when group ratings are available.
 - Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars, and clear a previous rating back to unrated.
 - Let users record a separate real post-show rating on band detail after seeing a band, with its own 1-5 scale and reset-to-unrated behavior; real ratings are local/offline-first and do not affect group schedule decisions.
+- Store every real post-show rating as personal band rating history with festival and created-date context, sync that history to Supabase, and show it on band detail and archived festival history screens.
 - Export all locally cached band rating data from Settings as a CSV file for Android share/save targets, including planning ratings, real post-show ratings, cached group member ratings, and schedule metadata where known.
 - Start on the active festival band list, with `Wacken Open Air 2026` seeded as the default active festival. The top action row includes **Archive**; archiving the active festival immediately moves the app to a no-active-festival start state that lists archived festivals as read-only and shows the next add-festival entry point.
+- Add the next festival from a band CSV after the active festival is archived; exact band-name matches reuse existing band records, new names create new band records, and known bands get festival planning ratings prefilled from the user's latest personal band rating.
 - Save rating and manual schedule-lock changes locally immediately, queue them as pending offline operations, and sync them with Supabase in the background on start/reactivation, on manual sync, or before close.
 - Open available YouTube and Spotify links from overview rows and band detail screens.
 - Show readable imported English band biography/explanation and available band image metadata on the detail screen when source data provides it, without leaking raw HTML tags.
@@ -96,9 +98,9 @@ Current modules:
 | `infrastructure` | Java library | TSV backend-like source adapters, in-memory test adapters, and sync/write-through decorators. Depends inward on `application` and `domain`. |
 | `app` | Android application | Android UI/bootstrap, APK packaging, and Room local-cache adapters. |
 
-Current repositories cover bands, stages, performances, stage distances, food options, planning ratings, real post-show ratings, and group schedule locks. The app reads lineup and mutable shared data from Room first. Supabase is the primary master-data and shared-data sync backend; the CSV/TSV path remains as an explicit fallback/import tool. Real post-show ratings are stored locally in Room in the current release.
+Current repositories cover festivals, festival lineups, bands, stages, performances, stage distances, food options, festival planning ratings, personal band rating history, real post-show latest ratings, and group schedule locks. The app reads lineup and mutable shared data from Room first. Supabase is the primary master-data and shared-data sync backend; the CSV/TSV path remains as an explicit fallback/import tool. Real post-show ratings are recorded as personal band rating events for sync and history while the latest real rating remains available locally for the band detail control.
 
-The first implemented post-MVP3 slice adds explicit festival lifecycle state. Room stores the seeded active `Wacken Open Air 2026` festival and archived festival status, while Flyway migration `V009__festivals.sql` creates the matching Supabase `festivals` contract. The remaining ADR 0011 work still needs to evolve lineup entries, festival planning ratings, and synced personal band rating events.
+The implemented post-MVP3 slice adds explicit festival lifecycle and rating history state. Room stores the seeded active `Wacken Open Air 2026` festival, archived festival status, festival lineup entries, festival-scoped planning ratings, and personal band rating events. Flyway migrations `V009__festivals.sql` and `V010__festival_lineups_and_rating_history.sql` create the matching Supabase contracts.
 
 ### Technologies
 - Language: Java
@@ -266,16 +268,17 @@ when the app starts and whenever the overview is reactivated after returning
 from another screen or app. Use **Sync from Supabase** to retry manually. Use
 **Sync & close** to push/pull Supabase data before closing the app. Each sync
 pulls central bands, stages, performances, stage distances, and food options
-from Supabase into Room and pushes/pulls group ratings. Rating changes and
-rating clears are stored locally first with pending sync metadata; when Supabase
-accepts the rating change it is marked synced. Clearing a rating deletes that
-explicit user/group/band rating row in Supabase, so future group pulls no longer
-count the previous score. If sync fails, existing cached Room data and pending
-ratings remain available and the app shows a stale-data message. A Wacken/metal
-sync overlay is shown while startup, reactivation, manual, or close sync is
-running. The CSV import screen remains available for fallback/local import work
-and writes through the TSV fallback source plus Room cache; it is no longer the
-primary app data source.
+from Supabase into Room and pushes/pulls festival planning ratings, personal
+band rating events, and group schedule locks. Rating changes and rating clears
+are stored locally first with pending sync metadata; when Supabase accepts the
+rating change it is marked synced. Clearing a planning rating deletes that
+explicit user/group/festival/band rating row in Supabase, so future group pulls
+no longer count the previous score. If sync fails, existing cached Room data and
+pending ratings remain available and the app shows a stale-data message. A
+Wacken/metal sync overlay is shown while startup, reactivation, manual, or close
+sync is running. The CSV import screen remains available for fallback/local
+import work and writes through the TSV fallback source plus Room cache; it is no
+longer the primary app data source.
 
 Rating scale migration: app database version 3 migrates old local explicit
 ratings from the previous 0-4 scale to the new 1-5 explicit scale by adding 1

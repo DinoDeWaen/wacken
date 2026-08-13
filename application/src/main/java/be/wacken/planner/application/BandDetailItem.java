@@ -13,7 +13,8 @@ public record BandDetailItem(
         Optional<String> spotifyUrl,
         int realRating,
         boolean defaultRealRating,
-        List<PersonRatingStars> personRatings
+        List<PersonRatingStars> personRatings,
+        List<PersonalRatingHistoryItem> personalRatingHistory
 ) {
     public BandDetailItem(
             String bandName,
@@ -25,11 +26,12 @@ public record BandDetailItem(
             Optional<String> spotifyUrl,
             List<PersonRatingStars> personRatings
     ) {
-        this(bandName, biography, imageUrl, rating, defaultRating, youtubeUrl, spotifyUrl, 0, true, personRatings);
+        this(bandName, biography, imageUrl, rating, defaultRating, youtubeUrl, spotifyUrl, 0, true, personRatings, List.of());
     }
 
     public BandDetailItem {
         personRatings = List.copyOf(personRatings);
+        personalRatingHistory = List.copyOf(personalRatingHistory);
     }
 
     public boolean hasPersonRatings() {
@@ -41,5 +43,9 @@ public record BandDetailItem(
                 .map(PersonRatingStars::displayText)
                 .reduce((left, right) -> left + "  " + right)
                 .orElse("");
+    }
+
+    public boolean hasPersonalRatingHistory() {
+        return !personalRatingHistory.isEmpty();
     }
 }

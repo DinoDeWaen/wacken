@@ -1,6 +1,7 @@
 package be.wacken.planner.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
@@ -22,52 +23,61 @@ import be.wacken.planner.domain.PersonalBandRatingHistoryRepository;
 import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.SavedFestivalPlanningRating;
 
-final class FestivalArchiveQaScenarioTest {
+final class AddFestivalUseCaseTest {
     @Test
-    void archiveActiveFestivalShowsArchivedStartState() {
-        // Given a festival is active
-        FakeFestivalRepository repository = new FakeFestivalRepository(List.of(Festival.active("wacken-2026", "Wacken Open Air 2026")));
-
-        // When a user archives the festival
-        FestivalStartState state = new ArchiveActiveFestivalUseCase(repository).archiveActiveFestival();
-
-        // Then the festival becomes read-only history and no festival is active
-        assertTrue(state.activeFestival().isEmpty());
-        assertEquals(List.of(Festival.archived("wacken-2026", "Wacken Open Air 2026")), state.archivedFestivals());
-        assertTrue(state.archivedFestivalsReadOnly());
-        assertTrue(state.canAddFestival());
-    }
-
-    @Test
-    void addNextFestivalAfterArchiveReusesBandsAndPrefillsPlanningRatings() {
-        // Given Wacken has been archived and Airbourne has a personal rating history
+    void addsFestivalAfterArchiveAndReusesExactBandNames() {
         FakeFestivalRepository festivals = new FakeFestivalRepository(List.of(Festival.archived("wacken-2026", "Wacken Open Air 2026")));
         FakeBandRepository bands = new FakeBandRepository(List.of(new Band("Airbourne")));
-        FakeLineups lineups = new FakeLineups();
-        FakePlanningRatings planningRatings = new FakePlanningRatings();
-        FakePersonalRatings personalRatings = new FakePersonalRatings();
-        personalRatings.save(new PersonalBandRatingEvent(
-                "airbourne-wacken",
-                "dino",
-                new Band("Airbourne"),
-                Optional.of("wacken-2026"),
-                Rating.of(4),
-                Instant.parse("2026-08-03T21:15:00Z")
-        ));
+        FakeLineupRepository lineups = new FakeLineupRepository();
+        FakePlanningRatingRepository planningRatings = new FakePlanningRatingRepository();
 
-        // When a user adds Rock im Park with Airbourne and a new band
-        AddFestivalResult result = new AddFestivalUseCase(festivals, bands, lineups, planningRatings, personalRatings)
-                .addFestival("group", "dino", "rock-im-park-2027", "Rock im Park 2027", List.of(new Band("Airbourne"), new Band("New Act")));
+        AddFestivalResult result = new AddFestivalUseCase(
+                festivals,
+                bands,
+                lineups,
+                planningRatings,
+                new FakePersonalRatingHistoryRepository()
+        ).addFestival("group", "dino", "rock-im-park-2027", "Rock im Park 2027", List.of(new Band("Airbourne"), new Band("New Act")));
 
-        // Then the new festival is active, exact-name bands are reused, new names are created, and known bands are prefilled
         assertTrue(result.success());
         assertEquals(1, result.reusedBands());
         assertEquals(1, result.createdBands());
-        assertEquals(1, result.prefilledRatings());
         assertEquals(Festival.active("rock-im-park-2027", "Rock im Park 2027"), festivals.findAll().get(1));
         assertEquals(List.of("Airbourne", "New Act"), lineups.findByFestival("rock-im-park-2027").stream().map(entry -> entry.band().name()).toList());
-        assertEquals(Optional.of(Rating.of(4)), planningRatings.findByUserFestivalAndBand("dino", "rock-im-park-2027", new Band("Airbourne")));
-        assertTrue(planningRatings.findByUserFestivalAndBand("dino", "rock-im-park-2027", new Band("New Act")).isEmpty());
+    }
+
+    @Test
+    void preventsAddingFestivalWhenOneIsAlreadyActive() {
+        AddFestivalResult result = new AddFestivalUseCase(
+                new FakeFestivalRepository(List.of(Festival.active("wacken-2026", "Wacken Open Air 2026"))),
+                new FakeBandRepository(List.of()),
+                new FakeLineupRepository(),
+                new FakePlanningRatingRepository(),
+                new FakePersonalRatingHistoryRepository()
+        ).addFestival("group", "dino", "rock-im-park-2027", "Rock im Park 2027", List.of(new Band("Airbourne")));
+
+        assertFalse(result.success());
+        assertEquals("Archive the active festival before adding the next one.", result.message());
+    }
+
+    @Test
+    void prefillUsesLatestPersonalRatingOnly() {
+        FakePersonalRatingHistoryRepository personalRatings = new FakePersonalRatingHistoryRepository();
+        personalRatings.save(new PersonalBandRatingEvent("old", "dino", new Band("Airbourne"), Optional.of("wacken-2026"), Rating.of(2), Instant.parse("2026-08-01T10:00:00Z")));
+        personalRatings.save(new PersonalBandRatingEvent("latest", "dino", new Band("Airbourne"), Optional.of("rock-am-ring-2027"), Rating.of(4), Instant.parse("2027-06-01T10:00:00Z")));
+        FakePlanningRatingRepository planningRatings = new FakePlanningRatingRepository();
+
+        AddFestivalResult result = new AddFestivalUseCase(
+                new FakeFestivalRepository(List.of(Festival.archived("wacken-2026", "Wacken Open Air 2026"))),
+                new FakeBandRepository(List.of(new Band("Airbourne"))),
+                new FakeLineupRepository(),
+                planningRatings,
+                personalRatings
+        ).addFestival("group", "dino", "rock-im-park-2028", "Rock im Park 2028", List.of(new Band("Airbourne"), new Band("Unknown Act")));
+
+        assertEquals(1, result.prefilledRatings());
+        assertEquals(Optional.of(Rating.of(4)), planningRatings.findByUserFestivalAndBand("dino", "rock-im-park-2028", new Band("Airbourne")));
+        assertTrue(planningRatings.findByUserFestivalAndBand("dino", "rock-im-park-2028", new Band("Unknown Act")).isEmpty());
     }
 
     private static final class FakeFestivalRepository implements FestivalRepository {
@@ -84,12 +94,7 @@ final class FestivalArchiveQaScenarioTest {
 
         @Override
         public void save(Festival festival) {
-            for (int index = 0; index < festivals.size(); index++) {
-                if (festivals.get(index).id().equals(festival.id())) {
-                    festivals.set(index, festival);
-                    return;
-                }
-            }
+            festivals.removeIf(existing -> existing.id().equals(festival.id()));
             festivals.add(festival);
         }
     }
@@ -125,7 +130,7 @@ final class FestivalArchiveQaScenarioTest {
         }
     }
 
-    private static final class FakeLineups implements FestivalLineupRepository {
+    private static final class FakeLineupRepository implements FestivalLineupRepository {
         private final List<FestivalLineupEntry> entries = new ArrayList<>();
 
         @Override
@@ -140,11 +145,15 @@ final class FestivalArchiveQaScenarioTest {
         }
     }
 
-    private static final class FakePlanningRatings implements FestivalPlanningRatingRepository {
+    private static final class FakePlanningRatingRepository implements FestivalPlanningRatingRepository {
         private final List<SavedFestivalPlanningRating> ratings = new ArrayList<>();
 
         @Override
         public void save(String groupId, String userName, String festivalId, Band band, Rating rating) {
+            ratings.removeIf(existing -> existing.groupId().equals(groupId)
+                    && existing.userName().equals(userName)
+                    && existing.festivalId().equals(festivalId)
+                    && existing.band().equals(band));
             ratings.add(new SavedFestivalPlanningRating(groupId, userName, festivalId, band, rating));
         }
 
@@ -169,7 +178,7 @@ final class FestivalArchiveQaScenarioTest {
         }
     }
 
-    private static final class FakePersonalRatings implements PersonalBandRatingHistoryRepository {
+    private static final class FakePersonalRatingHistoryRepository implements PersonalBandRatingHistoryRepository {
         private final List<PersonalBandRatingEvent> events = new ArrayList<>();
 
         @Override

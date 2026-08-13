@@ -27,7 +27,7 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
 - Implemented MVP3 field-use capabilities include recording a separate local real post-show rating on band detail, exporting locally cached rating data to CSV from settings, and keeping cached/imported data usable without Wi-Fi during the festival.
-- Implemented post-MVP3 festival lifecycle foundation includes a seeded active `Wacken Open Air 2026` festival, a manual Archive action on the active festival start screen, and a no-active-festival archive state that lists archived festivals as read-only with an add-festival entry point.
+- Implemented post-MVP3 festival archive and rating-history capabilities include a seeded active `Wacken Open Air 2026` festival, a manual Archive action on the active festival start screen, a no-active-festival archive state with read-only archived festival detail, adding the next festival from a band CSV after archiving, exact-name reusable band matching, festival-specific planning ratings, synced personal band rating history, and planning-rating prefill from the user's latest personal band rating.
 
 ### Current Non-Goals
 
@@ -159,7 +159,7 @@ The delivery roadmap captures the planned or completed increments for the curren
 | MVP 1 | Establish the Android foundation, CI, domain model, band listing, first-priority band ratings, initial lineup import, and unit test setup. | Not specified in `project.md` |
 | MVP 2 | Enable one-group planning with a decision engine, conflict resolution, and timeline generation. | Not specified in `project.md` |
 | MVP 3 | Improve festival-field usefulness with rating CSV export, post-show real ratings, and no-Wi-Fi cached operation. | Completed |
-| Post-MVP3 | Archive completed festivals, add the next festival, sync personal band rating history, and prefill future festival planning ratings from personal band ratings. | Planned |
+| Post-MVP3 | Archive completed festivals, add the next festival, sync personal band rating history, and prefill future festival planning ratings from personal band ratings. | Completed for first-version scope |
 
 Future production direction, not implemented:
 
