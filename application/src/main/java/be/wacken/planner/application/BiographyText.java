@@ -4,7 +4,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-final class BiographyText {
+public final class BiographyText {
     private static final Pattern TAGS = Pattern.compile("<[^>]+>");
     private static final Pattern NUMERIC_ENTITY = Pattern.compile("&#(\\d+);");
     private static final Pattern HEX_ENTITY = Pattern.compile("&#x([0-9a-fA-F]+);");
@@ -12,7 +12,7 @@ final class BiographyText {
     private BiographyText() {
     }
 
-    static Optional<String> readable(Optional<String> biography) {
+    public static Optional<String> readable(Optional<String> biography) {
         if (biography == null || biography.isEmpty()) {
             return Optional.empty();
         }

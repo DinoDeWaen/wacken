@@ -18,6 +18,8 @@ import be.wacken.planner.domain.FestivalRepository;
 import be.wacken.planner.domain.PersonalBandRatingEvent;
 import be.wacken.planner.domain.PersonalBandRatingHistoryRepository;
 import be.wacken.planner.domain.Rating;
+import be.wacken.planner.domain.RealRatingRepository;
+import be.wacken.planner.domain.SavedRating;
 import be.wacken.planner.domain.SavedFestivalPlanningRating;
 
 final class ArchivedFestivalHistoryUseCaseTest {
@@ -56,6 +58,21 @@ final class ArchivedFestivalHistoryUseCaseTest {
         );
         assertEquals(List.of("Airbourne"), history.personalRatings().stream().map(PersonalRatingHistoryItem::bandName).toList());
         assertEquals("Wacken Open Air 2026 - 3 stars - 2026-08-04T19:00:00Z", history.personalRatings().get(0).displayText());
+    }
+
+    @Test
+    void fallsBackToLegacyRealRatingsWhenPersonalEventsAreMissing() {
+        ViewArchivedFestivalHistoryUseCase.ArchivedFestivalHistory history = new ViewArchivedFestivalHistoryUseCase(
+                new StaticFestivals(),
+                new EmptyLineup(),
+                new EmptyPlanningRatings(),
+                new EmptyPersonalRatings(),
+                new LegacyRealRatings()
+        ).show("dino", "wacken-2026");
+
+        assertEquals(List.of("Airbourne"), history.bandNames());
+        assertEquals(List.of("Airbourne"), history.personalRatings().stream().map(PersonalRatingHistoryItem::bandName).toList());
+        assertEquals("Wacken Open Air 2026 - 4 stars - date unknown", history.personalRatings().get(0).displayText());
     }
 
     private static final class StaticFestivals implements FestivalRepository {
@@ -131,6 +148,33 @@ final class ArchivedFestivalHistoryUseCaseTest {
                     Rating.of(3),
                     Instant.parse("2026-08-04T19:00:00Z")
             ));
+        }
+    }
+
+    private static final class EmptyPersonalRatings implements PersonalBandRatingHistoryRepository {
+        @Override
+        public void save(PersonalBandRatingEvent event) {
+        }
+
+        @Override
+        public List<PersonalBandRatingEvent> findByUserAndBand(String userName, Band band) {
+            return List.of();
+        }
+    }
+
+    private static final class LegacyRealRatings implements RealRatingRepository {
+        @Override
+        public void save(String userName, Band band, Rating rating) {
+        }
+
+        @Override
+        public Optional<Rating> findByUserAndBand(String userName, Band band) {
+            return Optional.empty();
+        }
+
+        @Override
+        public List<SavedRating> findAll() {
+            return List.of(new SavedRating("dino", new Band("Airbourne"), Rating.of(4)));
         }
     }
 

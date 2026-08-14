@@ -27,7 +27,7 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
 - Implemented MVP3 field-use capabilities include recording a separate local real post-show rating on band detail, exporting locally cached rating data to CSV from settings, and keeping cached/imported data usable without Wi-Fi during the festival.
-- Implemented post-MVP3 festival archive and rating-history capabilities include a seeded active `Wacken Open Air 2026` festival, a manual Archive action on the active festival start screen, a no-active-festival archive state with read-only archived festival detail, adding the next festival from a band CSV after archiving, exact-name reusable band matching, festival-specific planning ratings, synced personal band rating history, and planning-rating prefill from the user's latest personal band rating.
+- Implemented post-MVP3 festival archive and rating-history capabilities include a seeded active `Wacken Open Air 2026` festival, a manual Archive action on the active festival start screen, a no-active-festival archive state with read-only archived festival band lists and band detail screens, adding the next festival from a band CSV after archiving, exact-name reusable band matching, festival-specific planning ratings, synced personal band rating history, and planning-rating prefill from the user's latest personal band rating.
 
 ### Current Non-Goals
 
@@ -519,7 +519,7 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-083 | The start screen shows the active festival when one exists. | The active festival band list is shown by default with an Archive action at the top. | Must |
 | BR-084 | If no festival is active, the start screen shows archived festivals and an add-festival path. | After Wacken is archived, the user sees historical festivals and can add the next festival. | Must |
 | BR-085 | A festival can be manually archived by a user. | Archiving marks the active festival as historical without requiring confirmation in the first version. | Must |
-| BR-086 | Archived festivals are read-only in the first post-Wacken version. | Users can inspect historical lineups and ratings, but cannot edit archived festival data yet. | Must |
+| BR-086 | Archived festivals are read-only in the first post-Wacken version. | Users can inspect historical lineups and ratings through a read-only band list and band detail screens, but cannot edit archived festival data yet. | Must |
 | BR-087 | A new festival can be added after the active festival is archived. | The first post-Wacken version does not manage multiple active or upcoming festivals at the same time. | Must |
 | BR-088 | The app remains for one friend group only. | Multi-group support, new invite flows, invite tokens, and invite deep links are out of scope. | Must |
 | BR-089 | Bands are stored independently from festivals. | A band such as Airbourne exists once in the band table and can appear in multiple festival lineups. | Must |
