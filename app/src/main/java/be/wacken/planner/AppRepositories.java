@@ -98,6 +98,7 @@ final class AppRepositories {
         this.festivalPlanningRatingCache = planningRatingCache;
         this.personalRatingCache = personalRatingCache;
         this.realRatings = realRatingCache;
+        personalRatingCache.backfillLegacyWackenRealRatings(realRatingCache);
         this.scheduleLockCache = scheduleLockCache;
 
         BandRepository bandSource;

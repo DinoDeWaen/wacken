@@ -131,7 +131,7 @@ public abstract class WackenDatabase extends RoomDatabase {
                     """);
             database.execSQL("""
                     INSERT OR IGNORE INTO personal_band_rating_events (id, userName, bandName, festivalId, value, createdAt, syncStatus)
-                    SELECT userName || ':' || bandName || ':legacy-real', userName, bandName, 'wacken-2026', value, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), 'PENDING'
+                    SELECT userName || ':' || bandName || ':legacy-real', userName, bandName, 'wacken-2026', value, '1970-01-01T00:00:00Z', 'PENDING'
                     FROM real_ratings
                     WHERE value > 0
                     """);

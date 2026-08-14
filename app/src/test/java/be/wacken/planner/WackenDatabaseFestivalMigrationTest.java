@@ -24,7 +24,7 @@ public final class WackenDatabaseFestivalMigrationTest {
         assertTrue(source.contains("CREATE TABLE IF NOT EXISTS festival_planning_ratings"));
         assertTrue(source.contains("CREATE TABLE IF NOT EXISTS personal_band_rating_events"));
         assertTrue(source.contains("SELECT 'wacken-2026', name, name FROM bands"));
-        assertTrue(source.contains("strftime('%Y-%m-%dT%H:%M:%fZ', 'now')"));
+        assertTrue(source.contains("'1970-01-01T00:00:00Z'"));
         assertTrue(source.contains("MIGRATION_6_7"));
     }
 

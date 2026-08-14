@@ -72,6 +72,7 @@ final class ArchivedFestivalHistoryUseCaseTest {
 
         assertEquals(List.of("Airbourne"), history.bandNames());
         assertEquals(List.of("Airbourne"), history.personalRatings().stream().map(PersonalRatingHistoryItem::bandName).toList());
+        assertEquals(4, history.personalRatings().get(0).rating());
         assertEquals("Wacken Open Air 2026 - 4 stars - date unknown", history.personalRatings().get(0).displayText());
     }
 
