@@ -52,6 +52,11 @@ public final class RoomPersonalBandRatingHistoryRepository implements PersonalBa
         return events.findByUserAndBand(userName, band.name()).stream().map(this::toDomain).collect(Collectors.toList());
     }
 
+    @Override
+    public List<PersonalBandRatingEvent> findByUserAndFestival(String userName, String festivalId) {
+        return events.findByUserAndFestival(userName, festivalId).stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
     private PersonalBandRatingEvent toDomain(RoomPersonalBandRatingEvent row) {
         return new PersonalBandRatingEvent(
                 row.id,

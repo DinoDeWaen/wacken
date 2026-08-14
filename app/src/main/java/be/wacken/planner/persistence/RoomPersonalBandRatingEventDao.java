@@ -15,6 +15,9 @@ public interface RoomPersonalBandRatingEventDao {
     @Query("SELECT * FROM personal_band_rating_events WHERE userName = :userName AND bandName = :bandName ORDER BY createdAt DESC")
     List<RoomPersonalBandRatingEvent> findByUserAndBand(String userName, String bandName);
 
+    @Query("SELECT * FROM personal_band_rating_events WHERE userName = :userName AND festivalId = :festivalId ORDER BY createdAt DESC")
+    List<RoomPersonalBandRatingEvent> findByUserAndFestival(String userName, String festivalId);
+
     @Query("SELECT * FROM personal_band_rating_events WHERE userName = :userName AND syncStatus = 'PENDING'")
     List<RoomPersonalBandRatingEvent> findPendingByUser(String userName);
 }

@@ -47,9 +47,14 @@ public final class ArchivedFestivalActivity extends Activity {
         screen.addView(section("Lineup", history.bandNames().isEmpty()
                 ? "No archived lineup entries available."
                 : String.join("\n", history.bandNames())));
-        screen.addView(section("Planning ratings", history.planningRatingCount() + " stored planning ratings"));
+        screen.addView(section("Planning ratings", history.planningRatings().isEmpty()
+                ? "No archived planning ratings available."
+                : history.planningRatings().stream()
+                        .map(ViewArchivedFestivalHistoryUseCase.ArchivedPlanningRatingItem::displayText)
+                        .reduce((left, right) -> left + "\n" + right)
+                        .orElse("")));
         screen.addView(section("Personal history", history.personalRatings().isEmpty()
-                ? "No personal rating history for this archived lineup yet."
+                ? "No real/personal post-show rating history for this archived festival yet."
                 : history.personalRatings().stream()
                         .map(item -> item.bandName() + " - " + item.displayText())
                         .reduce((left, right) -> left + "\n" + right)

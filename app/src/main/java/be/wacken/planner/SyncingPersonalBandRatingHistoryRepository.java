@@ -28,6 +28,11 @@ final class SyncingPersonalBandRatingHistoryRepository implements PersonalBandRa
         return cache.findByUserAndBand(userName, band);
     }
 
+    @Override
+    public List<PersonalBandRatingEvent> findByUserAndFestival(String userName, String festivalId) {
+        return cache.findByUserAndFestival(userName, festivalId);
+    }
+
     void syncPendingEvents() throws IOException {
         for (PersonalBandRatingEvent event : cache.findPending(session.userId())) {
             remote.pushEvent(session, event);

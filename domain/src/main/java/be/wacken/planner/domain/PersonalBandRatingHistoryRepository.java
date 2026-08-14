@@ -8,6 +8,10 @@ public interface PersonalBandRatingHistoryRepository {
 
     List<PersonalBandRatingEvent> findByUserAndBand(String userName, Band band);
 
+    default List<PersonalBandRatingEvent> findByUserAndFestival(String userName, String festivalId) {
+        return List.of();
+    }
+
     default Optional<PersonalBandRatingEvent> latestByUserAndBand(String userName, Band band) {
         return findByUserAndBand(userName, band)
                 .stream()
