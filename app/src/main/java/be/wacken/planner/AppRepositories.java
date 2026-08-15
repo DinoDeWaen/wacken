@@ -3,6 +3,7 @@ package be.wacken.planner;
 import android.content.Context;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 import be.wacken.planner.application.ActiveFestivalRatingRepository;
 import be.wacken.planner.domain.BandRepository;
@@ -91,6 +92,8 @@ final class AppRepositories {
         RoomRatingRepository ratingCache = new RoomRatingRepository(database);
         RoomRealRatingRepository realRatingCache = new RoomRealRatingRepository(database);
         RoomScheduleLockStore scheduleLockCache = new RoomScheduleLockStore(database);
+        AuthSessionStore authSessionStore = new AuthSessionStore(context);
+        this.session = authSessionStore.load();
         this.ratingCache = ratingCache;
         festivalCache.seedDefaultActiveFestivalIfEmpty();
         this.festivals = festivalCache;
@@ -98,7 +101,10 @@ final class AppRepositories {
         this.festivalPlanningRatingCache = planningRatingCache;
         this.personalRatingCache = personalRatingCache;
         this.realRatings = realRatingCache;
-        personalRatingCache.backfillLegacyWackenRealRatings(realRatingCache);
+        personalRatingCache.backfillLegacyWackenRealRatings(
+                realRatingCache,
+                session.isPresent() ? Optional.of(session.userId()) : Optional.empty()
+        );
         this.scheduleLockCache = scheduleLockCache;
 
         BandRepository bandSource;
@@ -106,9 +112,7 @@ final class AppRepositories {
         PerformanceRepository performanceSource;
         StageDistanceRepository distanceSource;
         FoodOptionRepository foodSource;
-        AuthSessionStore authSessionStore = new AuthSessionStore(context);
         SupabaseSessionManager sessionManager = new SupabaseSessionManager(authSessionStore, new SupabaseAuthClient());
-        this.session = authSessionStore.load();
         if (sourceMode == SourceMode.SUPABASE) {
             SupabaseMasterDataClient client = new SupabaseMasterDataClient(sessionManager);
             bandSource = new SupabaseBandRepository(client);

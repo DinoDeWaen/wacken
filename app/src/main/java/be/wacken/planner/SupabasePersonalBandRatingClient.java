@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import be.wacken.planner.domain.Band;
 import be.wacken.planner.domain.PersonalBandRatingEvent;
@@ -38,7 +39,7 @@ final class SupabasePersonalBandRatingClient implements SupabasePersonalBandRati
         }
         try {
             JSONObject body = new JSONObject()
-                    .put("id", event.id())
+                    .put("id", remoteEventId(event))
                     .put("user_id", event.userName())
                     .put("band_id", bandIdFor(event.band()))
                     .put("rating", event.rating().value())
@@ -49,6 +50,14 @@ final class SupabasePersonalBandRatingClient implements SupabasePersonalBandRati
             request("POST", "/rest/v1/personal_band_rating_events?on_conflict=id", body.toString(), true);
         } catch (JSONException error) {
             throw new IOException("Supabase personal rating request could not be created.", error);
+        }
+    }
+
+    static String remoteEventId(PersonalBandRatingEvent event) {
+        try {
+            return UUID.fromString(event.id()).toString();
+        } catch (IllegalArgumentException ignored) {
+            return UUID.nameUUIDFromBytes(event.id().getBytes(StandardCharsets.UTF_8)).toString();
         }
     }
 

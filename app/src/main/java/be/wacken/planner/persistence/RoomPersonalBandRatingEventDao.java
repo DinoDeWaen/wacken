@@ -12,6 +12,9 @@ public interface RoomPersonalBandRatingEventDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void save(RoomPersonalBandRatingEvent event);
 
+    @Query("DELETE FROM personal_band_rating_events WHERE id = :id")
+    void deleteById(String id);
+
     @Query("SELECT * FROM personal_band_rating_events WHERE userName = :userName AND bandName = :bandName ORDER BY createdAt DESC")
     List<RoomPersonalBandRatingEvent> findByUserAndBand(String userName, String bandName);
 

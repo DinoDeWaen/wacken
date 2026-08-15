@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.Test;
 
@@ -89,6 +90,23 @@ public final class SyncingPersonalBandRatingHistoryRepositoryTest {
                 """, Map.of("band-airbourne", "Airbourne"));
 
         assertEquals(List.of(EVENT), events);
+    }
+
+    @Test
+    public void mapsLegacyNonUuidEventIdsToDeterministicUuidForSupabase() {
+        PersonalBandRatingEvent legacy = new PersonalBandRatingEvent(
+                "user-1:Airbourne:legacy-real",
+                "user-1",
+                new Band("Airbourne"),
+                Optional.of("wacken-2026"),
+                Rating.of(4),
+                Instant.EPOCH
+        );
+
+        String remoteId = SupabasePersonalBandRatingClient.remoteEventId(legacy);
+
+        assertEquals(remoteId, SupabasePersonalBandRatingClient.remoteEventId(legacy));
+        assertEquals(UUID.fromString(remoteId).toString(), remoteId);
     }
 
     private static final class FakeRemote implements SupabasePersonalBandRatingRemote {

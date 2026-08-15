@@ -1,8 +1,10 @@
 package be.wacken.planner.persistence;
 
 import java.time.Instant;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import be.wacken.planner.domain.Band;
@@ -63,13 +65,19 @@ public final class RoomPersonalBandRatingHistoryRepository implements PersonalBa
     }
 
     public void backfillLegacyWackenRealRatings(RealRatingRepository legacyRealRatings) {
-        for (SavedRating rating : legacyRealRatings.findAll()) {
-            if (rating.rating().value() <= 0 || hasReliableWackenHistory(rating.userName(), rating.band())) {
+        backfillLegacyWackenRealRatings(legacyRealRatings, Optional.empty());
+    }
+
+    public void backfillLegacyWackenRealRatings(RealRatingRepository legacyRealRatings, Optional<String> currentUserName) {
+        for (SavedRating rating : recoverableLegacyRatings(legacyRealRatings.findAll(), currentUserName)) {
+            String targetUserName = currentUserName.orElse(rating.userName());
+            if (rating.rating().value() <= 0 || hasReliableWackenHistory(targetUserName, rating.band())) {
                 continue;
             }
+            deleteStaleLegacyEvents(targetUserName, rating.band());
             save(new PersonalBandRatingEvent(
-                    legacyEventId(rating.userName(), rating.band()),
-                    rating.userName(),
+                    legacyEventId(targetUserName, rating.band()),
+                    targetUserName,
                     rating.band(),
                     Optional.of(LEGACY_WACKEN_FESTIVAL_ID),
                     rating.rating(),
@@ -78,19 +86,46 @@ public final class RoomPersonalBandRatingHistoryRepository implements PersonalBa
         }
     }
 
+    private List<SavedRating> recoverableLegacyRatings(List<SavedRating> ratings, Optional<String> currentUserName) {
+        List<SavedRating> positiveRatings = ratings.stream()
+                .filter(rating -> rating.rating().value() > 0)
+                .toList();
+        if (currentUserName.isEmpty()) {
+            return positiveRatings;
+        }
+        return positiveRatings.stream()
+                .collect(Collectors.toMap(
+                        rating -> rating.band().name().toLowerCase(java.util.Locale.ROOT),
+                        rating -> rating,
+                        (first, second) -> first.userName().equals(currentUserName.orElseThrow()) ? first : second
+                ))
+                .values()
+                .stream()
+                .toList();
+    }
+
     private boolean hasReliableWackenHistory(String userName, Band band) {
         List<PersonalBandRatingEvent> wackenEvents = findByUserAndBand(userName, band).stream()
                 .filter(event -> event.festivalId().filter(LEGACY_WACKEN_FESTIVAL_ID::equals).isPresent())
                 .toList();
         boolean hasUserCreatedEvent = wackenEvents.stream()
-                .anyMatch(event -> !event.id().equals(legacyEventId(userName, band)));
+                .anyMatch(event -> !event.id().equals(legacyEventId(userName, band))
+                        && !event.id().equals(staleLegacyEventId(userName, band)));
         boolean hasUnknownDateLegacyEvent = wackenEvents.stream()
                 .anyMatch(event -> event.id().equals(legacyEventId(userName, band))
                         && UNKNOWN_LEGACY_CREATED_AT.equals(event.createdAt()));
         return hasUserCreatedEvent || hasUnknownDateLegacyEvent;
     }
 
+    private void deleteStaleLegacyEvents(String userName, Band band) {
+        events.deleteById(staleLegacyEventId(userName, band));
+    }
+
     private String legacyEventId(String userName, Band band) {
+        return UUID.nameUUIDFromBytes(staleLegacyEventId(userName, band).getBytes(StandardCharsets.UTF_8)).toString();
+    }
+
+    private String staleLegacyEventId(String userName, Band band) {
         return userName + ":" + band.name() + ":legacy-real";
     }
 
