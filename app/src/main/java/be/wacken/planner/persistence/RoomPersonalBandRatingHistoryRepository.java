@@ -89,7 +89,7 @@ public final class RoomPersonalBandRatingHistoryRepository implements PersonalBa
     private List<SavedRating> recoverableLegacyRatings(List<SavedRating> ratings, Optional<String> currentUserName) {
         List<SavedRating> positiveRatings = ratings.stream()
                 .filter(rating -> rating.rating().value() > 0)
-                .toList();
+                .collect(Collectors.toList());
         if (currentUserName.isEmpty()) {
             return positiveRatings;
         }
@@ -101,13 +101,13 @@ public final class RoomPersonalBandRatingHistoryRepository implements PersonalBa
                 ))
                 .values()
                 .stream()
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private boolean hasReliableWackenHistory(String userName, Band band) {
         List<PersonalBandRatingEvent> wackenEvents = findByUserAndBand(userName, band).stream()
                 .filter(event -> event.festivalId().filter(LEGACY_WACKEN_FESTIVAL_ID::equals).isPresent())
-                .toList();
+                .collect(Collectors.toList());
         boolean hasUserCreatedEvent = wackenEvents.stream()
                 .anyMatch(event -> !event.id().equals(legacyEventId(userName, band))
                         && !event.id().equals(staleLegacyEventId(userName, band)));

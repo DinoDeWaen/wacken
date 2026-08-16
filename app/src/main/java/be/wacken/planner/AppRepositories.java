@@ -133,7 +133,7 @@ final class AppRepositories {
         this.performances = new SyncedPerformanceRepository(performanceCache, performanceSource);
         this.distances = new SyncedStageDistanceRepository(distanceCache, distanceSource);
         this.foodOptions = new SyncedFoodOptionRepository(foodCache, foodSource);
-        if (sourceMode == SourceMode.SUPABASE) {
+        if (sourceMode == SourceMode.SUPABASE && session.isPresent()) {
             SupabaseScheduleLockClient scheduleLockClient = new SupabaseScheduleLockClient(sessionManager);
             this.syncingPlanningRatings = new SyncingFestivalPlanningRatingRepository(
                     planningRatingCache,
