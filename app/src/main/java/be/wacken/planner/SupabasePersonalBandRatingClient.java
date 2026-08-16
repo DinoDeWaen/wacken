@@ -14,6 +14,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -90,11 +92,19 @@ final class SupabasePersonalBandRatingClient implements SupabasePersonalBandRati
                         new Band(bandName),
                         optional(row.optString("festival_id", "")),
                         Rating.of(row.getInt("rating")),
-                        Instant.parse(row.getString("created_at"))
+                        parseCreatedAt(row.getString("created_at"))
                 ));
             }
         }
         return events;
+    }
+
+    static Instant parseCreatedAt(String createdAt) {
+        try {
+            return Instant.parse(createdAt);
+        } catch (DateTimeParseException error) {
+            return OffsetDateTime.parse(createdAt).toInstant();
+        }
     }
 
     private String bandIdFor(Band band) throws IOException {

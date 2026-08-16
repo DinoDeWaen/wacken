@@ -93,6 +93,29 @@ public final class SyncingPersonalBandRatingHistoryRepositoryTest {
     }
 
     @Test
+    public void parsesSupabaseOffsetTimestampPersonalRatingRows() throws Exception {
+        List<PersonalBandRatingEvent> events = SupabasePersonalBandRatingClient.parseEvents("""
+                [
+                  {
+                    "id": "event-legacy",
+                    "user_id": "user-1",
+                    "band_id": "band-airbourne",
+                    "festival_id": "wacken-2026",
+                    "rating": 4,
+                    "created_at": "1970-01-01T00:00:00+00:00"
+                  }
+                ]
+                """, Map.of("band-airbourne", "Airbourne"));
+
+        assertEquals(Instant.EPOCH, events.get(0).createdAt());
+    }
+
+    @Test
+    public void parsesSupabaseInstantTimestampPersonalRatingRows() {
+        assertEquals(Instant.parse("2026-08-03T21:15:00Z"), SupabasePersonalBandRatingClient.parseCreatedAt("2026-08-03T21:15:00Z"));
+    }
+
+    @Test
     public void mapsLegacyNonUuidEventIdsToDeterministicUuidForSupabase() {
         PersonalBandRatingEvent legacy = new PersonalBandRatingEvent(
                 "user-1:Airbourne:legacy-real",
