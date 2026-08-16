@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import be.wacken.planner.application.AddFestivalResult;
 import be.wacken.planner.application.AddFestivalUseCase;
@@ -216,7 +217,7 @@ public final class ImportCsvActivity extends Activity {
     }
 
     private List<Band> parseBands(String csv) {
-        List<String> lines = csv.lines().filter(line -> !line.isBlank()).toList();
+        List<String> lines = csv.lines().filter(line -> !line.isBlank()).collect(Collectors.toList());
         List<Band> bands = new ArrayList<>();
         if (lines.size() < 2) {
             return bands;

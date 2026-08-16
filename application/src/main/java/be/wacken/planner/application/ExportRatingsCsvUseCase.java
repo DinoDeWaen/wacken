@@ -52,7 +52,7 @@ public final class ExportRatingsCsvUseCase {
             List<Performance> bandPerformances = performancesByBand.getOrDefault(band.name(), List.of())
                     .stream()
                     .sorted(Comparator.comparing(Performance::start))
-                    .toList();
+                    .collect(Collectors.toList());
             csv.append(row(userName, band, bandPerformances)).append('\n');
         }
         return csv.toString();
@@ -79,9 +79,9 @@ public final class ExportRatingsCsvUseCase {
                 csv(ratingValue(planningRatings.findByUserAndBand(userName, band))),
                 csv(ratingValue(realRatings.findByUserAndBand(userName, band))),
                 csv(groupRatings(band)),
-                csv(join(bandPerformances.stream().map(performance -> performance.stage().name()).distinct().toList())),
-                csv(join(bandPerformances.stream().map(Performance::start).map(LocalDateTime::toLocalDate).distinct().map(LocalDate::toString).toList())),
-                csv(join(bandPerformances.stream().map(this::timeRange).toList())),
+                csv(join(bandPerformances.stream().map(performance -> performance.stage().name()).distinct().collect(Collectors.toList()))),
+                csv(join(bandPerformances.stream().map(Performance::start).map(LocalDateTime::toLocalDate).distinct().map(LocalDate::toString).collect(Collectors.toList()))),
+                csv(join(bandPerformances.stream().map(this::timeRange).collect(Collectors.toList()))),
                 csv(bandPerformances.isEmpty() ? "UNSCHEDULED" : "SCHEDULED")
         );
     }

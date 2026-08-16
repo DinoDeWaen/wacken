@@ -115,6 +115,6 @@ public final class ListArchivedFestivalBandsUseCase {
                 .filter(rating -> rating.rating().value() > 0)
                 .sorted(Comparator.comparing(SavedFestivalPlanningRating::userName, String.CASE_INSENSITIVE_ORDER))
                 .map(rating -> new PersonRatingStars(rating.userName(), rating.rating().value()))
-                .toList();
+                .collect(Collectors.toList());
     }
 }

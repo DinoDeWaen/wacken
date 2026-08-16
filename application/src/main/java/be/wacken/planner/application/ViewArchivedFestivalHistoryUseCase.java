@@ -72,7 +72,7 @@ public final class ViewArchivedFestivalHistoryUseCase {
                 .sorted(Comparator.comparing((SavedFestivalPlanningRating rating) -> rating.band().name(), String.CASE_INSENSITIVE_ORDER)
                         .thenComparing(SavedFestivalPlanningRating::userName, String.CASE_INSENSITIVE_ORDER))
                 .map(rating -> new ArchivedPlanningRatingItem(rating.band().name(), rating.userName(), rating.rating().value()))
-                .toList();
+                .collect(Collectors.toList());
         List<PersonalRatingHistoryItem> history = personalHistory(userName, festivalId, bands, festivalNames, festivalPersonalEvents, legacyRealRatingFallbacks);
         boolean readOnly = FestivalLifecycle.archivedFestivals(festivals.findAll())
                 .stream()
@@ -95,7 +95,7 @@ public final class ViewArchivedFestivalHistoryUseCase {
                 .stream()
                 .filter(rating -> rating.userName().equals(userName))
                 .filter(rating -> rating.rating().value() > 0)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private List<PersonalRatingHistoryItem> personalHistory(
@@ -121,7 +121,7 @@ public final class ViewArchivedFestivalHistoryUseCase {
                         event.createdAt()
                 ))
                 .sorted(Comparator.comparing(PersonalRatingHistoryItem::createdAt).reversed())
-                .toList();
+                .collect(Collectors.toList());
         TreeSet<String> bandsWithHistory = history.stream()
                 .map(PersonalRatingHistoryItem::bandName)
                 .collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER)));
@@ -134,13 +134,13 @@ public final class ViewArchivedFestivalHistoryUseCase {
                         rating.rating().value(),
                         Instant.EPOCH
                 ))
-                .toList();
+                .collect(Collectors.toList());
         if (legacyFallbacks.isEmpty()) {
             return history;
         }
         return java.util.stream.Stream.concat(history.stream(), legacyFallbacks.stream())
                 .sorted(Comparator.comparing(PersonalRatingHistoryItem::createdAt).reversed())
-                .toList();
+                .collect(Collectors.toList());
     }
 
     public record ArchivedPlanningRatingItem(String bandName, String userName, int rating) {

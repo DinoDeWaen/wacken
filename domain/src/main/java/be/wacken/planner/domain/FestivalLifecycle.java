@@ -3,6 +3,7 @@ package be.wacken.planner.domain;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class FestivalLifecycle {
     private FestivalLifecycle() {
@@ -12,7 +13,7 @@ public final class FestivalLifecycle {
         Objects.requireNonNull(festivals, "festivals must not be null");
         List<Festival> activeFestivals = festivals.stream()
                 .filter(Festival::isActive)
-                .toList();
+                .collect(Collectors.toList());
         if (activeFestivals.size() > 1) {
             throw new DomainValidationException("Only one festival can be active at a time.");
         }
@@ -23,6 +24,6 @@ public final class FestivalLifecycle {
         Objects.requireNonNull(festivals, "festivals must not be null");
         return festivals.stream()
                 .filter(Festival::isArchived)
-                .toList();
+                .collect(Collectors.toList());
     }
 }

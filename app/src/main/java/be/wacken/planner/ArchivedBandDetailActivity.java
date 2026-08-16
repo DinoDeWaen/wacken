@@ -18,6 +18,7 @@ import android.widget.TextView;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import be.wacken.planner.application.BandDetailItem;
 import be.wacken.planner.application.BiographyText;
@@ -77,11 +78,11 @@ public final class ArchivedBandDetailActivity extends Activity {
                 .filter(item -> item.bandName().equalsIgnoreCase(bandName))
                 .filter(item -> item.rating() > 0)
                 .map(item -> new PersonRatingStars(item.userName(), item.rating()))
-                .toList();
+                .collect(Collectors.toList());
         List<PersonalRatingHistoryItem> bandHistory = history.personalRatings()
                 .stream()
                 .filter(item -> item.bandName().equalsIgnoreCase(bandName))
-                .toList();
+                .collect(Collectors.toList());
         Optional<PersonalRatingHistoryItem> festivalRealRating = bandHistory.stream()
                 .filter(item -> item.festivalName().filter(history.festivalName()::equals).isPresent())
                 .findFirst()
