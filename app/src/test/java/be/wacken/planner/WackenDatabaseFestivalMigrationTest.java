@@ -15,9 +15,9 @@ public final class WackenDatabaseFestivalMigrationTest {
     public void migratesExistingDatabasesToSeedActiveWackenFestival() throws IOException {
         String source = new String(Files.readAllBytes(databaseSource()), StandardCharsets.UTF_8);
 
-        assertTrue(source.contains("version = 7"));
+        assertTrue(source.contains("version = 8"));
         assertTrue(source.contains("CREATE TABLE IF NOT EXISTS festivals"));
-        assertTrue(source.contains("idx_festivals_one_active"));
+        assertTrue(!source.contains("CREATE UNIQUE INDEX IF NOT EXISTS idx_festivals_one_active"));
         assertTrue(source.contains("VALUES ('wacken-2026', 'Wacken Open Air 2026', 'ACTIVE')"));
         assertTrue(source.contains("MIGRATION_5_6"));
         assertTrue(source.contains("CREATE TABLE IF NOT EXISTS festival_lineup_entries"));
@@ -26,6 +26,8 @@ public final class WackenDatabaseFestivalMigrationTest {
         assertTrue(source.contains("SELECT 'wacken-2026', name, name FROM bands"));
         assertTrue(source.contains("'1970-01-01T00:00:00Z'"));
         assertTrue(source.contains("MIGRATION_6_7"));
+        assertTrue(source.contains("MIGRATION_7_8"));
+        assertTrue(source.contains("DROP INDEX IF EXISTS idx_festivals_one_active"));
     }
 
     private Path databaseSource() {

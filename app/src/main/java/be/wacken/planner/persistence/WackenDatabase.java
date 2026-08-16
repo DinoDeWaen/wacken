@@ -23,7 +23,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 RoomFestivalPlanningRating.class,
                 RoomPersonalBandRatingEvent.class
         },
-        version = 7,
+        version = 8,
         exportSchema = false
 )
 public abstract class WackenDatabase extends RoomDatabase {
@@ -80,7 +80,6 @@ public abstract class WackenDatabase extends RoomDatabase {
                         PRIMARY KEY(id)
                     )
                     """);
-            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS idx_festivals_one_active ON festivals(status) WHERE status = 'ACTIVE'");
             database.execSQL("""
                     INSERT OR IGNORE INTO festivals (id, name, status)
                     VALUES ('wacken-2026', 'Wacken Open Air 2026', 'ACTIVE')
@@ -134,7 +133,13 @@ public abstract class WackenDatabase extends RoomDatabase {
                     SELECT userName || ':' || bandName || ':legacy-real', userName, bandName, 'wacken-2026', value, '1970-01-01T00:00:00Z', 'PENDING'
                     FROM real_ratings
                     WHERE value > 0
-                    """);
+            """);
+        }
+    };
+    private static final Migration MIGRATION_7_8 = new Migration(7, 8) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("DROP INDEX IF EXISTS idx_festivals_one_active");
         }
     };
 
@@ -171,7 +176,7 @@ public abstract class WackenDatabase extends RoomDatabase {
                                     WackenDatabase.class,
                                     "wacken-cache.db"
                             )
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                             .allowMainThreadQueries()
                             .build();
                 }
