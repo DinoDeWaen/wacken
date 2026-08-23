@@ -4,6 +4,7 @@ title: 'US: Link fuzzy band aliases for future festival imports'
 status: To Do
 assignee: []
 created_date: '2026-08-12 07:53'
+updated_date: '2026-08-23 09:35'
 labels:
   - user-story
   - future
@@ -35,3 +36,9 @@ Out of scope: first post-Wacken implementation, automatic unreviewed fuzzy merge
 - [ ] #4 The story is marked future scope and must not block the first post-Wacken exact-name implementation.
 - [ ] #5 README, business requirements, diagram, and ADR impact are recorded using delivery-governance wording when implemented.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Update 2026-08-23: User reported a concrete CSV import defect after Summer Breeze upload. Reviewed fuzzy/manual linking and missing-field metadata enrichment are now captured in task-179, which should be treated as the actionable replacement for this older future-scope placeholder. Keep this task only as historical context unless task-179 is split during implementation.
+<!-- SECTION:NOTES:END -->

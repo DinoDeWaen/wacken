@@ -10,7 +10,7 @@ Use this section for most tasks. Read deeper sections only when the active task 
 
 Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken bands and prepare a conflict-aware festival schedule. The current implementation focuses on band import, band listing, band detail, 1-5 ratings with unrated state, local cache behavior, Supabase-backed lifecycle master-data sync, Supabase Auth, shared rating sync, and MVP2 schedule planning. MVP3 extends the product toward festival-field use with rating export, post-show real ratings, and stronger no-Wi-Fi operation.
 
-The validated post-MVP3 direction keeps the product for one friend group and extends it from a Wacken-only planning app into a festival-over-time rating archive. Users can archive the completed active festival, add the next festival, reuse known bands across festivals, sync personal band rating history to Supabase, and prefill new festival planning ratings from the latest personal band rating.
+The validated post-MVP3 direction keeps the product for one friend group and extends it from a Wacken-only planning app into a festival-over-time rating archive. Users can archive the completed active festival, add the next festival, reuse known bands across festivals, sync personal band rating history to Supabase, and prefill new festival planning ratings from the latest personal band rating. The next planned admin improvements make festival naming explicit, allow active-festival renaming, and add reviewed band linking plus missing-field metadata enrichment for future festival imports.
 
 ### Current Implemented Capabilities
 
@@ -35,7 +35,7 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 - New friend-invite, invite-token, or invite deep-link flows.
 - Managing multiple upcoming festivals at the same time in the first post-Wacken version.
 - Editing archived festivals in the first post-Wacken version.
-- Fuzzy band linking and band aliases in the first post-Wacken version.
+- Automatic unreviewed fuzzy band merges or unreviewed metadata overwrites.
 - Wacken website scraping and Android data-grid validation in the current roadmap.
 - Play Store distribution before a later delivery phase.
 - Business logic in Android UI, Activities, or Fragments.
@@ -50,7 +50,7 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 | Festival data import | BR-033 to BR-046 | CSV import, Supabase master data, Room cache, admin data, band-only imports |
 | Overview, detail, and app state | BR-047 to BR-072 | Wacken UI, metadata, music links, loading, sync feedback, settings, calendar schedule, returning to app context |
 | MVP3 field use and export | BR-077 to BR-080 | Rating export, real post-show ratings, and no-Wi-Fi festival use |
-| Post-MVP3 festival archive and personal rating history | BR-081 to BR-102 | Festival lifecycle, archived festivals, reusable bands, personal band ratings, planning ratings, rating prefill |
+| Post-MVP3 festival archive, personal rating history, and import administration | BR-081 to BR-112 | Festival lifecycle, archived festivals, reusable bands, personal band ratings, planning ratings, rating prefill, active festival rename, reviewed band linking, metadata enrichment |
 
 ### Requirement Drift Markers
 
@@ -135,6 +135,7 @@ Existing integration:
 | Festival CSV files | Provide bands, stages, performances, distances, and food data. | Inbound | CSVs are uploaded through Android file selection. They must be validated for missing references, overlaps, and unknown stages once final stage and time data is available. |
 | MVP TSV source | Acts as the current backend-like persistence source for imported festival data and ratings. | Internal source | The app caches data locally in Room and writes through to TSV files so the TSV source can later be replaced by a backend API without changing domain behavior. |
 | Supabase Postgres | Central backend database for shared ratings and admin-managed festival data. | Backend | Schema is managed through Flyway migrations. Bands can be uploaded from the repository CSV through an idempotent backend import script. |
+| External music metadata sources | Candidate source for missing band metadata after the own band database has been checked first. | Inbound | Planned priority is MusicBrainz for canonical artist identity, aliases, and official URL relationships; Wikidata/Wikipedia for neutral text and images when identity is unambiguous; Spotify Web API for Spotify artist URL/images when configured; and YouTube Data API for official channel candidates when configured. External data must be reviewed before saving and must not overwrite existing metadata automatically. |
 | CI artifact storage | Stores downloadable APK artifacts. | Outbound | CI must produce a clearly versioned debug APK artifact. |
 
 ## Non-goals
@@ -147,7 +148,7 @@ Existing integration:
 - Non-goal 6: Do not build new invite-token, invite deep-link, or self-service group onboarding flows.
 - Non-goal 7: Do not support multiple upcoming festivals at the same time in the first post-Wacken version.
 - Non-goal 8: Do not support editing archived festivals in the first post-Wacken version.
-- Non-goal 9: Do not build fuzzy band linking or alias storage in the first post-Wacken version.
+- Non-goal 9: Do not automatically merge fuzzy band matches or overwrite existing metadata without user review and confirmation.
 - Non-goal 10: Do not build Wacken scraping or Android data-grid validation in the current roadmap.
 
 ## Delivery roadmap
@@ -159,7 +160,7 @@ The delivery roadmap captures the planned or completed increments for the curren
 | MVP 1 | Establish the Android foundation, CI, domain model, band listing, first-priority band ratings, initial lineup import, and unit test setup. | Not specified in `project.md` |
 | MVP 2 | Enable one-group planning with a decision engine, conflict resolution, and timeline generation. | Not specified in `project.md` |
 | MVP 3 | Improve festival-field usefulness with rating CSV export, post-show real ratings, and no-Wi-Fi cached operation. | Completed |
-| Post-MVP3 | Archive completed festivals, add the next festival, sync personal band rating history, and prefill future festival planning ratings from personal band ratings. | Completed for first-version scope |
+| Post-MVP3 | Archive completed festivals, add the next festival, sync personal band rating history, prefill future festival planning ratings from personal band ratings, and improve admin correction tools for festival names, reviewed band linking, and missing metadata. | Completed for first-version scope; admin correction follow-ups planned |
 
 Future production direction, not implemented:
 
@@ -168,7 +169,7 @@ Future production direction, not implemented:
 - Android instrumentation tests as a later-phase option for the QA suite.
 - Multiple independent groups.
 - Multiple upcoming festivals at the same time.
-- Fuzzy band matching and alias management.
+- Automatic unreviewed fuzzy band matching and alias management.
 
 Release assumptions:
 
@@ -204,7 +205,9 @@ Release assumptions:
 | Personal band rating history | Store and sync historical personal band ratings by user, band, festival, and created date. | Must | Post-MVP3 |
 | Festival planning ratings | Store and sync editable per-festival planning ratings separately from personal band ratings. | Must | Post-MVP3 |
 | Future festival rating prefill | Prefill planning ratings for known bands from the user's latest personal band rating. | Must | Post-MVP3 |
-| Fuzzy band linking and aliases | Later propose likely existing bands for new lineup names and store aliases after user confirmation. | Could | Future |
+| Festival administration | Require deliberate festival naming, allow active-festival display-name corrections, and keep festival identity stable when names change. | Must | Post-MVP3 |
+| Reviewed band linking and aliases | Propose likely existing bands for new lineup names, let the user approve one match or no match, and store/reuse the existing band identity after confirmation. | Should | Post-MVP3 |
+| Band metadata enrichment | Fill missing band picture, biography/text, Spotify, and YouTube metadata from the own band catalog first, then reviewed external sources when needed, without overwriting existing values automatically. | Should | Post-MVP3 |
 
 ## Domain context
 
@@ -393,6 +396,46 @@ Scenario: Add a new festival after archiving the current one
   And unmatched band names create new band records
 ```
 
+### Workflow 11a: Rename the active festival
+
+A festival admin can correct the active festival display name without changing the underlying festival identity.
+
+```gherkin
+Scenario: Rename the active festival
+  Given a festival is active
+  When the user changes the festival name from Settings
+  Then the active festival display name is updated
+  And the festival id, lineup entries, planning ratings, personal rating history, and schedule references remain linked to the same festival
+```
+
+### Workflow 11b: Link imported bands to existing bands
+
+After a future festival lineup upload, a festival admin can review bands that may already exist in the app catalog under a slightly different name.
+
+```gherkin
+Scenario: Review and link an imported band
+  Given an uploaded lineup contains "Any Given Day"
+  And the own band database contains "Any given Day"
+  When the user opens the Settings link-bands review table
+  Then "Any Given Day" is shown with editable search text and likely existing matches
+  And the user can approve a match or choose no match
+  And only an approved match reuses the existing band identity, ratings, history, and metadata
+```
+
+### Workflow 11c: Enrich missing band metadata
+
+A festival admin can fill missing band metadata after import while preserving existing golden-source data.
+
+```gherkin
+Scenario: Fetch missing band metadata
+  Given a band is missing picture, biography, Spotify, or YouTube metadata
+  When the user runs metadata enrichment from Settings
+  Then the app checks the own band database first
+  And remaining missing fields can be proposed from configured external music metadata sources
+  And the user approves proposed metadata before it is saved
+  And existing non-empty metadata is not overwritten automatically
+```
+
 ### Workflow 12: Prefill planning ratings from personal band ratings
 
 Future festival planning starts from each user's own historical band experience, while festival context stays editable.
@@ -536,6 +579,16 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-100 | New festival lineups prefill planning ratings from personal band ratings only. | When a known band appears in a new festival lineup, the user's planning rating starts from the latest personal band rating; if none exists, it stays unrated. | Must |
 | BR-101 | Prefilled planning ratings remain editable for the active festival. | Editing the prefilled planning rating affects only that festival's planning decision and does not change personal band history. | Must |
 | BR-102 | Archived festival ratings remain visible with context. | Historical planning ratings and personal band rating events can be inspected with band, festival, and created-date reference. | Must |
+| BR-103 | Adding a new festival requires an explicit non-blank festival name. | The add-festival screen starts with an empty name field and blocks creation until the user enters a real name. | Must |
+| BR-104 | The active festival display name can be corrected from Settings. | A typo in the active festival name can be fixed without archiving and re-adding the festival. | Must |
+| BR-105 | Renaming the active festival must preserve festival identity. | Changing `Summer Breeze` to `Summer Breeze 2027` does not change the festival id, lineup entries, planning ratings, personal rating history, or schedule references. | Must |
+| BR-106 | Imported bands with non-exact names can be reviewed against the own band database. | `Any Given Day` can be searched against existing `Any given Day` before accepting it as a new separate band. | Should |
+| BR-107 | Fuzzy or manual band linking requires user approval per band. | The review table shows the imported band, editable search text, a candidate selector, and a no-match option; no automatic merge occurs. | Should |
+| BR-108 | A user-confirmed band link reuses the existing band as the golden source. | After confirming `Any Given Day` maps to existing `Any given Day`, the lineup points to the existing band and uses its ratings, history, picture, biography, Spotify, and YouTube metadata. | Should |
+| BR-109 | No match is a valid band-linking outcome. | If none of the proposed candidates are correct, the imported band remains a separate band without blocking the rest of the import review. | Should |
+| BR-110 | Metadata enrichment checks the own band database before external sources. | If a missing Spotify link is already present on a confirmed existing band, that value is used before any online lookup. | Should |
+| BR-111 | External metadata enrichment may fill missing fields only after review. | MusicBrainz, Wikidata/Wikipedia, Spotify, or YouTube candidates are shown for approval before picture, biography, Spotify, or YouTube fields are saved. | Should |
+| BR-112 | Existing non-empty band metadata must not be overwritten automatically. | A band with an existing biography keeps it when enrichment finds another biography unless a future reviewed replace flow explicitly permits replacement. | Must |
 
 ## Data and terminology
 
@@ -543,8 +596,10 @@ Scenario: Rate the same band after seeing it at different festivals
 | --- | --- | --- | --- |
 | Festival | A music festival event planned or archived in the app. | Name, status, optional date range | Exactly one festival can be active at a time in the first post-Wacken version. |
 | Archived festival | A completed festival kept for historical reference. | Festival, lineups, performances, planning ratings, personal band rating events | Read-only in the first post-Wacken version. |
-| Band | A musical act that can appear at one or more festivals. | Stable identity, canonical name, optional English biography, optional image metadata, optional music links | Exists independently from festival lineups. Exact name matching reuses a band in the first post-Wacken version. |
+| Band | A musical act that can appear at one or more festivals. | Stable identity, canonical name, optional English biography, optional image metadata, optional music links, optional aliases where approved | Exists independently from festival lineups. Exact name matching reuses a band in the first post-Wacken version; reviewed fuzzy/manual linking can reuse the band in later admin workflows. |
 | Festival lineup entry | A relationship between a festival and a band. | Festival, band, uploaded festival-specific display name | Must reference one festival and one band. |
+| Band link candidate | A possible mapping from an uploaded festival-specific band name to an existing band. | Uploaded name, editable search term, candidate band, confidence or match reason where available, decision | Must be approved by the user before the lineup is relinked. No match is valid. |
+| Metadata enrichment proposal | A proposed missing metadata update for a band. | Band, field, proposed value, source, source URL where available, user decision | May fill only blank fields unless a future reviewed replacement workflow explicitly allows overwriting. |
 | Performance | A scheduled band appearance at a festival. | Festival, band, stage, time range | Must reference known festival, band, and stage data. |
 | Stage | A festival podium or location where performances happen. | Name or identifier | Must be known before performances can reference it. |
 | Distance | Travel information between stages. | From stage, to stage, walking minutes by default | Used to show walking-time context and support tie-breaking. |
@@ -566,6 +621,8 @@ Scenario: Rate the same band after seeing it at different festivals
 | Festival | Provides the planning and archive context for one event. | Contains lineup entries, stages, performances, distances, food options, planning ratings, and personal band rating events. |
 | Band | Represents an act that users can rate and potentially attend across festivals. | Has festival lineup entries and performances; receives personal band rating events and festival planning ratings. |
 | Festival Lineup Entry | Represents a band appearing at one festival. | Belongs to one festival and one band. |
+| Band Link Candidate | Represents a reviewed possible link between an imported lineup name and an existing band. | Is produced from the own band database first and becomes effective only after user approval. |
+| Metadata Enrichment Proposal | Represents reviewed missing metadata found from the own database or configured external sources. | Updates the golden-source band only after approval and does not automatically overwrite existing values. |
 | Performance | Represents when and where a band plays at a festival. | Belongs to a festival, a band, and a stage; may overlap other performances. |
 | Stage | Represents a festival location or podium. | Has performances; has distances to other stages. |
 | User | Represents an attendee participating in planning. | Provides ratings; may belong to a group. |
@@ -634,9 +691,15 @@ Post-MVP3 adds historical reference needs: archived festivals must remain readab
 - The app starts with no network after a successful previous sync/import.
 - A user archives the active festival and no active festival remains.
 - A user tries to edit an archived festival in the first post-Wacken version.
+- A user tries to add a new festival without entering a festival name.
+- A user corrects the active festival display name after the festival was created.
 - A user uploads a new festival lineup after archiving the previous active festival.
 - An uploaded lineup contains a band whose name exactly matches an existing band.
 - An uploaded lineup contains a similar but not exact band name, such as a suffix or alias.
+- A user reviews multiple likely matches for an uploaded band and chooses one.
+- A user reviews likely matches for an uploaded band and chooses no match.
+- A band is missing picture, biography, Spotify, or YouTube metadata.
+- An external metadata source proposes a value for a field that is already present on the band.
 - A known band has no personal band rating history when added to a new festival.
 - A known band has a latest personal band rating that should prefill a new festival planning rating.
 - A user changes a prefilled planning rating because festival context makes the band more or less important to see.
@@ -656,7 +719,8 @@ These topics are intentionally out of scope unless a future task explicitly reop
 - Audit history, owner/admin-only permissions, or richer reset flows for group-wide manual schedule locks.
 - Editing archived festivals in the first post-Wacken version.
 - Managing multiple upcoming festivals at the same time in the first post-Wacken version.
-- Fuzzy band linking and alias storage in the first post-Wacken version.
+- Automatic unreviewed fuzzy band merges.
+- Automatic overwrites of existing band metadata from external sources.
 
 ## Open questions
 
