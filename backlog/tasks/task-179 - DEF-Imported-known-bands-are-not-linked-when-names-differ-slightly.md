@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-08-23 09:33'
-updated_date: '2026-08-23 14:02'
+updated_date: '2026-08-23 14:12'
 labels:
   - defect
   - bands
@@ -77,4 +77,16 @@ Validation so far:
 
 Architecture gate:
 - External metadata lookup is architecture-significant because it adds external API contracts, provider adapters, configuration/credential behavior, and an ADR. Approval requested before coding AC #6.
+
+Story split update:
+
+External metadata lookup from AC #6 has been split into smaller stories under task-179:
+- task-179.1: reviewed band metadata search framework
+- task-179.2: MusicBrainz provider
+- task-179.3: Wikidata provider
+- task-179.4: Wikipedia biography/image provider
+- task-179.5: Spotify provider
+- task-179.6: YouTube channel provider
+
+The framework story carries the architecture approval and ADR gate. Provider stories depend on the framework story and keep provider-specific configuration, ambiguity handling, attribution, no-overwrite behavior, and tests separate.
 <!-- SECTION:NOTES:END -->
