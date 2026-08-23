@@ -10,7 +10,7 @@ Use this section for most tasks. Read deeper sections only when the active task 
 
 Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken bands and prepare a conflict-aware festival schedule. The current implementation focuses on band import, band listing, band detail, 1-5 ratings with unrated state, local cache behavior, Supabase-backed lifecycle master-data sync, Supabase Auth, shared rating sync, and MVP2 schedule planning. MVP3 extends the product toward festival-field use with rating export, post-show real ratings, and stronger no-Wi-Fi operation.
 
-The validated post-MVP3 direction keeps the product for one friend group and extends it from a Wacken-only planning app into a festival-over-time rating archive. Users can archive the completed active festival, add the next festival, reuse known bands across festivals, sync personal band rating history to Supabase, and prefill new festival planning ratings from the latest personal band rating. The next planned admin improvements make festival naming explicit, allow active-festival renaming, and add reviewed band linking plus missing-field metadata enrichment for future festival imports.
+The validated post-MVP3 direction keeps the product for one friend group and extends it from a Wacken-only planning app into a festival-over-time rating archive. Users can archive the completed active festival, add the next festival, reuse known bands across festivals, sync personal band rating history to Supabase, and prefill new festival planning ratings from the latest personal band rating. Current admin improvements make festival naming explicit, allow active-festival renaming, and add reviewed own-database band linking plus missing-field metadata enrichment from the existing band catalog for future festival imports. Reviewed online metadata lookup remains a planned external-integration step.
 
 ### Current Implemented Capabilities
 
@@ -27,7 +27,7 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
 - Implemented MVP3 field-use capabilities include recording a separate local real post-show rating on band detail, exporting locally cached rating data to CSV from settings, and keeping cached/imported data usable without Wi-Fi during the festival.
-- Implemented post-MVP3 festival archive and rating-history capabilities include a seeded active `Wacken Open Air 2026` festival, a manual Archive action on the active festival start screen, a no-active-festival archive state with read-only archived festival band lists and band detail screens, adding the next festival from a band CSV after archiving, exact-name reusable band matching, festival-specific planning ratings, synced personal band rating history, and planning-rating prefill from the user's latest personal band rating.
+- Implemented post-MVP3 festival archive and rating-history capabilities include a seeded active `Wacken Open Air 2026` festival, a manual Archive action on the active festival start screen, a no-active-festival archive state with read-only archived festival band lists and band detail screens, adding the next festival from a band CSV after archiving, exact-name reusable band matching, explicit non-blank new-festival naming, active-festival renaming from Settings, reviewed own-database band linking for similar imported names, missing-field metadata enrichment from existing catalog records, festival-specific planning ratings, synced personal band rating history, and planning-rating prefill from the user's latest personal band rating.
 
 ### Current Non-Goals
 
@@ -160,7 +160,7 @@ The delivery roadmap captures the planned or completed increments for the curren
 | MVP 1 | Establish the Android foundation, CI, domain model, band listing, first-priority band ratings, initial lineup import, and unit test setup. | Not specified in `project.md` |
 | MVP 2 | Enable one-group planning with a decision engine, conflict resolution, and timeline generation. | Not specified in `project.md` |
 | MVP 3 | Improve festival-field usefulness with rating CSV export, post-show real ratings, and no-Wi-Fi cached operation. | Completed |
-| Post-MVP3 | Archive completed festivals, add the next festival, sync personal band rating history, prefill future festival planning ratings from personal band ratings, and improve admin correction tools for festival names, reviewed band linking, and missing metadata. | Completed for first-version scope; admin correction follow-ups planned |
+| Post-MVP3 | Archive completed festivals, add the next festival, sync personal band rating history, prefill future festival planning ratings from personal band ratings, and improve admin correction tools for festival names, reviewed band linking, and missing metadata. | Completed for archive and local admin-correction scope; reviewed online metadata integration planned |
 
 Future production direction, not implemented:
 

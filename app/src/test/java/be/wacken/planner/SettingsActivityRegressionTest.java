@@ -33,6 +33,16 @@ public final class SettingsActivityRegressionTest {
         assertTrue("Rename UI must keep blank-name validation visible to the user.", source.contains("Festival name must not be blank."));
     }
 
+    @Test
+    public void exposesBandLinkingAndMetadataActionsInAdminSettings() throws IOException {
+        String source = new String(Files.readAllBytes(settingsActivitySource()), StandardCharsets.UTF_8);
+
+        assertTrue("Settings/Admin must expose imported-band linking.", source.contains("\"Link imported bands\""));
+        assertTrue("Settings/Admin must open the band-link review screen.", source.contains("BandLinkReviewActivity.class"));
+        assertTrue("Settings/Admin must expose missing metadata enrichment.", source.contains("\"Fetch band metadata\""));
+        assertTrue("SettingsActivity must use the catalog metadata enrichment use case.", source.contains("new EnrichBandMetadataFromCatalogUseCase"));
+    }
+
     private Path settingsActivitySource() {
         return List.of(
                         Path.of("app/src/main/java/be/wacken/planner/SettingsActivity.java"),

@@ -23,7 +23,9 @@ import java.nio.charset.StandardCharsets;
 
 import androidx.core.content.FileProvider;
 
+import be.wacken.planner.application.EnrichBandMetadataFromCatalogUseCase;
 import be.wacken.planner.application.ExportRatingsCsvUseCase;
+import be.wacken.planner.application.BandMetadataEnrichmentResult;
 import be.wacken.planner.application.RenameActiveFestivalResult;
 import be.wacken.planner.application.RenameActiveFestivalUseCase;
 import be.wacken.planner.domain.Festival;
@@ -136,6 +138,10 @@ public final class SettingsActivity extends Activity {
         activeFestival().ifPresent(festival ->
                 adminSection.addView(actionButton("Rename active festival", WackenTheme.ButtonStyle.SECONDARY, view -> renameActiveFestival(festival)))
         );
+        adminSection.addView(actionButton("Link imported bands", WackenTheme.ButtonStyle.SECONDARY, view -> {
+            startActivity(new Intent(this, BandLinkReviewActivity.class));
+        }));
+        adminSection.addView(actionButton("Fetch band metadata", WackenTheme.ButtonStyle.SECONDARY, view -> fetchBandMetadata()));
         adminSection.addView(actionButton("Import lineup CSV files", WackenTheme.ButtonStyle.PREMIUM, view -> {
             startActivityForResult(new Intent(this, ImportCsvActivity.class), REQUEST_IMPORT);
         }));
@@ -307,6 +313,16 @@ public final class SettingsActivity extends Activity {
             }
         }));
         dialog.show();
+    }
+
+    private void fetchBandMetadata() {
+        try {
+            BandMetadataEnrichmentResult result = new EnrichBandMetadataFromCatalogUseCase(new AppRepositories(this).bands())
+                    .enrichMissingMetadata();
+            showStatus(result.message(), WackenTheme.SUCCESS_GREEN);
+        } catch (Exception error) {
+            showStatus("Metadata fetch failed. Existing metadata remains unchanged.", COLOR_AMBER);
+        }
     }
 
     private File writeExportFile(String csv) throws java.io.IOException {
