@@ -114,7 +114,9 @@ Band metadata enrichment uses a reviewed proposal workflow. The application laye
 finds missing metadata fields, prefers values from likely matching own-catalog
 bands first, and accepts external provider proposals only through the Settings
 review screen. Saving accepted proposals updates missing fields only; existing
-non-empty band metadata is preserved.
+non-empty band metadata is preserved. MusicBrainz is the first implemented
+external provider and can propose Spotify and YouTube links from artist URL
+relationships.
 
 ### Technologies
 - Language: Java
@@ -122,6 +124,7 @@ non-empty band metadata is preserved.
 - Local cache: AndroidX Room
 - File sharing: AndroidX Core `FileProvider` for Settings CSV export
 - Backend database: Supabase Postgres, managed by Flyway SQL migrations
+- External metadata: MusicBrainz web service for reviewed artist URL proposals
 - Testing: JUnit 5, Mockito/fakes, JaCoCo coverage gates, and a dedicated `qaTest` scenario suite
 - Output: Debug APK via `./gradlew assembleDebug`
 
@@ -211,6 +214,21 @@ scripts/ensure-release-keystore.sh
 
 The script keeps the keystore in `.local/release/`, which is ignored by git,
 and updates the macOS keychain `WACKEN_RELEASE_STORE_FILE` path when needed.
+
+## External Metadata
+
+MusicBrainz lookup is available from the Settings metadata review workflow and
+does not require an API key. It does require a meaningful HTTP User-Agent and
+must stay within MusicBrainz rate limits. Override the default build-time value
+with a Gradle property or environment variable:
+
+```bash
+MUSICBRAINZ_USER_AGENT="WackenPlanner/2.29 ( contact@example.com )" ./gradlew assembleDebug
+```
+
+The app uses the value in `BuildConfig.MUSICBRAINZ_USER_AGENT`, searches
+MusicBrainz artists, looks up artist URL relationships, and shows Spotify or
+YouTube proposals for review before anything is saved.
 
 ## Backend Database
 

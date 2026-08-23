@@ -37,7 +37,7 @@ public final class BandMetadataReviewActivity extends Activity {
     }
 
     private List<BandMetadataLookupProvider> metadataProviders() {
-        return List.of();
+        return List.of(new MusicBrainzMetadataProvider(BuildConfig.MUSICBRAINZ_USER_AGENT));
     }
 
     private ScrollView content() {
@@ -73,7 +73,15 @@ public final class BandMetadataReviewActivity extends Activity {
 
     private void renderRows() {
         rows.removeAllViews();
-        List<BandMetadataSearchResult> results = searchMetadata.searchMissingMetadata();
+        rows.addView(messageRow("Searching metadata sources..."));
+        new Thread(() -> {
+            List<BandMetadataSearchResult> results = searchMetadata.searchMissingMetadata();
+            runOnUiThread(() -> showResults(results));
+        }).start();
+    }
+
+    private void showResults(List<BandMetadataSearchResult> results) {
+        rows.removeAllViews();
         if (results.isEmpty()) {
             rows.addView(messageRow("No metadata proposals found."));
             return;

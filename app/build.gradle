@@ -7,6 +7,9 @@ def releaseStorePassword = project.findProperty("WACKEN_RELEASE_STORE_PASSWORD")
 def releaseKeyAlias = project.findProperty("WACKEN_RELEASE_KEY_ALIAS") ?: System.getenv("WACKEN_RELEASE_KEY_ALIAS")
 def releaseKeyPassword = project.findProperty("WACKEN_RELEASE_KEY_PASSWORD") ?: System.getenv("WACKEN_RELEASE_KEY_PASSWORD")
 def releaseSigningConfigured = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+def musicBrainzUserAgent = project.findProperty("MUSICBRAINZ_USER_AGENT")
+        ?: System.getenv("MUSICBRAINZ_USER_AGENT")
+        ?: "WackenPlanner/2.29 ( local-maintainer )"
 
 android {
     namespace "be.wacken.planner"
@@ -24,6 +27,7 @@ android {
         versionName "2.29"
         buildConfigField "String", "SUPABASE_URL", "\"https://dwyunoyaqwxkfbwscxhe.supabase.co\""
         buildConfigField "String", "SUPABASE_ANON_KEY", "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3eXVub3lhcXd4a2Zid3NjeGhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjQxODAsImV4cCI6MjA5NDYwMDE4MH0.OSD2cZT4LR2p0olO_k-f2dHXJx_sekHtxA9OGHrSvZM\""
+        buildConfigField "String", "MUSICBRAINZ_USER_AGENT", "\"${musicBrainzUserAgent.replace("\\", "\\\\").replace("\"", "\\\"")}\""
     }
 
     signingConfigs {

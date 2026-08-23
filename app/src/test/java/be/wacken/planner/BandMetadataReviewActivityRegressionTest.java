@@ -16,6 +16,7 @@ public final class BandMetadataReviewActivityRegressionTest {
         String source = new String(Files.readAllBytes(activitySource()), StandardCharsets.UTF_8);
 
         assertTrue("Review screen must fetch proposals through the application use case.", source.contains("new SearchBandMetadataUseCase"));
+        assertTrue("Review screen must register MusicBrainz as the first metadata provider.", source.contains("new MusicBrainzMetadataProvider"));
         assertTrue("Review screen must require selectable proposal approval.", source.contains("new CheckBox(this)"));
         assertTrue("Review screen must save only accepted metadata proposals.", source.contains("\"Save accepted metadata\""));
         assertTrue("Review screen must call the approval use case.", source.contains("applyMetadata.apply"));
