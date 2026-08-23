@@ -47,6 +47,43 @@ final class AddFestivalUseCaseTest {
     }
 
     @Test
+    void rejectsBlankFestivalNameBeforeCreatingFestival() {
+        FakeFestivalRepository festivals = new FakeFestivalRepository(List.of(Festival.archived("wacken-2026", "Wacken Open Air 2026")));
+        FakeBandRepository bands = new FakeBandRepository(List.of());
+        FakeLineupRepository lineups = new FakeLineupRepository();
+
+        AddFestivalResult result = new AddFestivalUseCase(
+                festivals,
+                bands,
+                lineups,
+                new FakePlanningRatingRepository(),
+                new FakePersonalRatingHistoryRepository()
+        ).addFestival("group", "dino", "summer-breeze-2027", "   ", List.of(new Band("Any Given Day")));
+
+        assertFalse(result.success());
+        assertEquals("Festival name must not be blank.", result.message());
+        assertEquals(1, festivals.findAll().size());
+        assertTrue(bands.findAll().isEmpty());
+        assertTrue(lineups.findByFestival("summer-breeze-2027").isEmpty());
+    }
+
+    @Test
+    void trimsExplicitFestivalNameWhenAddingFestival() {
+        FakeFestivalRepository festivals = new FakeFestivalRepository(List.of(Festival.archived("wacken-2026", "Wacken Open Air 2026")));
+
+        AddFestivalResult result = new AddFestivalUseCase(
+                festivals,
+                new FakeBandRepository(List.of()),
+                new FakeLineupRepository(),
+                new FakePlanningRatingRepository(),
+                new FakePersonalRatingHistoryRepository()
+        ).addFestival("group", "dino", "summer-breeze-2027", "  Summer Breeze 2027  ", List.of(new Band("Any Given Day")));
+
+        assertTrue(result.success());
+        assertEquals(Festival.active("summer-breeze-2027", "Summer Breeze 2027"), festivals.findAll().get(1));
+    }
+
+    @Test
     void preventsAddingFestivalWhenOneIsAlreadyActive() {
         AddFestivalResult result = new AddFestivalUseCase(
                 new FakeFestivalRepository(List.of(Festival.active("wacken-2026", "Wacken Open Air 2026"))),

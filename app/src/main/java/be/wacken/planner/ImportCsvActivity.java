@@ -82,7 +82,6 @@ public final class ImportCsvActivity extends Activity {
             festivalName.setTextColor(WackenTheme.TEXT);
             festivalName.setHintTextColor(WackenTheme.MUTED);
             festivalName.setSingleLine(true);
-            festivalName.setText("Rock im Park");
             form.addView(festivalName);
         }
 

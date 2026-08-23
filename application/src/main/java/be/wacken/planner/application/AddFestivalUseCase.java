@@ -41,6 +41,9 @@ public final class AddFestivalUseCase {
             if (FestivalLifecycle.activeFestival(festivals.findAll()).isPresent()) {
                 return AddFestivalResult.failure("Archive the active festival before adding the next one.");
             }
+            if (festivalName == null || festivalName.isBlank()) {
+                return AddFestivalResult.failure("Festival name must not be blank.");
+            }
             Festival festival = Festival.active(festivalId, festivalName);
             if (uploadedBands.isEmpty()) {
                 return AddFestivalResult.failure("Select at least one band before adding the festival.");
