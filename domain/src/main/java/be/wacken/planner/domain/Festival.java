@@ -21,6 +21,10 @@ public record Festival(String id, String name, FestivalStatus status) {
         return new Festival(id, name, FestivalStatus.ARCHIVED);
     }
 
+    public Festival rename(String name) {
+        return new Festival(id, name, status);
+    }
+
     public boolean isActive() {
         return status == FestivalStatus.ACTIVE;
     }

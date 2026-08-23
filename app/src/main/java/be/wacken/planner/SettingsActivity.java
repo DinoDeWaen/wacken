@@ -1,6 +1,7 @@
 package be.wacken.planner;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.graphics.Color;
@@ -9,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -22,6 +24,10 @@ import java.nio.charset.StandardCharsets;
 import androidx.core.content.FileProvider;
 
 import be.wacken.planner.application.ExportRatingsCsvUseCase;
+import be.wacken.planner.application.RenameActiveFestivalResult;
+import be.wacken.planner.application.RenameActiveFestivalUseCase;
+import be.wacken.planner.domain.Festival;
+import be.wacken.planner.domain.FestivalLifecycle;
 
 public final class SettingsActivity extends Activity {
     private static final int COLOR_BACKGROUND = WackenTheme.BACKGROUND;
@@ -127,6 +133,9 @@ public final class SettingsActivity extends Activity {
 
         LinearLayout adminSection = section("Admin");
         adminSection.addView(infoText("Imports update shared festival data. Ratings are preserved."));
+        activeFestival().ifPresent(festival ->
+                adminSection.addView(actionButton("Rename active festival", WackenTheme.ButtonStyle.SECONDARY, view -> renameActiveFestival(festival)))
+        );
         adminSection.addView(actionButton("Import lineup CSV files", WackenTheme.ButtonStyle.PREMIUM, view -> {
             startActivityForResult(new Intent(this, ImportCsvActivity.class), REQUEST_IMPORT);
         }));
@@ -259,6 +268,45 @@ public final class SettingsActivity extends Activity {
         } catch (Exception error) {
             showStatus("Export failed. Cached data remains unchanged.", COLOR_AMBER);
         }
+    }
+
+    private java.util.Optional<Festival> activeFestival() {
+        try {
+            return FestivalLifecycle.activeFestival(new AppRepositories(this).festivals().findAll());
+        } catch (Exception error) {
+            return java.util.Optional.empty();
+        }
+    }
+
+    private void renameActiveFestival(Festival festival) {
+        EditText input = new EditText(this);
+        input.setText(festival.name());
+        input.setSingleLine(true);
+        input.setSelectAllOnFocus(true);
+        input.setHint("Festival name");
+        input.setTextColor(WackenTheme.TEXT);
+        input.setHintTextColor(WackenTheme.MUTED);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Rename active festival")
+                .setView(input)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Save", null)
+                .create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
+            RenameActiveFestivalResult result = new RenameActiveFestivalUseCase(new AppRepositories(this).festivals())
+                    .rename(input.getText().toString());
+            if (result.success()) {
+                showStatus(result.message(), WackenTheme.SUCCESS_GREEN);
+                dialog.dismiss();
+                return;
+            }
+            showStatus(result.message(), COLOR_AMBER);
+            if ("Festival name must not be blank.".equals(result.message())) {
+                input.setError("Festival name must not be blank.");
+            }
+        }));
+        dialog.show();
     }
 
     private File writeExportFile(String csv) throws java.io.IOException {

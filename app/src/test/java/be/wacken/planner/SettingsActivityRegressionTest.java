@@ -24,6 +24,15 @@ public final class SettingsActivityRegressionTest {
         assertTrue("SettingsActivity must add ratingAllocation after initialization.", initialization < addedToSection);
     }
 
+    @Test
+    public void exposesRenameActiveFestivalActionInAdminSettings() throws IOException {
+        String source = new String(Files.readAllBytes(settingsActivitySource()), StandardCharsets.UTF_8);
+
+        assertTrue("Settings/Admin must expose active festival rename action.", source.contains("\"Rename active festival\""));
+        assertTrue("SettingsActivity must call the rename use case.", source.contains("new RenameActiveFestivalUseCase"));
+        assertTrue("Rename UI must keep blank-name validation visible to the user.", source.contains("Festival name must not be blank."));
+    }
+
     private Path settingsActivitySource() {
         return List.of(
                         Path.of("app/src/main/java/be/wacken/planner/SettingsActivity.java"),
