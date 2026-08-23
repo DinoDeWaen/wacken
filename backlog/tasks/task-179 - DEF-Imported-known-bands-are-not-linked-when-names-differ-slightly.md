@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-08-23 09:33'
-updated_date: '2026-08-23 14:12'
+updated_date: '2026-08-23 14:25'
 labels:
   - defect
   - bands
@@ -89,4 +89,10 @@ External metadata lookup from AC #6 has been split into smaller stories under ta
 - task-179.6: YouTube channel provider
 
 The framework story carries the architecture approval and ADR gate. Provider stories depend on the framework story and keep provider-specific configuration, ambiguity handling, attribution, no-overwrite behavior, and tests separate.
+
+Metadata framework progress update:
+
+- task-179.1 is Done: reviewed metadata search framework, proposal approval flow, ADR 0012, README/business-requirements updates.
+- task-179.2 is Done: MusicBrainz provider wired into the reviewed metadata workflow for artist URL relationships, with User-Agent/rate-limit behavior and focused tests.
+- Remaining external metadata work is split into task-179.3 Wikidata, task-179.4 Wikipedia, task-179.5 Spotify, and task-179.6 YouTube. Parent AC #6 remains open until the intended external-provider set is complete or explicitly narrowed.
 <!-- SECTION:NOTES:END -->
