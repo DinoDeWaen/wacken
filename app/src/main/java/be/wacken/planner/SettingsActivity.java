@@ -23,9 +23,7 @@ import java.nio.charset.StandardCharsets;
 
 import androidx.core.content.FileProvider;
 
-import be.wacken.planner.application.EnrichBandMetadataFromCatalogUseCase;
 import be.wacken.planner.application.ExportRatingsCsvUseCase;
-import be.wacken.planner.application.BandMetadataEnrichmentResult;
 import be.wacken.planner.application.RenameActiveFestivalResult;
 import be.wacken.planner.application.RenameActiveFestivalUseCase;
 import be.wacken.planner.domain.Festival;
@@ -316,13 +314,7 @@ public final class SettingsActivity extends Activity {
     }
 
     private void fetchBandMetadata() {
-        try {
-            BandMetadataEnrichmentResult result = new EnrichBandMetadataFromCatalogUseCase(new AppRepositories(this).bands())
-                    .enrichMissingMetadata();
-            showStatus(result.message(), WackenTheme.SUCCESS_GREEN);
-        } catch (Exception error) {
-            showStatus("Metadata fetch failed. Existing metadata remains unchanged.", COLOR_AMBER);
-        }
+        startActivity(new Intent(this, BandMetadataReviewActivity.class));
     }
 
     private File writeExportFile(String csv) throws java.io.IOException {

@@ -26,6 +26,9 @@
             android:name=".BandLinkReviewActivity"
             android:exported="false" />
         <activity
+            android:name=".BandMetadataReviewActivity"
+            android:exported="false" />
+        <activity
             android:name=".ArchivedFestivalActivity"
             android:exported="false" />
         <activity

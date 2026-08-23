@@ -40,7 +40,7 @@ public final class SettingsActivityRegressionTest {
         assertTrue("Settings/Admin must expose imported-band linking.", source.contains("\"Link imported bands\""));
         assertTrue("Settings/Admin must open the band-link review screen.", source.contains("BandLinkReviewActivity.class"));
         assertTrue("Settings/Admin must expose missing metadata enrichment.", source.contains("\"Fetch band metadata\""));
-        assertTrue("SettingsActivity must use the catalog metadata enrichment use case.", source.contains("new EnrichBandMetadataFromCatalogUseCase"));
+        assertTrue("Settings/Admin must open the metadata review screen.", source.contains("BandMetadataReviewActivity.class"));
     }
 
     private Path settingsActivitySource() {

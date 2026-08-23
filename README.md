@@ -21,7 +21,7 @@
 - Show readable imported English band biography/explanation and available band image metadata on the detail screen when source data provides it, without leaking raw HTML tags.
 - Return from band detail to the same overview band row after refresh so users can continue rating without losing their place.
 - Sign in with Supabase Auth so ratings can be associated with a user and the shared Wacken planning group.
-- Keep the band overview focused with compact settings, schedule, and sync-exit icon actions; settings contains group invite, lineup import, active-festival rename, reviewed imported-band linking, own-catalog metadata enrichment, rating export, and manual Supabase sync.
+- Keep the band overview focused with compact settings, schedule, and sync-exit icon actions; settings contains group invite, lineup import, active-festival rename, reviewed imported-band linking, reviewed metadata search/enrichment, rating export, and manual Supabase sync.
 - Share plain-text invite instructions for the single shared `Sofie and Dino` planning group through Android's share sheet.
 - Generate and view an MVP2 day-filtered calendar schedule with fixed stage labels on the left and horizontally scrollable time columns across the top, using shared ratings, middle-30-minute conflict rules, optional decisions, winner stars, and lost-alternative stars; the view can locally hide barred overlapping acts or acts at/below a selected star threshold; tapping a performance block opens the chosen act and alternatives, and alternatives can be selected as Supabase-synced locked group winners.
 
@@ -38,6 +38,7 @@
 - ADR: [`0009-supabase-group-schedule-winner-locks.md`](backlog/decisions/0009-supabase-group-schedule-winner-locks.md).
 - ADR: [`0010-offline-first-sync-boundary.md`](backlog/decisions/0010-offline-first-sync-boundary.md).
 - ADR: [`0011-post-wacken-festival-rating-model.md`](backlog/decisions/0011-post-wacken-festival-rating-model.md) defines the accepted post-MVP3 festival archive, reusable band, planning rating, and personal rating history direction.
+- ADR: [`0012-reviewed-band-metadata-search-framework.md`](backlog/decisions/0012-reviewed-band-metadata-search-framework.md) defines the reviewed metadata proposal boundary for own-catalog and external provider enrichment.
 - CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
 - Visual design system: [`visual-design-system.md`](backlog/docs/visual-design-system.md).
 - Release process: [`release-process.md`](backlog/docs/release-process.md).
@@ -108,6 +109,12 @@ Current modules:
 Current repositories cover festivals, festival lineups, bands, stages, performances, stage distances, food options, festival planning ratings, personal band rating history, real post-show latest ratings, and group schedule locks. The app reads lineup and mutable shared data from Room first. Supabase is the primary master-data and shared-data sync backend; the CSV/TSV path remains as an explicit fallback/import tool. Real post-show ratings are recorded as personal band rating events for sync and history while the latest real rating remains available locally for the band detail control.
 
 The implemented post-MVP3 slice adds explicit festival lifecycle and rating history state. Room stores the seeded active `Wacken Open Air 2026` festival, archived festival status, festival lineup entries, festival-scoped planning ratings, and personal band rating events. Flyway migrations `V009__festivals.sql` and `V010__festival_lineups_and_rating_history.sql` create the matching Supabase contracts.
+
+Band metadata enrichment uses a reviewed proposal workflow. The application layer
+finds missing metadata fields, prefers values from likely matching own-catalog
+bands first, and accepts external provider proposals only through the Settings
+review screen. Saving accepted proposals updates missing fields only; existing
+non-empty band metadata is preserved.
 
 ### Technologies
 - Language: Java
