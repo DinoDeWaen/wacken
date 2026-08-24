@@ -137,7 +137,7 @@ final class MusicBrainzMetadataProvider implements BandMetadataLookupProvider {
 
         private RateLimitedMusicBrainzHttpClient(String userAgent) {
             this.userAgent = userAgent == null || userAgent.isBlank()
-                    ? "WackenPlanner/2.29 ( local-maintainer )"
+                    ? "WackenPlanner/2.30 ( local-maintainer )"
                     : userAgent.trim();
         }
 

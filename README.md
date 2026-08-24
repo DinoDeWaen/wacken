@@ -115,9 +115,9 @@ Band metadata enrichment uses a reviewed proposal workflow. The application laye
 finds missing metadata fields, prefers values from likely matching own-catalog
 bands first, and accepts external provider proposals only through the Settings
 review screen. Saving accepted proposals updates missing fields only; existing
-non-empty band metadata is preserved. MusicBrainz is the first implemented
-external provider and can propose Spotify and YouTube links from artist URL
-relationships.
+non-empty band metadata is preserved. MusicBrainz can propose Spotify and
+YouTube links from artist URL relationships. Wikidata can propose structured
+image, Spotify, and YouTube values from item claims.
 
 ### Technologies
 - Language: Java
@@ -125,7 +125,8 @@ relationships.
 - Local cache: AndroidX Room
 - File sharing: AndroidX Core `FileProvider` for Settings CSV export
 - Backend database: Supabase Postgres, managed by Flyway SQL migrations
-- External metadata: MusicBrainz web service for reviewed artist URL proposals
+- External metadata: MusicBrainz and Wikidata web services for reviewed artist
+  metadata proposals
 - Testing: JUnit 5, Mockito/fakes, JaCoCo coverage gates, and a dedicated `qaTest` scenario suite
 - Output: Debug APK via `./gradlew assembleDebug`
 

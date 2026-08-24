@@ -37,7 +37,10 @@ public final class BandMetadataReviewActivity extends Activity {
     }
 
     private List<BandMetadataLookupProvider> metadataProviders() {
-        return List.of(new MusicBrainzMetadataProvider(BuildConfig.MUSICBRAINZ_USER_AGENT));
+        return List.of(
+                new MusicBrainzMetadataProvider(BuildConfig.MUSICBRAINZ_USER_AGENT),
+                new WikidataMetadataProvider()
+        );
     }
 
     private ScrollView content() {
