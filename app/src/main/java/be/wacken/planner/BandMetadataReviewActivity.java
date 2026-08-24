@@ -40,7 +40,8 @@ public final class BandMetadataReviewActivity extends Activity {
         return List.of(
                 new MusicBrainzMetadataProvider(BuildConfig.MUSICBRAINZ_USER_AGENT),
                 new WikidataMetadataProvider(),
-                new WikipediaMetadataProvider()
+                new WikipediaMetadataProvider(),
+                new SpotifyMetadataProvider(BuildConfig.SPOTIFY_CLIENT_ID, BuildConfig.SPOTIFY_CLIENT_SECRET)
         );
     }
 

@@ -119,7 +119,8 @@ non-empty band metadata is preserved. MusicBrainz can propose Spotify and
 YouTube links from artist URL relationships. Wikidata can propose structured
 image, Spotify, and YouTube values from item claims. Wikipedia can propose
 neutral biography text and page-summary images from linked or searched English
-Wikipedia pages.
+Wikipedia pages. Spotify can propose artist profile links and artist images
+when Spotify Web API credentials are configured.
 
 ### Technologies
 - Language: Java
@@ -127,8 +128,8 @@ Wikipedia pages.
 - Local cache: AndroidX Room
 - File sharing: AndroidX Core `FileProvider` for Settings CSV export
 - Backend database: Supabase Postgres, managed by Flyway SQL migrations
-- External metadata: MusicBrainz, Wikidata, and Wikipedia web services for
-  reviewed artist metadata proposals
+- External metadata: MusicBrainz, Wikidata, Wikipedia, and optional Spotify web
+  services for reviewed artist metadata proposals
 - Testing: JUnit 5, Mockito/fakes, JaCoCo coverage gates, and a dedicated `qaTest` scenario suite
 - Output: Debug APK via `./gradlew assembleDebug`
 
@@ -221,11 +222,12 @@ and updates the macOS keychain `WACKEN_RELEASE_STORE_FILE` path when needed.
 
 ## External Metadata
 
-MusicBrainz, Wikidata, and Wikipedia lookups are available from the Settings
-metadata review workflow and do not require API keys. MusicBrainz and Wikimedia
-requests use a meaningful HTTP User-Agent; MusicBrainz must stay within its rate
-limits. Override the default build-time value with a Gradle property or
-environment variable:
+MusicBrainz, Wikidata, Wikipedia, and optional Spotify lookups are available
+from the Settings metadata review workflow. MusicBrainz, Wikidata, and
+Wikipedia do not require API keys. MusicBrainz and Wikimedia requests use a
+meaningful HTTP User-Agent; MusicBrainz must stay within its rate limits.
+Override the default build-time value with a Gradle property or environment
+variable:
 
 ```bash
 MUSICBRAINZ_USER_AGENT="WackenPlanner/2.30 ( contact@example.com )" ./gradlew assembleDebug
@@ -238,6 +240,18 @@ structured image, Spotify, and YouTube values from item claims. Wikipedia uses
 English Wikipedia page summaries to propose neutral biography text and image
 metadata. All external values remain reviewed proposals and existing band
 metadata is not overwritten automatically.
+
+Spotify enrichment is disabled unless `SPOTIFY_CLIENT_ID` and
+`SPOTIFY_CLIENT_SECRET` are supplied as Gradle properties or environment
+variables:
+
+```bash
+SPOTIFY_CLIENT_ID="..." SPOTIFY_CLIENT_SECRET="..." ./gradlew assembleDebug
+```
+
+The app uses Spotify's client-credentials flow for artist catalog search only.
+Do not use production Spotify secrets in a broadly distributed mobile build
+without moving token exchange behind a backend.
 
 ## Backend Database
 

@@ -10,6 +10,12 @@ def releaseSigningConfigured = releaseStoreFile && releaseStorePassword && relea
 def musicBrainzUserAgent = project.findProperty("MUSICBRAINZ_USER_AGENT")
         ?: System.getenv("MUSICBRAINZ_USER_AGENT")
         ?: "WackenPlanner/2.30 ( local-maintainer )"
+def spotifyClientId = project.findProperty("SPOTIFY_CLIENT_ID")
+        ?: System.getenv("SPOTIFY_CLIENT_ID")
+        ?: ""
+def spotifyClientSecret = project.findProperty("SPOTIFY_CLIENT_SECRET")
+        ?: System.getenv("SPOTIFY_CLIENT_SECRET")
+        ?: ""
 
 android {
     namespace "be.wacken.planner"
@@ -28,6 +34,8 @@ android {
         buildConfigField "String", "SUPABASE_URL", "\"https://dwyunoyaqwxkfbwscxhe.supabase.co\""
         buildConfigField "String", "SUPABASE_ANON_KEY", "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3eXVub3lhcXd4a2Zid3NjeGhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjQxODAsImV4cCI6MjA5NDYwMDE4MH0.OSD2cZT4LR2p0olO_k-f2dHXJx_sekHtxA9OGHrSvZM\""
         buildConfigField "String", "MUSICBRAINZ_USER_AGENT", "\"${musicBrainzUserAgent.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+        buildConfigField "String", "SPOTIFY_CLIENT_ID", "\"${spotifyClientId.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+        buildConfigField "String", "SPOTIFY_CLIENT_SECRET", "\"${spotifyClientSecret.replace("\\", "\\\\").replace("\"", "\\\"")}\""
     }
 
     signingConfigs {
