@@ -16,6 +16,9 @@ def spotifyClientId = project.findProperty("SPOTIFY_CLIENT_ID")
 def spotifyClientSecret = project.findProperty("SPOTIFY_CLIENT_SECRET")
         ?: System.getenv("SPOTIFY_CLIENT_SECRET")
         ?: ""
+def youtubeApiKey = project.findProperty("YOUTUBE_API_KEY")
+        ?: System.getenv("YOUTUBE_API_KEY")
+        ?: ""
 
 android {
     namespace "be.wacken.planner"
@@ -36,6 +39,7 @@ android {
         buildConfigField "String", "MUSICBRAINZ_USER_AGENT", "\"${musicBrainzUserAgent.replace("\\", "\\\\").replace("\"", "\\\"")}\""
         buildConfigField "String", "SPOTIFY_CLIENT_ID", "\"${spotifyClientId.replace("\\", "\\\\").replace("\"", "\\\"")}\""
         buildConfigField "String", "SPOTIFY_CLIENT_SECRET", "\"${spotifyClientSecret.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+        buildConfigField "String", "YOUTUBE_API_KEY", "\"${youtubeApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\""
     }
 
     signingConfigs {

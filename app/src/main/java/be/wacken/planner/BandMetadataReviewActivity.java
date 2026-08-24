@@ -41,7 +41,8 @@ public final class BandMetadataReviewActivity extends Activity {
                 new MusicBrainzMetadataProvider(BuildConfig.MUSICBRAINZ_USER_AGENT),
                 new WikidataMetadataProvider(),
                 new WikipediaMetadataProvider(),
-                new SpotifyMetadataProvider(BuildConfig.SPOTIFY_CLIENT_ID, BuildConfig.SPOTIFY_CLIENT_SECRET)
+                new SpotifyMetadataProvider(BuildConfig.SPOTIFY_CLIENT_ID, BuildConfig.SPOTIFY_CLIENT_SECRET),
+                new YouTubeMetadataProvider(BuildConfig.YOUTUBE_API_KEY)
         );
     }
 

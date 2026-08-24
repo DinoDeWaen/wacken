@@ -120,7 +120,8 @@ YouTube links from artist URL relationships. Wikidata can propose structured
 image, Spotify, and YouTube values from item claims. Wikipedia can propose
 neutral biography text and page-summary images from linked or searched English
 Wikipedia pages. Spotify can propose artist profile links and artist images
-when Spotify Web API credentials are configured.
+when Spotify Web API credentials are configured. YouTube can propose channel
+links when a YouTube Data API key is configured.
 
 ### Technologies
 - Language: Java
@@ -128,8 +129,8 @@ when Spotify Web API credentials are configured.
 - Local cache: AndroidX Room
 - File sharing: AndroidX Core `FileProvider` for Settings CSV export
 - Backend database: Supabase Postgres, managed by Flyway SQL migrations
-- External metadata: MusicBrainz, Wikidata, Wikipedia, and optional Spotify web
-  services for reviewed artist metadata proposals
+- External metadata: MusicBrainz, Wikidata, Wikipedia, optional Spotify, and
+  optional YouTube web services for reviewed artist metadata proposals
 - Testing: JUnit 5, Mockito/fakes, JaCoCo coverage gates, and a dedicated `qaTest` scenario suite
 - Output: Debug APK via `./gradlew assembleDebug`
 
@@ -222,10 +223,11 @@ and updates the macOS keychain `WACKEN_RELEASE_STORE_FILE` path when needed.
 
 ## External Metadata
 
-MusicBrainz, Wikidata, Wikipedia, and optional Spotify lookups are available
-from the Settings metadata review workflow. MusicBrainz, Wikidata, and
-Wikipedia do not require API keys. MusicBrainz and Wikimedia requests use a
-meaningful HTTP User-Agent; MusicBrainz must stay within its rate limits.
+MusicBrainz, Wikidata, Wikipedia, optional Spotify, and optional YouTube lookups
+are available from the Settings metadata review workflow. MusicBrainz,
+Wikidata, and Wikipedia do not require API keys. MusicBrainz and Wikimedia
+requests use a meaningful HTTP User-Agent; MusicBrainz must stay within its rate
+limits.
 Override the default build-time value with a Gradle property or environment
 variable:
 
@@ -243,15 +245,17 @@ metadata is not overwritten automatically.
 
 Spotify enrichment is disabled unless `SPOTIFY_CLIENT_ID` and
 `SPOTIFY_CLIENT_SECRET` are supplied as Gradle properties or environment
-variables:
+variables. YouTube enrichment is disabled unless `YOUTUBE_API_KEY` is supplied
+the same way:
 
 ```bash
-SPOTIFY_CLIENT_ID="..." SPOTIFY_CLIENT_SECRET="..." ./gradlew assembleDebug
+SPOTIFY_CLIENT_ID="..." SPOTIFY_CLIENT_SECRET="..." YOUTUBE_API_KEY="..." ./gradlew assembleDebug
 ```
 
 The app uses Spotify's client-credentials flow for artist catalog search only.
 Do not use production Spotify secrets in a broadly distributed mobile build
-without moving token exchange behind a backend.
+without moving token exchange behind a backend. The app uses YouTube Data API
+channel search only and proposes channel links for review.
 
 ## Backend Database
 
