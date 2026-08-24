@@ -1,11 +1,11 @@
 ---
 id: task-179
 title: 'DEF: Imported known bands are not linked when names differ slightly'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-08-23 09:33'
-updated_date: '2026-08-23 14:25'
+updated_date: '2026-08-24 15:38'
 labels:
   - defect
   - bands
@@ -39,7 +39,7 @@ Out of scope: automatic unreviewed fuzzy merges, overwriting existing metadata, 
 - [x] #3 Given multiple possible matches exist, then the user must explicitly choose one or choose no match; the app does not merge automatically.
 - [x] #4 Given no candidate is suitable, when the user chooses no match, then the uploaded band remains a separate band without blocking the rest of the review.
 - [x] #5 Given a band is missing picture, biography/text, Spotify, or YouTube metadata, when the user runs fetch metadata, then existing golden-source metadata is applied first for missing fields only.
-- [ ] #6 Given metadata is still missing after checking the own database, when external lookup is configured and run, then proposed MusicBrainz/Wikidata/Wikipedia/Spotify/YouTube metadata is shown for user approval before being saved to the golden-source band record.
+- [x] #6 Given metadata is still missing after checking the own database, when external lookup is configured and run, then proposed MusicBrainz/Wikidata/Wikipedia/Spotify/YouTube metadata is shown for user approval before being saved to the golden-source band record.
 - [x] #7 Existing non-empty band metadata is not overwritten unless a future task explicitly adds reviewed replace behavior.
 - [x] #8 Automated tests cover case-insensitive or fuzzy candidate discovery with the Any Given Day example, user-confirmed linking, no-match handling, and no-overwrite metadata enrichment.
 - [x] #9 Architecture impact is assessed before implementation; if alias storage, lineage/audit, external API clients, persistence schema, or Supabase contracts must change, explicit approval is requested before coding and ADR impact is recorded.
@@ -64,35 +64,17 @@ Approval needed before coding external lookup: yes.
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Progress update before external metadata approval gate:
+External metadata AC #6 is complete through the split child stories:
+- task-179.1: reviewed metadata search framework and ADR 0012.
+- task-179.2: MusicBrainz provider for Spotify/YouTube URL relationships.
+- task-179.3: Wikidata provider for structured image, Spotify, and YouTube claims.
+- task-179.4: Wikipedia provider for neutral biography and image proposals.
+- task-179.5: optional Spotify Web API provider for artist URL and image proposals when configured.
+- task-179.6: optional YouTube Data API provider for channel URL proposals when configured.
 
-- Implemented reviewed own-database imported-band linking from Settings/Admin. Candidate rows show the imported name, editable search term, dropdown candidates, and explicit No match option. Confirmed links replace the active-festival lineup entry with the selected golden-source band.
-- Implemented own-catalog metadata enrichment for missing fields only. Existing non-empty metadata is preserved; external lookup remains unimplemented until architecture approval is received.
-- Added application tests for the Any Given Day case-insensitive candidate, manual search, confirmed link, no-match handling, and no-overwrite metadata enrichment.
-- Added Android source regression tests for Settings actions and the band-link review controls.
-- Updated README and business requirements for the implemented local admin behavior.
+All external results are reviewed proposals only, own-catalog metadata remains the first source, existing non-empty metadata is not overwritten automatically, and unconfigured credentialed providers report not configured while the workflow continues.
 
-Validation so far:
-- JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :application:test :app:testDebugUnitTest --tests be.wacken.planner.application.ImportedBandLinkingUseCaseTest --tests be.wacken.planner.SettingsActivityRegressionTest --tests be.wacken.planner.BandLinkReviewActivityRegressionTest
+Combined validation for the completed provider set: JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :application:test :app:testDebugUnitTest --tests be.wacken.planner.application.BandMetadataSearchFrameworkUseCaseTest --tests be.wacken.planner.MusicBrainzMetadataProviderTest --tests be.wacken.planner.WikidataMetadataProviderTest --tests be.wacken.planner.WikipediaMetadataProviderTest --tests be.wacken.planner.SpotifyMetadataProviderTest --tests be.wacken.planner.YouTubeMetadataProviderTest --tests be.wacken.planner.BandMetadataReviewActivityRegressionTest --tests be.wacken.planner.SettingsActivityRegressionTest passed.
 
-Architecture gate:
-- External metadata lookup is architecture-significant because it adds external API contracts, provider adapters, configuration/credential behavior, and an ADR. Approval requested before coding AC #6.
-
-Story split update:
-
-External metadata lookup from AC #6 has been split into smaller stories under task-179:
-- task-179.1: reviewed band metadata search framework
-- task-179.2: MusicBrainz provider
-- task-179.3: Wikidata provider
-- task-179.4: Wikipedia biography/image provider
-- task-179.5: Spotify provider
-- task-179.6: YouTube channel provider
-
-The framework story carries the architecture approval and ADR gate. Provider stories depend on the framework story and keep provider-specific configuration, ambiguity handling, attribution, no-overwrite behavior, and tests separate.
-
-Metadata framework progress update:
-
-- task-179.1 is Done: reviewed metadata search framework, proposal approval flow, ADR 0012, README/business-requirements updates.
-- task-179.2 is Done: MusicBrainz provider wired into the reviewed metadata workflow for artist URL relationships, with User-Agent/rate-limit behavior and focused tests.
-- Remaining external metadata work is split into task-179.3 Wikidata, task-179.4 Wikipedia, task-179.5 Spotify, and task-179.6 YouTube. Parent AC #6 remains open until the intended external-provider set is complete or explicitly narrowed.
+Delivery impact: README impact: updated across the child stories for the framework and each implemented provider. Business requirements impact: updated to mark MusicBrainz, Wikidata, Wikipedia, optional Spotify, and optional YouTube metadata enrichment implemented. Diagram impact: none; no new system category beyond external metadata providers. ADR impact: ADR 0012 records the reviewed metadata search framework; provider implementations follow that ADR. Architecture impact: completed through approved adapter/provider boundary with no persistence/schema/domain changes.
 <!-- SECTION:NOTES:END -->
