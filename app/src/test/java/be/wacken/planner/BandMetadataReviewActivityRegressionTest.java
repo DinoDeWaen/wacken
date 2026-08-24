@@ -18,6 +18,7 @@ public final class BandMetadataReviewActivityRegressionTest {
         assertTrue("Review screen must fetch proposals through the application use case.", source.contains("new SearchBandMetadataUseCase"));
         assertTrue("Review screen must register MusicBrainz as the first metadata provider.", source.contains("new MusicBrainzMetadataProvider"));
         assertTrue("Review screen must register Wikidata after MusicBrainz.", source.contains("new WikidataMetadataProvider"));
+        assertTrue("Review screen must register Wikipedia as a biography and image metadata provider.", source.contains("new WikipediaMetadataProvider"));
         assertTrue("Review screen must require selectable proposal approval.", source.contains("new CheckBox(this)"));
         assertTrue("Review screen must save only accepted metadata proposals.", source.contains("\"Save accepted metadata\""));
         assertTrue("Review screen must call the approval use case.", source.contains("applyMetadata.apply"));

@@ -117,7 +117,9 @@ bands first, and accepts external provider proposals only through the Settings
 review screen. Saving accepted proposals updates missing fields only; existing
 non-empty band metadata is preserved. MusicBrainz can propose Spotify and
 YouTube links from artist URL relationships. Wikidata can propose structured
-image, Spotify, and YouTube values from item claims.
+image, Spotify, and YouTube values from item claims. Wikipedia can propose
+neutral biography text and page-summary images from linked or searched English
+Wikipedia pages.
 
 ### Technologies
 - Language: Java
@@ -125,8 +127,8 @@ image, Spotify, and YouTube values from item claims.
 - Local cache: AndroidX Room
 - File sharing: AndroidX Core `FileProvider` for Settings CSV export
 - Backend database: Supabase Postgres, managed by Flyway SQL migrations
-- External metadata: MusicBrainz and Wikidata web services for reviewed artist
-  metadata proposals
+- External metadata: MusicBrainz, Wikidata, and Wikipedia web services for
+  reviewed artist metadata proposals
 - Testing: JUnit 5, Mockito/fakes, JaCoCo coverage gates, and a dedicated `qaTest` scenario suite
 - Output: Debug APK via `./gradlew assembleDebug`
 
@@ -219,18 +221,23 @@ and updates the macOS keychain `WACKEN_RELEASE_STORE_FILE` path when needed.
 
 ## External Metadata
 
-MusicBrainz lookup is available from the Settings metadata review workflow and
-does not require an API key. It does require a meaningful HTTP User-Agent and
-must stay within MusicBrainz rate limits. Override the default build-time value
-with a Gradle property or environment variable:
+MusicBrainz, Wikidata, and Wikipedia lookups are available from the Settings
+metadata review workflow and do not require API keys. MusicBrainz and Wikimedia
+requests use a meaningful HTTP User-Agent; MusicBrainz must stay within its rate
+limits. Override the default build-time value with a Gradle property or
+environment variable:
 
 ```bash
-MUSICBRAINZ_USER_AGENT="WackenPlanner/2.29 ( contact@example.com )" ./gradlew assembleDebug
+MUSICBRAINZ_USER_AGENT="WackenPlanner/2.30 ( contact@example.com )" ./gradlew assembleDebug
 ```
 
 The app uses the value in `BuildConfig.MUSICBRAINZ_USER_AGENT`, searches
 MusicBrainz artists, looks up artist URL relationships, and shows Spotify or
-YouTube proposals for review before anything is saved.
+YouTube proposals for review before anything is saved. Wikidata proposes
+structured image, Spotify, and YouTube values from item claims. Wikipedia uses
+English Wikipedia page summaries to propose neutral biography text and image
+metadata. All external values remain reviewed proposals and existing band
+metadata is not overwritten automatically.
 
 ## Backend Database
 
