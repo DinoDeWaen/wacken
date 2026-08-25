@@ -44,6 +44,8 @@
 - Release process: [`release-process.md`](backlog/docs/release-process.md).
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
+- V2.31 UAT overview: [`v2.31-user-acceptance-test-overview.md`](backlog/docs/v2.31-user-acceptance-test-overview.md).
+- V2.31 release notes: [`releases/v2.31.md`](releases/v2.31.md).
 - V2.30 release notes: [`releases/v2.30.md`](releases/v2.30.md).
 - V2.29 release notes: [`releases/v2.29.md`](releases/v2.29.md).
 - V2.28 release notes: [`releases/v2.28.md`](releases/v2.28.md).
@@ -232,7 +234,7 @@ Override the default build-time value with a Gradle property or environment
 variable:
 
 ```bash
-MUSICBRAINZ_USER_AGENT="WackenPlanner/2.30 ( contact@example.com )" ./gradlew assembleDebug
+MUSICBRAINZ_USER_AGENT="WackenPlanner/2.31 ( contact@example.com )" ./gradlew assembleDebug
 ```
 
 The app uses the value in `BuildConfig.MUSICBRAINZ_USER_AGENT`, searches
