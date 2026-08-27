@@ -432,6 +432,7 @@ Scenario: Fetch missing band metadata
   When the user runs metadata enrichment from Settings
   Then the app checks the own band database first
   And remaining missing fields can be proposed from configured external music metadata sources
+  And the user can see which metadata enrichment tasks are done, still needed, or blocked by provider status
   And the user approves proposed metadata before it is saved
   And existing non-empty metadata is not overwritten automatically
 ```

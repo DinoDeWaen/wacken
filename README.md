@@ -116,14 +116,16 @@ The implemented post-MVP3 slice adds explicit festival lifecycle and rating hist
 Band metadata enrichment uses a reviewed proposal workflow. The application layer
 finds missing metadata fields, prefers values from likely matching own-catalog
 bands first, and accepts external provider proposals only through the Settings
-review screen. Saving accepted proposals updates missing fields only; existing
-non-empty band metadata is preserved. MusicBrainz can propose Spotify and
-YouTube links from artist URL relationships. Wikidata can propose structured
-image, Spotify, and YouTube values from item claims. Wikipedia can propose
-neutral biography text and page-summary images from linked or searched English
-Wikipedia pages. Spotify can propose artist profile links and artist images
-when Spotify Web API credentials are configured. YouTube can propose channel
-links when a YouTube Data API key is configured.
+review screen. The review screen shows a task/status summary for checked bands,
+completed metadata, missing metadata, proposals needing review, provider status,
+and the latest save result. Saving accepted proposals updates missing fields
+only; existing non-empty band metadata is preserved. MusicBrainz can propose
+Spotify and YouTube links from artist URL relationships. Wikidata can propose
+structured image, Spotify, and YouTube values from item claims. Wikipedia can
+propose neutral biography text and page-summary images from linked or searched
+English Wikipedia pages. Spotify can propose artist profile links and artist
+images when Spotify Web API credentials are configured. YouTube can propose
+channel links when a YouTube Data API key is configured.
 
 ### Technologies
 - Language: Java

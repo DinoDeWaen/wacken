@@ -2,6 +2,7 @@ package be.wacken.planner.application;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -21,11 +22,48 @@ public final class SearchBandMetadataUseCase {
     }
 
     public List<BandMetadataSearchResult> searchMissingMetadata() {
-        return bands.findAll().stream()
-                .filter(band -> !missingFields(band).isEmpty())
-                .map(band -> search(band.name()))
-                .filter(result -> !result.proposals().isEmpty() || !result.unavailableProviders().isEmpty())
-                .toList();
+        return searchMissingMetadataRun().results();
+    }
+
+    public BandMetadataSearchRun searchMissingMetadataRun() {
+        List<Band> allBands = bands.findAll();
+        List<BandMetadataSearchResult> results = new ArrayList<>();
+        List<String> bandsWithoutProposals = new ArrayList<>();
+        Set<String> providerMessages = new LinkedHashSet<>();
+        int completeBands = 0;
+        int bandsMissingMetadata = 0;
+        int bandsNeedingReview = 0;
+        int proposalCount = 0;
+
+        for (Band band : allBands) {
+            if (missingFields(band).isEmpty()) {
+                completeBands++;
+                continue;
+            }
+            bandsMissingMetadata++;
+            BandMetadataSearchResult result = search(band.name());
+            providerMessages.addAll(result.unavailableProviders());
+            if (!result.proposals().isEmpty()) {
+                bandsNeedingReview++;
+                proposalCount += result.proposals().size();
+            } else {
+                bandsWithoutProposals.add(result.bandName());
+            }
+            if (!result.proposals().isEmpty() || !result.unavailableProviders().isEmpty()) {
+                results.add(result);
+            }
+        }
+
+        return new BandMetadataSearchRun(
+                results,
+                allBands.size(),
+                completeBands,
+                bandsMissingMetadata,
+                bandsNeedingReview,
+                proposalCount,
+                bandsWithoutProposals,
+                List.copyOf(providerMessages)
+        );
     }
 
     public BandMetadataSearchResult search(String bandName) {

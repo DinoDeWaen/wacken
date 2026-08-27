@@ -123,6 +123,42 @@ final class BandMetadataSearchFrameworkUseCaseTest {
     }
 
     @Test
+    void searchRunSummarizesDoneNeededReviewAndProviderStatus() {
+        FakeBandRepository bands = new FakeBandRepository(List.of(
+                new Band(
+                        "Complete Band",
+                        Optional.of("Bio"),
+                        Optional.of("https://images.test/complete.jpg"),
+                        Optional.of("https://youtube.test/complete"),
+                        Optional.of("https://spotify.test/complete")
+                ),
+                new Band("Needs Review"),
+                new Band("Still Missing")
+        ));
+        MatchingProvider provider = new MatchingProvider("Needs Review", new BandMetadataProviderCandidate(
+                "Needs Review",
+                Optional.of("External bio"),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of("https://source.test/needs-review"),
+                80
+        ));
+        FakeProvider unconfigured = FakeProvider.unconfigured("Spotify");
+
+        BandMetadataSearchRun run = new SearchBandMetadataUseCase(bands, List.of(provider, unconfigured))
+                .searchMissingMetadataRun();
+
+        assertEquals(3, run.totalBands());
+        assertEquals(1, run.completeBands());
+        assertEquals(2, run.bandsMissingMetadata());
+        assertEquals(1, run.bandsNeedingReview());
+        assertEquals(1, run.proposalCount());
+        assertEquals(List.of("Still Missing"), run.bandsWithoutProposals());
+        assertEquals(List.of("Spotify is not configured."), run.providerMessages());
+    }
+
+    @Test
     void applyingProposalDoesNotOverwriteExistingMetadata() {
         FakeBandRepository bands = new FakeBandRepository(List.of(new Band(
                 "Any Given Day",
@@ -181,6 +217,31 @@ final class BandMetadataSearchFrameworkUseCaseTest {
         @Override
         public List<BandMetadataProviderCandidate> search(String bandName) {
             return candidates;
+        }
+    }
+
+    private static final class MatchingProvider implements BandMetadataLookupProvider {
+        private final String matchingBandName;
+        private final BandMetadataProviderCandidate candidate;
+
+        MatchingProvider(String matchingBandName, BandMetadataProviderCandidate candidate) {
+            this.matchingBandName = matchingBandName;
+            this.candidate = candidate;
+        }
+
+        @Override
+        public String name() {
+            return "Fake source";
+        }
+
+        @Override
+        public boolean configured() {
+            return true;
+        }
+
+        @Override
+        public List<BandMetadataProviderCandidate> search(String bandName) {
+            return matchingBandName.equals(bandName) ? List.of(candidate) : List.of();
         }
     }
 

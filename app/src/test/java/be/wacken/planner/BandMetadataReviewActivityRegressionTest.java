@@ -25,6 +25,12 @@ public final class BandMetadataReviewActivityRegressionTest {
         assertTrue("Review screen must save only accepted metadata proposals.", source.contains("\"Save accepted metadata\""));
         assertTrue("Review screen must call the approval use case.", source.contains("applyMetadata.apply"));
         assertTrue("Review screen must show missing-field proposal source context.", source.contains("proposal.sourceName()"));
+        assertTrue("Review screen must show a metadata task/status panel.", source.contains("Metadata enrichment tasks"));
+        assertTrue("Review screen must summarize completed metadata tasks.", source.contains("Done:"));
+        assertTrue("Review screen must summarize missing metadata tasks.", source.contains("Needed:"));
+        assertTrue("Review screen must summarize proposals needing review.", source.contains("Needs review:"));
+        assertTrue("Review screen must surface provider configuration or lookup status.", source.contains("Provider status:"));
+        assertTrue("Review screen must keep save outcome visible after refresh.", source.contains("Last save:"));
     }
 
     private Path activitySource() {
