@@ -1,11 +1,11 @@
 ---
 id: task-184
 title: 'REL: Prepare V2.32 signed Android release'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-08-28 08:08'
-updated_date: '2026-08-28 08:11'
+updated_date: '2026-08-28 08:14'
 labels:
   - release
   - android
@@ -21,7 +21,7 @@ priority: high
 - [x] #2 V2.32 release notes are created and linked from README.
 - [x] #3 Full release validation and signed assembleRelease build pass with release signing configured.
 - [x] #4 Signed APK metadata, signature, and SHA-256 are verified and recorded.
-- [ ] #5 Git tag v2.32 is pushed and GitHub release is published with app-release.apk.
+- [x] #5 Git tag v2.32 is pushed and GitHub release is published with app-release.apk.
 - [x] #6 README, business requirements, diagram, and ADR impact are recorded in task notes.
 <!-- AC:END -->
 
@@ -59,4 +59,10 @@ README impact: updated README with the V2.32 release notes link and current Musi
 Business requirements impact: none for release packaging, because task-182 and task-183 already recorded the product behavior requirement changes being released.
 Diagram impact: none, because release packaging does not change architecture or runtime relationships.
 ADR impact: none, because release packaging does not change architecture decisions.
+
+## Publication
+
+- Git tag `v2.32` pushed to origin.
+- GitHub release published: https://github.com/DinoDeWaen/wacken/releases/tag/v2.32
+- GitHub release verification passed with asset `app-release.apk`.
 <!-- SECTION:NOTES:END -->
