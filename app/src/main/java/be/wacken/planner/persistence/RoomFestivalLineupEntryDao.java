@@ -15,6 +15,12 @@ public interface RoomFestivalLineupEntryDao {
     @Query("DELETE FROM festival_lineup_entries WHERE festivalId = :festivalId")
     void deleteByFestival(String festivalId);
 
+    @Query("DELETE FROM festival_lineup_entries")
+    void deleteAll();
+
     @Query("SELECT * FROM festival_lineup_entries WHERE festivalId = :festivalId ORDER BY uploadedDisplayName")
     List<RoomFestivalLineupEntry> findByFestival(String festivalId);
+
+    @Query("SELECT * FROM festival_lineup_entries ORDER BY festivalId, uploadedDisplayName")
+    List<RoomFestivalLineupEntry> findAll();
 }

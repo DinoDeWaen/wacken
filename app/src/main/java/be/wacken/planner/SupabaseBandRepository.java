@@ -16,10 +16,18 @@ final class SupabaseBandRepository implements BandRepository {
 
     @Override
     public void save(Band band) {
+        try {
+            client.saveBand(band);
+        } catch (IOException error) {
+            throw new SupabaseSyncException(error.getMessage(), error);
+        }
     }
 
     @Override
     public void replaceAll(List<Band> bands) {
+        for (Band band : bands) {
+            save(band);
+        }
     }
 
     @Override

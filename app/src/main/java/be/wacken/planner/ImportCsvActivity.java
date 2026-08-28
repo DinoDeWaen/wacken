@@ -150,11 +150,11 @@ public final class ImportCsvActivity extends Activity {
             return;
         }
 
-        AppRepositories repositories = AppRepositories.tsvFallback(this);
         if (addFestivalMode) {
-            addFestivalFromBandsCsv(repositories);
+            addFestivalFromBandsCsv(new AppRepositories(this));
             return;
         }
+        AppRepositories repositories = AppRepositories.tsvFallback(this);
         ImportFestivalCsvUseCase importFestivalCsv = new ImportFestivalCsvUseCase(
                 repositories.bands(),
                 repositories.stages(),
@@ -190,15 +190,30 @@ public final class ImportCsvActivity extends Activity {
 
     private void addFestivalFromBandsCsv(AppRepositories repositories) {
         AuthSession session = new AuthSessionStore(this).load();
+        if (!session.isPresent()) {
+            resultMessage.setTextColor(WackenTheme.RED);
+            resultMessage.setText("Sign in before adding a group-wide festival.");
+            setResult(RESULT_CANCELED);
+            return;
+        }
         String name = festivalName.getText().toString().trim();
         List<Band> bands = parseBands(bandsCsv.contents);
-        AddFestivalResult result = new AddFestivalUseCase(
-                repositories.festivals(),
-                repositories.bands(),
-                repositories.festivalLineups(),
-                repositories.festivalPlanningRatings(),
-                repositories.personalBandRatings()
-        ).addFestival(session.groupId(), session.userId(), slug(name), name, bands);
+        AddFestivalResult result;
+        try {
+            result = new AddFestivalUseCase(
+                    repositories.festivals(),
+                    repositories.bands(),
+                    repositories.festivalLineups(),
+                    repositories.festivalPlanningRatings(),
+                    repositories.personalBandRatings()
+            ).addFestival(session.groupId(), session.userId(), slug(name), name, bands);
+        } catch (RuntimeException error) {
+            resultMessage.setTextColor(WackenTheme.RED);
+            resultMessage.setText("Festival was not added group-wide. Existing cached data remains usable offline.\n"
+                    + error.getMessage());
+            setResult(RESULT_CANCELED);
+            return;
+        }
         if (result.success()) {
             resultMessage.setTextColor(WackenTheme.AMBER);
             String feedback = "Added " + name + ": " + result.reusedBands()

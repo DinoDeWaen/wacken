@@ -12,6 +12,12 @@ public interface RoomFestivalDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void save(RoomFestival festival);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void saveAll(List<RoomFestival> festivals);
+
+    @Query("DELETE FROM festivals")
+    void deleteAll();
+
     @Query("SELECT * FROM festivals ORDER BY CASE status WHEN 'ACTIVE' THEN 0 ELSE 1 END, name")
     List<RoomFestival> findAll();
 

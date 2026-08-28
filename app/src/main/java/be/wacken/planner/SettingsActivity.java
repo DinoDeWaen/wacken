@@ -298,8 +298,14 @@ public final class SettingsActivity extends Activity {
                 .setPositiveButton("Save", null)
                 .create();
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
-            RenameActiveFestivalResult result = new RenameActiveFestivalUseCase(new AppRepositories(this).festivals())
-                    .rename(input.getText().toString());
+            RenameActiveFestivalResult result;
+            try {
+                result = new RenameActiveFestivalUseCase(new AppRepositories(this).festivals())
+                        .rename(input.getText().toString());
+            } catch (RuntimeException error) {
+                showStatus("Festival name was not changed group-wide. " + error.getMessage(), WackenTheme.RED);
+                return;
+            }
             if (result.success()) {
                 showStatus(result.message(), WackenTheme.SUCCESS_GREEN);
                 dialog.dismiss();

@@ -111,7 +111,7 @@ Current modules:
 
 Current repositories cover festivals, festival lineups, bands, stages, performances, stage distances, food options, festival planning ratings, personal band rating history, real post-show latest ratings, and group schedule locks. The app reads lineup and mutable shared data from Room first. Supabase is the primary master-data and shared-data sync backend; the CSV/TSV path remains as an explicit fallback/import tool. Real post-show ratings are recorded as personal band rating events for sync and history while the latest real rating remains available locally for the band detail control.
 
-The implemented post-MVP3 slice adds explicit festival lifecycle and rating history state. Room stores the seeded active `Wacken Open Air 2026` festival, archived festival status, festival lineup entries, festival-scoped planning ratings, and personal band rating events. Flyway migrations `V009__festivals.sql` and `V010__festival_lineups_and_rating_history.sql` create the matching Supabase contracts.
+The implemented post-MVP3 slice adds explicit festival lifecycle and rating history state. Room stores the seeded active `Wacken Open Air 2026` festival, archived festival status, festival lineup entries, festival-scoped planning ratings, and personal band rating events. Flyway migrations `V009__festivals.sql` and `V010__festival_lineups_and_rating_history.sql` create the matching Supabase contracts. When signed in, adding a festival from a band CSV, archiving the active festival, renaming the active festival, and saving festival lineup entries write through to Supabase first and then update Room. A rejected Supabase write leaves the existing Room cache usable and shows an error instead of creating a personal-only festival.
 
 Band metadata enrichment uses a reviewed proposal workflow. The application layer
 finds missing metadata fields, prefers values from likely matching own-catalog
@@ -330,18 +330,33 @@ The Android band overview reads from Room and automatically syncs from Supabase
 when the app starts and whenever the overview is reactivated after returning
 from another screen or app. Use **Sync from Supabase** to retry manually. Use
 **Sync & close** to push/pull Supabase data before closing the app. Each sync
-pulls central bands, stages, performances, stage distances, and food options
-from Supabase into Room and pushes/pulls festival planning ratings, personal
-band rating events, and group schedule locks. Rating changes and rating clears
-are stored locally first with pending sync metadata; when Supabase accepts the
-rating change it is marked synced. Clearing a planning rating deletes that
-explicit user/group/festival/band rating row in Supabase, so future group pulls
-no longer count the previous score. If sync fails, existing cached Room data and
-pending ratings remain available and the app shows a stale-data message. A
-Wacken/metal sync overlay is shown while startup, reactivation, manual, or close
-sync is running. The CSV import screen remains available for fallback/local
-import work and writes through the TSV fallback source plus Room cache; it is no
-longer the primary app data source.
+pulls central bands, festivals, festival lineup entries, stages, performances,
+stage distances, and food options from Supabase into Room and pushes/pulls
+festival planning ratings, personal band rating events, and group schedule
+locks. Rating changes and rating clears are stored locally first with pending
+sync metadata; when Supabase accepts the rating change it is marked synced.
+Clearing a planning rating deletes that explicit user/group/festival/band
+rating row in Supabase, so future group pulls no longer count the previous
+score. If sync fails, existing cached Room data and pending ratings remain
+available and the app shows a stale-data message. A Wacken/metal sync overlay
+is shown while startup, reactivation, manual, or close sync is running. The full
+master-data CSV import screen remains available for fallback/local import work
+and writes through the TSV fallback source plus Room cache; it is no longer the
+primary app data source. The add-festival band CSV flow is group-wide for
+signed-in users and uses Supabase plus Room.
+
+### Group-Wide Festival Data Model
+
+| Table | Key | Purpose | Main links |
+| --- | --- | --- | --- |
+| `groups` | `id` | Single friend-group identity for shared planning data. | Referenced by group membership, planning ratings, and schedule locks. |
+| `group_members` | `group_id`, `user_id` | Connects Supabase Auth users to the planning group and role. | `user_id` points to Supabase Auth; `group_id` points to `groups`. |
+| `festivals` | `id` | Shared festival lifecycle record with `name`, `status`, `archived_at`, and timestamps. | Referenced by lineup entries, planning ratings, performances, and personal rating events. |
+| `bands` | `id` | Golden-source band catalog with canonical `name`, active flag, biography, image URL, Spotify artist id, and YouTube URL. | Referenced by festival lineups, performances, planning ratings, and personal rating history. |
+| `festival_lineup_entries` | `festival_id`, `band_id` | Shared many-to-many lineup relation. Keeps `uploaded_display_name` for the source CSV name. | Links one `festival` to one golden-source `band`. |
+| `festival_planning_ratings` | `group_id`, `user_id`, `festival_id`, `band_id` | Editable planning rating used by the group schedule. | Links group, user, festival, and band. |
+| `personal_band_rating_events` | `id` | Historical personal band rating event. | Links user, band, and optionally festival; latest event can prefill future planning ratings. |
+| `schedule_locks` | `group_id`, `festival_id`, conflict key | Shared manual group schedule override. | Links a group and festival schedule decision to the selected band/performance. |
 
 Rating scale migration: app database version 3 migrates old local explicit
 ratings from the previous 0-4 scale to the new 1-5 explicit scale by adding 1

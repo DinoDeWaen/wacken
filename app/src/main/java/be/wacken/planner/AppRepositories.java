@@ -58,6 +58,8 @@ final class AppRepositories {
     private final PersonalBandRatingHistoryRepository personalBandRatings;
     private final RatingRepository ratings;
     private final RealRatingRepository realRatings;
+    private final SyncingFestivalRepository syncingFestivals;
+    private final SyncingFestivalLineupRepository syncingFestivalLineups;
     private final SyncingFestivalPlanningRatingRepository syncingPlanningRatings;
     private final SyncingPersonalBandRatingHistoryRepository syncingPersonalRatings;
     private final SyncingScheduleLockStore syncingScheduleLocks;
@@ -96,8 +98,6 @@ final class AppRepositories {
         this.session = authSessionStore.load();
         this.ratingCache = ratingCache;
         festivalCache.seedDefaultActiveFestivalIfEmpty();
-        this.festivals = festivalCache;
-        this.festivalLineups = lineupCache;
         this.festivalPlanningRatingCache = planningRatingCache;
         this.personalRatingCache = personalRatingCache;
         this.realRatings = realRatingCache;
@@ -112,14 +112,15 @@ final class AppRepositories {
         PerformanceRepository performanceSource;
         StageDistanceRepository distanceSource;
         FoodOptionRepository foodSource;
+        SupabaseMasterDataClient supabaseMasterDataClient = null;
         SupabaseSessionManager sessionManager = new SupabaseSessionManager(authSessionStore, new SupabaseAuthClient());
         if (sourceMode == SourceMode.SUPABASE) {
-            SupabaseMasterDataClient client = new SupabaseMasterDataClient(sessionManager);
-            bandSource = new SupabaseBandRepository(client);
-            stageSource = new SupabaseStageRepository(client);
-            performanceSource = new SupabasePerformanceRepository(client);
-            distanceSource = new SupabaseStageDistanceRepository(client);
-            foodSource = new SupabaseFoodOptionRepository(client);
+            supabaseMasterDataClient = new SupabaseMasterDataClient(sessionManager);
+            bandSource = new SupabaseBandRepository(supabaseMasterDataClient);
+            stageSource = new SupabaseStageRepository(supabaseMasterDataClient);
+            performanceSource = new SupabasePerformanceRepository(supabaseMasterDataClient);
+            distanceSource = new SupabaseStageDistanceRepository(supabaseMasterDataClient);
+            foodSource = new SupabaseFoodOptionRepository(supabaseMasterDataClient);
         } else {
             bandSource = new FileBackedBandRepository(storageDirectory);
             stageSource = new FileBackedStageRepository(storageDirectory);
@@ -134,6 +135,16 @@ final class AppRepositories {
         this.distances = new SyncedStageDistanceRepository(distanceCache, distanceSource);
         this.foodOptions = new SyncedFoodOptionRepository(foodCache, foodSource);
         if (sourceMode == SourceMode.SUPABASE && session.isPresent()) {
+            this.syncingFestivals = new SyncingFestivalRepository(
+                    festivalCache,
+                    new SupabaseFestivalRepository(supabaseMasterDataClient)
+            );
+            this.festivals = syncingFestivals;
+            this.syncingFestivalLineups = new SyncingFestivalLineupRepository(
+                    lineupCache,
+                    new SupabaseFestivalLineupRepository(supabaseMasterDataClient)
+            );
+            this.festivalLineups = syncingFestivalLineups;
             SupabaseScheduleLockClient scheduleLockClient = new SupabaseScheduleLockClient(sessionManager);
             this.syncingPlanningRatings = new SyncingFestivalPlanningRatingRepository(
                     planningRatingCache,
@@ -153,6 +164,10 @@ final class AppRepositories {
         } else {
             this.syncingPlanningRatings = null;
             this.syncingPersonalRatings = null;
+            this.syncingFestivals = null;
+            this.syncingFestivalLineups = null;
+            this.festivals = festivalCache;
+            this.festivalLineups = lineupCache;
             this.festivalPlanningRatings = planningRatingCache;
             this.ratings = new ActiveFestivalRatingRepository(festivals, festivalPlanningRatings, "local");
             this.personalBandRatings = personalRatingCache;
@@ -264,6 +279,12 @@ final class AppRepositories {
         try {
             SupabaseDiagnostics.info("master_data_sync", "start", "source=remote_or_assets");
             bands.syncSourceToCache();
+            if (syncingFestivals != null) {
+                syncingFestivals.syncSourceToCache();
+            }
+            if (syncingFestivalLineups != null) {
+                syncingFestivalLineups.syncSourceToCache();
+            }
             stages.syncSourceToCache();
             performances.syncSourceToCache();
             distances.syncSourceToCache();
