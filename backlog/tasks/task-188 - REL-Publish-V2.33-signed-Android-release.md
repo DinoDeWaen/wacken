@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-15 18:03'
-updated_date: '2026-10-15 18:32'
+updated_date: '2026-10-15 18:33'
 labels:
   - release
   - android
@@ -40,7 +40,7 @@ Out of scope: Play Store distribution, key rotation, unrelated features, and pub
 - [x] #2 Release notes describe the three fixes, known risks, install guidance, and validation, and README links to them.
 - [x] #3 Full documented release validation and a signed assembleRelease build pass; the APK has verified v1/v2 signatures, package/version/minSdk metadata, and a recorded SHA-256.
 - [ ] #4 Tag v2.33 is pushed and the GitHub release is published with the verified app-release.apk asset; the release URL and asset are checked.
-- [ ] #5 Unrelated pre-existing worktree changes are excluded from release commits and artifact provenance.
+- [x] #5 Unrelated pre-existing worktree changes are excluded from release commits and artifact provenance.
 - [x] #6 README, business requirements, diagram, and ADR impact are recorded using canonical delivery-governance wording before task completion.
 <!-- AC:END -->
 
