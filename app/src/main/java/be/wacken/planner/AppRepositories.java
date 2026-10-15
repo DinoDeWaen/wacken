@@ -2,11 +2,13 @@ package be.wacken.planner;
 
 import android.content.Context;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 import be.wacken.planner.application.ActiveFestivalRatingRepository;
+import be.wacken.planner.application.RecoverPendingPlanningRatingUseCase;
 import be.wacken.planner.domain.BandRepository;
 import be.wacken.planner.domain.FestivalLineupRepository;
 import be.wacken.planner.domain.FestivalPlanningRatingRepository;
@@ -18,6 +20,7 @@ import be.wacken.planner.domain.RatingRepository;
 import be.wacken.planner.domain.RealRatingRepository;
 import be.wacken.planner.domain.StageDistanceRepository;
 import be.wacken.planner.domain.StageRepository;
+import be.wacken.planner.domain.SavedFestivalPlanningRating;
 import be.wacken.planner.infrastructure.FileBackedBandRepository;
 import be.wacken.planner.infrastructure.FileBackedFoodOptionRepository;
 import be.wacken.planner.infrastructure.FileBackedPerformanceRepository;
@@ -63,6 +66,7 @@ final class AppRepositories {
     private final SyncingFestivalRepository syncingFestivals;
     private final SyncingFestivalLineupRepository syncingFestivalLineups;
     private final SyncingFestivalPlanningRatingRepository syncingPlanningRatings;
+    private final RecoverPendingPlanningRatingUseCase pendingPlanningRatingRecovery;
     private final SyncingPersonalBandRatingHistoryRepository syncingPersonalRatings;
     private final SyncingScheduleLockStore syncingScheduleLocks;
     private final ScheduleLockStore scheduleLocks;
@@ -152,11 +156,17 @@ final class AppRepositories {
             );
             this.festivalLineups = syncingFestivalLineups;
             SupabaseScheduleLockClient scheduleLockClient = new SupabaseScheduleLockClient(sessionManager);
+            SupabaseFestivalPlanningRatingClient planningRatingRemote = new SupabaseFestivalPlanningRatingClient(sessionManager);
             this.syncingPlanningRatings = new SyncingFestivalPlanningRatingRepository(
                     planningRatingCache,
-                    new SupabaseFestivalPlanningRatingClient(sessionManager),
-                    session
+                    planningRatingRemote,
+                    session,
+                    festivals
             );
+            this.pendingPlanningRatingRecovery = new RecoverPendingPlanningRatingUseCase(
+                    planningRatingCache,
+                    (festivalId, band) -> planningRatingRemote.hasRating(session, festivalId, band),
+                    festivals);
             this.festivalPlanningRatings = syncingPlanningRatings;
             this.ratings = new ActiveFestivalRatingRepository(festivals, festivalPlanningRatings, session.groupId());
             this.syncingPersonalRatings = new SyncingPersonalBandRatingHistoryRepository(
@@ -169,6 +179,7 @@ final class AppRepositories {
             this.scheduleLocks = syncingScheduleLocks;
         } else {
             this.syncingPlanningRatings = null;
+            this.pendingPlanningRatingRecovery = null;
             this.syncingPersonalRatings = null;
             this.syncingFestivals = null;
             this.syncingFestivalLineups = null;
@@ -286,6 +297,13 @@ final class AppRepositories {
             SupabaseDiagnostics.warn("ratings_sync", "failed", "remote_repository=true", error);
             throw new SupabaseSyncException(error.getMessage(), error);
         }
+    }
+
+    void recoverPendingWackenRating(SavedFestivalPlanningRating expected) throws IOException {
+        if (pendingPlanningRatingRecovery == null) {
+            throw new IllegalStateException("Sign in before recovering a pending rating.");
+        }
+        pendingPlanningRatingRecovery.moveToWacken2026(expected, session.groupId(), session.userId());
     }
 
     void syncMasterDataFromSource() {

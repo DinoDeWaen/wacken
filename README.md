@@ -349,6 +349,15 @@ and writes through the TSV fallback source plus Room cache; it is no longer the
 primary app data source. The add-festival band CSV flow is group-wide for
 signed-in users and uses Supabase plus Room.
 
+If a pending planning rating refers to a festival that no longer exists in the
+refreshed Supabase festival list, sync shows its band, stars, and stored festival
+ID for review. If the rating was intended for Wacken Open Air 2026, confirm
+**Move to Wacken 2026**. The app checks that Wacken is active and that no rating
+for the same band already exists locally or in Supabase, then moves that one
+pending rating in a Room transaction and retries sync. **Keep pending** leaves
+it untouched. A failed check or network request also leaves it pending; do not
+use Android **Clear storage/data** to recover an unsynced rating.
+
 ### Group-Wide Festival Data Model
 
 | Table | Key | Purpose | Main links |

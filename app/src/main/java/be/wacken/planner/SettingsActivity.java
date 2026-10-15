@@ -246,6 +246,11 @@ public final class SettingsActivity extends Activity {
                         redirectToLogin();
                         return;
                     }
+                    if (MissingFestivalRatingDialog.showIfPresent(this, error,
+                            this::syncFromSupabase,
+                            message -> showStatus(message, COLOR_AMBER))) {
+                        return;
+                    }
                     showStatus(SettingsFeedback.offlineRecovery("Sync"), COLOR_AMBER);
                 });
             }

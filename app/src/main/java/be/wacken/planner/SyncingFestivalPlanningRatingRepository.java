@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import be.wacken.planner.domain.Band;
 import be.wacken.planner.domain.FestivalPlanningRatingRepository;
+import be.wacken.planner.domain.FestivalRepository;
 import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.SavedFestivalPlanningRating;
 
@@ -13,11 +14,13 @@ final class SyncingFestivalPlanningRatingRepository implements FestivalPlanningR
     private final FestivalPlanningRatingSyncLocalStore cache;
     private final SupabaseFestivalPlanningRatingRemote remote;
     private final AuthSession session;
+    private final FestivalRepository festivals;
 
-    SyncingFestivalPlanningRatingRepository(FestivalPlanningRatingSyncLocalStore cache, SupabaseFestivalPlanningRatingRemote remote, AuthSession session) {
+    SyncingFestivalPlanningRatingRepository(FestivalPlanningRatingSyncLocalStore cache, SupabaseFestivalPlanningRatingRemote remote, AuthSession session, FestivalRepository festivals) {
         this.cache = cache;
         this.remote = remote;
         this.session = session;
+        this.festivals = festivals;
     }
 
     @Override
@@ -42,6 +45,10 @@ final class SyncingFestivalPlanningRatingRepository implements FestivalPlanningR
 
     void syncPendingRatings() throws IOException {
         for (SavedFestivalPlanningRating rating : cache.findPending(session.groupId(), session.userId())) {
+            boolean festivalExists = festivals.findAll().stream().anyMatch(festival -> festival.id().equals(rating.festivalId()));
+            if (!festivalExists) {
+                throw new MissingFestivalPlanningRatingException(rating);
+            }
             remote.pushRating(session, rating);
             cache.saveSynced(rating);
         }

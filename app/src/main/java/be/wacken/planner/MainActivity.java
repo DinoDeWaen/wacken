@@ -449,6 +449,15 @@ public final class MainActivity extends Activity {
                         redirectToLogin();
                         return;
                     }
+                    if (MissingFestivalRatingDialog.showIfPresent(this, error,
+                            () -> syncFromSupabase(false, "Retrying repaired rating sync..."),
+                            recoveryMessage -> {
+                                status.setVisibility(View.VISIBLE);
+                                status.setText(recoveryMessage);
+                            })) {
+                        refreshSyncStatus(new AppRepositories(this), "Review pending rating", WackenTheme.AMBER);
+                        return;
+                    }
                     status.setVisibility(View.VISIBLE);
                     status.setText("Showing cached data. Supabase sync failed: " + error.getMessage());
                     if (reloadNeeded || adapter == null) {

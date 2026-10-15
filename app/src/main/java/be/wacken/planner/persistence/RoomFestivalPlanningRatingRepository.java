@@ -11,9 +11,11 @@ import be.wacken.planner.domain.SavedFestivalPlanningRating;
 import be.wacken.planner.FestivalPlanningRatingSyncLocalStore;
 
 public final class RoomFestivalPlanningRatingRepository implements FestivalPlanningRatingSyncLocalStore {
+    private final WackenDatabase database;
     private final RoomFestivalPlanningRatingDao ratings;
 
     public RoomFestivalPlanningRatingRepository(WackenDatabase database) {
+        this.database = database;
         this.ratings = database.festivalPlanningRatings();
     }
 
@@ -28,6 +30,26 @@ public final class RoomFestivalPlanningRatingRepository implements FestivalPlann
 
     public List<SavedFestivalPlanningRating> findPending(String groupId, String userName) {
         return ratings.findPending(groupId, userName).stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public void movePendingRating(SavedFestivalPlanningRating expected, String targetFestivalId) {
+        database.runInTransaction(() -> {
+            RoomFestivalPlanningRating source = ratings.findExact(expected.groupId(), expected.userName(),
+                    expected.festivalId(), expected.band().name());
+            if (source == null || !"PENDING".equals(source.syncStatus) || source.value != expected.rating().value()) {
+                throw new IllegalStateException("Pending rating changed. Review it again before recovery.");
+            }
+            if (ratings.findExact(expected.groupId(), expected.userName(), targetFestivalId, expected.band().name()) != null) {
+                throw new IllegalStateException("A Wacken rating already exists for this band. The pending rating was kept.");
+            }
+            if (ratings.deletePendingExact(expected.groupId(), expected.userName(), expected.festivalId(),
+                    expected.band().name(), expected.rating().value()) != 1) {
+                throw new IllegalStateException("Pending rating changed. Review it again before recovery.");
+            }
+            ratings.save(new RoomFestivalPlanningRating(expected.groupId(), expected.userName(), targetFestivalId,
+                    expected.band().name(), expected.rating().value(), "PENDING"));
+        });
     }
 
     @Override

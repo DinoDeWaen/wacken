@@ -75,6 +75,21 @@ final class SupabaseFestivalPlanningRatingClient implements SupabaseFestivalPlan
         }
     }
 
+    @Override
+    public boolean hasRating(AuthSession session, String festivalId, Band band) throws IOException {
+        String response = request("GET", "/rest/v1/festival_planning_ratings?select=band_id"
+                + "&group_id=eq." + encode(session.groupId())
+                + "&user_id=eq." + encode(session.userId())
+                + "&festival_id=eq." + encode(festivalId)
+                + "&band_id=eq." + encode(bandIdFor(band))
+                + "&limit=1", null, false);
+        try {
+            return new JSONArray(response).length() > 0;
+        } catch (JSONException error) {
+            throw new IOException("Supabase rating conflict check could not be read.", error);
+        }
+    }
+
     static List<SavedFestivalPlanningRating> parseRatings(String response, Map<String, String> bandNamesById) throws JSONException {
         JSONArray rows = new JSONArray(response);
         List<SavedFestivalPlanningRating> ratings = new ArrayList<>();

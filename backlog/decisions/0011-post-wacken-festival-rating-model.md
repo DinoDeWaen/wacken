@@ -141,6 +141,19 @@ Mutable rating writes follow the existing local-first sync pattern:
 - remote pulls do not overwrite pending local writes for the same business key
 - network failure must not clear a valid local session or block cached work
 
+### Missing festival rating recovery
+
+Before pushing a pending planning rating, the sync adapter checks its festival
+against the refreshed festival cache. A missing festival produces a typed
+diagnostic containing the stored festival ID, band, and value; the pending row
+is retained. The user may confirm moving that one rating to active Wacken 2026.
+An application use case checks both Room and the exact remote
+user/festival/band key for a destination rating. Room moves the pending key in
+one transaction, rechecking the original value and destination key. Any conflict or failed remote check
+leaves the original row pending. A successful move remains pending until the
+normal Supabase push succeeds. This is a repair of an orphaned local reference,
+not a general festival merge mechanism.
+
 ### Festival write authorization
 
 The current Supabase policy allows group members to update an existing festival,
@@ -208,6 +221,7 @@ Negative / trade-offs:
 - Related task: task-149
 - Related stories: task-150, task-151, task-152, task-153, task-154, task-155
 - Festival write-path correction: task-189
+- Missing festival rating recovery: task-190
 - Future scope: task-156, task-157
 - Related ADR: `0008-supabase-postgres-flyway-migrations.md`
 - Related ADR: `0010-offline-first-sync-boundary.md`

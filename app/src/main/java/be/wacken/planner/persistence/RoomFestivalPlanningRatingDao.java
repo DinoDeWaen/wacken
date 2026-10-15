@@ -15,6 +15,12 @@ public interface RoomFestivalPlanningRatingDao {
     @Query("SELECT * FROM festival_planning_ratings WHERE userName = :userName AND festivalId = :festivalId AND bandName = :bandName")
     RoomFestivalPlanningRating findByUserFestivalAndBand(String userName, String festivalId, String bandName);
 
+    @Query("SELECT * FROM festival_planning_ratings WHERE groupId = :groupId AND userName = :userName AND festivalId = :festivalId AND bandName = :bandName")
+    RoomFestivalPlanningRating findExact(String groupId, String userName, String festivalId, String bandName);
+
+    @Query("DELETE FROM festival_planning_ratings WHERE groupId = :groupId AND userName = :userName AND festivalId = :festivalId AND bandName = :bandName AND value = :value AND syncStatus = 'PENDING'")
+    int deletePendingExact(String groupId, String userName, String festivalId, String bandName, int value);
+
     @Query("SELECT * FROM festival_planning_ratings WHERE festivalId = :festivalId")
     List<RoomFestivalPlanningRating> findByFestival(String festivalId);
 
