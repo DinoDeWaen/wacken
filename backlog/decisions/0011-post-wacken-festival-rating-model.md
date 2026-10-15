@@ -141,6 +141,15 @@ Mutable rating writes follow the existing local-first sync pattern:
 - remote pulls do not overwrite pending local writes for the same business key
 - network failure must not clear a valid local session or block cached work
 
+### Festival write authorization
+
+The current Supabase policy allows group members to update an existing festival,
+while creating a festival is restricted to platform admins. The Android festival
+adapter checks whether the festival ID already exists, uses `PATCH` for archive
+and rename, and uses `POST` only for a new festival. It does not use an insert
+upsert for lifecycle updates because that also invokes the insert policy. A
+failed remote write leaves the Room festival unchanged and reports the error.
+
 ### Import and band matching
 
 Festival imports remain validated CSV-based imports.
@@ -198,6 +207,7 @@ Negative / trade-offs:
 
 - Related task: task-149
 - Related stories: task-150, task-151, task-152, task-153, task-154, task-155
+- Festival write-path correction: task-189
 - Future scope: task-156, task-157
 - Related ADR: `0008-supabase-postgres-flyway-migrations.md`
 - Related ADR: `0010-offline-first-sync-boundary.md`

@@ -32,10 +32,16 @@ import be.wacken.planner.domain.Stage;
 import be.wacken.planner.domain.StageDistance;
 
 final class SupabaseMasterDataClient {
-    private final SupabaseAuthenticatedRequest authenticatedRequest;
+    private final RequestExecutor requests;
 
     SupabaseMasterDataClient(SupabaseSessionManager sessionManager) {
-        this.authenticatedRequest = new SupabaseAuthenticatedRequest(sessionManager, "Supabase sync failed");
+        SupabaseAuthenticatedRequest authenticatedRequest = new SupabaseAuthenticatedRequest(sessionManager, "Supabase sync failed");
+        this.requests = (method, endpoint, body, upsert) ->
+                authenticatedRequest.execute(session -> send(method, endpoint, body, session, upsert));
+    }
+
+    SupabaseMasterDataClient(RequestExecutor requests) {
+        this.requests = requests;
     }
 
     List<Band> bands() throws IOException {
@@ -140,12 +146,17 @@ final class SupabaseMasterDataClient {
 
     void saveFestival(Festival festival) throws IOException {
         try {
+            JSONArray existing = requestArray("/rest/v1/festivals?select=id&id=eq." + encode(festival.id()) + "&limit=1");
             JSONObject body = new JSONObject()
                     .put("id", festival.id())
                     .put("name", festival.name())
                     .put("status", festival.status().name())
                     .put("archived_at", festival.isArchived() ? OffsetDateTime.now().toString() : JSONObject.NULL);
-            request("POST", "/rest/v1/festivals?on_conflict=id", body.toString(), true);
+            if (existing.length() > 0) {
+                request("PATCH", "/rest/v1/festivals?id=eq." + encode(festival.id()), body.toString(), false);
+            } else {
+                request("POST", "/rest/v1/festivals", body.toString(), false);
+            }
         } catch (JSONException error) {
             throw new IOException("Supabase festival request could not be created.", error);
         }
@@ -300,7 +311,11 @@ final class SupabaseMasterDataClient {
     }
 
     private String request(String method, String endpoint, String body, boolean upsert) throws IOException {
-        return authenticatedRequest.execute(session -> send(method, endpoint, body, session, upsert));
+        return requests.execute(method, endpoint, body, upsert);
+    }
+
+    interface RequestExecutor {
+        String execute(String method, String endpoint, String body, boolean upsert) throws IOException;
     }
 
     private SupabaseAuthenticatedRequest.Response send(String method, String endpoint, String body, AuthSession session, boolean upsert) throws IOException {

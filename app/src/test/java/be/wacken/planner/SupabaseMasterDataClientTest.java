@@ -4,6 +4,7 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -73,6 +74,41 @@ public final class SupabaseMasterDataClientTest {
     }
 
     @Test
+    public void archivesExistingFestivalWithUpdateInsteadOfInsert() throws Exception {
+        RecordingRequests requests = new RecordingRequests("[{\"id\":\"wacken-2026\"}]");
+        SupabaseMasterDataClient client = new SupabaseMasterDataClient(requests);
+
+        client.saveFestival(Festival.active("wacken-2026", "Wacken Open Air 2026").archive());
+
+        assertEquals(List.of("GET", "PATCH"), requests.methods);
+        assertEquals("/rest/v1/festivals?id=eq.wacken-2026", requests.endpoints.get(1));
+        assertEquals("ARCHIVED", new JSONObject(requests.bodies.get(1)).getString("status"));
+    }
+
+    @Test
+    public void renamesExistingActiveFestivalWithUpdate() throws Exception {
+        RecordingRequests requests = new RecordingRequests("[{\"id\":\"wacken-2026\"}]");
+        SupabaseMasterDataClient client = new SupabaseMasterDataClient(requests);
+
+        client.saveFestival(Festival.active("wacken-2026", "Wacken Open Air"));
+
+        assertEquals(List.of("GET", "PATCH"), requests.methods);
+        assertEquals("Wacken Open Air", new JSONObject(requests.bodies.get(1)).getString("name"));
+    }
+
+    @Test
+    public void createsNewFestivalWithInsert() throws Exception {
+        RecordingRequests requests = new RecordingRequests("[]");
+        SupabaseMasterDataClient client = new SupabaseMasterDataClient(requests);
+
+        client.saveFestival(Festival.active("summer-breeze-2027", "Summer Breeze 2027"));
+
+        assertEquals(List.of("GET", "POST"), requests.methods);
+        assertEquals("/rest/v1/festivals", requests.endpoints.get(1));
+        assertEquals("summer-breeze-2027", new JSONObject(requests.bodies.get(1)).getString("id"));
+    }
+
+    @Test
     public void mapsFestivalLineupRowsToDomainEntries() throws Exception {
         org.json.JSONArray rows = new org.json.JSONArray()
                 .put(new JSONObject()
@@ -118,5 +154,24 @@ public final class SupabaseMasterDataClientTest {
         assertEquals("spotify-artist", patch.getString("spotify_artist_id"));
         assertTrue(patch.isNull("biography_html") || !patch.has("biography_html"));
         assertTrue(patch.isNull("youtube_url") || !patch.has("youtube_url"));
+    }
+
+    private static final class RecordingRequests implements SupabaseMasterDataClient.RequestExecutor {
+        private final String lookupResponse;
+        private final List<String> methods = new ArrayList<>();
+        private final List<String> endpoints = new ArrayList<>();
+        private final List<String> bodies = new ArrayList<>();
+
+        private RecordingRequests(String lookupResponse) {
+            this.lookupResponse = lookupResponse;
+        }
+
+        @Override
+        public String execute(String method, String endpoint, String body, boolean upsert) {
+            methods.add(method);
+            endpoints.add(endpoint);
+            bodies.add(body);
+            return "GET".equals(method) ? lookupResponse : "";
+        }
     }
 }

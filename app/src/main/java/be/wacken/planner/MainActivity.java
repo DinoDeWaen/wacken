@@ -33,7 +33,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 
 import be.wacken.planner.application.BandListItem;
-import be.wacken.planner.application.ArchiveActiveFestivalUseCase;
 import be.wacken.planner.application.FestivalStartState;
 import be.wacken.planner.application.ListActiveFestivalBandsUseCase;
 import be.wacken.planner.application.ListBandsUseCase;
@@ -357,9 +356,15 @@ public final class MainActivity extends Activity {
     }
 
     private void archiveActiveFestival() {
-        AppRepositories repositories = new AppRepositories(this);
-        try {
-            FestivalStartState state = new ArchiveActiveFestivalUseCase(repositories.festivals()).archiveActiveFestival();
+        archiveButton.setEnabled(false);
+        status.setVisibility(View.VISIBLE);
+        status.setText("Archiving festival...");
+        new ArchiveFestivalAction(
+                command -> new Thread(command, "archive-festival").start(),
+                this::runOnUiThread,
+                () -> new AppRepositories(this).festivals()
+        ).execute(state -> {
+            AppRepositories repositories = new AppRepositories(this);
             renderFestivalStartState(state);
             cachedBands = List.of();
             cachedBandsByName = Map.of();
@@ -369,10 +374,12 @@ public final class MainActivity extends Activity {
             reloadNeeded = false;
             status.setVisibility(View.VISIBLE);
             refreshSyncStatus(repositories, "Cached data", COLOR_MUTED);
-        } catch (RuntimeException error) {
+            archiveButton.setEnabled(true);
+        }, error -> {
             status.setVisibility(View.VISIBLE);
-            status.setText(error.getMessage());
-        }
+            status.setText("Archive failed: " + error);
+            archiveButton.setEnabled(true);
+        });
     }
 
     private Button topActionButton(String icon, String description, WackenTheme.ButtonStyle style, View.OnClickListener listener) {
