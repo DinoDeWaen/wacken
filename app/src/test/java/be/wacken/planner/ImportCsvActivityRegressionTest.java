@@ -21,6 +21,15 @@ public final class ImportCsvActivityRegressionTest {
         assertFalse("Add-festival flow must not submit a hard-coded placeholder festival name.", source.contains("festivalName.setText(\"Rock im Park\")"));
     }
 
+    @Test
+    public void bandOnlyImportUsesSharedCsvReaderAndHandlesFormatErrors() throws IOException {
+        String source = new String(Files.readAllBytes(importCsvActivitySource()), StandardCharsets.UTF_8);
+
+        assertTrue("Band-only import must use the shared CSV reader.", source.contains("FestivalCsvReader.bandNames("));
+        assertTrue("Malformed CSV must be shown to the user.", source.contains("catch (FestivalCsvReader.FormatException error)"));
+        assertFalse("The Activity must not keep a separate quote parser.", source.contains("private List<String> splitLine("));
+    }
+
     private Path importCsvActivitySource() {
         return List.of(
                         Path.of("app/src/main/java/be/wacken/planner/ImportCsvActivity.java"),

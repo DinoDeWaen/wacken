@@ -252,6 +252,14 @@ Scenario: Import festival data from selected CSV files
   And existing band ratings are preserved
 ```
 
+```gherkin
+Scenario: Festival import persistence fails
+  Given the app already has usable festival master data
+  When an Android CSV import fails while saving the new master data
+  Then the previous master data remains usable in the local cache and TSV source
+  And the app reports the failure without changing existing ratings
+```
+
 ### Workflow 2: Rate bands
 
 A festival attendee rates bands using the shared 1-5 scale.
@@ -514,6 +522,7 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-040 | MVP CSV import must be file-upload based in Android, not paste-text based. | The user selects `bands.csv` and companion CSV files with the Android document picker. | Must |
 | BR-041 | The import screen must show which CSV files were selected before import. | After selecting `bands.csv`, the screen shows the chosen file name. | Must |
 | BR-042 | A successful CSV import updates festival master data for bands, stages, performances, distances, and food. | Re-importing a newer Wacken band list replaces the stored lineup data. | Must |
+| BR-042a | A failed Android CSV import must leave the prior festival master data usable. | If any of the five master-data writes fails during import, the earlier TSV source files are restored and the Room cache transaction is rolled back before failure is reported. | Must |
 | BR-043 | Re-importing festival master data must preserve existing ratings. | If a user rated 5th Avenue as `5`, importing updated CSV files must not erase that rating. | Must |
 | BR-044 | Ratings are user/group preference data, not festival master data. | Updating lineup CSVs must not clear or overwrite rating records. | Must |
 | BR-045 | Band-only imports must be visible in the band overview before performance times are available. | A Wacken lineup CSV without stages/times still shows bands for rating. | Must |

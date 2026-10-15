@@ -19,13 +19,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import be.wacken.planner.application.AddFestivalResult;
 import be.wacken.planner.application.AddFestivalUseCase;
 import be.wacken.planner.application.FestivalCsvFiles;
+import be.wacken.planner.application.FestivalCsvReader;
 import be.wacken.planner.application.ImportFestivalCsvResult;
 import be.wacken.planner.application.ImportFestivalCsvUseCase;
 
@@ -160,7 +160,8 @@ public final class ImportCsvActivity extends Activity {
                 repositories.stages(),
                 repositories.performances(),
                 repositories.distances(),
-                repositories.foodOptions()
+                repositories.foodOptions(),
+                repositories.festivalImportTransaction()
         );
 
         ImportFestivalCsvResult result = importFestivalCsv.importCsv(new FestivalCsvFiles(
@@ -197,7 +198,15 @@ public final class ImportCsvActivity extends Activity {
             return;
         }
         String name = festivalName.getText().toString().trim();
-        List<Band> bands = parseBands(bandsCsv.contents);
+        List<Band> bands;
+        try {
+            bands = FestivalCsvReader.bandNames(bandsCsv.contents).stream().map(Band::new).collect(Collectors.toList());
+        } catch (FestivalCsvReader.FormatException error) {
+            resultMessage.setTextColor(WackenTheme.RED);
+            resultMessage.setText("Festival was not added. " + error.getMessage());
+            setResult(RESULT_CANCELED);
+            return;
+        }
         AddFestivalResult result;
         try {
             result = new AddFestivalUseCase(
@@ -228,45 +237,6 @@ public final class ImportCsvActivity extends Activity {
             resultMessage.setText(result.message());
             setResult(RESULT_CANCELED);
         }
-    }
-
-    private List<Band> parseBands(String csv) {
-        List<String> lines = csv.lines().filter(line -> !line.isBlank()).collect(Collectors.toList());
-        List<Band> bands = new ArrayList<>();
-        if (lines.size() < 2) {
-            return bands;
-        }
-        List<String> headers = splitLine(lines.get(0));
-        int nameColumn = headers.indexOf("name");
-        if (nameColumn < 0) {
-            nameColumn = 0;
-        }
-        for (int index = 1; index < lines.size(); index++) {
-            List<String> values = splitLine(lines.get(index));
-            if (nameColumn < values.size() && !values.get(nameColumn).isBlank()) {
-                bands.add(new Band(values.get(nameColumn)));
-            }
-        }
-        return bands;
-    }
-
-    private List<String> splitLine(String line) {
-        List<String> values = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        boolean quoted = false;
-        for (int index = 0; index < line.length(); index++) {
-            char character = line.charAt(index);
-            if (character == '"') {
-                quoted = !quoted;
-            } else if (character == ',' && !quoted) {
-                values.add(current.toString().trim());
-                current.setLength(0);
-            } else {
-                current.append(character);
-            }
-        }
-        values.add(current.toString().trim());
-        return values;
     }
 
     private String slug(String name) {

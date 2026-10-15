@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -77,6 +78,40 @@ class ImportFestivalCsvUseCaseTest {
     }
 
     @Test
+    void importsQuotedCommasAndEscapedQuotes() {
+        Repositories repositories = new Repositories();
+
+        ImportFestivalCsvResult result = repositories.useCase().importCsv(new FestivalCsvFiles(
+                "band_id,name,biography\nquoted,\"AC, DC\",\"A \"\"loud\"\" band\"\n",
+                "stage_id,name\n",
+                "performance_id,band_id,stage_id,festival_day_id,start_at,end_at\n",
+                "from_stage_id,to_stage_id,walking_minutes\n",
+                "food_id,name,near_stage_id\n"
+        ));
+
+        assertEquals(ImportFestivalCsvResult.imported(), result);
+        assertEquals(Optional.of("A \"loud\" band"), repositories.bands.findByName("AC, DC").orElseThrow().biography());
+    }
+
+    @Test
+    void malformedQuotingLeavesExistingMasterDataUntouched() {
+        Repositories repositories = new Repositories();
+        repositories.useCase().importCsv(validCsv());
+
+        ImportFestivalCsvResult result = repositories.useCase().importCsv(new FestivalCsvFiles(
+                "band_id,name\nnew,\"Unclosed\n",
+                "stage_id,name\n",
+                "performance_id,band_id,stage_id,festival_day_id,start_at,end_at\n",
+                "from_stage_id,to_stage_id,walking_minutes\n",
+                "food_id,name,near_stage_id\n"
+        ));
+
+        assertEquals(ImportFestivalCsvResult.failure(List.of("bands.csv row 2: unterminated quoted field")), result);
+        assertEquals(List.of(new Band("5th Avenue")), repositories.bands.findAll());
+        assertEquals(List.of(new Stage("Faster"), new Stage("Harder")), repositories.stages.findAll());
+    }
+
+    @Test
     void reimportReplacesFestivalMasterDataWithoutTouchingRatings() {
         Repositories repositories = new Repositories();
         repositories.useCase().importCsv(validCsv());
@@ -102,6 +137,38 @@ class ImportFestivalCsvUseCaseTest {
                 )),
                 repositories.performances.findAll()
         );
+        assertEquals(Optional.of(Rating.of(4)), repositories.ratings.findByUserAndBand("dino", new Band("5th Avenue")));
+    }
+
+    @Test
+    void reportsPersistenceFailureAfterTransactionRestoresEarlierReplacements() {
+        Repositories repositories = new Repositories();
+        repositories.useCase().importCsv(validCsv());
+        repositories.ratings.save("dino", new Band("5th Avenue"), Rating.of(4));
+        repositories.stages.failNextReplace = true;
+        Consumer<Runnable> rollback = work -> {
+            List<Band> oldBands = repositories.bands.findAll();
+            List<Stage> oldStages = repositories.stages.findAll();
+            try {
+                work.run();
+            } catch (RuntimeException failure) {
+                repositories.bands.replaceAll(oldBands);
+                repositories.stages.replaceAll(oldStages);
+                throw failure;
+            }
+        };
+
+        ImportFestivalCsvResult result = repositories.useCase(rollback).importCsv(new FestivalCsvFiles(
+                "band_id,name\nnew,New Band\n",
+                "stage_id,name\nnew,New Stage\n",
+                "performance_id,band_id,stage_id,start_at,end_at\n",
+                "from_stage_id,to_stage_id,walking_minutes\n",
+                "food_id,name,near_stage_id\n"
+        ));
+
+        assertEquals(ImportFestivalCsvResult.failure(List.of("injected persistence failure")), result);
+        assertEquals(List.of(new Band("5th Avenue")), repositories.bands.findAll());
+        assertEquals(List.of(new Stage("Faster"), new Stage("Harder")), repositories.stages.findAll());
         assertEquals(Optional.of(Rating.of(4)), repositories.ratings.findByUserAndBand("dino", new Band("5th Avenue")));
     }
 
@@ -173,7 +240,11 @@ class ImportFestivalCsvUseCaseTest {
         private final FakeRatingRepository ratings = new FakeRatingRepository();
 
         private ImportFestivalCsvUseCase useCase() {
-            return new ImportFestivalCsvUseCase(bands, stages, performances, distances, food);
+            return useCase(Runnable::run);
+        }
+
+        private ImportFestivalCsvUseCase useCase(Consumer<Runnable> transaction) {
+            return new ImportFestivalCsvUseCase(bands, stages, performances, distances, food, transaction);
         }
     }
 
@@ -204,6 +275,7 @@ class ImportFestivalCsvUseCaseTest {
 
     private static final class FakeStageRepository implements StageRepository {
         private final Map<String, Stage> stagesByName = new LinkedHashMap<>();
+        private boolean failNextReplace;
 
         @Override
         public void save(Stage stage) {
@@ -212,6 +284,10 @@ class ImportFestivalCsvUseCaseTest {
 
         @Override
         public void replaceAll(List<Stage> stages) {
+            if (failNextReplace) {
+                failNextReplace = false;
+                throw new IllegalStateException("injected persistence failure");
+            }
             stagesByName.clear();
             stages.forEach(this::save);
         }

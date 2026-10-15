@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.function.Consumer;
 
 public final class ImportFestivalCsvUseCase {
     private final BandRepository bands;
@@ -27,57 +28,73 @@ public final class ImportFestivalCsvUseCase {
     private final PerformanceRepository performances;
     private final StageDistanceRepository distances;
     private final FoodOptionRepository foodOptions;
+    private final Consumer<Runnable> transaction;
 
     public ImportFestivalCsvUseCase(
             BandRepository bands,
             StageRepository stages,
             PerformanceRepository performances,
             StageDistanceRepository distances,
-            FoodOptionRepository foodOptions
+            FoodOptionRepository foodOptions,
+            Consumer<Runnable> transaction
     ) {
         this.bands = Objects.requireNonNull(bands, "bands must not be null");
         this.stages = Objects.requireNonNull(stages, "stages must not be null");
         this.performances = Objects.requireNonNull(performances, "performances must not be null");
         this.distances = Objects.requireNonNull(distances, "distances must not be null");
         this.foodOptions = Objects.requireNonNull(foodOptions, "foodOptions must not be null");
+        this.transaction = Objects.requireNonNull(transaction, "transaction must not be null");
     }
 
     public ImportFestivalCsvResult importCsv(FestivalCsvFiles files) {
         Objects.requireNonNull(files, "files must not be null");
 
-        ParsedData parsedData = parse(files);
+        ParsedData parsedData;
+        try {
+            parsedData = parse(files);
+        } catch (FestivalCsvReader.FormatException error) {
+            return ImportFestivalCsvResult.failure(List.of(error.getMessage()));
+        }
         List<String> errors = validate(parsedData);
         if (!errors.isEmpty()) {
             return ImportFestivalCsvResult.failure(errors);
         }
 
-        bands.replaceAll(new ArrayList<>(parsedData.bandsById().values()));
-        stages.replaceAll(new ArrayList<>(parsedData.stagesById().values()));
-        performances.replaceAll(parsedData.performances().stream()
-                .map(row -> new Performance(
-                        parsedData.bandsById().get(row.bandId()),
-                        parsedData.stagesById().get(row.stageId()),
-                        LocalDateTime.parse(row.startAt()),
-                        LocalDateTime.parse(row.endAt())
-                ))
-                .collect(Collectors.toList()));
-        distances.replaceAll(parsedData.distances().stream()
-                .map(row -> StageDistance.between(
-                        parsedData.stagesById().get(row.fromStageId()),
-                        parsedData.stagesById().get(row.toStageId()),
-                        Integer.parseInt(row.walkingMinutes())
-                ))
-                .collect(Collectors.toList()));
-        foodOptions.replaceAll(parsedData.foodOptions().stream()
-                .map(row -> new FoodOption(row.name()))
-                .collect(Collectors.toList()));
+        try {
+            transaction.accept(() -> {
+                bands.replaceAll(new ArrayList<>(parsedData.bandsById().values()));
+                stages.replaceAll(new ArrayList<>(parsedData.stagesById().values()));
+                performances.replaceAll(parsedData.performances().stream()
+                        .map(row -> new Performance(
+                                parsedData.bandsById().get(row.bandId()),
+                                parsedData.stagesById().get(row.stageId()),
+                                LocalDateTime.parse(row.startAt()),
+                                LocalDateTime.parse(row.endAt())
+                        ))
+                        .collect(Collectors.toList()));
+                distances.replaceAll(parsedData.distances().stream()
+                        .map(row -> StageDistance.between(
+                                parsedData.stagesById().get(row.fromStageId()),
+                                parsedData.stagesById().get(row.toStageId()),
+                                Integer.parseInt(row.walkingMinutes())
+                        ))
+                        .collect(Collectors.toList()));
+                foodOptions.replaceAll(parsedData.foodOptions().stream()
+                        .map(row -> new FoodOption(row.name()))
+                        .collect(Collectors.toList()));
+            });
+        } catch (RuntimeException error) {
+            return ImportFestivalCsvResult.failure(List.of(
+                    error.getMessage() == null ? "Festival data could not be saved." : error.getMessage()
+            ));
+        }
 
         return ImportFestivalCsvResult.imported();
     }
 
     private ParsedData parse(FestivalCsvFiles files) {
         Map<String, Band> bandsById = new LinkedHashMap<>();
-        for (CsvRow row : parseCsv(files.bandsCsv())) {
+        for (FestivalCsvReader.Row row : FestivalCsvReader.rows("bands.csv", files.bandsCsv())) {
             bandsById.put(row.required("band_id"), new Band(
                     row.required("name"),
                     optional(plainText(preferredBiography(row))),
@@ -88,11 +105,11 @@ public final class ImportFestivalCsvUseCase {
         }
 
         Map<String, Stage> stagesById = new LinkedHashMap<>();
-        for (CsvRow row : parseCsv(files.stagesCsv())) {
+        for (FestivalCsvReader.Row row : FestivalCsvReader.rows("stages.csv", files.stagesCsv())) {
             stagesById.put(row.required("stage_id"), new Stage(row.required("name")));
         }
 
-        List<PerformanceRow> performanceRows = parseCsv(files.performancesCsv())
+        List<PerformanceRow> performanceRows = FestivalCsvReader.rows("performances.csv", files.performancesCsv())
                 .stream()
                 .map(row -> new PerformanceRow(
                         row.rowNumber(),
@@ -104,7 +121,7 @@ public final class ImportFestivalCsvUseCase {
                 ))
                 .collect(Collectors.toList());
 
-        List<DistanceRow> distanceRows = parseCsv(files.distancesCsv())
+        List<DistanceRow> distanceRows = FestivalCsvReader.rows("distances.csv", files.distancesCsv())
                 .stream()
                 .map(row -> new DistanceRow(
                         row.rowNumber(),
@@ -114,7 +131,7 @@ public final class ImportFestivalCsvUseCase {
                 ))
                 .collect(Collectors.toList());
 
-        List<FoodRow> foodRows = parseCsv(files.foodCsv())
+        List<FoodRow> foodRows = FestivalCsvReader.rows("food.csv", files.foodCsv())
                 .stream()
                 .map(row -> new FoodRow(
                         row.rowNumber(),
@@ -196,47 +213,6 @@ public final class ImportFestivalCsvUseCase {
         return firstStart.isBefore(secondEnd) && secondStart.isBefore(firstEnd);
     }
 
-    private List<CsvRow> parseCsv(String csv) {
-        List<String> lines = csv.lines()
-                .filter(line -> !line.isBlank())
-                .collect(Collectors.toList());
-        if (lines.isEmpty()) {
-            return java.util.Collections.emptyList();
-        }
-
-        List<String> headers = splitLine(lines.get(0));
-        List<CsvRow> rows = new ArrayList<>();
-        for (int index = 1; index < lines.size(); index++) {
-            List<String> values = splitLine(lines.get(index));
-            Map<String, String> valuesByHeader = new HashMap<>();
-            for (int column = 0; column < headers.size(); column++) {
-                String value = column < values.size() ? values.get(column) : "";
-                valuesByHeader.put(headers.get(column), value.trim());
-            }
-            rows.add(new CsvRow(index + 1, valuesByHeader));
-        }
-        return rows;
-    }
-
-    private List<String> splitLine(String line) {
-        List<String> values = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        boolean quoted = false;
-        for (int index = 0; index < line.length(); index++) {
-            char character = line.charAt(index);
-            if (character == '"') {
-                quoted = !quoted;
-            } else if (character == ',' && !quoted) {
-                values.add(current.toString());
-                current.setLength(0);
-            } else {
-                current.append(character);
-            }
-        }
-        values.add(current.toString());
-        return values;
-    }
-
     private Optional<String> optional(String value) {
         if (value == null || value.isBlank()) {
             return Optional.empty();
@@ -262,7 +238,7 @@ public final class ImportFestivalCsvUseCase {
                 .trim();
     }
 
-    private String preferredBiography(CsvRow row) {
+    private String preferredBiography(FestivalCsvReader.Row row) {
         return firstPresent(row.value("biography"), row.value("biography_html"));
     }
 
@@ -291,13 +267,4 @@ public final class ImportFestivalCsvUseCase {
     private record FoodRow(int rowNumber, String foodId, String name, String nearStageId) {
     }
 
-    private record CsvRow(int rowNumber, Map<String, String> valuesByHeader) {
-        private String required(String header) {
-            return value(header);
-        }
-
-        private String value(String header) {
-            return valuesByHeader.getOrDefault(header, "");
-        }
-    }
 }

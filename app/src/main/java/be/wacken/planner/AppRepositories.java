@@ -4,6 +4,7 @@ import android.content.Context;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import be.wacken.planner.application.ActiveFestivalRatingRepository;
 import be.wacken.planner.domain.BandRepository;
@@ -27,6 +28,7 @@ import be.wacken.planner.infrastructure.SyncedFoodOptionRepository;
 import be.wacken.planner.infrastructure.SyncedPerformanceRepository;
 import be.wacken.planner.infrastructure.SyncedStageDistanceRepository;
 import be.wacken.planner.infrastructure.SyncedStageRepository;
+import be.wacken.planner.infrastructure.TsvImportTransaction;
 import be.wacken.planner.persistence.RoomBandRepository;
 import be.wacken.planner.persistence.RoomFestivalLineupRepository;
 import be.wacken.planner.persistence.RoomFestivalPlanningRatingRepository;
@@ -69,6 +71,7 @@ final class AppRepositories {
     private final RoomPersonalBandRatingHistoryRepository personalRatingCache;
     private final ScheduleLockLocalStore scheduleLockCache;
     private final AuthSession session;
+    private final Consumer<Runnable> festivalImportTransaction;
 
     AppRepositories(Context context) {
         this(context, SourceMode.SUPABASE);
@@ -81,6 +84,9 @@ final class AppRepositories {
     private AppRepositories(Context context, SourceMode sourceMode) {
         Path storageDirectory = context.getFilesDir().toPath();
         WackenDatabase database = WackenDatabase.get(context);
+        this.festivalImportTransaction = sourceMode == SourceMode.TSV_FALLBACK
+                ? new TsvImportTransaction(storageDirectory, database::runInTransaction)
+                : null;
 
         RoomBandRepository bandCache = new RoomBandRepository(database);
         RoomStageRepository stageCache = new RoomStageRepository(database);
@@ -198,6 +204,13 @@ final class AppRepositories {
 
     FoodOptionRepository foodOptions() {
         return foodOptions;
+    }
+
+    Consumer<Runnable> festivalImportTransaction() {
+        if (festivalImportTransaction == null) {
+            throw new IllegalStateException("Festival CSV transaction requires TSV fallback repositories.");
+        }
+        return festivalImportTransaction;
     }
 
     FestivalRepository festivals() {

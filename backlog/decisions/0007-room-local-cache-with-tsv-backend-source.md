@@ -32,6 +32,16 @@ write through to both the TSV source and Room cache. On first use, when a Room
 table is empty, the app seeds that cache table from the TSV source so data from
 older MVP installs is migrated into the local cache.
 
+For the five-file Android festival CSV import, validation finishes before any
+write. The application use case hands the five master-data replacements to one
+import transaction at the adapter edge. That adapter copies the five existing
+TSV source files, runs the replacements inside one Room transaction, and restores
+the TSV files if an import write fails. Room rolls back the corresponding cache
+writes. Rating repositories are outside this transaction and remain untouched.
+If a TSV restore itself fails, the import reports that failure and retains the
+backup path for manual recovery. This boundary covers failures reported during
+an import; it does not provide process or power-loss recovery.
+
 Room entities, DAOs, and database wiring live in the Android app edge. Domain
 and application modules do not depend on Android, Room, SQL, files, or future
 API details.
@@ -53,6 +63,8 @@ Negative / trade-offs:
   off the UI thread.
 - The current sync model is simple write-through, not a full conflict-aware
   offline sync engine.
+- The five-file import copies the TSV source files before writing and performs
+  synchronous file and Room work on the import path.
 
 ## Alternatives Considered
 
