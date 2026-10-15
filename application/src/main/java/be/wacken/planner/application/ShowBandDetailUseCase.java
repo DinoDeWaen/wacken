@@ -48,7 +48,10 @@ public final class ShowBandDetailUseCase {
 
     public Optional<BandDetailItem> showBand(String userName, String bandName, MusicLinks musicLinks) {
         Objects.requireNonNull(musicLinks, "musicLinks must not be null");
-        return bands.findByName(bandName)
+        if (bandName == null || bandName.isBlank()) {
+            return Optional.empty();
+        }
+        return bands.findByName(bandName.trim())
                 .map(band -> {
                     EffectiveRating rating = ratings.resolve(userName, band);
                     Optional<Rating> realRating = realRatingRepository.findByUserAndBand(userName, band);

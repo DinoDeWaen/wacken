@@ -74,19 +74,38 @@ public final class BandDetailActivity extends Activity {
         festivals = repositories.festivals();
         personalRatings = repositories.personalBandRatings();
 
-        selectedBand = new Band(getIntent().getStringExtra(EXTRA_BAND_NAME));
-        if (bands.findByName(selectedBand.name()).isEmpty()) {
-            bands.save(selectedBand);
-        }
-
         ShowBandDetailUseCase showBand = new ShowBandDetailUseCase(bands, ratings, realRatings, festivals, personalRatings);
-        BandDetailItem detail = showBand.showBand(currentUser(), selectedBand.name(), musicLinksFromIntent())
-                .orElseThrow(() -> new IllegalStateException("Band detail could not be loaded."));
+        Optional<BandDetailItem> loaded = showBand.showBand(
+                currentUser(), getIntent().getStringExtra(EXTRA_BAND_NAME), musicLinksFromIntent());
+        if (loaded.isEmpty()) {
+            setContentView(renderMissingBand());
+            return;
+        }
+        BandDetailItem detail = loaded.orElseThrow();
+        selectedBand = new Band(detail.bandName());
         setContentView(render(detail));
     }
 
     private String currentUser() {
         return currentSession.userId();
+    }
+
+    private View renderMissingBand() {
+        LinearLayout screen = new LinearLayout(this);
+        screen.setOrientation(LinearLayout.VERTICAL);
+        screen.setGravity(Gravity.CENTER);
+        screen.setPadding(dp(24), dp(24), dp(24), dp(24));
+        screen.setBackgroundColor(COLOR_BACKGROUND);
+
+        TextView message = new TextView(this);
+        message.setText("Band details are unavailable. Return to the previous screen and try syncing.");
+        message.setTextColor(COLOR_TEXT);
+        message.setTextSize(18);
+        message.setGravity(Gravity.CENTER);
+        screen.addView(message);
+
+        screen.addView(WackenTheme.actionButton(this, "Back", WackenTheme.ButtonStyle.SECONDARY, view -> finish()));
+        return screen;
     }
 
     private View render(BandDetailItem detail) {

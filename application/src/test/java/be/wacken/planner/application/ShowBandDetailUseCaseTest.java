@@ -192,6 +192,39 @@ class ShowBandDetailUseCaseTest {
         assertEquals(Optional.empty(), useCase.showBand("dino", "Unknown", MusicLinks.none()));
     }
 
+    @Test
+    void missingOrInvalidBandDetailNeverCreatesMasterData() {
+        BandRepository readOnlyBands = new BandRepository() {
+            @Override
+            public void save(Band band) {
+                throw new AssertionError("Opening band detail must not save a band");
+            }
+
+            @Override
+            public void replaceAll(List<Band> bands) {
+                throw new AssertionError("Opening band detail must not replace bands");
+            }
+
+            @Override
+            public Optional<Band> findByName(String name) {
+                if (name == null || name.isBlank()) {
+                    throw new AssertionError("Invalid band names must not reach persistence");
+                }
+                return Optional.empty();
+            }
+
+            @Override
+            public List<Band> findAll() {
+                return List.of();
+            }
+        };
+        ShowBandDetailUseCase useCase = new ShowBandDetailUseCase(readOnlyBands, new FakeRatingRepository());
+
+        assertEquals(Optional.empty(), useCase.showBand("dino", "Unknown", MusicLinks.none()));
+        assertEquals(Optional.empty(), useCase.showBand("dino", " ", MusicLinks.none()));
+        assertEquals(Optional.empty(), useCase.showBand("dino", null, MusicLinks.none()));
+    }
+
     private static final class FakeBandRepository implements BandRepository {
         private final Map<String, Band> bandsByName = new LinkedHashMap<>();
 
