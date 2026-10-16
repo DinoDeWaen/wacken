@@ -191,6 +191,9 @@ public final class SyncingFestivalPlanningRatingRepositoryTest {
         public void movePendingRating(SavedFestivalPlanningRating expected, String targetFestivalId) {
             throw new UnsupportedOperationException();
         }
+        @Override public void discardPendingRating(SavedFestivalPlanningRating expected) {
+            ratings.removeIf(stored -> stored.rating.equals(expected) && stored.status.equals("PENDING"));
+        }
     }
 
     private record StoredRating(SavedFestivalPlanningRating rating, String status) {

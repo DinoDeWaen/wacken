@@ -355,9 +355,13 @@ refreshed Supabase festival list, sync shows its band, stars, and stored festiva
 ID for review. If the rating was intended for Wacken Open Air 2026, confirm
 **Move to Wacken 2026**. The app checks that Wacken is active and that no rating
 for the same band already exists locally or in Supabase, then moves that one
-pending rating in a Room transaction and retries sync. **Keep pending** leaves
-it untouched. A failed check or network request also leaves it pending; do not
-use Android **Clear storage/data** to recover an unsynced rating.
+pending rating in a Room transaction and retries sync. **Discard pending** opens
+a second confirmation showing the exact band, stars, and stored festival ID. On
+confirmation, it irreversibly removes only that unchanged pending rating from
+this device and retries sync; other pending changes and synced ratings remain.
+**Keep pending** leaves it untouched. A failed check or network request also
+leaves it pending; do not use Android **Clear storage/data** to recover an
+unsynced rating.
 
 ### Group-Wide Festival Data Model
 

@@ -306,6 +306,13 @@ final class AppRepositories {
         pendingPlanningRatingRecovery.moveToWacken2026(expected, session.groupId(), session.userId());
     }
 
+    void discardPendingRating(SavedFestivalPlanningRating expected) {
+        if (pendingPlanningRatingRecovery == null) {
+            throw new IllegalStateException("Sign in before discarding a pending rating.");
+        }
+        pendingPlanningRatingRecovery.discardPending(expected, session.groupId(), session.userId());
+    }
+
     void syncMasterDataFromSource() {
         try {
             SupabaseDiagnostics.info("master_data_sync", "start", "source=remote_or_assets");

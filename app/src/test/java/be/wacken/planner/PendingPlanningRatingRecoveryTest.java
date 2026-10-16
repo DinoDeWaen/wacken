@@ -72,6 +72,35 @@ public final class PendingPlanningRatingRecoveryTest {
         assertEquals(List.of(ORPHAN), local.pending);
     }
 
+    @Test
+    public void discardRemovesOnlyTheConfirmedPendingRating() throws Exception {
+        Local local = new Local();
+        SavedFestivalPlanningRating other = new SavedFestivalPlanningRating(
+                "group-1", "user-1", "wacken-2026", new Band("Alestorm"), Rating.of(3));
+        local.pending.add(ORPHAN);
+        local.pending.add(other);
+
+        recovery(local, new Remote(), true).discardPending(ORPHAN, SESSION.groupId(), SESSION.userId());
+
+        assertEquals(List.of(other), local.pending);
+
+        Remote remote = new Remote();
+        new SyncingFestivalPlanningRatingRepository(local, remote, SESSION, festivals(true)).syncPendingRatings();
+        assertEquals(List.of(other), remote.pushed);
+        assertTrue(local.pending.isEmpty());
+    }
+
+    @Test
+    public void discardRejectsOtherUsersAndChangedRows() throws Exception {
+        Local local = new Local();
+        local.pending.add(ORPHAN);
+        expectFailure(() -> recovery(local, new Remote(), true).discardPending(ORPHAN, "other-group", SESSION.userId()));
+        expectFailure(() -> recovery(local, new Remote(), true).discardPending(
+                new SavedFestivalPlanningRating("group-1", "user-1", "missing", new Band("Airbourne"), Rating.of(2)),
+                SESSION.groupId(), SESSION.userId()));
+        assertEquals(List.of(ORPHAN), local.pending);
+    }
+
     private static FestivalRepository festivals(boolean active) {
         return new FestivalRepository() {
             @Override public List<Festival> findAll() {
@@ -130,6 +159,9 @@ public final class PendingPlanningRatingRecoveryTest {
             if (!pending.remove(expected)) throw new IllegalStateException("changed");
             pending.add(new SavedFestivalPlanningRating(expected.groupId(), expected.userName(), targetFestivalId,
                     expected.band(), expected.rating()));
+        }
+        @Override public void discardPendingRating(SavedFestivalPlanningRating expected) {
+            if (!pending.remove(expected)) throw new IllegalStateException("changed");
         }
     }
 }
