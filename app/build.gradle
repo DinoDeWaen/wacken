@@ -34,6 +34,7 @@ android {
         targetSdk 36
         versionCode 37
         versionName "2.33.1"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "SUPABASE_URL", "\"https://dwyunoyaqwxkfbwscxhe.supabase.co\""
         buildConfigField "String", "SUPABASE_ANON_KEY", "\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3eXVub3lhcXd4a2Zid3NjeGhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMjQxODAsImV4cCI6MjA5NDYwMDE4MH0.OSD2cZT4LR2p0olO_k-f2dHXJx_sekHtxA9OGHrSvZM\""
         buildConfigField "String", "MUSICBRAINZ_USER_AGENT", "\"${musicBrainzUserAgent.replace("\\", "\\\\").replace("\"", "\\\"")}\""
@@ -80,4 +81,6 @@ dependencies {
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
     testImplementation "junit:junit:4.13.2"
     testImplementation "org.json:json:20240303"
+    androidTestImplementation "androidx.test:runner:1.6.2"
+    androidTestImplementation "junit:junit:4.13.2"
 }

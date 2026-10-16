@@ -79,7 +79,7 @@ public final class ShowBandDetailUseCase {
                 .stream()
                 .map(event -> new PersonalRatingHistoryItem(
                         event.band().name(),
-                        event.festivalId().map(festivalNames::get),
+                        event.festivalId().map(festivalNames::get).or(event::festivalNameSnapshot),
                         event.rating().value(),
                         event.createdAt()
                 ))

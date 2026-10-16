@@ -73,7 +73,7 @@ final class SupabaseMasterDataClient {
     List<Performance> performances() throws IOException {
         Map<String, String> bandNamesById = namesById("/rest/v1/bands?select=id,name");
         Map<String, String> stageNamesById = namesById("/rest/v1/stages?select=id,name");
-        JSONArray rows = requestArray("/rest/v1/performances?select=band_id,stage_id,start_at,end_at&order=start_at.asc");
+        JSONArray rows = requestArray("/rest/v1/performances?select=band_id,stage_id,start_at,end_at,festival_id&order=start_at.asc");
         List<Performance> performances = new ArrayList<>();
         for (int index = 0; index < rows.length(); index++) {
             try {
@@ -85,7 +85,8 @@ final class SupabaseMasterDataClient {
                             new Band(bandName),
                             new Stage(stageName),
                             toLocalDateTime(row.getString("start_at")),
-                            toLocalDateTime(row.getString("end_at"))
+                            toLocalDateTime(row.getString("end_at")),
+                            row.getString("festival_id")
                     ));
                 }
             } catch (JSONException error) {
@@ -159,6 +160,13 @@ final class SupabaseMasterDataClient {
             }
         } catch (JSONException error) {
             throw new IOException("Supabase festival request could not be created.", error);
+        }
+    }
+
+    void deleteFestival(String festivalId) throws IOException {
+        request("DELETE", "/rest/v1/festivals?id=eq." + encode(festivalId), null, false);
+        if (requestArray("/rest/v1/festivals?select=id&id=eq." + encode(festivalId) + "&limit=1").length() != 0) {
+            throw new IOException("Supabase did not delete the festival. Check group permissions and retry.");
         }
     }
 

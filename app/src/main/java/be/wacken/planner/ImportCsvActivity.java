@@ -158,7 +158,7 @@ public final class ImportCsvActivity extends Activity {
         ImportFestivalCsvUseCase importFestivalCsv = new ImportFestivalCsvUseCase(
                 repositories.bands(),
                 repositories.stages(),
-                repositories.performances(),
+                repositories.performanceImportTarget(),
                 repositories.distances(),
                 repositories.foodOptions(),
                 repositories.festivalImportTransaction()

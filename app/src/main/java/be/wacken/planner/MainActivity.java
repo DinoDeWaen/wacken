@@ -65,6 +65,7 @@ public final class MainActivity extends Activity {
     private AuthSession currentSession;
     private Button closeButton;
     private Button archiveButton;
+    private Button deleteFestivalButton;
     private Button scheduleButton;
     private Button addFestivalButton;
     private FrameLayout syncOverlay;
@@ -241,6 +242,9 @@ public final class MainActivity extends Activity {
         if (archiveButton != null) {
             archiveButton.setVisibility(content.showArchiveAction() ? View.VISIBLE : View.GONE);
         }
+        if (deleteFestivalButton != null) {
+            deleteFestivalButton.setVisibility(content.showArchiveAction() ? View.VISIBLE : View.GONE);
+        }
         if (addFestivalButton != null) {
             addFestivalButton.setVisibility(content.showAddFestivalAction() ? View.VISIBLE : View.GONE);
         }
@@ -336,6 +340,11 @@ public final class MainActivity extends Activity {
         archiveButton.setTextSize(13);
         archiveButton.setSingleLine(true);
         actions.addView(archiveButton);
+        deleteFestivalButton = topActionButton("Delete", "Delete active festival and schedule", WackenTheme.ButtonStyle.DANGER,
+                view -> deleteActiveFestival());
+        deleteFestivalButton.setTextSize(13);
+        deleteFestivalButton.setSingleLine(true);
+        actions.addView(deleteFestivalButton);
         addFestivalButton = topActionButton("+", "Add festival", WackenTheme.ButtonStyle.SECONDARY,
                 view -> {
                     reloadNeeded = true;
@@ -380,6 +389,19 @@ public final class MainActivity extends Activity {
             status.setText("Archive failed: " + error);
             archiveButton.setEnabled(true);
         });
+    }
+
+    private void deleteActiveFestival() {
+        AppRepositories repositories = new AppRepositories(this);
+        new ShowFestivalStartUseCase(repositories.festivals()).show().activeFestival()
+                .ifPresent(festival -> DeleteFestivalDialog.show(this, festival, () -> {
+                    loadBandList();
+                    status.setVisibility(View.VISIBLE);
+                    status.setText("Festival deleted for the group. Shared bands and personal history remain.");
+                }, error -> {
+                    status.setVisibility(View.VISIBLE);
+                    status.setText("Delete failed: " + error);
+                }));
     }
 
     private Button topActionButton(String icon, String description, WackenTheme.ButtonStyle style, View.OnClickListener listener) {
@@ -475,6 +497,9 @@ public final class MainActivity extends Activity {
         }
         if (archiveButton != null) {
             archiveButton.setEnabled(enabled);
+        }
+        if (deleteFestivalButton != null) {
+            deleteFestivalButton.setEnabled(enabled);
         }
         if (scheduleButton != null && bandList != null) {
             scheduleButton.setEnabled(enabled && bandList.getVisibility() == View.VISIBLE);

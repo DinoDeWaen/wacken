@@ -19,11 +19,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 RoomRealRating.class,
                 RoomScheduleLock.class,
                 RoomFestival.class,
+                RoomFestivalCacheMarker.class,
                 RoomFestivalLineupEntry.class,
                 RoomFestivalPlanningRating.class,
                 RoomPersonalBandRatingEvent.class
         },
-        version = 8,
+        version = 9,
         exportSchema = false
 )
 public abstract class WackenDatabase extends RoomDatabase {
@@ -142,6 +143,42 @@ public abstract class WackenDatabase extends RoomDatabase {
             database.execSQL("DROP INDEX IF EXISTS idx_festivals_one_active");
         }
     };
+    static final Migration MIGRATION_8_9 = new Migration(8, 9) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("""
+                    CREATE TABLE performances_new (
+                        festivalId TEXT NOT NULL,
+                        bandName TEXT NOT NULL,
+                        stageName TEXT NOT NULL,
+                        start TEXT NOT NULL,
+                        end TEXT NOT NULL,
+                        PRIMARY KEY(festivalId, bandName, start)
+                    )
+                    """);
+            database.execSQL("INSERT INTO performances_new SELECT 'wacken-2026', bandName, stageName, start, end FROM performances");
+            database.execSQL("DROP TABLE performances");
+            database.execSQL("ALTER TABLE performances_new RENAME TO performances");
+            database.execSQL("""
+                    CREATE TABLE schedule_locks_new (
+                        groupId TEXT NOT NULL,
+                        festivalId TEXT NOT NULL,
+                        conflictKey TEXT NOT NULL,
+                        selectedCandidateKey TEXT NOT NULL,
+                        syncStatus TEXT NOT NULL,
+                        operation TEXT NOT NULL,
+                        PRIMARY KEY(groupId, festivalId, conflictKey)
+                    )
+                    """);
+            database.execSQL("INSERT INTO schedule_locks_new SELECT groupId, 'wacken-2026', conflictKey, selectedCandidateKey, syncStatus, operation FROM schedule_locks");
+            database.execSQL("DROP TABLE schedule_locks");
+            database.execSQL("ALTER TABLE schedule_locks_new RENAME TO schedule_locks");
+            database.execSQL("ALTER TABLE personal_band_rating_events ADD COLUMN festivalNameSnapshot TEXT");
+            database.execSQL("UPDATE personal_band_rating_events SET festivalNameSnapshot = (SELECT name FROM festivals WHERE id = personal_band_rating_events.festivalId)");
+            database.execSQL("CREATE TABLE festival_cache_marker (id INTEGER NOT NULL, PRIMARY KEY(id))");
+            database.execSQL("INSERT INTO festival_cache_marker (id) SELECT 1 WHERE EXISTS (SELECT 1 FROM festivals)");
+        }
+    };
 
     public abstract RoomBandDao bands();
 
@@ -154,6 +191,8 @@ public abstract class WackenDatabase extends RoomDatabase {
     public abstract RoomFoodOptionDao foodOptions();
 
     public abstract RoomFestivalDao festivals();
+
+    public abstract RoomFestivalCacheMarkerDao festivalCacheMarker();
 
     public abstract RoomFestivalLineupEntryDao festivalLineups();
 
@@ -176,7 +215,7 @@ public abstract class WackenDatabase extends RoomDatabase {
                                     WackenDatabase.class,
                                     "wacken-cache.db"
                             )
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                             .allowMainThreadQueries()
                             .build();
                 }

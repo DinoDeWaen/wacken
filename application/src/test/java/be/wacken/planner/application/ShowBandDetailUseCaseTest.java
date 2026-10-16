@@ -6,16 +6,45 @@ import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.RatingRepository;
 import be.wacken.planner.domain.RealRatingRepository;
 import be.wacken.planner.domain.SavedRating;
+import be.wacken.planner.domain.Festival;
+import be.wacken.planner.domain.FestivalRepository;
+import be.wacken.planner.domain.PersonalBandRatingEvent;
+import be.wacken.planner.domain.PersonalBandRatingHistoryRepository;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ShowBandDetailUseCaseTest {
+    @Test
+    void retainsDeletedFestivalNameInPersonalRatingHistory() {
+        FakeBandRepository bands = new FakeBandRepository();
+        bands.save(new Band("Airbourne"));
+        FestivalRepository festivals = new FestivalRepository() {
+            @Override public List<Festival> findAll() { return List.of(); }
+            @Override public void save(Festival festival) { throw new UnsupportedOperationException(); }
+        };
+        PersonalBandRatingHistoryRepository history = new PersonalBandRatingHistoryRepository() {
+            @Override public void save(PersonalBandRatingEvent event) { throw new UnsupportedOperationException(); }
+            @Override public List<PersonalBandRatingEvent> findByUserAndBand(String userName, Band band) {
+                return List.of(new PersonalBandRatingEvent("event", userName, band, Optional.empty(),
+                        Rating.of(4), Instant.parse("2026-08-01T12:00:00Z"), Optional.of("Deleted festival")));
+            }
+        };
+
+        BandDetailItem detail = new ShowBandDetailUseCase(bands, new FakeRatingRepository(),
+                new FakeRealRatingRepository(), festivals, history)
+                .showBand("dino", "Airbourne", MusicLinks.none()).orElseThrow();
+
+        assertEquals("Deleted festival - 4 stars - 2026-08-01T12:00:00Z",
+                detail.personalRatingHistory().get(0).displayText());
+    }
+
     @Test
     void returnsBandInformationNeededForRating() {
         FakeBandRepository bands = new FakeBandRepository();

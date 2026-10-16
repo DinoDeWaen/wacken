@@ -116,6 +116,18 @@ public final class SyncingPersonalBandRatingHistoryRepositoryTest {
     }
 
     @Test
+    public void retainsFestivalNameWhenDeletedFestivalReferenceIsNull() throws Exception {
+        List<PersonalBandRatingEvent> events = SupabasePersonalBandRatingClient.parseEvents("""
+                [{"id":"event-1","user_id":"user-1","band_id":"band-airbourne",
+                  "festival_id":null,"festival_name_snapshot":"Deleted festival",
+                  "rating":4,"created_at":"2026-08-03T21:15:00Z"}]
+                """, Map.of("band-airbourne", "Airbourne"));
+
+        assertEquals(Optional.empty(), events.get(0).festivalId());
+        assertEquals(Optional.of("Deleted festival"), events.get(0).festivalNameSnapshot());
+    }
+
+    @Test
     public void mapsLegacyNonUuidEventIdsToDeterministicUuidForSupabase() {
         PersonalBandRatingEvent legacy = new PersonalBandRatingEvent(
                 "user-1:Airbourne:legacy-real",

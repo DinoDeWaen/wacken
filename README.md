@@ -13,6 +13,7 @@
 - Let users rate bands on a 1-5 scale (1 = veto, 5 = must-see), with 0 reserved for unrated bands/no filled stars, and clear a previous rating back to unrated.
 - Let users record a separate real post-show rating on band detail after seeing a band, with its own 1-5 scale and reset-to-unrated behavior; real ratings are local/offline-first and do not affect group schedule decisions.
 - Store every real post-show rating as personal band rating history with festival and created-date context, sync that history to Supabase, and show it on band detail and archived festival history screens.
+- Delete an active or archived festival after confirmation, including its lineup, planning ratings, performances, and schedule decisions; preserve central bands and personal rating history.
 - Export all locally cached band rating data from Settings as a CSV file for Android share/save targets, including planning ratings, real post-show ratings, cached group member ratings, and schedule metadata where known.
 - Start on the active festival band list, with `Wacken Open Air 2026` seeded as the default active festival. The top action row includes **Archive**; archiving the active festival immediately moves the app to a no-active-festival start state that lists archived festivals as read-only, opens archived festivals as read-only band lists with band detail screens, and shows the next add-festival entry point.
 - Add the next festival from a band CSV after the active festival is archived; the festival name starts empty and must be filled in explicitly. Exact band-name matches reuse existing band records, new names create new band records, and known bands get festival planning ratings prefilled from the user's latest personal band rating.
@@ -37,6 +38,7 @@
 - ADR: [`0008-supabase-postgres-flyway-migrations.md`](backlog/decisions/0008-supabase-postgres-flyway-migrations.md).
 - ADR: [`0009-supabase-group-schedule-winner-locks.md`](backlog/decisions/0009-supabase-group-schedule-winner-locks.md).
 - ADR: [`0010-offline-first-sync-boundary.md`](backlog/decisions/0010-offline-first-sync-boundary.md).
+- ADR: [`0013-festival-deletion-and-schedule-ownership.md`](backlog/decisions/0013-festival-deletion-and-schedule-ownership.md).
 - ADR: [`0011-post-wacken-festival-rating-model.md`](backlog/decisions/0011-post-wacken-festival-rating-model.md) defines the accepted post-MVP3 festival archive, reusable band, planning rating, and personal rating history direction.
 - ADR: [`0012-reviewed-band-metadata-search-framework.md`](backlog/decisions/0012-reviewed-band-metadata-search-framework.md) defines the reviewed metadata proposal boundary for own-catalog and external provider enrichment.
 - CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
@@ -116,7 +118,9 @@ Current repositories cover festivals, festival lineups, bands, stages, performan
 
 The Android five-file CSV import validates the input before writes. Its TSV fallback adapter saves copies of the five source files and replaces the corresponding Room cache tables inside one database transaction. If a write fails, Room rolls back and the adapter restores the TSV files before reporting failure; existing ratings are outside the replacement. A restore failure is reported with the retained backup location. This import boundary does not recover an interrupted process or device power loss.
 
-The implemented post-MVP3 slice adds explicit festival lifecycle and rating history state. Room stores the seeded active `Wacken Open Air 2026` festival, archived festival status, festival lineup entries, festival-scoped planning ratings, and personal band rating events. Flyway migrations `V009__festivals.sql` and `V010__festival_lineups_and_rating_history.sql` create the matching Supabase contracts. When signed in, adding a festival from a band CSV, archiving the active festival, renaming the active festival, and saving festival lineup entries write through to Supabase first and then update Room. Existing festival archive and rename use an update request allowed for group members; creating a new festival still requires platform-admin access under the current Supabase policy. The Archive action reports progress and errors while the remote write runs in the background. A rejected Supabase write leaves the existing Room cache usable and shows an error instead of creating a personal-only festival.
+The implemented post-MVP3 slice adds explicit festival lifecycle and rating history state. Room stores the initially seeded active `Wacken Open Air 2026` festival, archived festival status, festival lineup entries, festival-scoped planning ratings, and personal band rating events. Flyway migrations `V009`–`V011` create the matching Supabase contracts, including festival ownership for performances and schedule locks. When signed in, festival lifecycle changes and lineup writes go to Supabase first and then update Room. Group members can archive, rename, or delete a festival; creating a new festival still requires platform-admin access under the current Supabase policy. A rejected Supabase write leaves the existing Room cache usable and shows an error.
+
+**Delete** on the active festival screen and **Delete festival** on an archived festival screen ask for confirmation before removing that festival for the group. Supabase cascades deletion to its lineup, planning ratings, performances, and schedule locks. Central bands survive, and personal rating events retain their values, dates, and a festival-name snapshot. A successful sync cleans the same festival from other devices. A persisted Room initialization marker prevents the app from recreating an intentionally deleted Wacken festival. Deletion is online and cannot be undone.
 
 Band metadata enrichment uses a reviewed proposal workflow. The application layer
 finds missing metadata fields, prefers values from likely matching own-catalog
@@ -173,20 +177,20 @@ C4Container
 
     System_Boundary(app, "Wacken Planner 2026") {
         Container(ui, "Android UI", "Java", "Screens for band list, ratings, imports, schedule")
-        Container(appsvc, "Application Layer", "Java", "Use cases for listing, rating, imports")
-        Container(domain, "Domain", "Java", "Entities, value objects, decision rules")
+        Container(appsvc, "Application Layer", "Java", "Use cases for listing, rating, imports, confirmed festival deletion")
+        Container(domain, "Domain", "Java", "Festival-owned schedules, reusable bands, personal rating history")
         Container(infra, "Infrastructure", "Java", "Adapters: Supabase source, TSV fallback source, and sync decorators")
         ContainerDb(cache, "Room Local Cache", "SQLite/Room", "Fast local app cache for imported data and ratings")
         ContainerDb(tsv, "TSV Fallback Source", "App-private TSV files", "Fallback import source")
     }
 
-    Rel(attendee, ui, "Rates bands, views lineup")
+    Rel(attendee, ui, "Rates bands, views lineup, confirms festival deletion")
     Rel(admin, ui, "Triggers CSV imports")
     Rel(ui, appsvc, "Invokes use cases")
     Rel(appsvc, domain, "Uses domain rules and models")
     Rel(appsvc, infra, "Accesses repository adapters")
     Rel(infra, cache, "Reads from and writes through to local cache")
-    Rel(infra, supabase, "Syncs master data", "HTTPS/PostgREST")
+    Rel(infra, supabase, "Syncs data and deletes festival-owned records before local cleanup", "HTTPS/PostgREST")
     Rel(infra, tsv, "Uses only for explicit fallback CSV import")
     Rel(csvSource, infra, "Supplies fallback import files", "CSV")
 ```
@@ -209,6 +213,7 @@ Useful module checks:
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew test
 JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew qaTest
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :app:connectedDebugAndroidTest
 JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew assembleDebug
 ```
 
@@ -292,6 +297,11 @@ backend/flyway/run-flyway.sh info
 backend/flyway/run-flyway.sh migrate
 backend/flyway/run-flyway.sh info
 ```
+
+After V011, verify festival deletion, shared-band preservation, history, and
+member/non-member permissions with `bash backend/flyway/verify-festival-deletion.sh`.
+It creates temporary test festival rows inside a transaction and rolls them all
+back. It requires an existing group member, band, and stage.
 
 The script uses locally installed `flyway` when available and falls back to
 Docker otherwise. Band import uses local `psql`; set `PSQL_BIN` if `psql` is

@@ -36,12 +36,17 @@ public final class RoomPerformanceRepository implements PerformanceRepository {
         return performances.findAll().stream().map(this::toDomain).collect(Collectors.toList());
     }
 
+    public List<Performance> findByFestival(String festivalId) {
+        return performances.findByFestival(festivalId).stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
     public boolean isEmpty() {
         return performances.count() == 0;
     }
 
     private RoomPerformance toRow(Performance performance) {
         return new RoomPerformance(
+                performance.festivalId(),
                 performance.band().name(),
                 performance.stage().name(),
                 performance.start().toString(),
@@ -54,7 +59,8 @@ public final class RoomPerformanceRepository implements PerformanceRepository {
                 new Band(row.bandName),
                 new Stage(row.stageName),
                 LocalDateTime.parse(row.start),
-                LocalDateTime.parse(row.end)
+                LocalDateTime.parse(row.end),
+                row.festivalId
         );
     }
 }

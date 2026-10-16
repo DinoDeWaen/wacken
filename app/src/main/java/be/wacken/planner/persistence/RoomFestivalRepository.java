@@ -14,16 +14,23 @@ public final class RoomFestivalRepository implements FestivalRepository, Syncing
 
     private final WackenDatabase database;
     private final RoomFestivalDao festivals;
+    private final RoomFestivalCacheMarkerDao marker;
 
     public RoomFestivalRepository(WackenDatabase database) {
         this.database = database;
         this.festivals = database.festivals();
+        this.marker = database.festivalCacheMarker();
     }
 
     public void seedDefaultActiveFestivalIfEmpty() {
-        if (festivals.count() == 0) {
-            save(Festival.active(DEFAULT_FESTIVAL_ID, DEFAULT_FESTIVAL_NAME));
-        }
+        database.runInTransaction(() -> {
+            if (marker.count() == 0) {
+                if (festivals.count() == 0) {
+                    save(Festival.active(DEFAULT_FESTIVAL_ID, DEFAULT_FESTIVAL_NAME));
+                }
+                marker.markInitialized(new RoomFestivalCacheMarker(1));
+            }
+        });
     }
 
     @Override
@@ -37,14 +44,21 @@ public final class RoomFestivalRepository implements FestivalRepository, Syncing
     @Override
     public void save(Festival festival) {
         festivals.save(new RoomFestival(festival.id(), festival.name(), festival.status().name()));
+        marker.markInitialized(new RoomFestivalCacheMarker(1));
     }
 
     public void replaceAll(List<Festival> replacements) {
         database.runInTransaction(() -> {
+            for (Festival existing : findAll()) {
+                if (replacements.stream().noneMatch(festival -> festival.id().equals(existing.id()))) {
+                    new RoomFestivalDeletion(database).delete(existing);
+                }
+            }
             festivals.deleteAll();
             festivals.saveAll(replacements.stream()
                     .map(festival -> new RoomFestival(festival.id(), festival.name(), festival.status().name()))
                     .collect(Collectors.toList()));
+            marker.markInitialized(new RoomFestivalCacheMarker(1));
         });
     }
 

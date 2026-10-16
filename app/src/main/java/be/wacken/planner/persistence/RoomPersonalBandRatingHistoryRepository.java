@@ -32,6 +32,7 @@ public final class RoomPersonalBandRatingHistoryRepository implements PersonalBa
                 event.userName(),
                 event.band().name(),
                 event.festivalId().orElse(null),
+                event.festivalNameSnapshot().orElse(null),
                 event.rating().value(),
                 event.createdAt().toString(),
                 "PENDING"
@@ -44,6 +45,7 @@ public final class RoomPersonalBandRatingHistoryRepository implements PersonalBa
                 event.userName(),
                 event.band().name(),
                 event.festivalId().orElse(null),
+                event.festivalNameSnapshot().orElse(null),
                 event.rating().value(),
                 event.createdAt().toString(),
                 "SYNCED"
@@ -136,7 +138,8 @@ public final class RoomPersonalBandRatingHistoryRepository implements PersonalBa
                 new Band(row.bandName),
                 Optional.ofNullable(row.festivalId),
                 Rating.of(row.value),
-                Instant.parse(row.createdAt)
+                Instant.parse(row.createdAt),
+                Optional.ofNullable(row.festivalNameSnapshot)
         );
     }
 }
