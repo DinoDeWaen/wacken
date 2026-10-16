@@ -109,6 +109,44 @@ public final class SupabaseMasterDataClientTest {
     }
 
     @Test
+    public void reusingExistingBandDoesNotRequireAdminUpdatePermission() throws Exception {
+        RecordingRequests requests = new RecordingRequests("[{\"id\":\"airbourne\",\"name\":\"Airbourne\",\"active\":true}]");
+        SupabaseMasterDataClient client = new SupabaseMasterDataClient(requests);
+
+        client.saveBand(new Band("Airbourne"));
+
+        assertEquals(List.of("GET"), requests.methods);
+    }
+
+    @Test
+    public void newBandUsesInsertWithoutUpdatePrivilege() throws Exception {
+        RecordingRequests requests = new RecordingRequests("[]");
+        SupabaseMasterDataClient client = new SupabaseMasterDataClient(requests);
+
+        client.saveBand(new Band("New Act"));
+
+        assertEquals(List.of("GET", "POST"), requests.methods);
+        assertEquals("/rest/v1/bands", requests.endpoints.get(1));
+        assertEquals(List.of(false, false), requests.upserts);
+    }
+
+    @Test
+    public void newFestivalLineupUsesInsertWithoutUpdatePrivilege() throws Exception {
+        RecordingRequests requests = new RecordingRequests("[{\"id\":\"airbourne\",\"name\":\"Airbourne\",\"active\":true}]");
+        SupabaseMasterDataClient client = new SupabaseMasterDataClient(requests);
+
+        client.saveFestivalLineup("summer-breeze-2027", List.of(
+                new FestivalLineupEntry("summer-breeze-2027", new Band(
+                        "Airbourne", Optional.of("Cached biography"), Optional.empty(), Optional.empty(), Optional.empty()
+                ), "Airbourne")
+        ));
+
+        assertEquals(List.of("DELETE", "GET", "POST"), requests.methods);
+        assertEquals("/rest/v1/festival_lineup_entries", requests.endpoints.get(2));
+        assertEquals(false, requests.upserts.get(2));
+    }
+
+    @Test
     public void mapsFestivalLineupRowsToDomainEntries() throws Exception {
         org.json.JSONArray rows = new org.json.JSONArray()
                 .put(new JSONObject()
@@ -161,6 +199,7 @@ public final class SupabaseMasterDataClientTest {
         private final List<String> methods = new ArrayList<>();
         private final List<String> endpoints = new ArrayList<>();
         private final List<String> bodies = new ArrayList<>();
+        private final List<Boolean> upserts = new ArrayList<>();
 
         private RecordingRequests(String lookupResponse) {
             this.lookupResponse = lookupResponse;
@@ -171,6 +210,7 @@ public final class SupabaseMasterDataClientTest {
             methods.add(method);
             endpoints.add(endpoint);
             bodies.add(body);
+            upserts.add(upsert);
             return "GET".equals(method) ? lookupResponse : "";
         }
     }
