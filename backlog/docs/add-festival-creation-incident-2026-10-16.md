@@ -214,6 +214,13 @@ personal history before committing. The active Summer breeze lineup now has
 now part of CI. The release process requires both commands on the release
 source. Ordinary unit-run integration skips cannot satisfy the API gate.
 
+GitHub Actions run [38960044738](https://github.com/DinoDeWaen/wacken/actions/runs/38960044738)
+passed both jobs on fix commit `d2ab031`: unit/QA/coverage, real PostgreSQL and
+PostgREST validation, debug APK build, and Android emulator instrumentation.
+The first CI attempt exposed an existing SDK setup default requesting the
+removed `tools` package. Both jobs now explicitly install platform-tools,
+Android 36 and build-tools 36.0.0; the successful run validates that correction.
+
 Physical-phone CSV/file-picker interaction remains unverified because the
 reported phone is not attached. The emulator validates the actual activity,
 worker and cache with a supplied CSV selection, while the real HTTP suite
