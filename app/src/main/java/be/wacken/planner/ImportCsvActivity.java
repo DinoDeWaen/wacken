@@ -49,6 +49,7 @@ public final class ImportCsvActivity extends Activity {
     private boolean addFestivalMode;
     private EditText festivalName;
     private TextView resultMessage;
+    private Button importButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +94,7 @@ public final class ImportCsvActivity extends Activity {
             form.addView(filePicker("Food", foodCsv, REQUEST_FOOD));
         }
 
-        Button importButton = actionButton(addFestivalMode ? "Add festival from bands.csv" : "Import selected files");
+        importButton = actionButton(addFestivalMode ? "Add festival from bands.csv" : "Import selected files");
         importButton.setOnClickListener(view -> importCsv());
         form.addView(importButton);
 
@@ -151,7 +152,7 @@ public final class ImportCsvActivity extends Activity {
         }
 
         if (addFestivalMode) {
-            addFestivalFromBandsCsv(new AppRepositories(this));
+            addFestivalFromBandsCsv();
             return;
         }
         AppRepositories repositories = AppRepositories.tsvFallback(this);
@@ -189,7 +190,7 @@ public final class ImportCsvActivity extends Activity {
         }
     }
 
-    private void addFestivalFromBandsCsv(AppRepositories repositories) {
+    private void addFestivalFromBandsCsv() {
         AuthSession session = new AuthSessionStore(this).load();
         if (!session.isPresent()) {
             resultMessage.setTextColor(WackenTheme.RED);
@@ -207,22 +208,34 @@ public final class ImportCsvActivity extends Activity {
             setResult(RESULT_CANCELED);
             return;
         }
-        AddFestivalResult result;
-        try {
-            result = new AddFestivalUseCase(
+        importButton.setEnabled(false);
+        resultMessage.setTextColor(WackenTheme.AMBER);
+        resultMessage.setText("Adding festival group-wide...");
+        new AddFestivalAction(
+                command -> new Thread(command, "add-festival").start(),
+                this::runOnUiThread
+        ).execute(() -> {
+            AppRepositories repositories = new AppRepositories(getApplicationContext());
+            return new AddFestivalUseCase(
                     repositories.festivals(),
                     repositories.bands(),
                     repositories.festivalLineups(),
                     repositories.festivalPlanningRatings(),
                     repositories.personalBandRatings()
             ).addFestival(session.groupId(), session.userId(), slug(name), name, bands);
-        } catch (RuntimeException error) {
+        }, result -> {
+            importButton.setEnabled(true);
+            showAddFestivalResult(name, result);
+        }, message -> {
+            importButton.setEnabled(true);
             resultMessage.setTextColor(WackenTheme.RED);
             resultMessage.setText("Festival was not added group-wide. Existing cached data remains usable offline.\n"
-                    + error.getMessage());
+                    + message);
             setResult(RESULT_CANCELED);
-            return;
-        }
+        });
+    }
+
+    private void showAddFestivalResult(String name, AddFestivalResult result) {
         if (result.success()) {
             resultMessage.setTextColor(WackenTheme.AMBER);
             String feedback = "Added " + name + ": " + result.reusedBands()

@@ -156,12 +156,16 @@ not a general festival merge mechanism.
 
 ### Festival write authorization
 
-The current Supabase policy allows group members to update an existing festival,
-while creating a festival is restricted to platform admins. The Android festival
-adapter checks whether the festival ID already exists, uses `PATCH` for archive
-and rename, and uses `POST` only for a new festival. It does not use an insert
-upsert for lifecycle updates because that also invokes the insert policy. A
-failed remote write leaves the Room festival unchanged and reports the error.
+Members of the single shared group may insert the next active festival, active
+band records needed by its CSV, and lineup entries for an active festival.
+`V012__group_member_festival_creation.sql` grants only these insert operations;
+non-members remain denied and metadata updates retain their existing admin
+policy. The Android festival adapter checks whether the festival ID already
+exists, uses `PATCH` for archive and rename, and uses `POST` for a new festival.
+Band and lineup creation use plain inserts so they do not require update
+permission. A failed remote festival write leaves the Room festival unchanged
+and reports the error. The Add Festival action runs this remote work outside
+the Android UI thread.
 
 ### Import and band matching
 
@@ -222,6 +226,7 @@ Negative / trade-offs:
 - Related stories: task-150, task-151, task-152, task-153, task-154, task-155
 - Festival write-path correction: task-189
 - Missing festival rating recovery: task-190
+- Group-member festival creation: task-195
 - Future scope: task-156, task-157
 - Related ADR: `0008-supabase-postgres-flyway-migrations.md`
 - Related ADR: `0010-offline-first-sync-boundary.md`

@@ -179,13 +179,20 @@ final class SupabaseMasterDataClient {
         try {
             JSONArray rows = new JSONArray();
             for (FestivalLineupEntry entry : entries) {
-                saveBand(entry.band());
+                Optional<String> existingBandId = findBandIdByName(entry.band().name());
+                String bandId;
+                if (existingBandId.isPresent()) {
+                    bandId = existingBandId.get();
+                } else {
+                    saveBand(entry.band());
+                    bandId = bandIdFor(entry.band());
+                }
                 rows.put(new JSONObject()
                         .put("festival_id", festivalId)
-                        .put("band_id", bandIdForWrite(entry.band()))
+                        .put("band_id", bandId)
                         .put("uploaded_display_name", entry.uploadedDisplayName()));
             }
-            request("POST", "/rest/v1/festival_lineup_entries?on_conflict=festival_id,band_id", rows.toString(), true);
+            request("POST", "/rest/v1/festival_lineup_entries", rows.toString(), false);
         } catch (JSONException error) {
             throw new IOException("Supabase festival lineup request could not be created.", error);
         }
@@ -195,11 +202,16 @@ final class SupabaseMasterDataClient {
         try {
             Optional<JSONObject> existing = findBandRowByName(band.name());
             if (existing.isPresent()) {
-                JSONObject body = missingMetadataPatch(existing.get(), band).put("active", true);
-                request("PATCH", "/rest/v1/bands?id=eq." + encode(existing.get().getString("id")), body.toString(), false);
+                JSONObject body = missingMetadataPatch(existing.get(), band);
+                if (!existing.get().optBoolean("active", true)) {
+                    body.put("active", true);
+                }
+                if (body.length() > 0) {
+                    request("PATCH", "/rest/v1/bands?id=eq." + encode(existing.get().getString("id")), body.toString(), false);
+                }
                 return;
             }
-            request("POST", "/rest/v1/bands?on_conflict=id", newBandBody(band).toString(), true);
+            request("POST", "/rest/v1/bands", newBandBody(band).toString(), false);
         } catch (JSONException error) {
             throw new IOException("Supabase band request could not be created.", error);
         }
@@ -366,11 +378,6 @@ final class SupabaseMasterDataClient {
         return Optional.of("https://open.spotify.com/artist/" + artistId.trim());
     }
 
-    private String bandIdForWrite(Band band) throws IOException {
-        Optional<String> existing = findBandIdByName(band.name());
-        return existing.orElseGet(() -> bandIdFor(band));
-    }
-
     private Optional<String> findBandIdByName(String name) throws IOException {
         Optional<JSONObject> row = findBandRowByName(name);
         try {
@@ -381,7 +388,7 @@ final class SupabaseMasterDataClient {
     }
 
     private Optional<JSONObject> findBandRowByName(String name) throws IOException {
-        JSONArray rows = requestArray("/rest/v1/bands?select=id,name,biography_html,image_url,youtube_url,spotify_artist_id&name=eq." + encode(name) + "&limit=1");
+        JSONArray rows = requestArray("/rest/v1/bands?select=id,name,active,biography_html,image_url,youtube_url,spotify_artist_id&name=eq." + encode(name) + "&limit=1");
         try {
             if (rows.length() == 0) {
                 return Optional.empty();
