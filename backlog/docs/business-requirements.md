@@ -39,7 +39,7 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 - Wacken website scraping and Android data-grid validation in the current roadmap.
 - Play Store distribution before a later delivery phase.
 - Business logic in Android UI, Activities, or Fragments.
-- Android instrumentation tests unless a future task makes them meaningful.
+- Android instrumentation tests beyond critical persistence and UI regression flows unless a future task makes them meaningful.
 
 ### Business Rules Index
 
@@ -402,6 +402,9 @@ Scenario: Add a new festival after archiving the current one
   Then the new festival becomes the active festival
   And exact-name band matches reuse existing band records
   And unmatched band names create new band records
+  And the festival, complete lineup, and initial personal planning prefill are saved together
+  And a failed submission leaves no partial new festival
+  And retrying the same submission confirms its result without resetting later edits
 ```
 
 ### Workflow 11a: Rename the active festival
@@ -574,6 +577,8 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-085 | A festival can be manually archived by a user. | Archiving marks the active festival as historical without requiring confirmation in the first version. | Must |
 | BR-086 | Archived festival data is read-only except for explicit festival deletion. | Users can inspect historical lineups and ratings without editing them. A separate confirmed delete action may remove the archived festival under BR-105b. | Must |
 | BR-087 | A new festival can be added after the active festival is archived. | The first post-Wacken version does not manage multiple active or upcoming festivals at the same time. For signed-in users, adding a festival writes the festival and lineup through to Supabase so it is visible group-wide after sync. | Must |
+| BR-087a | Adding a festival is a complete operation. | The festival, full deduplicated lineup, new exact-name bands, and creating user's planning prefill are saved together. A failed save leaves no partial new festival, catalog changes, or prefill. Existing metadata and history survive. | Must |
+| BR-087b | An interrupted creation can be confirmed safely. | Retrying the same name and lineup after an uncertain result confirms the completed creation without duplicating it or resetting later rating edits. Existing archived festival identities cannot be reactivated by adding another festival. | Must |
 | BR-088 | The app remains for one friend group only. | Multi-group support, new invite flows, invite tokens, and invite deep links are out of scope. | Must |
 | BR-089 | Bands are stored independently from festivals. | A band such as Airbourne exists once in the band table and can appear in multiple festival lineups. | Must |
 | BR-090 | Festival lineups link festivals to bands. | Uploading a festival lineup creates festival-band entries and links them to band records in the shared Supabase model, then refreshes the local Room cache. | Must |

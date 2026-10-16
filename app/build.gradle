@@ -43,6 +43,10 @@ android {
         buildConfigField "String", "YOUTUBE_API_KEY", "\"${youtubeApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\""
     }
 
+    sourceSets {
+        androidTest.assets.srcDir file("../data/summer-breeze-2027")
+    }
+
     signingConfigs {
         release {
             if (releaseSigningConfigured) {

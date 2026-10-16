@@ -43,6 +43,7 @@
 - ADR: [`0012-reviewed-band-metadata-search-framework.md`](backlog/decisions/0012-reviewed-band-metadata-search-framework.md) defines the reviewed metadata proposal boundary for own-catalog and external provider enrichment.
 - CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
 - Visual design system: [`visual-design-system.md`](backlog/docs/visual-design-system.md).
+- Atomic festival creation: [`0014-atomic-festival-creation.md`](backlog/decisions/0014-atomic-festival-creation.md).
 - Release process: [`release-process.md`](backlog/docs/release-process.md).
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
@@ -227,6 +228,29 @@ Useful focused checks:
 ./gradlew :domain:jacocoTestCoverageVerification :application:jacocoTestCoverageVerification
 ./gradlew qaTest
 ```
+
+Festival creation has two required boundary checks, in addition to unit/QA tests:
+
+```bash
+scripts/verify-festival-creation.sh
+./gradlew :app:connectedDebugAndroidTest
+```
+
+The first command needs Docker, Python 3, curl, JDK 21, and the Android SDK.
+It creates disposable local PostgreSQL/PostgREST containers, applies every
+repository migration, exercises member RLS and failure rollback, and runs the
+complete Summer Breeze CSV, concurrency, and lost-response retry scenarios
+through the real API. It fails on skipped integration tests. The Android suite
+requires a connected emulator and checks the actual Add Festival screen and
+Room publication/rollback. Both checks run in CI and are mandatory before release.
+
+Add Festival uses the atomic `V013` creation operation. Exact names reuse
+catalog records; different names get independent identities even if their
+simplified spelling matches. Repeating the same name and CSV confirms the same
+creation after a lost response without resetting later ratings. Archived
+festival identities are never reused. The complete remote snapshot is published
+to Room in one transaction. See the [incident analysis](backlog/docs/add-festival-creation-incident-2026-10-16.md)
+for the previous failures and the regression coverage.
 
 Before building official signed release APKs, verify the local release keystore:
 

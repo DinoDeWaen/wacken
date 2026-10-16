@@ -31,6 +31,9 @@ jobs:
       - name: Run QA suite
         run: ./gradlew qaTest
 
+      - name: Validate festival creation against PostgreSQL and PostgREST
+        run: scripts/verify-festival-creation.sh
+
       - name: Build debug APK
         run: ./gradlew assembleDebug
 
@@ -40,3 +43,26 @@ jobs:
           name: wacken-planner-0.1.${{ github.run_number }}-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+  android-creation:
+    name: Android creation UI and Room regressions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@v3
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run Android instrumentation tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          arch: x86_64
+          target: google_apis
+          script: ./gradlew :app:connectedDebugAndroidTest --no-daemon
