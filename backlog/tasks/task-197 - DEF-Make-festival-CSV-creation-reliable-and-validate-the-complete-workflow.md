@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-16 18:44'
-updated_date: '2026-10-16 18:46'
+updated_date: '2026-10-16 18:52'
 labels:
   - defect
   - android
@@ -15,9 +15,12 @@ dependencies: []
 references:
   - supabasemasterdataclient
   - addfestivalusecase
+documentation:
+  - backlog/docs/add-festival-creation-incident-2026-10-16.md
 modified_files:
   - >-
     app/src/test/java/be/wacken/planner/AddFestivalPersistenceRegressionTest.java
+  - backlog/docs/add-festival-creation-incident-2026-10-16.md
 priority: high
 type: bug
 ---
@@ -55,3 +58,25 @@ Architecture impact: new transaction/API boundary proposed; explicit user approv
 README/business requirements/ADR will reflect atomic creation and repeatable validation. Diagram impact assessed after final design.
 Current production data is read-only during analysis; no automatic deletion of partial or historic data.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Investigation progress
+
+The code is being developed in the isolated codex/fix-festival-creation worktree based on V2.33.3. TASK-197 is now also present in the main user checkout so it appears in the local Backlog.md board.
+
+Confirmed root cause: the supplied CSV contains Any Given Day; the golden catalog contains Any given Day at id any-given-day. Exact-name lookup sees a new name, while the generated slug ID collides. Production logs record SQLSTATE 23505 on the band POST at 2026-10-16 18:36:16 UTC.
+
+The failed import left Summer breeze active with zero lineup entries, one planning rating, and 29 newly inserted bands. Production has only been read during this investigation.
+
+Added AddFestivalPersistenceRegressionTest and ran it against the unchanged V2.33.3 production code. Four scenarios fail for the expected defects:
+1. Full 63-band Summer Breeze CSV: bands_pkey collision.
+2. Injected second-band failure: active empty festival and first band remain.
+3. Duplicate CSV rows: festival_lineup_entries_pkey collision.
+4. Reusing an archived festival ID: history record is reactivated and renamed.
+
+The existing tests did not compose the real use case and adapters with stateful constraints or this CSV. Worker dispatch and isolated RLS checks passed while the complete feature remained broken.
+
+Architecture approval requested and still pending: one atomic SECURITY INVOKER Supabase creation operation, collision-safe identities, idempotent retry, and cache publication after complete success. Repository architecture-decision-rules.md requires explicit approval for this transaction/API change. Independent regression tests and investigation continue while pending.
+<!-- SECTION:NOTES:END -->
