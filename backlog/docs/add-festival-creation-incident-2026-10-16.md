@@ -21,10 +21,10 @@ Postgres logs show SQLSTATE `23505` on the band POST at 18:36:16 UTC
 - 29 band records inserted during the failed attempt.
 - Archived Wacken remains present with 165 lineup entries and 272 planning ratings.
 
-No production records have been changed during this investigation. Existing
+No production records were changed during the initial investigation. Existing
 bands or history must not be deleted to recover the import.
 
-## Related failures found in the creation flow
+## Related failures found in the legacy creation flow
 
 | Scenario | Finding | Evidence |
 | --- | --- | --- |
@@ -153,12 +153,11 @@ created record. The current partial production state demonstrates this risk.
 
 ### Approval needed
 
-Explicit approval is pending under `architecture-decision-rules.md` and
-`delivery-governance.md`, which require it before a transaction/API change.
-An approval question has been presented in this chat. Production implementation
-and recovery of the incomplete festival have not started.
+The user explicitly approved the recommended atomic creation change with
+“Please proceed” on 16 October 2026, before production implementation.
+ADR 0014 records the accepted design. Flyway V013 has been deployed and validated.
 
-## Required completion evidence
+## Required completion evidence and outcome
 
 The fix must pass the full 63-band fixture through the real API/schema and
 verify persisted lineup and history, not only return a successful request.
@@ -168,3 +167,63 @@ non-members; verify Android Room publication and responsive UI on the emulator.
 Make the integration command a required CI/release gate. Recovery of the
 existing incomplete import must preserve existing metadata and ratings and
 verify the complete expected lineup afterward.
+
+## Completed repair and verification
+
+The code now uses a creation-specific application port, one authorized database
+transaction and a request ledger, and one Room publication transaction. New
+band IDs are independent of display slugs. The same exact-name rule is
+preserved; different spellings are not silently merged. Missing name headers
+and blank band names are rejected before persistence instead of importing IDs
+or dropping rows.
+
+The initial four-red-test baseline is committed at `5e4b334`. The stateful
+contract double has since been replaced by real PostgreSQL/PostgREST tests in
+the same regression class. The final validation is:
+
+- Ten real HTTP/API scenarios pass, including the actual 63-band CSV,
+  case/punctuation/Unicode identities, personal prefill, duplicate rows,
+  archived identity protection, stale active-state rejection, lost-response
+  retry, concurrent identical and competing requests, and non-member denial.
+- SQL fault injection at band, lineup, prefill, and final request-ledger writes
+  proves rollback of the whole operation. Replay preserves later rating edits.
+- Ten Android instrumentation tests pass: six creation UI/Room cases and four
+  existing festival deletion/migration cases. The creation cases cover the
+  actual screen with the checked-in CSV, worker responsiveness, error feedback,
+  local rollback/retry, stale cache reconciliation, pending edits/history,
+  session mismatch, and malformed CSV rejection.
+- A clean full unit/QA/coverage run, release lint-vital, and signed APK build pass.
+  The local untagged validation APK retains 2.33.3/39 metadata; it is not a new
+  published release. Its SHA-256 is
+  `ae211c03bb8866d1285220b5ba12c39a22108b02939b7c73794275ae660f047d`.
+- Flyway validates all 13 migrations. A rollback-only hosted member-role test
+  created and replayed the full CSV and rejected a non-member. Every existing
+  data fingerprint matched before and after that verification.
+- Security advisor finding names and counts did not change.
+
+The guarded support transaction in
+`backend/flyway/repairs/task-197-summer-breeze.sql` then completed the legacy
+partial festival. It checked the exact observed identity, status, creation
+timestamp, empty lineup, and creating-member evidence, and asserted preservation
+of all existing band metadata, planning ratings, festivals, other lineups, and
+personal history before committing. The active Summer breeze lineup now has
+63 bands and its existing planning rating remains. Archived Wacken retains
+165 lineup entries and 272 planning ratings.
+
+`scripts/verify-festival-creation.sh` and the Android instrumentation job are
+now part of CI. The release process requires both commands on the release
+source. Ordinary unit-run integration skips cannot satisfy the API gate.
+
+GitHub Actions run [38960044738](https://github.com/DinoDeWaen/wacken/actions/runs/38960044738)
+passed both jobs on fix commit `d2ab031`: unit/QA/coverage, real PostgreSQL and
+PostgREST validation, debug APK build, and Android emulator instrumentation.
+The first CI attempt exposed an existing SDK setup default requesting the
+removed `tools` package. Both jobs now explicitly install platform-tools,
+Android 36 and build-tools 36.0.0; the successful run validates that correction.
+
+Physical-phone CSV/file-picker interaction remains unverified because the
+reported phone is not attached. The emulator validates the actual activity,
+worker and cache with a supplied CSV selection, while the real HTTP suite
+validates the database/API path. A new app build must be installed to deliver
+the code fix; the repaired existing festival is available to V2.33.3 through
+**Sync from Supabase**.
