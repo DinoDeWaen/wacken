@@ -167,6 +167,12 @@ permission. A failed remote festival write leaves the Room festival unchanged
 and reports the error. The Add Festival action runs this remote work outside
 the Android UI thread.
 
+TASK-197 replaces the new-festival sequence with the atomic creation operation
+and request replay contract in [ADR 0014](0014-atomic-festival-creation.md).
+The complete response is published to Room in one transaction; generic lifecycle
+updates remain separate. Exact names receive collision-safe identities and
+creation cannot reactivate an archived identity.
+
 ### Import and band matching
 
 Festival imports remain validated CSV-based imports.
