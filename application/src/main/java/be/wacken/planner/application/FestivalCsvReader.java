@@ -34,10 +34,16 @@ public final class FestivalCsvReader {
     }
 
     public static List<String> bandNames(String csv) {
-        return rows("bands.csv", csv).stream()
-                .map(row -> row.valuesByHeader().containsKey("name") ? row.value("name") : row.firstValue())
-                .filter(name -> !name.isBlank())
-                .toList();
+        List<Row> bands = rows("bands.csv", csv);
+        for (Row row : bands) {
+            if (!row.valuesByHeader().containsKey("name")) {
+                throw new FormatException("bands.csv", 1, "missing required name header");
+            }
+            if (row.value("name").isBlank()) {
+                throw new FormatException("bands.csv", row.rowNumber(), "band name must not be blank");
+            }
+        }
+        return bands.stream().map(row -> row.value("name")).toList();
     }
 
     private static List<Record> records(String fileName, String csv) {

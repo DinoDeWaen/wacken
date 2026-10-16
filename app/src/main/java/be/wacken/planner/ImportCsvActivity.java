@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import be.wacken.planner.application.AddFestivalResult;
 import be.wacken.planner.application.AddFestivalUseCase;
+import be.wacken.planner.application.FestivalCreationGateway;
 import be.wacken.planner.application.FestivalCsvFiles;
 import be.wacken.planner.application.FestivalCsvReader;
 import be.wacken.planner.application.ImportFestivalCsvResult;
@@ -50,6 +51,7 @@ public final class ImportCsvActivity extends Activity {
     private EditText festivalName;
     private TextView resultMessage;
     private Button importButton;
+    private FestivalCreationGateway festivalCreation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -215,21 +217,18 @@ public final class ImportCsvActivity extends Activity {
                 command -> new Thread(command, "add-festival").start(),
                 this::runOnUiThread
         ).execute(() -> {
-            AppRepositories repositories = new AppRepositories(getApplicationContext());
-            return new AddFestivalUseCase(
-                    repositories.festivals(),
-                    repositories.bands(),
-                    repositories.festivalLineups(),
-                    repositories.festivalPlanningRatings(),
-                    repositories.personalBandRatings()
-            ).addFestival(session.groupId(), session.userId(), slug(name), name, bands);
+            if (festivalCreation == null) {
+                festivalCreation = new AppRepositories(getApplicationContext()).festivalCreation();
+            }
+            return new AddFestivalUseCase(festivalCreation)
+                    .addFestival(session.groupId(), session.userId(), festivalId(name), name, bands);
         }, result -> {
             importButton.setEnabled(true);
             showAddFestivalResult(name, result);
         }, message -> {
             importButton.setEnabled(true);
             resultMessage.setTextColor(WackenTheme.RED);
-            resultMessage.setText("Festival was not added group-wide. Existing cached data remains usable offline.\n"
+            resultMessage.setText("Festival creation could not be confirmed. Retry the same name and CSV.\n"
                     + message);
             setResult(RESULT_CANCELED);
         });
@@ -252,10 +251,11 @@ public final class ImportCsvActivity extends Activity {
         }
     }
 
-    private String slug(String name) {
-        return name.toLowerCase()
+    private String festivalId(String name) {
+        String slug = name.toLowerCase(java.util.Locale.ROOT)
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("^-|-$", "");
+        return slug.isEmpty() ? "festival-" + java.util.UUID.nameUUIDFromBytes(name.getBytes(StandardCharsets.UTF_8)) : slug;
     }
 
     private LinearLayout filePicker(String title, CsvSelection selection, int requestCode) {

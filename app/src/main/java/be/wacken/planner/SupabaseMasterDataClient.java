@@ -145,6 +145,10 @@ final class SupabaseMasterDataClient {
         return festivals;
     }
 
+    String createFestival(String command) throws IOException {
+        return request("POST", "/rest/v1/rpc/create_festival_from_bands", command, false);
+    }
+
     void saveFestival(Festival festival) throws IOException {
         try {
             JSONArray existing = requestArray("/rest/v1/festivals?select=id&id=eq." + encode(festival.id()) + "&limit=1");
@@ -260,7 +264,7 @@ final class SupabaseMasterDataClient {
     }
 
     static String bandIdFor(Band band) {
-        return slug(band.name());
+        return "band-" + java.util.UUID.nameUUIDFromBytes(band.name().getBytes(StandardCharsets.UTF_8));
     }
 
     static Optional<String> spotifyArtistId(Optional<String> spotifyUrl) {
@@ -340,6 +344,8 @@ final class SupabaseMasterDataClient {
 
     private SupabaseAuthenticatedRequest.Response send(String method, String endpoint, String body, AuthSession session, boolean upsert) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(SupabaseConfig.url() + endpoint).openConnection();
+        connection.setConnectTimeout(15000);
+        connection.setReadTimeout(30000);
         connection.setRequestMethod(method);
         connection.setRequestProperty("apikey", SupabaseConfig.anonKey());
         connection.setRequestProperty("Authorization", "Bearer " + session.accessToken());

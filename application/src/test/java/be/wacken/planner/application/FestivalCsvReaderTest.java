@@ -48,4 +48,16 @@ class FestivalCsvReaderTest {
 
         assertEquals("bands.csv row 2: unterminated quoted field", error.getMessage());
     }
+
+    @Test
+    void bandOnlyImportRejectsMissingNameHeaderBeforeWriting() {
+        assertThrows(FestivalCsvReader.FormatException.class,
+                () -> FestivalCsvReader.bandNames("band_id,title\nfirst,Airbourne\n"));
+    }
+
+    @Test
+    void bandOnlyImportRejectsBlankNamesInsteadOfSilentlyDroppingRows() {
+        assertThrows(FestivalCsvReader.FormatException.class,
+                () -> FestivalCsvReader.bandNames("band_id,name\nfirst,Airbourne\nsecond,\n"));
+    }
 }

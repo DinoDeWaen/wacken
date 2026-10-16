@@ -1,5 +1,8 @@
 package be.wacken.planner;
 
+import be.wacken.planner.application.FestivalCreationGateway;
+import be.wacken.planner.application.AddFestivalResult;
+
 import android.content.Context;
 
 import java.io.IOException;
@@ -81,6 +84,7 @@ final class AppRepositories {
     private final SupabaseSessionManager sessionManager;
     private final AuthSession session;
     private final Consumer<Runnable> festivalImportTransaction;
+    private final FestivalCreationGateway festivalCreation;
 
     AppRepositories(Context context) {
         this(context, SourceMode.SUPABASE);
@@ -209,9 +213,17 @@ final class AppRepositories {
             this.scheduleLocks = new ScheduleLockStore.NoOp();
         }
 
+        this.festivalCreation = sourceMode == SourceMode.SUPABASE && session.isPresent()
+                ? new SupabaseFestivalCreationGateway(supabaseMasterDataClient, new RoomFestivalCreationCache(database))
+                : (group, user, festival, uploaded) -> AddFestivalResult.failure("Sign in before adding a group-wide festival.");
+
         if (sourceMode == SourceMode.TSV_FALLBACK) {
             seedCacheFromSourceIfNeeded(bandCache, stageCache, performanceCache, distanceCache, foodCache);
         }
+    }
+
+    be.wacken.planner.application.FestivalCreationGateway festivalCreation() {
+        return festivalCreation;
     }
 
     BandRepository bands() {
