@@ -4,16 +4,19 @@ title: 'US: Link fuzzy band aliases for future festival imports'
 status: To Do
 assignee: []
 created_date: '2026-08-12 07:53'
-updated_date: '2026-08-23 09:35'
+updated_date: '2026-10-17 11:56'
 labels:
   - user-story
   - future
   - bands
   - aliases
   - import
+milestone: m-0
 dependencies:
-  - task-151
+  - TASK-151
+  - TASK-215
 priority: low
+type: enhancement
 ---
 
 ## Description
@@ -41,4 +44,6 @@ Out of scope: first post-Wacken implementation, automatic unreviewed fuzzy merge
 
 <!-- SECTION:NOTES:BEGIN -->
 Update 2026-08-23: User reported a concrete CSV import defect after Summer Breeze upload. Reviewed fuzzy/manual linking and missing-field metadata enrichment are now captured in task-179, which should be treated as the actionable replacement for this older future-scope placeholder. Keep this task only as historical context unless task-179 is split during implementation.
+
+2026-10-17 release2.34 assessment: TASK-179 covers post-import reviewed linking but not pre-creation reviewed aliases or durable reuse. Remaining acceptance criteria stay in scope. Concrete boundary proposal: backlog/docs/release-2.34-remaining-architecture-proposal.md (TASK-215); do not implement its schema/API extension before explicit approval.
 <!-- SECTION:NOTES:END -->

@@ -4,12 +4,15 @@ title: 'US: Review imported lineup changes in a data grid'
 status: To Do
 assignee: []
 created_date: '2026-08-19 11:02'
+updated_date: '2026-10-17 11:56'
 labels:
   - user-story
   - future
   - import
   - data-review
-dependencies: []
+milestone: m-0
+dependencies:
+  - TASK-215
 priority: low
 ---
 
@@ -33,3 +36,9 @@ Out of scope: Wacken scraping itself and fuzzy alias matching.
 - [ ] #4 Relevant tests cover validation states, accept/reject behavior, and rating preservation.
 - [ ] #5 README, business requirements, diagram, and ADR impact are recorded using delivery-governance wording when implemented.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-10-17: The current CSV import directly replaces validated local snapshots; no review grid exists. Proposed row acceptance/rejection preserves baseline data and ratings using the existing local import transaction. See backlog/docs/release-2.34-remaining-architecture-proposal.md and TASK-215 before implementation.
+<!-- SECTION:NOTES:END -->
