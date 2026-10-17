@@ -19,7 +19,7 @@ Five interactive HTML design directions are available in the [design study](desi
 > corrections cannot overwrite newer sources. TASK-216–220 and the aligned existing
 > stories deliver this model. TASK-216 implements isolated after-ratings and the
 > established-rating store. TASK-217 adds once-only creation snapshots for each
-> current group member. TASK-218 adds atomic archive promotion. Archived corrections,
+> current group member. TASK-218 adds atomic archive promotion.
 > TASK-172 adds audited own-rating corrections. Contextual views and integrated
 > upgrade validation remain TASK-219/220;
 > do not publish this intermediate state as the completed release.
@@ -65,6 +65,7 @@ Five interactive HTML design directions are available in the [design study](desi
 - Visual design system: [`visual-design-system.md`](backlog/docs/visual-design-system.md).
 - Atomic festival creation: [`0014-atomic-festival-creation.md`](backlog/decisions/0014-atomic-festival-creation.md).
 - Archived correction/audit: [`0017-audited-archived-rating-corrections.md`](backlog/decisions/0017-audited-archived-rating-corrections.md).
+- Reviewed aliases/creation: [`0018-reviewed-canonical-band-aliases.md`](backlog/decisions/0018-reviewed-canonical-band-aliases.md).
 - Release process: [`release-process.md`](backlog/docs/release-process.md).
 
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
@@ -210,6 +211,37 @@ English Wikipedia pages. Spotify can propose artist profile links and artist
 images when Spotify Web API credentials are configured. YouTube can propose
 channel links when a YouTube Data API key is configured.
 
+### Review band identities before adding a festival
+
+After choosing bands.csv and a festival name, review each nonexact name. Similar
+catalog names and previously confirmed aliases are suggestions requiring your
+choice. Select an existing band, optionally remember the imported spelling as an
+alias, or choose **Create new band**. Exact catalog names reuse their existing
+identity. The final summary requires **Create festival**; cancel saves nothing.
+
+Known bands retain their metadata and history. Multiple imported names selecting
+one canonical band create one lineup entry. The server saves the festival, aliases,
+lineup and each member's established planning snapshot together. A conflicting
+alias or changed catalog identity requires another review. After an uncertain
+result, retry the same name, CSV and choices to confirm without resetting ratings.
+Review and creation use the same authenticated member even across token refresh.
+
+Apply FlywayV018 before this APK. Older exact-name creation clients remain
+compatible. Room12 adds a confirmed-alias cache refreshed through normal master
+data sync; no offline alias write queue is introduced.
+
+```mermaid
+flowchart TD
+    CSV[Bands CSV] --> Review[Suggest canonical names and remembered aliases]
+    Review --> Choice{Explicit choice per nonexact name}
+    Choice -->|Existing| Link[Reuse canonical identity and optional alias]
+    Choice -->|No match| New[Create a separate catalog band]
+    Link --> Confirm[Confirm festival summary]
+    New --> Confirm
+    Confirm --> Transaction[Atomic festival, aliases, lineup and member planning snapshots]
+    Review -->|Cancel| Stop[No festival or alias writes]
+```
+
 ### Archived rating corrections
 
 Archives keep disabled rating controls by default. **Correct my archived rating**
@@ -289,10 +321,10 @@ C4Container
 
     System_Boundary(app, "Wacken Planner 2026") {
         Container(ui, "Android UI", "Java", "Screens for band list, ratings, imports, schedule")
-        Container(appsvc, "Application Layer", "Java", "Festival ratings, reviewed archived corrections, imports and deletion")
+        Container(appsvc, "Application Layer", "Java", "Festival ratings, reviewed canonical identities, archived corrections, imports and deletion")
         Container(domain, "Domain", "Canonical bands, separate personal/planning/after ratings and source provenance")
         Container(infra, "Infrastructure", "Java", "Adapters: Supabase source, TSV fallback source, and sync decorators")
-        ContainerDb(cache, "Room Local Cache", "SQLite/Room", "Imported data, independent ratings, pending work and correction audit")
+        ContainerDb(cache, "Room Local Cache", "SQLite/Room", "Imported data, confirmed aliases, independent ratings, pending work and correction audit")
         ContainerDb(tsv, "TSV Fallback Source", "App-private TSV files", "Fallback import source")
     }
 

@@ -25,9 +25,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 RoomPersonalBandRatingEvent.class,
                 RoomFestivalAfterRating.class,
                 RoomPersonalBandRating.class,
-                RoomRatingCorrection.class
+                RoomRatingCorrection.class,
+                RoomBandAlias.class
         },
-        version = 11,
+        version = 12,
         exportSchema = false
 )
 public abstract class WackenDatabase extends RoomDatabase {
@@ -239,6 +240,14 @@ public abstract class WackenDatabase extends RoomDatabase {
         }
     };
 
+    public static final Migration MIGRATION_11_12 = new Migration(11, 12) {
+        @Override public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS band_aliases (aliasKey TEXT NOT NULL PRIMARY KEY, aliasName TEXT NOT NULL, bandId TEXT NOT NULL, bandName TEXT NOT NULL, confirmedBy TEXT NOT NULL, confirmedAt TEXT NOT NULL)");
+        }
+    };
+
+    public abstract RoomBandAliasDao bandAliases();
+
     public abstract RoomRatingCorrectionDao ratingCorrections();
 
     public abstract RoomRatingStateDao ratingStates();
@@ -278,7 +287,7 @@ public abstract class WackenDatabase extends RoomDatabase {
                                     WackenDatabase.class,
                                     "wacken-cache.db"
                             )
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                             .allowMainThreadQueries()
                             .build();
                 }

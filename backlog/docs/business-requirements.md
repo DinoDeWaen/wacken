@@ -42,6 +42,11 @@ confirmation, atomic audit and conditional current-source update. Original dates
 are retained separately from correction times; a separate cached audit CSV keeps
 the normal ratings CSV contract unchanged. Archives remain read-only by default.
 TASK-219/220 still gate complete contextual views/exports and upgrade validation.
+TASK-156 adds pre-creation review of nonexact canonical identities and remembered
+aliases, with optional explicit alias confirmation. Festival/aliases/lineup and
+member planning snapshots commit together; conflicts require fresh review. The
+published exact-name creation API remains compatible. No automatic fuzzy merge
+or rating/history merge occurs.
 
 - Android band overview and detail screens, with generic Metal Battle placeholder entries hidden from rating lists.
 - 1-5 band ratings with default unrated value of `0`, including clearing a prior rating back to unrated.
@@ -631,7 +636,7 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-089 | Bands are stored independently from festivals. | A band such as Airbourne exists once in the band table and can appear in multiple festival lineups. | Must |
 | BR-090 | Festival lineups link festivals to bands. | Uploading a festival lineup creates festival-band entries and links them to band records in the shared Supabase model, then refreshes the local Room cache. | Must |
 | BR-091 | The first post-Wacken version matches bands by exact name. | If an uploaded band name exactly matches an existing band name, the app reuses the existing band; otherwise it creates a new band. | Must |
-| BR-092 | Nonexact band identities and remembered aliases require explicit confirmation. | Release2.34 TASK-156 proposes existing canonical bands before creation; confirming reuses identity and may remember an alias. No match creates a new catalog band before linking. No automatic fuzzy merge. | Should |
+| BR-092 | Nonexact band identities and remembered aliases require explicit confirmation. | TASK-156 proposes existing canonical bands before creation; confirming reuses identity and may remember an alias. No match creates a new catalog band before linking. Cancel writes nothing. Conflicting aliases cannot be silently reassigned. Repeated canonical choices yield one lineup entry without merging metadata, opinions or history. The old exact-name API remains compatible. | Should |
 | BR-093 | Ratings are personal per user. | Each user's ratings belong to that user. The one friend group's schedule still combines personal planning ratings. | Must |
 | BR-094 | Personal band ratings sync to Supabase. | A user's overall opinion of a band is synced for backup, cross-device continuity, and future festival prefilling. | Must |
 | BR-095 | Festival planning ratings sync to Supabase. | Planning ratings are per user, festival, and band, and are used for group schedule decisions. | Must |

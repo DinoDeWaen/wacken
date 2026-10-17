@@ -11,4 +11,9 @@ import be.wacken.planner.domain.Festival;
 @FunctionalInterface
 public interface FestivalCreationGateway {
     AddFestivalResult create(String groupId, String userName, Festival festival, List<Band> bands);
+
+    default AddFestivalResult createReviewed(String groupId, String userName, Festival festival,
+            List<be.wacken.planner.domain.ReviewedFestivalBand> bands) {
+        return AddFestivalResult.failure("Reviewed creation is unavailable. Update the app and database before retrying.");
+    }
 }

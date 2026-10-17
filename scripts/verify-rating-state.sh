@@ -47,6 +47,8 @@ docker cp "$ROOT_DIR/backend/flyway/tests/rating_corrections.sql" "$TEST_PREFIX:
 docker exec "$TEST_PREFIX" psql -X -v ON_ERROR_STOP=1 -U postgres -f /tmp/rating_corrections.sql
 docker cp "$ROOT_DIR/backend/flyway/tests/festival_deletion.sql" "$TEST_PREFIX:/tmp/festival_deletion.sql"
 docker exec "$TEST_PREFIX" psql -X -v ON_ERROR_STOP=1 -U postgres -f /tmp/festival_deletion.sql
+docker cp "$ROOT_DIR/backend/flyway/tests/festival_aliases.sql" "$TEST_PREFIX:/tmp/festival_aliases.sql"
+docker exec "$TEST_PREFIX" psql -X -v ON_ERROR_STOP=1 -U postgres -f /tmp/festival_aliases.sql
 docker run -d --name "$TEST_PREFIX-api" --network "$TEST_PREFIX" -p 127.0.0.1::3000 \
   -e "PGRST_DB_URI=postgres://postgres:rating-state-tests-only@$TEST_PREFIX:5432/postgres" \
   -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon \

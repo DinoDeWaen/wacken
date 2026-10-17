@@ -47,6 +47,31 @@ final class SupabaseFestivalCreationGateway implements FestivalCreationGateway {
         }
     }
 
+    @Override public AddFestivalResult createReviewed(String groupId,String userName,Festival festival,List<ReviewedFestivalBand> bands) {
+        try {
+            JSONArray rows=new JSONArray();
+            for(ReviewedFestivalBand row:bands.stream().sorted(java.util.Comparator.comparing(ReviewedFestivalBand::uploadedName)).toList())
+                rows.put(new JSONObject().put("uploaded_name",row.uploadedName())
+                    .put("band_id",row.selected().map(CanonicalBand::id).orElse(null))
+                    .put("band_name",row.selected().map(b->b.band().name()).orElse(null))
+                    .put("remember_alias",row.rememberAlias()));
+            JSONArray identity=new JSONArray().put("reviewed-v1").put(groupId).put(userName).put(festival.id()).put(festival.name()).put(rows);
+            String request=UUID.nameUUIDFromBytes(identity.toString().getBytes(StandardCharsets.UTF_8)).toString();
+            JSONObject command=new JSONObject().put("p_request_id",request).put("p_group_id",groupId)
+                .put("p_festival_id",festival.id()).put("p_festival_name",festival.name()).put("p_rows",rows);
+            Snapshot snapshot=parse(client.request("POST","/rest/v1/rpc/create_festival_from_reviewed_bands",command.toString(),false),groupId,userName);
+            java.util.Set<String> expected=bands.stream().map(row->row.selected().map(b->b.band().name()).orElse(row.uploadedName())).collect(Collectors.toSet());
+            java.util.Set<String> acknowledged=snapshot.lineup().stream().map(row->row.band().name()).collect(Collectors.toSet());
+            if(!festival.equals(snapshot.festival())||snapshot.aliases()==null||!expected.equals(acknowledged))
+                throw new IOException("Reviewed creation acknowledgement is incomplete or belongs to different festival data.");
+            try { cache.accept(snapshot); }
+            catch(RuntimeException error) { throw new SupabaseSyncException("Festival saved group-wide, but the local cache could not be updated. Retry the same name, CSV and reviewed choices.",error); }
+            return snapshot.result();
+        } catch(IOException|org.json.JSONException error) {
+            throw new SupabaseSyncException("Could not confirm reviewed festival creation. Retry the same name, CSV and choices. If a band or alias changed, review again. "+error.getMessage(),error);
+        }
+    }
+
     static Snapshot parse(String response, String groupId, String userName) throws org.json.JSONException {
         JSONObject data = new JSONObject(response);
         if (!groupId.equals(data.getString("group_id")) || !userName.equals(data.getString("user_id"))) {
@@ -74,10 +99,11 @@ final class SupabaseFestivalCreationGateway implements FestivalCreationGateway {
         }
         return new Snapshot(groupId,userName,festival,List.copyOf(festivals),List.copyOf(bands),
                 List.copyOf(lineup),List.copyOf(ratings),AddFestivalResult.added(
-                data.getInt("reused_bands"),data.getInt("created_bands"),data.getInt("prefilled_ratings")));
+                data.getInt("reused_bands"),data.getInt("created_bands"),data.getInt("prefilled_ratings")),
+                data.has("aliases")?SupabaseFestivalBandCatalog.parseAliases(data.getJSONArray("aliases")):null);
     }
 
     record Snapshot(String groupId, String userName, Festival festival, List<Festival> festivals,
                     List<Band> bands, List<FestivalLineupEntry> lineup,
-                    List<SavedFestivalPlanningRating> ratings, AddFestivalResult result) { }
+                    List<SavedFestivalPlanningRating> ratings, AddFestivalResult result,List<ConfirmedBandAlias> aliases) { }
 }

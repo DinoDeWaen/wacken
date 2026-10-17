@@ -52,6 +52,8 @@ public final class ImportCsvActivity extends Activity {
     private TextView resultMessage;
     private Button importButton;
     private FestivalCreationGateway festivalCreation;
+    private be.wacken.planner.application.FestivalBandCatalog festivalBandCatalog;
+    private FestivalBandReviewDialog bandReview;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +75,7 @@ public final class ImportCsvActivity extends Activity {
 
         TextView subtitle = new TextView(this);
         subtitle.setText(addFestivalMode
-                ? "Name the next festival and select bands.csv. Exact band names reuse existing history."
+                ? "Name the next festival and select bands.csv. Review similar names and aliases before creating the lineup."
                 : "Select CSV files. Imported festival data is updated; existing ratings stay untouched.");
         subtitle.setTextColor(WackenTheme.MUTED);
         subtitle.setPadding(0, dp(8), 0, dp(16));
@@ -201,6 +203,10 @@ public final class ImportCsvActivity extends Activity {
             return;
         }
         String name = festivalName.getText().toString().trim();
+        try { be.wacken.planner.domain.Festival.active(festivalId(name),name); }
+        catch(be.wacken.planner.domain.DomainValidationException error) {
+            resultMessage.setTextColor(WackenTheme.RED);resultMessage.setText(error.getMessage());return;
+        }
         List<Band> bands;
         try {
             bands = FestivalCsvReader.bandNames(bandsCsv.contents).stream().map(Band::new).collect(Collectors.toList());
@@ -212,26 +218,59 @@ public final class ImportCsvActivity extends Activity {
         }
         importButton.setEnabled(false);
         resultMessage.setTextColor(WackenTheme.AMBER);
+        resultMessage.setText("Loading bands for review...");
+        new Thread(() -> {
+            try {
+                if(festivalBandCatalog==null) {
+                    AppRepositories repositories=new AppRepositories(getApplicationContext());
+                    repositories.requireReviewMember(session.userId());
+                    festivalBandCatalog=repositories.festivalBandCatalog();
+                    festivalCreation=repositories.festivalCreation();
+                }
+                var proposals=new be.wacken.planner.application.ReviewFestivalBandsUseCase(festivalBandCatalog).review(bands);
+                runOnUiThread(() -> {
+                    if(isFinishing()||isDestroyed())return;
+                    bandReview=new FestivalBandReviewDialog(this,proposals,rows->createReviewedFestival(session,name,rows),()->{
+                        importButton.setEnabled(true);resultMessage.setText("Review cancelled. No festival or aliases were created.");
+                    });
+                    bandReview.show();
+                });
+            } catch(RuntimeException error) {
+                runOnUiThread(() -> {
+                    if(isFinishing()||isDestroyed())return;
+                    importButton.setEnabled(true);resultMessage.setTextColor(WackenTheme.RED);
+                    resultMessage.setText("Could not review festival bands. "+error.getMessage());
+                });
+            }
+        },"review-festival-bands").start();
+    }
+
+    private void createReviewedFestival(AuthSession session,String name,List<be.wacken.planner.domain.ReviewedFestivalBand> bands) {
         resultMessage.setText("Adding festival group-wide...");
         new AddFestivalAction(
                 command -> new Thread(command, "add-festival").start(),
                 this::runOnUiThread
         ).execute(() -> {
-            if (festivalCreation == null) {
-                festivalCreation = new AppRepositories(getApplicationContext()).festivalCreation();
-            }
+            if (festivalCreation == null) throw new IllegalStateException("Review bands again before creating the festival.");
             return new AddFestivalUseCase(festivalCreation)
-                    .addFestival(session.groupId(), session.userId(), festivalId(name), name, bands);
+                    .addReviewedFestival(session.groupId(), session.userId(), festivalId(name), name, bands);
         }, result -> {
+            if(isFinishing()||isDestroyed())return;
             importButton.setEnabled(true);
             showAddFestivalResult(name, result);
         }, message -> {
+            if(isFinishing()||isDestroyed())return;
             importButton.setEnabled(true);
             resultMessage.setTextColor(WackenTheme.RED);
             resultMessage.setText("Festival creation could not be confirmed. Retry the same name and CSV.\n"
                     + message);
             setResult(RESULT_CANCELED);
         });
+    }
+
+    @Override protected void onDestroy() {
+        if(bandReview!=null)bandReview.dismiss();
+        super.onDestroy();
     }
 
     private void showAddFestivalResult(String name, AddFestivalResult result) {

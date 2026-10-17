@@ -191,6 +191,48 @@ public final class AddFestivalPersistenceRegressionTest {
         } finally {sql("DROP TRIGGER test_reject_other_prefill ON public.festival_planning_ratings");}
     }
 
+    @Test public void reviewedAliasCreationReusesMetadataAndEveryMembersEstablishedPlanning() throws Exception {
+        var row=new ReviewedFestivalBand("Airborn",Optional.of(new CanonicalBand("airbourne",new Band("Airbourne"))),true);
+        var gateway=new SupabaseFestivalCreationGateway(new SupabaseMasterDataClient(http(token)),snapshots::add);
+        assertTrue(gateway.createReviewed(GROUP,USER,Festival.active("reviewed","Reviewed"),List.of(row)).success());
+        assertEquals("1",sql("SELECT count(*) FROM public.band_aliases WHERE alias_key='airborn' AND band_id='airbourne'"));
+        assertEquals("Original",sql("SELECT biography_html FROM public.bands WHERE id='airbourne'"));
+        assertEquals("4\n5",sql("SELECT rating FROM public.festival_planning_ratings WHERE festival_id='reviewed' ORDER BY user_id"));
+        assertEquals("0",sql("SELECT count(*) FROM public.festival_after_ratings WHERE festival_id='reviewed'"));
+        assertEquals("Airborn",snapshots.get(0).lineup().get(0).uploadedDisplayName());
+        assertEquals("airbourne",snapshots.get(0).aliases().get(0).canonical().id());
+    }
+
+    @Test public void reviewedConcurrentReplayCommitsOnceAndLostResponseRetryKeepsPlanningEdits() throws Exception {
+        var rows=List.of(new ReviewedFestivalBand("Airborn",Optional.of(new CanonicalBand("airbourne",new Band("Airbourne"))),true));
+        var gateway=new SupabaseFestivalCreationGateway(new SupabaseMasterDataClient(http(token)),s->{});
+        ExecutorService pool=Executors.newFixedThreadPool(3);
+        try {
+            List<Future<AddFestivalResult>> results=new ArrayList<>();
+            for(int i=0;i<3;i++)results.add(pool.submit(()->gateway.createReviewed(GROUP,USER,Festival.active("reviewed-replay","Replay"),rows)));
+            for(var result:results)assertTrue(result.get(20,TimeUnit.SECONDS).success());
+        } finally {pool.shutdownNow();}
+        sql("UPDATE public.festival_planning_ratings SET rating=2 WHERE festival_id='reviewed-replay' AND user_id='"+USER+"'");
+        assertTrue(gateway.createReviewed(GROUP,USER,Festival.active("reviewed-replay","Replay"),rows).success());
+        assertEquals("1",sql("SELECT count(*) FROM public.festival_creation_requests"));
+        assertEquals("1",sql("SELECT count(*) FROM public.band_aliases"));
+        assertEquals("2",sql("SELECT rating FROM public.festival_planning_ratings WHERE festival_id='reviewed-replay' AND user_id='"+USER+"'"));
+    }
+
+    @Test public void knownAliasRequiresExplicitChoiceAndConflictingRememberCannotReassignIt() throws Exception {
+        sql("INSERT INTO public.band_aliases(alias_key,alias_name,band_id,confirmed_by) VALUES('airborn','Airborn','airbourne','"+USER+"')");
+        var catalog=new SupabaseFestivalBandCatalog(new SupabaseMasterDataClient(http(token)),a->{});
+        var proposal=new ReviewFestivalBandsUseCase(catalog).review(List.of(new Band("Airborn"))).get(0);
+        assertTrue(proposal.exactMatch().isEmpty());assertEquals("airbourne",proposal.suggestions().get(0).id());
+        var gateway=new SupabaseFestivalCreationGateway(new SupabaseMasterDataClient(http(token)),s->{});
+        expectFailure(()->gateway.createReviewed(GROUP,USER,Festival.active("conflict","Conflict"),List.of(
+            new ReviewedFestivalBand("Airborn",Optional.of(new CanonicalBand("h-blockx",new Band("H-Blockx"))),true))));
+        assertEquals("0",sql("SELECT count(*) FROM public.festivals WHERE status='ACTIVE'"));
+        assertTrue(gateway.createReviewed(GROUP,USER,Festival.active("separate","Separate"),List.of(new ReviewedFestivalBand("Airborn",Optional.empty(),false))).success());
+        assertEquals("1",sql("SELECT count(*) FROM public.bands WHERE name='Airborn'"));
+        assertEquals("airbourne",sql("SELECT band_id FROM public.band_aliases WHERE alias_key='airborn'"));
+    }
+
     private AddFestivalResult create(String id,List<Band> bands) {
         return new AddFestivalUseCase(new SupabaseFestivalCreationGateway(new SupabaseMasterDataClient(http(token)),snapshots::add))
                 .addFestival(GROUP,USER,id,id,bands);

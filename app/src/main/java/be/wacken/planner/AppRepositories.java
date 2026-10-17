@@ -232,6 +232,17 @@ final class AppRepositories {
         return festivalCreation;
     }
 
+    SupabaseFestivalBandCatalog festivalBandCatalog() {
+        if(!session.isPresent()) throw new SupabaseSyncException("Sign in before reviewing festival bands.",null);
+        return new SupabaseFestivalBandCatalog(new SupabaseMasterDataClient(sessionManager,session.userId()),
+                new be.wacken.planner.persistence.RoomBandAliasRepository(database)::replaceAll);
+    }
+
+    void requireReviewMember(String expected) {
+        if(!session.isPresent()||!session.userId().equals(expected))
+            throw new SupabaseSyncException("Account changed. Sign in and review the bands again.",null);
+    }
+
     BandRepository bands() {
         return bands;
     }
@@ -421,6 +432,7 @@ final class AppRepositories {
         try {
             SupabaseDiagnostics.info("master_data_sync", "start", "source=remote_or_assets");
             bands.syncSourceToCache();
+            if(syncingFestivals!=null) festivalBandCatalog().refreshAliases();
             if (syncingFestivals != null) {
                 syncingFestivals.syncSourceToCache();
             }

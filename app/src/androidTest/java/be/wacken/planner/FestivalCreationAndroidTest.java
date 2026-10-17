@@ -93,6 +93,18 @@ public final class FestivalCreationAndroidTest {
         assertEquals(1,database.festivalLineups().findByFestival("new-festival").size());
     }
 
+    @Test public void aliasCacheFailureRollsBackFestivalCatalogAndPlanningPublication() throws Exception {
+        JSONObject reply=new JSONObject(response(List.of("Airbourne")));
+        reply.put("aliases",new JSONArray().put(new JSONObject().put("alias_name","Airborn").put("band_id","airbourne")
+            .put("band_name","Airbourne").put("confirmed_by",USER).put("confirmed_at","2026-10-17T12:00:00Z")));
+        database.getOpenHelper().getWritableDatabase().execSQL("CREATE TRIGGER reject_alias BEFORE INSERT ON band_aliases BEGIN SELECT RAISE(ABORT,'Alias cache fault'); END");
+        try {new RoomFestivalCreationCache(database).accept(SupabaseFestivalCreationGateway.parse(reply.toString(),GROUP,USER));fail("Expected rollback");}
+        catch(RuntimeException expected) {}
+        assertEquals(1,database.festivals().findAll().size());assertEquals("ACTIVE",database.festivals().findAll().get(0).status);
+        assertEquals(1,database.bands().findAll().size());assertTrue(database.festivalLineups().findAll().isEmpty());
+        assertTrue(database.festivalPlanningRatings().findAll().isEmpty());assertTrue(database.bandAliases().findAll().isEmpty());
+    }
+
     @Test public void actualAddScreenStaysResponsiveAndPublishesTheEntireCsv() throws Exception {
         String csv=read(instrumentation.getContext().getAssets().open("bands.csv"));
         List<String> names=FestivalCsvReader.bandNames(csv);
@@ -110,6 +122,7 @@ public final class FestivalCreationAndroidTest {
         Button button=(Button)field(activity,"importButton");
         try {
             instrumentation.runOnMainSync(button::performClick);
+            confirmReviewSummary();
             assertTrue(started.await(10,TimeUnit.SECONDS));
             instrumentation.runOnMainSync(()->{
                 assertFalse(button.isEnabled());
@@ -127,6 +140,7 @@ public final class FestivalCreationAndroidTest {
         openScreen("name\nAirbourne\n",new SupabaseFestivalCreationGateway(
                 new SupabaseMasterDataClient((m,p,b,u)->{throw new IOException("Network unavailable");}),new RoomFestivalCreationCache(database)));
         instrumentation.runOnMainSync(()->((Button)fieldUnchecked(activity,"importButton")).performClick());
+        confirmReviewSummary();
         awaitFeedback("Festival creation could not be confirmed");
         instrumentation.runOnMainSync(()->assertTrue(((Button)fieldUnchecked(activity,"importButton")).isEnabled()));
         assertEquals(1,database.festivals().findAll().size());
@@ -158,7 +172,29 @@ public final class FestivalCreationAndroidTest {
         Object selection=field(activity,"bandsCsv");
         Field contents=selection.getClass().getDeclaredField("contents");contents.setAccessible(true);contents.set(selection,csv);
         Field dependency=ImportCsvActivity.class.getDeclaredField("festivalCreation");dependency.setAccessible(true);dependency.set(activity,gateway);
+        try {
+            List<CanonicalBand> catalog=FestivalCsvReader.bandNames(csv).stream().map(name->new CanonicalBand("fixture-"+name,new Band(name))).collect(Collectors.toList());
+            Field review=ImportCsvActivity.class.getDeclaredField("festivalBandCatalog");review.setAccessible(true);
+            review.set(activity,(FestivalBandCatalog)()->new FestivalBandCatalog.Snapshot(catalog,List.of()));
+        } catch(FestivalCsvReader.FormatException malformedFixture) { /* Rejected before review. */ }
         instrumentation.runOnMainSync(()->((EditText)fieldUnchecked(activity,"festivalName")).setText("New festival"));
+    }
+    private void confirmReviewSummary() throws Exception {
+        long deadline=SystemClock.elapsedRealtime()+20000;
+        while(SystemClock.elapsedRealtime()<deadline) {
+            AtomicReference<android.app.AlertDialog> dialog=new AtomicReference<>();
+            instrumentation.runOnMainSync(()->{
+                Object review=fieldUnchecked(activity,"bandReview");
+                if(review!=null)dialog.set((android.app.AlertDialog)fieldUnchecked(review,"dialog"));
+            });
+            if(dialog.get()!=null&&dialog.get().isShowing()) {
+                instrumentation.runOnMainSync(()->dialog.get().getButton(android.app.AlertDialog.BUTTON_POSITIVE).performClick());return;
+            }
+            SystemClock.sleep(25);
+        }
+        AtomicReference<String> feedback=new AtomicReference<>();
+        instrumentation.runOnMainSync(()->feedback.set(((TextView)fieldUnchecked(activity,"resultMessage")).getText().toString()));
+        fail("Review confirmation did not appear: "+feedback.get());
     }
     private void awaitFeedback(String prefix) throws Exception {
         long deadline=SystemClock.elapsedRealtime()+10000;
@@ -190,6 +226,6 @@ public final class FestivalCreationAndroidTest {
         return new JSONObject().put("group_id",GROUP).put("user_id",USER).put("festival",festival)
                 .put("festivals",new JSONArray().put(new JSONObject().put("id","wacken-2026").put("name","Wacken history").put("status","ARCHIVED")).put(festival))
                 .put("bands",bands).put("lineup",lineup).put("planning_ratings",ratings)
-                .put("reused_bands",0).put("created_bands",names.size()).put("prefilled_ratings",ratings.length()).toString();
+                .put("reused_bands",0).put("created_bands",names.size()).put("prefilled_ratings",ratings.length()).put("aliases",new JSONArray()).toString();
     }
 }

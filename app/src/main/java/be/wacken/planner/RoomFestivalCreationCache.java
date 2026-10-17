@@ -25,6 +25,7 @@ final class RoomFestivalCreationCache implements Consumer<SupabaseFestivalCreati
                     .filter(row -> row.festivalId().equals(snapshot.festival().id()))
                     .map(row -> row.band().name()).collect(Collectors.toSet());
             snapshot.ratings().stream().filter(row -> !pending.contains(row.band().name())).forEach(ratings::saveSynced);
+            if(snapshot.aliases()!=null) new RoomBandAliasRepository(database).replaceAll(snapshot.aliases());
         });
     }
 }
