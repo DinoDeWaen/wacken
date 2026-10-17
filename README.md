@@ -20,7 +20,8 @@ Five interactive HTML design directions are available in the [design study](desi
 > stories deliver this model. TASK-216 implements isolated after-ratings and the
 > established-rating store. TASK-217 adds once-only creation snapshots for each
 > current group member. TASK-218 adds atomic archive promotion. Archived corrections,
-> contextual views and integrated upgrade validation remain TASK-172/219/220;
+> TASK-172 adds audited own-rating corrections. Contextual views and integrated
+> upgrade validation remain TASK-219/220;
 > do not publish this intermediate state as the completed release.
 
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
@@ -63,6 +64,7 @@ Five interactive HTML design directions are available in the [design study](desi
 - CSV schemas: [`festival-data-csv-schemas.md`](backlog/docs/festival-data-csv-schemas.md).
 - Visual design system: [`visual-design-system.md`](backlog/docs/visual-design-system.md).
 - Atomic festival creation: [`0014-atomic-festival-creation.md`](backlog/decisions/0014-atomic-festival-creation.md).
+- Archived correction/audit: [`0017-audited-archived-rating-corrections.md`](backlog/decisions/0017-audited-archived-rating-corrections.md).
 - Release process: [`release-process.md`](backlog/docs/release-process.md).
 
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
@@ -208,6 +210,44 @@ English Wikipedia pages. Spotify can propose artist profile links and artist
 images when Spotify Web API credentials are configured. YouTube can propose
 channel links when a YouTube Data API key is configured.
 
+### Archived rating corrections
+
+Archives keep disabled rating controls by default. **Correct my archived rating**
+opens a review of your own planning (0–5) or after-rating (1–5), with a separate
+confirmation before saving. Reconnect and reload if the reviewed revision is stale.
+Offline staging cannot claim a saved correction. The original recorded date is
+retained. Authenticated transport checks the reviewed member on the first request
+and token retry; if the signed-in account changed, reopen the screen before saving.
+Correction history shows old → new, actor and correction time. Missing
+original dates stay unknown. Looking at one festival never borrows another
+festival's after-rating, even when the names match.
+
+FlywayV017 commits correction, audit and the eligible established-band update
+together. An after-rating updates the band opinion only while that festival is its
+source; planning and older-source corrections cannot change it or later planning
+snapshots. Room11 caches acknowledged values/audit together. Explicit recovery can
+resolve the reviewed local pending target while retaining its original offline
+fact/date; a newer pending operation is kept for review instead of overwritten.
+Audit is owner-scoped and append-only, and its snapshots survive festival deletion.
+
+Settings → **Export archived correction audit CSV** exports cached correction
+values, old/new values, actor and separately labeled original/correction dates.
+The normal ratings CSV keeps its existing format. Sync first for other-device
+corrections; export itself works from cache. Apply V017 before the new APK.
+
+```mermaid
+flowchart TD
+    A[Read-only archive] --> B[Review own value and revision]
+    B --> C[Stage and confirm correction]
+    C --> D[Authorized atomic transaction]
+    D --> E{After-rating and still current source?}
+    E -->|Yes| F[Update target, established opinion and audit]
+    E -->|No| G[Update target and audit]
+    F --> H[Publish acknowledged Room values and audit]
+    G --> H
+    D -->|Stale or failed| I[Keep cached and pending data; reload or retry]
+```
+
 ### Technologies
 - Language: Java
 - Build: Gradle (Android)
@@ -249,10 +289,10 @@ C4Container
 
     System_Boundary(app, "Wacken Planner 2026") {
         Container(ui, "Android UI", "Java", "Screens for band list, ratings, imports, schedule")
-        Container(appsvc, "Application Layer", "Java", "Festival-scoped rating use cases, imports, confirmed festival deletion")
+        Container(appsvc, "Application Layer", "Java", "Festival ratings, reviewed archived corrections, imports and deletion")
         Container(domain, "Domain", "Canonical bands, separate personal/planning/after ratings and source provenance")
         Container(infra, "Infrastructure", "Java", "Adapters: Supabase source, TSV fallback source, and sync decorators")
-        ContainerDb(cache, "Room Local Cache", "SQLite/Room", "Fast local app cache for imported data and ratings")
+        ContainerDb(cache, "Room Local Cache", "SQLite/Room", "Imported data, independent ratings, pending work and correction audit")
         ContainerDb(tsv, "TSV Fallback Source", "App-private TSV files", "Fallback import source")
     }
 

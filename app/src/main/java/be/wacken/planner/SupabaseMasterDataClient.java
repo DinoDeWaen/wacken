@@ -35,9 +35,16 @@ final class SupabaseMasterDataClient {
     private final RequestExecutor requests;
 
     SupabaseMasterDataClient(SupabaseSessionManager sessionManager) {
+        this(sessionManager, null);
+    }
+
+    SupabaseMasterDataClient(SupabaseSessionManager sessionManager, String expectedUser) {
         SupabaseAuthenticatedRequest authenticatedRequest = new SupabaseAuthenticatedRequest(sessionManager, "Supabase sync failed");
-        this.requests = (method, endpoint, body, upsert) ->
-                authenticatedRequest.execute(session -> send(method, endpoint, body, session, upsert));
+        this.requests = (method, endpoint, body, upsert) -> {
+            SupabaseAuthenticatedRequest.Request request=session -> send(method, endpoint, body, session, upsert);
+            return expectedUser == null ? authenticatedRequest.execute(request)
+                    : authenticatedRequest.executeForUser(expectedUser, request);
+        };
     }
 
     SupabaseMasterDataClient(RequestExecutor requests) {

@@ -37,8 +37,6 @@ public final class ArchivedFestivalLayoutRegressionTest {
         assertTrue(source.contains("imagePanel(url)"));
         assertTrue(source.contains("disabledStars(detail.realRating()"));
         assertTrue(source.contains("reset.setEnabled(false);"));
-        assertTrue(source.contains("PersonalRatingHistoryItem::rating"));
-        assertTrue(source.contains("item.festivalName().filter(history.festivalName()::equals).isPresent()"));
     }
 
     private Path source(String fileName) {

@@ -143,7 +143,7 @@ final class AppRepositories {
         SupabaseSessionManager sessionManager = new SupabaseSessionManager(authSessionStore, new SupabaseAuthClient());
         this.sessionManager = sessionManager;
         if (sourceMode == SourceMode.SUPABASE) {
-            supabaseMasterDataClient = new SupabaseMasterDataClient(sessionManager);
+            supabaseMasterDataClient = new SupabaseMasterDataClient(sessionManager,session.isPresent()?session.userId():null);
             bandSource = new SupabaseBandRepository(supabaseMasterDataClient);
             stageSource = new SupabaseStageRepository(supabaseMasterDataClient);
             performanceSource = new SupabasePerformanceRepository(supabaseMasterDataClient);
@@ -310,6 +310,23 @@ final class AppRepositories {
 
     PersonalBandRatingRepository currentBandRatings() { return currentBandRatings; }
 
+    be.wacken.planner.domain.RatingCorrectionRepository ratingCorrectionHistory() {
+        return new be.wacken.planner.persistence.RoomRatingCorrectionRepository(database);
+    }
+
+    be.wacken.planner.application.ArchivedRatingCorrectionUseCase archivedRatingCorrections() {
+        return new be.wacken.planner.application.ArchivedRatingCorrectionUseCase(festivals,festivalLineups,correctionGateway());
+    }
+
+    private SupabaseArchivedRatingCorrectionGateway correctionGateway() {
+        if (!session.isPresent() || ratingStateSync == null) {
+            throw new IllegalStateException("Sign in and connect to review an archived correction.");
+        }
+        return new SupabaseArchivedRatingCorrectionGateway(new SupabaseMasterDataClient(sessionManager,session.userId())::request,
+                session.userId(),new SupabaseRatingStateClient(sessionManager,session.userId()),
+                new RoomArchivedRatingCorrectionCache(database,session.groupId(),session.userId()));
+    }
+
     boolean hasUnresolvedLegacyRating(String bandName) { return database.ratingStates().hasUnresolvedLegacy(bandName); }
 
     ScheduleLockStore scheduleLocks() {
@@ -356,7 +373,7 @@ final class AppRepositories {
             if (pendingSyncSummary().hasPendingChanges()) {
                 throw new IllegalStateException("Sync or recover pending changes before archiving. Cached edits were retained.");
             }
-            SupabaseMasterDataClient client = new SupabaseMasterDataClient(sessionManager);
+            SupabaseMasterDataClient client = new SupabaseMasterDataClient(sessionManager,session.userId());
             new SupabaseFestivalArchiveGateway(client::request,
                     new SupabaseRatingStateClient(sessionManager, session.userId()),
                     new RoomFestivalArchiveCache(database, session.userId(), () -> pendingSyncSummary().hasPendingChanges()))
@@ -378,6 +395,7 @@ final class AppRepositories {
                 syncingPersonalRatings.pullUserEvents();
             }
             if (ratingStateSync != null) ratingStateSync.sync();
+            correctionGateway().refreshAudit();
             SupabaseDiagnostics.info("ratings_sync", "success", "remote_repository=true");
         } catch (Exception error) {
             SupabaseDiagnostics.warn("ratings_sync", "failed", "remote_repository=true", error);

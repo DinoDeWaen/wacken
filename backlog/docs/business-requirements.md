@@ -37,7 +37,11 @@ legacy status-only archive writes. New clients sync pending work first and publi
 acknowledged archive/rating cache state together. Recovered lineup values require
 explicit review before archive. Unsent edits from other devices remain pending
 for archived correction; the server cannot inspect another device's offline data.
-TASK-172/219/220 still gate the completed correction/view/upgrade lifecycle.
+TASK-172 implements explicit own archived corrections with reviewed revision,
+confirmation, atomic audit and conditional current-source update. Original dates
+are retained separately from correction times; a separate cached audit CSV keeps
+the normal ratings CSV contract unchanged. Archives remain read-only by default.
+TASK-219/220 still gate complete contextual views/exports and upgrade validation.
 
 - Android band overview and detail screens, with generic Metal Battle placeholder entries hidden from rating lists.
 - 1-5 band ratings with default unrated value of `0`, including clearing a prior rating back to unrated.
@@ -59,7 +63,7 @@ TASK-172/219/220 still gate the completed correction/view/upgrade lifecycle.
 - Multiple independent groups in the current version.
 - New friend-invite, invite-token, or invite deep-link flows.
 - Managing multiple upcoming festivals at the same time in the first post-Wacken version.
-- Editing archived festivals in the first post-Wacken version.
+- Unrestricted edits to archived festival master data or another member's ratings.
 - Automatic unreviewed fuzzy band merges or unreviewed metadata overwrites.
 - Wacken website scraping and Android data-grid validation in the current roadmap.
 - Play Store distribution before a later delivery phase.
@@ -172,7 +176,7 @@ Existing integration:
 - Non-goal 5: Do not support multiple independent groups; the app remains for one friend group.
 - Non-goal 6: Do not build new invite-token, invite deep-link, or self-service group onboarding flows.
 - Non-goal 7: Do not support multiple upcoming festivals at the same time in the first post-Wacken version.
-- Non-goal 8: Do not support editing archived festivals in the first post-Wacken version.
+- Non-goal 8: Do not permit unrestricted archived master-data edits or corrections to another member's ratings.
 - Non-goal 9: Do not automatically merge fuzzy band matches or overwrite existing metadata without user review and confirmation.
 - Non-goal 10: Do not build Wacken scraping or Android data-grid validation in the current roadmap.
 
@@ -257,7 +261,7 @@ Out of scope:
 - Multiple independent groups.
 - New friend-invite, invite-token, or invite deep-link flows.
 - Multiple upcoming festivals at the same time in the first post-Wacken version.
-- Editing archived festivals in the first post-Wacken version.
+- Unrestricted edits to archived festival master data or another member's ratings.
 - Fuzzy band linking and alias storage in the first post-Wacken version.
 - Wacken website scraping and Android data-grid validation in the current roadmap.
 - Business logic in Android UI components.
@@ -662,7 +666,7 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-113 | Archive promotes each member's final nonempty festival after-rating to their personal band rating atomically. | Band4 → festival planning5/after3 → archive preserves5/3 and establishes band3; next festival planning starts3. | Must |
 | BR-114 | Missing/reset after-ratings retain established band ratings. | No after-rating never replaces a known band rating with planning or zero. | Must |
 | BR-115 | Rating roles are isolated by user, festival and canonical band identity. | Editing one festival never changes another festival's planning/after-rating or another member's opinion. | Must |
-| BR-116 | Archived corrections preserve audit and respect current source provenance. | Own after-rating correction updates the band rating only if that festival is still its source. Older corrections cannot replace newer sources; planning corrections never promote. Existing later-festival planning snapshots remain. | Must |
+| BR-116 | Archived corrections preserve audit and respect current source provenance. | Explicit own planning0–5/after1–5 correction reviews the current revision and confirms before saving. Target, immutable old/new/actor/time audit and any eligible established opinion update commit together. Original event dates remain separate from correction time. Only a still-current festival source updates the band rating; planning/older-source corrections cannot promote or refresh later planning snapshots. A stale review fails; uncertain results replay safely. Audit context survives festival deletion and has a separate CSV export. | Must |
 | BR-117 | Legacy migration preserves data and makes uncertain provenance explicit. | Retain original/unknown dates and pending work; do not invent dates or promote active festival results as archived outcomes. | Must |
 
 All BR-113–117 are Must requirements. Revised BR-078/086/087a/092/098–100/105a
@@ -796,7 +800,7 @@ These topics are intentionally out of scope unless a future task explicitly reop
 - New self-service friend invites, invite tokens, or invite deep links.
 - New festival date/time-format decisions beyond values supplied by uploaded festival data.
 - Audit history, owner/admin-only permissions, or richer reset flows for group-wide manual schedule locks.
-- Editing archived festivals in the first post-Wacken version.
+- Unrestricted edits to archived festival master data or another member's ratings.
 - Managing multiple upcoming festivals at the same time in the first post-Wacken version.
 - Automatic unreviewed fuzzy band merges.
 - Automatic overwrites of existing band metadata from external sources.

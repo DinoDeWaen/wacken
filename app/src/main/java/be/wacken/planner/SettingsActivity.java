@@ -106,6 +106,7 @@ public final class SettingsActivity extends Activity {
         ratingAllocation.setPadding(0, dp(4), 0, 0);
         ratingSection.addView(ratingAllocation);
         ratingSection.addView(actionButton("Export ratings CSV", WackenTheme.ButtonStyle.PREMIUM, view -> exportRatingsCsv()));
+        ratingSection.addView(actionButton("Export archived correction audit CSV", WackenTheme.ButtonStyle.SECONDARY, view -> exportCorrectionsCsv()));
         screen.addView(ratingSection);
         refreshRatingAllocation();
 
@@ -260,6 +261,21 @@ public final class SettingsActivity extends Activity {
         }).start();
     }
 
+    private void exportCorrectionsCsv() {
+        try {
+            String csv=new be.wacken.planner.application.ExportRatingCorrectionsCsvUseCase(
+                    new AppRepositories(this).ratingCorrectionHistory()).export(currentSession.userId());
+            File file=writeExportFile(csv,"wacken-rating-corrections.csv");
+            Intent share=new Intent(Intent.ACTION_SEND);
+            share.setType("text/csv");share.putExtra(Intent.EXTRA_SUBJECT,"Archived rating corrections");
+            share.putExtra(Intent.EXTRA_STREAM,exportUri(file));share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(share,"Export archived correction audit CSV"));
+            showStatus("Correction audit CSV ready. Original and correction dates are separate.",WackenTheme.SUCCESS_GREEN);
+        } catch(Exception error) {
+            showStatus("Audit export failed. Cached data remains unchanged.",COLOR_AMBER);
+        }
+    }
+
     private void exportRatingsCsv() {
         try {
             AppRepositories repositories = new AppRepositories(this);
@@ -332,11 +348,15 @@ public final class SettingsActivity extends Activity {
     }
 
     private File writeExportFile(String csv) throws java.io.IOException {
+        return writeExportFile(csv,"wacken-ratings.csv");
+    }
+
+    private File writeExportFile(String csv,String fileName) throws java.io.IOException {
         File directory = new File(getCacheDir(), "exports");
         if (!directory.exists() && !directory.mkdirs()) {
             throw new java.io.IOException("Export directory could not be created.");
         }
-        File exportFile = new File(directory, "wacken-ratings.csv");
+        File exportFile = new File(directory, fileName);
         try (FileOutputStream output = new FileOutputStream(exportFile)) {
             output.write(csv.getBytes(StandardCharsets.UTF_8));
         }

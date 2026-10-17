@@ -13,7 +13,7 @@ final class SupabaseRatingStateClient implements RatingStateSync.Remote {
     private final SupabaseMasterDataClient.RequestExecutor requests;
     private final String user;
     SupabaseRatingStateClient(SupabaseSessionManager sessions,String user){
-        this(new SupabaseMasterDataClient(sessions)::request,user);
+        this(new SupabaseMasterDataClient(sessions,user)::request,user);
     }
     SupabaseRatingStateClient(SupabaseMasterDataClient.RequestExecutor requests,String user){
         this.requests=requests;this.user=user;

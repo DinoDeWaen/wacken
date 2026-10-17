@@ -30,6 +30,7 @@ DELETE FROM public.group_members WHERE user_id='33333333-3333-3333-3333-33333333
 UPDATE public.festivals SET status='ARCHIVED';
 INSERT INTO public.festivals(id,name,status) VALUES ('rating-archived','Archived','ARCHIVED'),('rating-active','Active','ACTIVE');
 INSERT INTO public.bands(id,name,active) VALUES ('rating-band','Rating Band',true),('outside-band','Outside',true),('unknown-date-band','Unknown',true);
+INSERT INTO public.stages(id,name) VALUES('rating-test-stage','Fixture Stage');
 INSERT INTO public.festival_lineup_entries(festival_id,band_id,uploaded_display_name)
 VALUES ('rating-active','rating-band','Rating Band'),('rating-archived','rating-band','Rating Band');
 INSERT INTO public.personal_band_rating_events(id,user_id,band_id,festival_id,rating,created_at) VALUES
@@ -42,6 +43,10 @@ docker cp "$ROOT_DIR/backend/flyway/tests/rating_state.sql" "$TEST_PREFIX:/tmp/r
 docker exec "$TEST_PREFIX" psql -X -v ON_ERROR_STOP=1 -U postgres -f /tmp/rating_state.sql
 docker cp "$ROOT_DIR/backend/flyway/tests/festival_archive.sql" "$TEST_PREFIX:/tmp/festival_archive.sql"
 docker exec "$TEST_PREFIX" psql -X -v ON_ERROR_STOP=1 -U postgres -f /tmp/festival_archive.sql
+docker cp "$ROOT_DIR/backend/flyway/tests/rating_corrections.sql" "$TEST_PREFIX:/tmp/rating_corrections.sql"
+docker exec "$TEST_PREFIX" psql -X -v ON_ERROR_STOP=1 -U postgres -f /tmp/rating_corrections.sql
+docker cp "$ROOT_DIR/backend/flyway/tests/festival_deletion.sql" "$TEST_PREFIX:/tmp/festival_deletion.sql"
+docker exec "$TEST_PREFIX" psql -X -v ON_ERROR_STOP=1 -U postgres -f /tmp/festival_deletion.sql
 docker run -d --name "$TEST_PREFIX-api" --network "$TEST_PREFIX" -p 127.0.0.1::3000 \
   -e "PGRST_DB_URI=postgres://postgres:rating-state-tests-only@$TEST_PREFIX:5432/postgres" \
   -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon \

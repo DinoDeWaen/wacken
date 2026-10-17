@@ -26,4 +26,7 @@ public interface RoomPersonalBandRatingEventDao {
 
     @Query("SELECT * FROM personal_band_rating_events WHERE userName = :userName AND syncStatus = 'PENDING'")
     List<RoomPersonalBandRatingEvent> findPendingByUser(String userName);
+
+    @Query("UPDATE personal_band_rating_events SET syncStatus='RESOLVED' WHERE userName=:user AND festivalId=:festival AND bandName=:band AND id=:operation AND syncStatus='PENDING'")
+    void resolveReviewedPending(String user,String festival,String band,String operation);
 }

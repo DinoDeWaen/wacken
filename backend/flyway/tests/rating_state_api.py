@@ -111,3 +111,47 @@ assert request("/rpc/archive_festival", payload={"p_festival_id": "rating-active
 status, current = request("/personal_band_ratings?select=rating,source_festival_id")
 assert current == [{"rating": expected, "source_festival_id": "archive-race"}], current
 print("Real PostgREST archive API: concurrent replay, member promotion, reset retention, edit race and old-replay source protection passed.")
+
+# Corrections use reviewed revisions and immutable audit; concurrent edits cannot
+# silently overwrite a value reviewed before a different correction.
+status, review = request("/rpc/review_archived_rating", payload={
+    "p_festival_id": "archive-race", "p_band_id": "rating-band", "p_kind": "AFTER"})
+assert status == 200 and review["rating"] == expected, (status, review)
+new_value = 1 if expected != 1 else 3
+correction = {"p_operation_id": str(uuid.uuid4()), "p_festival_id": "archive-race",
+    "p_band_id": "rating-band", "p_kind": "AFTER", "p_expected_rating": expected,
+    "p_expected_revision": review["revision"], "p_new_rating": new_value}
+with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+    replies = list(pool.map(lambda _: request("/rpc/correct_archived_rating", payload=correction), range(3)))
+assert all(status == 200 and body["confirmed"] for status, body in replies), replies
+assert all(body == replies[0][1] for _, body in replies), replies
+status, audit = request("/rating_corrections?select=previous_value,new_value,original_recorded_at,corrected_at")
+assert status == 200 and len(audit) == 1, (status, audit)
+assert audit[0]["previous_value"] == expected and audit[0]["new_value"] == new_value, audit
+assert audit[0]["original_recorded_at"] == review["recorded_at"], (audit, review)
+status, current = request("/personal_band_ratings?select=rating,source_festival_id")
+assert current == [{"rating": new_value, "source_festival_id": "archive-race"}], current
+stale = dict(correction, p_operation_id=str(uuid.uuid4()), p_new_rating=4)
+assert request("/rpc/correct_archived_rating", payload=stale)[0] == 400
+status, review = request("/rpc/review_archived_rating", payload={
+    "p_festival_id": "archive-race", "p_band_id": "rating-band", "p_kind": "AFTER"})
+first = dict(correction, p_operation_id=str(uuid.uuid4()), p_expected_rating=new_value,
+             p_expected_revision=review["revision"], p_new_rating=4)
+second = dict(first, p_operation_id=str(uuid.uuid4()), p_new_rating=2)
+with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+    one = pool.submit(request, "/rpc/correct_archived_rating", payload=first)
+    two = pool.submit(request, "/rpc/correct_archived_rating", payload=second)
+    competing = [one.result(), two.result()]
+assert sorted(status for status, _ in competing) == [200, 400], competing
+status, private_audit = request("/rating_corrections?select=operation_id",
+                               "22222222-2222-2222-2222-222222222222")
+assert status == 200 and private_audit == [], (status, private_audit)
+status, current_before = request("/personal_band_ratings?select=rating,source_festival_id")
+status, old = request("/rpc/review_archived_rating", payload={
+    "p_festival_id": "rating-active", "p_band_id": "rating-band", "p_kind": "AFTER"})
+old_correction = dict(correction, p_operation_id=str(uuid.uuid4()), p_festival_id="rating-active",
+    p_expected_rating=old["rating"], p_expected_revision=old["revision"], p_new_rating=3)
+assert request("/rpc/correct_archived_rating", payload=old_correction)[0] == 200
+status, current_after = request("/personal_band_ratings?select=rating,source_festival_id")
+assert current_before == current_after, (current_before, current_after)
+print("Real PostgREST corrections: reviewed revision, concurrent conflict, audit/replay, original date, owner isolation and newer-source preservation passed.")

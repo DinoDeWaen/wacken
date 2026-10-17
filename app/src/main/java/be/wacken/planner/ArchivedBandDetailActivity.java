@@ -37,19 +37,30 @@ public final class ArchivedBandDetailActivity extends Activity {
     public static final String EXTRA_SPOTIFY_URL = "be.wacken.planner.ARCHIVED_SPOTIFY_URL";
 
     private static final String TBA = "TBA";
+    private AppRepositories repositories;
+    private AuthSession session;
+    private String festivalId;
+    private String bandName;
+    private java.util.function.Supplier<be.wacken.planner.application.ArchivedRatingCorrectionUseCase> correctionUseCase;
+    private ArchivedRatingCorrectionDialog correctionDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        AuthSession session = new AuthSessionStore(this).load();
+        session = new AuthSessionStore(this).load();
         if (!session.isPresent()) {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
             return;
         }
-        String festivalId = getIntent().getStringExtra(EXTRA_FESTIVAL_ID);
-        String bandName = getIntent().getStringExtra(EXTRA_BAND_NAME);
-        AppRepositories repositories = new AppRepositories(this);
+        festivalId = getIntent().getStringExtra(EXTRA_FESTIVAL_ID);
+        bandName = getIntent().getStringExtra(EXTRA_BAND_NAME);
+        repositories = new AppRepositories(this);
+        correctionUseCase=repositories::archivedRatingCorrections;
+        refresh();
+    }
+
+    private void refresh() {
         ViewArchivedFestivalHistoryUseCase.ArchivedFestivalHistory history = new ViewArchivedFestivalHistoryUseCase(
                 repositories.festivals(),
                 repositories.festivalLineups(),
@@ -83,10 +94,9 @@ public final class ArchivedBandDetailActivity extends Activity {
                 .stream()
                 .filter(item -> item.bandName().equalsIgnoreCase(bandName))
                 .collect(Collectors.toList());
-        Optional<PersonalRatingHistoryItem> festivalRealRating = bandHistory.stream()
-                .filter(item -> item.festivalName().filter(history.festivalName()::equals).isPresent())
-                .findFirst()
-                .or(() -> bandHistory.stream().findFirst());
+        Optional<be.wacken.planner.domain.Rating> festivalRealRating = repositories.afterRatings()
+                .findByUserFestivalAndBand(userName,history.festivalId(),new Band(bandName))
+                .map(be.wacken.planner.domain.FestivalAfterRating::rating);
         return new BandDetailItem(
                 bandName,
                 band.flatMap(value -> BiographyText.readable(value.biography())),
@@ -95,8 +105,8 @@ public final class ArchivedBandDetailActivity extends Activity {
                 planningRating.isEmpty() || planningRating.get() == 0,
                 band.flatMap(Band::youtubeUrl).or(() -> Optional.ofNullable(getIntent().getStringExtra(EXTRA_YOUTUBE_URL))),
                 band.flatMap(Band::spotifyUrl).or(() -> Optional.ofNullable(getIntent().getStringExtra(EXTRA_SPOTIFY_URL))),
-                festivalRealRating.map(PersonalRatingHistoryItem::rating).orElse(0),
-                festivalRealRating.isEmpty() || festivalRealRating.get().rating() == 0,
+                festivalRealRating.map(be.wacken.planner.domain.Rating::value).orElse(0),
+                festivalRealRating.isEmpty() || festivalRealRating.get().value() == 0,
                 groupPlanningRatings,
                 bandHistory
         );
@@ -149,6 +159,7 @@ public final class ArchivedBandDetailActivity extends Activity {
 
         detailSections.addView(ratingSection(detail));
         detailSections.addView(realRatingSection(detail));
+        detailSections.addView(correctionSection());
         if (detail.hasPersonalRatingHistory()) {
             detailSections.addView(personalRatingHistorySection(detail));
         }
@@ -157,6 +168,34 @@ public final class ArchivedBandDetailActivity extends Activity {
 
         detail.biography().ifPresent(biography -> screen.addView(paragraphPanel(biography)));
         return scroll;
+    }
+
+    private LinearLayout correctionSection() {
+        LinearLayout section=detailSection();
+        section.addView(sectionTitle("Correction history"));
+        var audit=repositories.ratingCorrectionHistory().findByUserFestivalAndBand(session.userId(),festivalId,new Band(bandName));
+        for(var correction:audit) {
+            section.addView(infoLine(correction.kind().name(),correction.previousValue()+" → "+correction.newValue()));
+            section.addView(infoLine("Changed by",correction.userName()));
+            section.addView(infoLine("Correction time",correction.correctedAt().toString()));
+            section.addView(infoLine("Original recorded date",correction.originalRecordedAt().map(Object::toString).orElse("unknown")));
+        }
+        if(audit.isEmpty())section.addView(infoLine("History","No cached corrections"));
+        boolean archived=repositories.festivals().findAll().stream().anyMatch(f->f.id().equals(festivalId)&&f.isArchived());
+        Button edit=WackenTheme.actionButton(this,"Correct my archived rating",WackenTheme.ButtonStyle.SECONDARY,v->{
+            correctionDialog=new ArchivedRatingCorrectionDialog(this,correctionUseCase.get(),session.userId(),festivalId,new Band(bandName),kind->
+                kind==be.wacken.planner.domain.ArchivedRatingKind.AFTER
+                    ?repositories.afterRatings().findByUserFestivalAndBand(session.userId(),festivalId,new Band(bandName)).map(r->r.rating().value()).orElse(0)
+                    :repositories.festivalPlanningRatings().findByUserFestivalAndBand(session.userId(),festivalId,new Band(bandName)).map(be.wacken.planner.domain.Rating::value).orElse(0),
+                this::refresh);
+            correctionDialog.show();
+        });
+        edit.setEnabled(archived);section.addView(edit);return section;
+    }
+
+    @Override protected void onDestroy(){
+        if(correctionDialog!=null)correctionDialog.dismiss();
+        super.onDestroy();
     }
 
     private LinearLayout ratingSection(BandDetailItem detail) {

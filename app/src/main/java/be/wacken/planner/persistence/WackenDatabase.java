@@ -24,9 +24,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 RoomFestivalPlanningRating.class,
                 RoomPersonalBandRatingEvent.class,
                 RoomFestivalAfterRating.class,
-                RoomPersonalBandRating.class
+                RoomPersonalBandRating.class,
+                RoomRatingCorrection.class
         },
-        version = 10,
+        version = 11,
         exportSchema = false
 )
 public abstract class WackenDatabase extends RoomDatabase {
@@ -231,6 +232,15 @@ public abstract class WackenDatabase extends RoomDatabase {
         }
     };
 
+    public static final Migration MIGRATION_10_11 = new Migration(10, 11) {
+        @Override public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS rating_corrections (operationId TEXT NOT NULL PRIMARY KEY, userName TEXT NOT NULL, festivalId TEXT NOT NULL, festivalName TEXT NOT NULL, bandName TEXT NOT NULL, kind TEXT NOT NULL, previousValue INTEGER NOT NULL, newValue INTEGER NOT NULL, expectedRevision INTEGER NOT NULL, originalRecordedAt TEXT, correctedAt TEXT NOT NULL)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_rating_corrections_userName_festivalId_bandName ON rating_corrections(userName,festivalId,bandName)");
+        }
+    };
+
+    public abstract RoomRatingCorrectionDao ratingCorrections();
+
     public abstract RoomRatingStateDao ratingStates();
 
     public abstract RoomBandDao bands();
@@ -268,7 +278,7 @@ public abstract class WackenDatabase extends RoomDatabase {
                                     WackenDatabase.class,
                                     "wacken-cache.db"
                             )
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
                             .allowMainThreadQueries()
                             .build();
                 }

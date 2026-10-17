@@ -15,6 +15,15 @@ final class SupabaseAuthenticatedRequest {
         this.failureMessage = failureMessage;
     }
 
+    String executeForUser(String expectedUser, Request request) throws IOException {
+        return execute(session -> {
+            if (expectedUser == null || !expectedUser.equals(session.userId())) {
+                throw new IOException("The signed-in member changed. Reopen this screen before saving or syncing its data.");
+            }
+            return request.send(session);
+        });
+    }
+
     String execute(Request request) throws IOException {
         AuthSession session = sessions.requireFreshSession();
         SupabaseDiagnostics.info("request", "send_start", "label=" + failureMessage);
