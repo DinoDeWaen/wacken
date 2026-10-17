@@ -46,6 +46,20 @@ public final class FestivalCsvReader {
         return bands.stream().map(row -> row.value("name")).toList();
     }
 
+    public static List<String> headers(String fileName,String csv) {
+        List<Record> records=records(fileName,csv);
+        return records.isEmpty()?List.of():records.get(0).values().stream().map(String::trim).toList();
+    }
+
+    public static List<Row> reviewRows(String fileName,String csv) {
+        List<Record> records=records(fileName,csv);
+        if(!records.isEmpty())for(int i=1;i<records.size();i++) {
+            if(records.get(i).values().size()!=records.get(0).values().size())
+                throw new FormatException(fileName,records.get(i).lineNumber(),"column count does not match the header");
+        }
+        return rows(fileName,csv);
+    }
+
     private static List<Record> records(String fileName, String csv) {
         List<Record> records = new ArrayList<>();
         List<String> values = new ArrayList<>();

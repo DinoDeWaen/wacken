@@ -47,6 +47,11 @@ aliases, with optional explicit alias confirmation. Festival/aliases/lineup and
 member planning snapshots commit together; conflicts require fresh review. The
 published exact-name creation API remains compatible. No automatic fuzzy merge
 or rating/history merge occurs.
+TASK-169 adds explicit row review to the local five-file CSV workflow: new,
+changed, removed and invalid data, unchecked defaults, final combined validation
+and TSV/Room rollback. Unselected files keep their baseline. Active lineup removal
+retains the catalog; ratings, history, metadata links and pending work remain.
+Rotation retains decisions; no shared-source import API is introduced.
 
 - Android band overview and detail screens, with generic Metal Battle placeholder entries hidden from rating lists.
 - 1-5 band ratings with default unrated value of `0`, including clearing a prior rating back to unrated.
@@ -70,7 +75,7 @@ or rating/history merge occurs.
 - Managing multiple upcoming festivals at the same time in the first post-Wacken version.
 - Unrestricted edits to archived festival master data or another member's ratings.
 - Automatic unreviewed fuzzy band merges or unreviewed metadata overwrites.
-- Wacken website scraping and Android data-grid validation in the current roadmap.
+- Wacken website scraping and hosted scraping/import services.
 - Play Store distribution before a later delivery phase.
 - Business logic in Android UI, Activities, or Fragments.
 - Android instrumentation tests beyond critical persistence and UI regression flows unless a future task makes them meaningful.
@@ -183,7 +188,7 @@ Existing integration:
 - Non-goal 7: Do not support multiple upcoming festivals at the same time in the first post-Wacken version.
 - Non-goal 8: Do not permit unrestricted archived master-data edits or corrections to another member's ratings.
 - Non-goal 9: Do not automatically merge fuzzy band matches or overwrite existing metadata without user review and confirmation.
-- Non-goal 10: Do not build Wacken scraping or Android data-grid validation in the current roadmap.
+- Non-goal 10: Do not build Wacken scraping or hosted scraping/import services. Local CSV review is covered by BR-034.
 
 ## Delivery roadmap
 
@@ -220,7 +225,7 @@ Release assumptions:
 | Band detail view | Show band details in a style inspired by the official Wacken band detail screen, with English biography when available, image metadata when available, editable own rating stars, read-only group member ratings when available, schedule information, and optional YouTube and Spotify links. | Must | MVP 1 |
 | Initial lineup import | Import the current Wacken band list before final stages and times are available. Band-only imports must be visible and rateable. English biography and image metadata are meaningful UI inputs when available. | Must | MVP 1 |
 | Festival data import | Import validated CSV files for bands, stages, performances, distances, and food options through Android file upload once final lineup data is available. Re-import updates festival master data while preserving user ratings. | Must | MVP 1 |
-| Data review grid | Historical candidate for reviewing proposed imported data changes line by line. | Could | Out of scope |
+| Data review grid | Review local CSV additions/changes/removals and validity, explicitly accept rows and preserve rejected baseline data/opinions. Scraping remains out of scope. | Should | Release2.34 |
 | One-group planning | Combine ratings from one shared friend group into shared decisions. | Must | MVP 2 |
 | Friend onboarding text | Keep the existing Android share-sheet onboarding text for provisioned accounts in the one shared group. New invite-token, invite deep-link, or self-service onboarding flows are out of scope. | Should | MVP 2 |
 | Decision engine | Decide whether the group should go, optionally go, or not go to a band. | Must | MVP 2 |
@@ -268,7 +273,7 @@ Out of scope:
 - Multiple upcoming festivals at the same time in the first post-Wacken version.
 - Unrestricted edits to archived festival master data or another member's ratings.
 - Fuzzy band linking and alias storage in the first post-Wacken version.
-- Wacken website scraping and Android data-grid validation in the current roadmap.
+- Wacken website scraping and hosted scraping/import services.
 - Business logic in Android UI components.
 - Payment behavior and unrelated production messaging.
 
@@ -567,7 +572,7 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-032 | A lost alternative is the second-highest band: the performance that lost to the selected performance and could still be chosen manually if preferred. | If the winning band is not good enough, the user can inspect the runner-up. | Must |
 | BR-032a | If the lost alternative tied the winner on all existing conflict criteria before the final input-order fallback, it must be marked as a tied alternative and shown first after the chosen act in decision details. | Users can see when the app chose between equal options rather than a clearly better winner. | Must |
 | BR-033 | CSV import validation must detect missing references, overlaps, and unknown stages. | An imported performance cannot reference an unknown stage without validation feedback. | Must |
-| BR-034 | Reserved for possible future imported-data review. | Android data-grid validation for proposed scraped or imported changes is out of the current roadmap. | Could |
+| BR-034 | Local CSV changes require row review before applying. | Show before/after and validity; default changes to unaccepted. Rejected rows retain baseline data. Invalid/duplicate/malformed rows cannot be accepted or imply removals. Validate references and overlaps against the accepted combined data; a stale baseline or failure saves nothing. Rotation retains decisions. No scraping or new remote import service. | Should |
 | BR-035 | The initial lineup import may contain only bands before final stage and time data is available. | Early rating can start from a band list without performance times. | Must |
 | BR-036 | The band rating screen should follow the official Wacken band detail style where practical, adding rating stars and optional YouTube and Spotify links. Unknown music links stay empty in the overview and detail screens; importing a band must not invent a channel or artist link. | Abbie Falls with no stored YouTube channel has no YouTube action; a band with a known channel retains its link. | Must |
 | BR-037 | The current version supports one shared group, not multiple independent groups. | All ratings belong to "my group" for now. | Must |
@@ -577,7 +582,7 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-039 | Reserved for future use. | No active MVP2 requirement. | Could |
 | BR-040 | MVP CSV import must be file-upload based in Android, not paste-text based. | The user selects `bands.csv` and companion CSV files with the Android document picker. | Must |
 | BR-041 | The import screen must show which CSV files were selected before import. | After selecting `bands.csv`, the screen shows the chosen file name. | Must |
-| BR-042 | A successful CSV import updates festival master data for bands, stages, performances, distances, and food. | Re-importing a newer Wacken band list replaces the stored lineup data. | Must |
+| BR-042 | A reviewed local CSV import applies accepted master-data changes for bands, stages, performances, distances and food. | Unselected companion files retain data; a selected header-only file proposes explicit removals. Only the active lineup/performance scope changes; the canonical catalog and other festivals remain. Existing nonempty metadata/links are kept; accepted proposals may fill missing fields. Later shared sync may refresh local master data. | Must |
 | BR-042a | A failed Android CSV import must leave the prior festival master data usable. | If any of the five master-data writes fails during import, the earlier TSV source files are restored and the Room cache transaction is rolled back before failure is reported. | Must |
 | BR-043 | Re-importing festival master data must preserve existing ratings. | If a user rated 5th Avenue as `5`, importing updated CSV files must not erase that rating. | Must |
 | BR-044 | Ratings are user/group preference data, not festival master data. | Updating lineup CSVs must not clear or overwrite rating records. | Must |
@@ -800,7 +805,7 @@ These topics are intentionally out of scope unless a future task explicitly reop
 
 - Final Wacken running-order schema changes beyond the current documented CSV contracts.
 - Wacken website scraping.
-- Android data-grid validation for proposed scraped/imported changes.
+- Scraped-data ingestion and hosted import review; local CSV review is implemented under BR-034.
 - Multi-group support and unspecified future group identity modeling.
 - New self-service friend invites, invite tokens, or invite deep links.
 - New festival date/time-format decisions beyond values supplied by uploaded festival data.

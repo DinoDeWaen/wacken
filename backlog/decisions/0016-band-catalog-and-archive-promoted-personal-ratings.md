@@ -137,6 +137,11 @@ shared catalog/history; local import semantics stay explicit. TASK-202 enrichmen
 updates missing canonical metadata only. TASK-172 follows the conditional source
 correction rule above. All 3.0 views keep these rating roles independent.
 
+TASK-169 implements the approved local CSV review through existing repositories
+and TSV/Room rollback. Lineup removals keep canonical bands; import cannot write
+or promote opinions, history or pending work. See [ADR0019](0019-reviewed-local-festival-csv-import.md)
+for row decisions, natural identities and retained review state.
+
 ## Alternatives considered
 
 1. Keep latest edited history event as the current band rating: rejected; active

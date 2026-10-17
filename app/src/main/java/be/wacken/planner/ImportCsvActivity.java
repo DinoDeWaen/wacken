@@ -54,6 +54,10 @@ public final class ImportCsvActivity extends Activity {
     private FestivalCreationGateway festivalCreation;
     private be.wacken.planner.application.FestivalBandCatalog festivalBandCatalog;
     private FestivalBandReviewDialog bandReview;
+    private LocalCsvImportReviewDialog localReview;
+    private java.util.function.Supplier<be.wacken.planner.application.ReviewFestivalCsvUseCase> localImportFactory;
+    private record RetainedImport(FestivalCsvFiles files,java.util.List<String> fileNames,
+                                  LocalCsvImportReviewDialog.State review) {}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +80,7 @@ public final class ImportCsvActivity extends Activity {
         TextView subtitle = new TextView(this);
         subtitle.setText(addFestivalMode
                 ? "Name the next festival and select bands.csv. Review similar names and aliases before creating the lineup."
-                : "Select CSV files. Imported festival data is updated; existing ratings stay untouched.");
+                : "Select CSV files, review each proposed change, then apply only accepted rows. This import updates local data; ratings stay untouched.");
         subtitle.setTextColor(WackenTheme.MUTED);
         subtitle.setPadding(0, dp(8), 0, dp(16));
         form.addView(subtitle);
@@ -98,7 +102,7 @@ public final class ImportCsvActivity extends Activity {
             form.addView(filePicker("Food", foodCsv, REQUEST_FOOD));
         }
 
-        importButton = actionButton(addFestivalMode ? "Add festival from bands.csv" : "Import selected files");
+        importButton = actionButton(addFestivalMode ? "Add festival from bands.csv" : "Review selected files");
         importButton.setOnClickListener(view -> importCsv());
         form.addView(importButton);
 
@@ -122,6 +126,18 @@ public final class ImportCsvActivity extends Activity {
         scrollView.setBackgroundColor(WackenTheme.BACKGROUND);
         scrollView.addView(form);
         setContentView(scrollView);
+        if(getLastNonConfigurationInstance() instanceof RetainedImport retained) {
+            CsvSelection[] selections={bandsCsv,stagesCsv,performancesCsv,distancesCsv,foodCsv};
+            String[] contents={retained.files().bandsCsv(),retained.files().stagesCsv(),retained.files().performancesCsv(),retained.files().distancesCsv(),retained.files().foodCsv()};
+            for(int i=0;i<selections.length;i++) {
+                CsvSelection selected=selections[i];selected.contents=contents[i];selected.fileName=retained.fileNames().get(i);
+                if(selected.label!=null&&selected.fileName!=null)selected.label.setText(selected.fileName);
+            }
+            if(!addFestivalMode&&retained.review()!=null&&!retained.review().closed)showLocalReview(retained.review());
+        } else if(savedInstanceState!=null) {
+            resultMessage.setText("Select CSV files again to start a fresh review.");
+        }
+        if(savedInstanceState!=null&&festivalName!=null)festivalName.setText(savedInstanceState.getString("festivalName",""));
     }
 
     @Override
@@ -159,39 +175,32 @@ public final class ImportCsvActivity extends Activity {
             addFestivalFromBandsCsv();
             return;
         }
-        AppRepositories repositories = AppRepositories.tsvFallback(this);
-        ImportFestivalCsvUseCase importFestivalCsv = new ImportFestivalCsvUseCase(
-                repositories.bands(),
-                repositories.stages(),
-                repositories.performanceImportTarget(),
-                repositories.distances(),
-                repositories.foodOptions(),
-                repositories.festivalImportTransaction()
-        );
-
-        ImportFestivalCsvResult result = importFestivalCsv.importCsv(new FestivalCsvFiles(
+        android.content.Context application=getApplicationContext();
+        if(localImportFactory==null)localImportFactory=()->AppRepositories.tsvFallback(application).reviewLocalFestivalImport();
+        showLocalReview(new LocalCsvImportReviewDialog.State(new FestivalCsvFiles(
                 bandsCsv.contents,
                 stagesCsv.contents,
                 performancesCsv.contents,
                 distancesCsv.contents,
                 foodCsv.contents
-        ));
+        ),localImportFactory));
+    }
 
-        if (result.success()) {
+    private void showLocalReview(LocalCsvImportReviewDialog.State state) {
+        importButton.setEnabled(false);
+        localReview=new LocalCsvImportReviewDialog(this,state,result->{
+            importButton.setEnabled(true);localReview=null;
+            if(result==null) {resultMessage.setText("Review cancelled. No import changes were saved.");return;}
+            if (result.success()) {
             resultMessage.setTextColor(WackenTheme.AMBER);
-            String feedback = SettingsFeedback.importSuccess();
+            String feedback = "Accepted local CSV changes saved. Ratings and archived data were kept. Sync may refresh local master data.";
             resultMessage.setText(feedback);
             Intent resultIntent = new Intent();
             resultIntent.putExtra(EXTRA_IMPORT_FEEDBACK, feedback);
             setResult(RESULT_OK, resultIntent);
-        } else {
-            resultMessage.setTextColor(WackenTheme.RED);
-            String feedback = "Import failed. Existing cached data remains usable offline. Next: correct the CSV and import again.";
-            resultMessage.setText(feedback + "\n" + String.join("\n", result.errors()));
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra(EXTRA_IMPORT_FEEDBACK, feedback);
-            setResult(RESULT_CANCELED, resultIntent);
-        }
+            }
+        });
+        localReview.show();
     }
 
     private void addFestivalFromBandsCsv() {
@@ -270,7 +279,19 @@ public final class ImportCsvActivity extends Activity {
 
     @Override protected void onDestroy() {
         if(bandReview!=null)bandReview.dismiss();
+        if(localReview!=null)localReview.detach(!isChangingConfigurations());
         super.onDestroy();
+    }
+
+    @Override public Object onRetainNonConfigurationInstance() {
+        return new RetainedImport(new FestivalCsvFiles(bandsCsv.contents,stagesCsv.contents,performancesCsv.contents,distancesCsv.contents,foodCsv.contents),
+                java.util.Arrays.asList(bandsCsv.fileName,stagesCsv.fileName,performancesCsv.fileName,distancesCsv.fileName,foodCsv.fileName),
+                localReview==null||localReview.state.closed?null:localReview.state);
+    }
+
+    @Override protected void onSaveInstanceState(Bundle state) {
+        super.onSaveInstanceState(state);
+        if(festivalName!=null)state.putString("festivalName",festivalName.getText().toString());
     }
 
     private void showAddFestivalResult(String name, AddFestivalResult result) {

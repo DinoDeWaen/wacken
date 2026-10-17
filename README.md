@@ -66,6 +66,7 @@ Five interactive HTML design directions are available in the [design study](desi
 - Atomic festival creation: [`0014-atomic-festival-creation.md`](backlog/decisions/0014-atomic-festival-creation.md).
 - Archived correction/audit: [`0017-audited-archived-rating-corrections.md`](backlog/decisions/0017-audited-archived-rating-corrections.md).
 - Reviewed aliases/creation: [`0018-reviewed-canonical-band-aliases.md`](backlog/decisions/0018-reviewed-canonical-band-aliases.md).
+- Local CSV review: [`0019-reviewed-local-festival-csv-import.md`](backlog/decisions/0019-reviewed-local-festival-csv-import.md).
 - Release process: [`release-process.md`](backlog/docs/release-process.md).
 
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
@@ -191,7 +192,41 @@ Hub image. Both-source or digest-verification failure stops validation. No tests
 are skipped. Run `python3 scripts/tests/test_test_images.py` to check acquisition
 and failure handling without containers or network.
 
-The Android five-file CSV import validates the input before writes. Its TSV fallback adapter saves copies of the five source files and replaces the corresponding Room cache tables inside one database transaction. If a write fails, Room rolls back and the adapter restores the TSV files before reporting failure; existing ratings are outside the replacement. A restore failure is reported with the retained backup location. This import boundary does not recover an interrupted process or device power loss.
+The Android five-file CSV import opens a **local review grid** before writing.
+Rows show additions/changes/removals, before/after values and validity. Every
+change starts unchecked; choose the rows to accept, then **Apply accepted changes**.
+Cancel writes nothing. Unselected companion files keep their data; a selected
+header-only file proposes explicit removals. Malformed/duplicate rows cannot be
+accepted or turn missing data into deletions. Final reference/overlap conflicts
+block all writes. A stale review requires **Reload review** and fresh choices.
+
+Local import requires an active festival. It updates that lineup and retains the
+canonical catalog, existing nonempty metadata/music links, other festivals and all
+ratings/history/provenance/pending work. Accepted metadata can fill missing fields.
+CSV IDs resolve through supplied companion files or exact persisted names. Legacy
+storage identifies performances by band/start, so a changed start time appears as
+remove/add. Food near-stage references are validated; the existing food cache
+still stores names only. This is a local TSV/Room operation; subsequent shared
+source sync may refresh it. Use Add Festival for group-wide creation.
+
+Parsing and saving run off the UI thread; rotation retains the staged decisions
+and running work. After process recreation without retained state, reselect the
+files and review again. Full CSV data is not put into Android saved-state bundles.
+The TSV adapter backs up five files and saves master data plus the active lineup
+inside one Room transaction. A reported write failure rolls Room back and restores
+the files, with a retained backup path if restoration itself fails. This boundary
+does not recover an interrupted process or device power loss.
+
+```mermaid
+flowchart TD
+    Files[Selected local CSV files] --> Preview[Compare with active festival and catalog]
+    Preview --> Decisions[Review before/after and choose accepted rows]
+    Decisions --> Check{Accepted combined data valid and baseline unchanged?}
+    Check -->|No| Review[Show errors and retain existing data]
+    Check -->|Yes| Save[Existing TSV backup and Room transaction]
+    Save --> Kept[Update active lineup/master data; keep opinions and other festivals]
+    Preview -->|Cancel| Stop[No import writes]
+```
 
 The implemented post-MVP3 slice adds explicit festival lifecycle and rating history state. Room stores the initially seeded active `Wacken Open Air 2026` festival, archived festival status, festival lineup entries, festival-scoped planning ratings, and personal band rating events. Flyway migrations `V009`–`V011` create the Supabase contracts, including festival ownership for performances and schedule locks. `V012__group_member_festival_creation.sql` permits members of the single shared group to insert the next active festival, new bands, and its lineup. When signed in, festival lifecycle changes and lineup writes go to Supabase first and then update Room. Group members can add a festival from a band CSV, archive, rename, or delete a festival. The Add Festival and Archive actions run remote writes in the background and report progress or errors. A rejected Supabase write leaves the existing Room cache usable and shows an error. Band metadata updates and lineup replacement retain their existing policy restrictions.
 
@@ -321,7 +356,7 @@ C4Container
 
     System_Boundary(app, "Wacken Planner 2026") {
         Container(ui, "Android UI", "Java", "Screens for band list, ratings, imports, schedule")
-        Container(appsvc, "Application Layer", "Java", "Festival ratings, reviewed canonical identities, archived corrections, imports and deletion")
+        Container(appsvc, "Application Layer", "Java", "Festival ratings, reviewed canonical identities, archived corrections, local CSV review and deletion")
         Container(domain, "Domain", "Canonical bands, separate personal/planning/after ratings and source provenance")
         Container(infra, "Infrastructure", "Java", "Adapters: Supabase source, TSV fallback source, and sync decorators")
         ContainerDb(cache, "Room Local Cache", "SQLite/Room", "Imported data, confirmed aliases, independent ratings, pending work and correction audit")

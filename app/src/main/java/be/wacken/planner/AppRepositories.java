@@ -293,6 +293,11 @@ final class AppRepositories {
         return festivalImportTransaction;
     }
 
+    be.wacken.planner.application.ReviewFestivalCsvUseCase reviewLocalFestivalImport() {
+        return new be.wacken.planner.application.ReviewFestivalCsvUseCase(bands,stages,performances,
+                distances,foodOptions,festivals,festivalLineups,festivalImportTransaction());
+    }
+
     FestivalRepository festivals() {
         return festivals;
     }
