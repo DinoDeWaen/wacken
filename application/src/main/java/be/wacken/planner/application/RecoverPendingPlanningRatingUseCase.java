@@ -53,10 +53,21 @@ public final class RecoverPendingPlanningRatingUseCase {
         local.movePendingRating(expected, WACKEN_2026_ID);
     }
 
+    public void discardPending(SavedFestivalPlanningRating expected, String groupId, String userId) {
+        if (!groupId.equals(expected.groupId()) || !userId.equals(expected.userName())) {
+            throw new IllegalStateException("This rating does not belong to the signed-in user.");
+        }
+        if (!local.findPending(groupId, userId).contains(expected)) {
+            throw new IllegalStateException("Pending rating changed. Review it again before discarding.");
+        }
+        local.discardPendingRating(expected);
+    }
+
     public interface LocalStore {
         List<SavedFestivalPlanningRating> findPending(String groupId, String userId);
         Optional<Rating> findByUserFestivalAndBand(String userId, String festivalId, Band band);
         void movePendingRating(SavedFestivalPlanningRating expected, String targetFestivalId);
+        void discardPendingRating(SavedFestivalPlanningRating expected);
     }
 
     public interface RemoteLookup {

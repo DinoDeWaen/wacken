@@ -29,6 +29,30 @@ final class MissingFestivalRatingDialog {
                 .setMessage(detail)
                 .setNegativeButton("Keep pending", (dialog, which) ->
                         feedback.accept("Rating kept on this device. Review it before syncing again."))
+                .setNeutralButton("Discard pending", (dialog, which) ->
+                        new AlertDialog.Builder(activity)
+                                .setTitle("Discard this pending rating?")
+                                .setMessage("Band: " + rating.band().name() + "\nRating: "
+                                        + rating.rating().value() + " stars\nStored festival ID: "
+                                        + rating.festivalId()
+                                        + "\n\nThis removes only this unsynced rating from this device. It cannot be undone.")
+                                .setNegativeButton("Cancel", (confirmation, ignored) ->
+                                        feedback.accept("Pending rating kept on this device."))
+                                .setPositiveButton("Discard rating", (confirmation, ignored) -> {
+                                    new Thread(() -> {
+                                        try {
+                                            new AppRepositories(activity).discardPendingRating(rating);
+                                            activity.runOnUiThread(() -> {
+                                                feedback.accept("Pending rating discarded. Retrying sync...");
+                                                retrySync.run();
+                                            });
+                                        } catch (Exception error) {
+                                            activity.runOnUiThread(() -> feedback.accept("Discard stopped: "
+                                                    + error.getMessage() + " The pending rating remains on this device."));
+                                        }
+                                    }, "discard-pending-rating").start();
+                                })
+                                .show())
                 .setPositiveButton("Move to Wacken 2026", (dialog, which) -> {
                     feedback.accept("Checking Wacken rating and repairing pending change...");
                     new Thread(() -> {

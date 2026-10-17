@@ -18,6 +18,9 @@ public interface RoomFestivalDao {
     @Query("DELETE FROM festivals")
     void deleteAll();
 
+    @Query("DELETE FROM festivals WHERE id = :festivalId")
+    void deleteById(String festivalId);
+
     @Query("SELECT * FROM festivals ORDER BY CASE status WHEN 'ACTIVE' THEN 0 ELSE 1 END, name")
     List<RoomFestival> findAll();
 

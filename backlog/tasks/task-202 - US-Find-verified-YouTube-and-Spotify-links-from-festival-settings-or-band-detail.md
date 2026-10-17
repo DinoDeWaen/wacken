@@ -3,10 +3,11 @@ id: TASK-202
 title: >-
   US: Find verified YouTube and Spotify links from festival settings or band
   detail
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@codex'
 created_date: '2026-10-17 08:11'
-updated_date: '2026-10-17 08:12'
+updated_date: '2026-10-17 09:24'
 labels:
   - administration
   - metadata
@@ -17,6 +18,117 @@ dependencies:
   - TASK-179.1
   - TASK-179.5
   - TASK-179.6
+references:
+  - importcsvactivity
+modified_files:
+  - .github/workflows/ci.yml
+  - app/build.gradle
+  - app/src/androidTest/java/be/wacken/planner/FestivalCreationAndroidTest.java
+  - app/src/androidTest/java/be/wacken/planner/UnknownBandLinksAndroidTest.java
+  - >-
+    app/src/androidTest/java/be/wacken/planner/persistence/FestivalDeletionDatabaseTest.java
+  - app/src/main/java/be/wacken/planner/AppRepositories.java
+  - app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java
+  - app/src/main/java/be/wacken/planner/DeleteFestivalDialog.java
+  - app/src/main/java/be/wacken/planner/FestivalScopedPerformanceRepository.java
+  - app/src/main/java/be/wacken/planner/MainActivity.java
+  - app/src/main/java/be/wacken/planner/MissingFestivalRatingDialog.java
+  - app/src/main/java/be/wacken/planner/RoomFestivalCreationCache.java
+  - app/src/main/java/be/wacken/planner/SupabaseFestivalCreationGateway.java
+  - app/src/main/java/be/wacken/planner/SupabaseFestivalDeletionGateway.java
+  - app/src/main/java/be/wacken/planner/SupabaseMasterDataClient.java
+  - app/src/main/java/be/wacken/planner/SupabasePersonalBandRatingClient.java
+  - app/src/main/java/be/wacken/planner/SupabaseScheduleLockClient.java
+  - app/src/main/java/be/wacken/planner/persistence/RoomFestivalCacheMarker.java
+  - >-
+    app/src/main/java/be/wacken/planner/persistence/RoomFestivalCacheMarkerDao.java
+  - app/src/main/java/be/wacken/planner/persistence/RoomFestivalDao.java
+  - app/src/main/java/be/wacken/planner/persistence/RoomFestivalDeletion.java
+  - >-
+    app/src/main/java/be/wacken/planner/persistence/RoomFestivalPlanningRatingDao.java
+  - >-
+    app/src/main/java/be/wacken/planner/persistence/RoomFestivalPlanningRatingRepository.java
+  - app/src/main/java/be/wacken/planner/persistence/RoomFestivalRepository.java
+  - app/src/main/java/be/wacken/planner/persistence/RoomPerformance.java
+  - app/src/main/java/be/wacken/planner/persistence/RoomPerformanceDao.java
+  - >-
+    app/src/main/java/be/wacken/planner/persistence/RoomPerformanceRepository.java
+  - >-
+    app/src/main/java/be/wacken/planner/persistence/RoomPersonalBandRatingEvent.java
+  - >-
+    app/src/main/java/be/wacken/planner/persistence/RoomPersonalBandRatingEventDao.java
+  - >-
+    app/src/main/java/be/wacken/planner/persistence/RoomPersonalBandRatingHistoryRepository.java
+  - app/src/main/java/be/wacken/planner/persistence/RoomScheduleLock.java
+  - app/src/main/java/be/wacken/planner/persistence/RoomScheduleLockDao.java
+  - app/src/main/java/be/wacken/planner/persistence/RoomScheduleLockStore.java
+  - app/src/main/java/be/wacken/planner/persistence/WackenDatabase.java
+  - >-
+    app/src/test/java/be/wacken/planner/AddFestivalPersistenceRegressionTest.java
+  - >-
+    app/src/test/java/be/wacken/planner/FestivalScopedPerformanceRepositoryTest.java
+  - app/src/test/java/be/wacken/planner/PendingPlanningRatingRecoveryTest.java
+  - app/src/test/java/be/wacken/planner/SupabaseFestivalDeletionGatewayTest.java
+  - app/src/test/java/be/wacken/planner/SupabaseMasterDataClientTest.java
+  - >-
+    app/src/test/java/be/wacken/planner/SyncingFestivalPlanningRatingRepositoryTest.java
+  - >-
+    app/src/test/java/be/wacken/planner/SyncingPersonalBandRatingHistoryRepositoryTest.java
+  - app/src/test/java/be/wacken/planner/WackenDatabaseFestivalMigrationTest.java
+  - >-
+    application/src/main/java/be/wacken/planner/application/AddFestivalUseCase.java
+  - >-
+    application/src/main/java/be/wacken/planner/application/DeleteFestivalUseCase.java
+  - >-
+    application/src/main/java/be/wacken/planner/application/FestivalCreationGateway.java
+  - >-
+    application/src/main/java/be/wacken/planner/application/FestivalCsvReader.java
+  - >-
+    application/src/main/java/be/wacken/planner/application/RecoverPendingPlanningRatingUseCase.java
+  - >-
+    application/src/main/java/be/wacken/planner/application/ShowBandDetailUseCase.java
+  - >-
+    application/src/main/java/be/wacken/planner/application/ViewArchivedFestivalHistoryUseCase.java
+  - >-
+    application/src/qaTest/java/be/wacken/planner/application/FestivalArchiveQaScenarioTest.java
+  - >-
+    application/src/test/java/be/wacken/planner/application/AddFestivalUseCaseTest.java
+  - >-
+    application/src/test/java/be/wacken/planner/application/DeleteFestivalUseCaseTest.java
+  - >-
+    application/src/test/java/be/wacken/planner/application/FestivalCsvReaderTest.java
+  - >-
+    application/src/test/java/be/wacken/planner/application/ShowBandDetailUseCaseTest.java
+  - backend/flyway/repairs/task-197-summer-breeze.sql
+  - backend/flyway/sql/V013__atomic_festival_creation.sql
+  - backend/flyway/tests/festival_creation.sql
+  - backend/flyway/tests/festival_deletion.sql
+  - backend/flyway/tests/local_auth.sql
+  - backend/flyway/verify-festival-deletion.sh
+  - backlog/decisions/0013-festival-deletion-and-schedule-ownership.md
+  - backlog/decisions/0014-atomic-festival-creation.md
+  - backlog/docs/business-requirements.md
+  - backlog/docs/release-process.md
+  - backlog/tasks/task-191 - REL-Publish-V2.33.1-rating-recovery-hotfix.md
+  - >-
+    backlog/tasks/task-192 -
+    DEF-Discard-a-blocked-pending-rating-from-recovery-dialog.md
+  - >-
+    backlog/tasks/task-193 -
+    US-Delete-a-festival-and-its-schedule-without-deleting-shared-bands.md
+  - backlog/tasks/task-194 - REL-Publish-V2.33.2-festival-cleanup-hotfix.md
+  - backlog/tasks/task-196 - REL-Publish-V2.33.3-festival-CSV-hotfix.md
+  - domain/src/main/java/be/wacken/planner/domain/Performance.java
+  - domain/src/main/java/be/wacken/planner/domain/PersonalBandRatingEvent.java
+  - releases/v2.33.1.md
+  - releases/v2.33.2.md
+  - releases/v2.33.3.md
+  - releases/v2.33.4.md
+  - releases/v2.33.5.md
+  - scripts/verify-festival-creation.sh
+  - README.md
+  - app/src/main/java/be/wacken/planner/ImportCsvActivity.java
+  - backlog/decisions/0011-post-wacken-festival-rating-model.md
 priority: medium
 type: enhancement
 ---
@@ -47,3 +159,15 @@ The Spotify equivalent is an artist profile, not a playlist/user account. YouTub
 - [ ] #8 README documents both actions, verification/source rules and provider configuration. Business requirements impact and Diagram impact use canonical delivery-governance wording when implemented.
 - [ ] #9 Architecture impact is assessed before coding; significant changes to integrations, credentials, evidence persistence, API or schema require explicit approval and ADR handling.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Standard scope. First integrate published v2.33.5 fixes into codex/release-2-34 so new metadata work retains festival/import/null-link regressions. Inspect accepted ADR-0012 and existing search/proposal/provider/save contracts, then define the smallest verification-evidence and scope extension. Before architecture-significant provider/API/evidence changes, prepare a concrete approval request per repository rules. After approval, use BDD/TDD for band/festival scoping, edited search term, canonical verified links, approval/reject/no-overwrite and failure/retry; extend native coverage. Update README/business requirements, ADR where needed, and full validation package before Done. No 3.0 redesign in this task.
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Integrated the published v2.33.5 baseline before new development. Resolved three merge conflicts by retaining the released atomic festival gateway, creation recovery wording and accepted ADR-0014; preserved the new design-study entry points. This integration reuses already published architecture and adds no new architectural decision.
+<!-- SECTION:NOTES:END -->

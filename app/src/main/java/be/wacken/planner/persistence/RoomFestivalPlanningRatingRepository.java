@@ -53,6 +53,14 @@ public final class RoomFestivalPlanningRatingRepository implements FestivalPlann
     }
 
     @Override
+    public void discardPendingRating(SavedFestivalPlanningRating expected) {
+        if (ratings.deletePendingExact(expected.groupId(), expected.userName(), expected.festivalId(),
+                expected.band().name(), expected.rating().value()) != 1) {
+            throw new IllegalStateException("Pending rating changed. Review it again before discarding.");
+        }
+    }
+
+    @Override
     public Optional<Rating> findByUserFestivalAndBand(String userName, String festivalId, Band band) {
         return Optional.ofNullable(ratings.findByUserFestivalAndBand(userName, festivalId, band.name()))
                 .map(row -> Rating.of(row.value));

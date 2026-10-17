@@ -164,7 +164,11 @@ public final class SupabaseMasterDataClientTest {
 
     @Test
     public void derivesStableBandIdsAndSpotifyArtistIdsForWrites() {
-        assertEquals("any-given-day", SupabaseMasterDataClient.bandIdFor(new Band("Any Given Day")));
+        assertEquals(SupabaseMasterDataClient.bandIdFor(new Band("Any Given Day")), SupabaseMasterDataClient.bandIdFor(new Band("Any Given Day")));
+        for (String other : List.of("Any given Day", "Any-Given-Day", "東京", "!!!")) {
+            org.junit.Assert.assertNotEquals(SupabaseMasterDataClient.bandIdFor(new Band("Any Given Day")), SupabaseMasterDataClient.bandIdFor(new Band(other)));
+        }
+        org.junit.Assert.assertNotEquals(SupabaseMasterDataClient.bandIdFor(new Band("東京")), SupabaseMasterDataClient.bandIdFor(new Band("!!!")));
         assertEquals(
                 Optional.of("spotify-artist"),
                 SupabaseMasterDataClient.spotifyArtistId(Optional.of("https://open.spotify.com/artist/spotify-artist?si=abc"))

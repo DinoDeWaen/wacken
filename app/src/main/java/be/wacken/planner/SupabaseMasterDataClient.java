@@ -73,7 +73,7 @@ final class SupabaseMasterDataClient {
     List<Performance> performances() throws IOException {
         Map<String, String> bandNamesById = namesById("/rest/v1/bands?select=id,name");
         Map<String, String> stageNamesById = namesById("/rest/v1/stages?select=id,name");
-        JSONArray rows = requestArray("/rest/v1/performances?select=band_id,stage_id,start_at,end_at&order=start_at.asc");
+        JSONArray rows = requestArray("/rest/v1/performances?select=band_id,stage_id,start_at,end_at,festival_id&order=start_at.asc");
         List<Performance> performances = new ArrayList<>();
         for (int index = 0; index < rows.length(); index++) {
             try {
@@ -85,7 +85,8 @@ final class SupabaseMasterDataClient {
                             new Band(bandName),
                             new Stage(stageName),
                             toLocalDateTime(row.getString("start_at")),
-                            toLocalDateTime(row.getString("end_at"))
+                            toLocalDateTime(row.getString("end_at")),
+                            row.getString("festival_id")
                     ));
                 }
             } catch (JSONException error) {
@@ -144,6 +145,10 @@ final class SupabaseMasterDataClient {
         return festivals;
     }
 
+    String createFestival(String command) throws IOException {
+        return request("POST", "/rest/v1/rpc/create_festival_from_bands", command, false);
+    }
+
     void saveFestival(Festival festival) throws IOException {
         try {
             JSONArray existing = requestArray("/rest/v1/festivals?select=id&id=eq." + encode(festival.id()) + "&limit=1");
@@ -159,6 +164,13 @@ final class SupabaseMasterDataClient {
             }
         } catch (JSONException error) {
             throw new IOException("Supabase festival request could not be created.", error);
+        }
+    }
+
+    void deleteFestival(String festivalId) throws IOException {
+        request("DELETE", "/rest/v1/festivals?id=eq." + encode(festivalId), null, false);
+        if (requestArray("/rest/v1/festivals?select=id&id=eq." + encode(festivalId) + "&limit=1").length() != 0) {
+            throw new IOException("Supabase did not delete the festival. Check group permissions and retry.");
         }
     }
 
@@ -220,10 +232,10 @@ final class SupabaseMasterDataClient {
     static Band toBand(JSONObject row) throws JSONException {
         return new Band(
                 row.getString("name"),
-                optional(row.optString("biography_html", "")),
-                optional(row.optString("image_url", "")),
-                optional(row.optString("youtube_url", "")),
-                spotifyUrl(row.optString("spotify_artist_id", ""))
+                optional(textOrEmpty(row, "biography_html")),
+                optional(textOrEmpty(row, "image_url")),
+                optional(textOrEmpty(row, "youtube_url")),
+                spotifyUrl(textOrEmpty(row, "spotify_artist_id"))
         );
     }
 
@@ -252,7 +264,7 @@ final class SupabaseMasterDataClient {
     }
 
     static String bandIdFor(Band band) {
-        return slug(band.name());
+        return "band-" + java.util.UUID.nameUUIDFromBytes(band.name().getBytes(StandardCharsets.UTF_8));
     }
 
     static Optional<String> spotifyArtistId(Optional<String> spotifyUrl) {
@@ -332,6 +344,8 @@ final class SupabaseMasterDataClient {
 
     private SupabaseAuthenticatedRequest.Response send(String method, String endpoint, String body, AuthSession session, boolean upsert) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(SupabaseConfig.url() + endpoint).openConnection();
+        connection.setConnectTimeout(15000);
+        connection.setReadTimeout(30000);
         connection.setRequestMethod(method);
         connection.setRequestProperty("apikey", SupabaseConfig.anonKey());
         connection.setRequestProperty("Authorization", "Bearer " + session.accessToken());
@@ -362,6 +376,11 @@ final class SupabaseMasterDataClient {
             }
         }
         return text.toString();
+    }
+
+    private static String textOrEmpty(JSONObject row, String field) {
+        // Android optString converts JSONObject.NULL to the nonempty string "null".
+        return row.isNull(field) ? "" : row.optString(field, "");
     }
 
     private static Optional<String> optional(String value) {
@@ -425,7 +444,7 @@ final class SupabaseMasterDataClient {
     }
 
     private static void putIfMissing(JSONObject patch, JSONObject existing, String field, Optional<String> candidate) throws JSONException {
-        if (candidate.isPresent() && existing.optString(field, "").isBlank()) {
+        if (candidate.isPresent() && textOrEmpty(existing, field).isBlank()) {
             patch.put(field, candidate.get());
         }
     }

@@ -14,17 +14,21 @@ public final class RoomPersonalBandRatingEvent {
     @NonNull
     public String bandName;
     public String festivalId;
+    public String festivalNameSnapshot;
     public int value;
     @NonNull
     public String createdAt;
     @NonNull
     public String syncStatus;
 
-    public RoomPersonalBandRatingEvent(@NonNull String id, @NonNull String userName, @NonNull String bandName, String festivalId, int value, @NonNull String createdAt, @NonNull String syncStatus) {
+    public RoomPersonalBandRatingEvent(@NonNull String id, @NonNull String userName, @NonNull String bandName,
+                                       String festivalId, String festivalNameSnapshot, int value,
+                                       @NonNull String createdAt, @NonNull String syncStatus) {
         this.id = id;
         this.userName = userName;
         this.bandName = bandName;
         this.festivalId = festivalId;
+        this.festivalNameSnapshot = festivalNameSnapshot;
         this.value = value;
         this.createdAt = createdAt;
         this.syncStatus = syncStatus;

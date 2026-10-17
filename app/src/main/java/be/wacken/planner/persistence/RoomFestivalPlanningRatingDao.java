@@ -27,6 +27,9 @@ public interface RoomFestivalPlanningRatingDao {
     @Query("SELECT * FROM festival_planning_ratings")
     List<RoomFestivalPlanningRating> findAll();
 
+    @Query("DELETE FROM festival_planning_ratings WHERE festivalId = :festivalId")
+    void deleteByFestival(String festivalId);
+
     @Query("SELECT * FROM festival_planning_ratings WHERE groupId = :groupId AND userName = :userName AND syncStatus = 'PENDING'")
     List<RoomFestivalPlanningRating> findPending(String groupId, String userName);
 }

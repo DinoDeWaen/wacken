@@ -1,5 +1,8 @@
 package be.wacken.planner;
 
+import be.wacken.planner.application.FestivalCreationGateway;
+import be.wacken.planner.application.AddFestivalResult;
+
 import android.content.Context;
 
 import java.io.IOException;
@@ -8,9 +11,11 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import be.wacken.planner.application.ActiveFestivalRatingRepository;
+import be.wacken.planner.application.DeleteFestivalUseCase;
 import be.wacken.planner.application.RecoverPendingPlanningRatingUseCase;
 import be.wacken.planner.domain.BandRepository;
 import be.wacken.planner.domain.FestivalLineupRepository;
+import be.wacken.planner.domain.Festival;
 import be.wacken.planner.domain.FestivalPlanningRatingRepository;
 import be.wacken.planner.domain.FestivalRepository;
 import be.wacken.planner.domain.FoodOptionRepository;
@@ -34,6 +39,7 @@ import be.wacken.planner.infrastructure.SyncedStageRepository;
 import be.wacken.planner.infrastructure.TsvImportTransaction;
 import be.wacken.planner.persistence.RoomBandRepository;
 import be.wacken.planner.persistence.RoomFestivalLineupRepository;
+import be.wacken.planner.persistence.RoomFestivalDeletion;
 import be.wacken.planner.persistence.RoomFestivalPlanningRatingRepository;
 import be.wacken.planner.persistence.RoomFestivalRepository;
 import be.wacken.planner.persistence.RoomFoodOptionRepository;
@@ -67,15 +73,18 @@ final class AppRepositories {
     private final SyncingFestivalLineupRepository syncingFestivalLineups;
     private final SyncingFestivalPlanningRatingRepository syncingPlanningRatings;
     private final RecoverPendingPlanningRatingUseCase pendingPlanningRatingRecovery;
+    private final DeleteFestivalUseCase festivalDeletion;
     private final SyncingPersonalBandRatingHistoryRepository syncingPersonalRatings;
     private final SyncingScheduleLockStore syncingScheduleLocks;
     private final ScheduleLockStore scheduleLocks;
     private final RatingSyncLocalStore ratingCache;
     private final RoomFestivalPlanningRatingRepository festivalPlanningRatingCache;
     private final RoomPersonalBandRatingHistoryRepository personalRatingCache;
-    private final ScheduleLockLocalStore scheduleLockCache;
+    private final WackenDatabase database;
+    private final SupabaseSessionManager sessionManager;
     private final AuthSession session;
     private final Consumer<Runnable> festivalImportTransaction;
+    private final FestivalCreationGateway festivalCreation;
 
     AppRepositories(Context context) {
         this(context, SourceMode.SUPABASE);
@@ -88,6 +97,7 @@ final class AppRepositories {
     private AppRepositories(Context context, SourceMode sourceMode) {
         Path storageDirectory = context.getFilesDir().toPath();
         WackenDatabase database = WackenDatabase.get(context);
+        this.database = database;
         this.festivalImportTransaction = sourceMode == SourceMode.TSV_FALLBACK
                 ? new TsvImportTransaction(storageDirectory, database::runInTransaction)
                 : null;
@@ -103,19 +113,25 @@ final class AppRepositories {
         RoomPersonalBandRatingHistoryRepository personalRatingCache = new RoomPersonalBandRatingHistoryRepository(database);
         RoomRatingRepository ratingCache = new RoomRatingRepository(database);
         RoomRealRatingRepository realRatingCache = new RoomRealRatingRepository(database);
-        RoomScheduleLockStore scheduleLockCache = new RoomScheduleLockStore(database);
         AuthSessionStore authSessionStore = new AuthSessionStore(context);
         this.session = authSessionStore.load();
         this.ratingCache = ratingCache;
         festivalCache.seedDefaultActiveFestivalIfEmpty();
+        String scheduleFestivalId = activeFestivalId(festivalCache);
+        if (scheduleFestivalId.isEmpty()) {
+            scheduleFestivalId = RoomFestivalRepository.DEFAULT_FESTIVAL_ID;
+        }
+        RoomScheduleLockStore scheduleLockCache = new RoomScheduleLockStore(database, scheduleFestivalId);
         this.festivalPlanningRatingCache = planningRatingCache;
         this.personalRatingCache = personalRatingCache;
         this.realRatings = realRatingCache;
-        personalRatingCache.backfillLegacyWackenRealRatings(
-                realRatingCache,
-                session.isPresent() ? Optional.of(session.userId()) : Optional.empty()
-        );
-        this.scheduleLockCache = scheduleLockCache;
+        if (festivalCache.findAll().stream().anyMatch(festival ->
+                RoomFestivalRepository.DEFAULT_FESTIVAL_ID.equals(festival.id()))) {
+            personalRatingCache.backfillLegacyWackenRealRatings(
+                    realRatingCache,
+                    session.isPresent() ? Optional.of(session.userId()) : Optional.empty()
+            );
+        }
 
         BandRepository bandSource;
         StageRepository stageSource;
@@ -124,6 +140,7 @@ final class AppRepositories {
         FoodOptionRepository foodSource;
         SupabaseMasterDataClient supabaseMasterDataClient = null;
         SupabaseSessionManager sessionManager = new SupabaseSessionManager(authSessionStore, new SupabaseAuthClient());
+        this.sessionManager = sessionManager;
         if (sourceMode == SourceMode.SUPABASE) {
             supabaseMasterDataClient = new SupabaseMasterDataClient(sessionManager);
             bandSource = new SupabaseBandRepository(supabaseMasterDataClient);
@@ -155,7 +172,7 @@ final class AppRepositories {
                     new SupabaseFestivalLineupRepository(supabaseMasterDataClient)
             );
             this.festivalLineups = syncingFestivalLineups;
-            SupabaseScheduleLockClient scheduleLockClient = new SupabaseScheduleLockClient(sessionManager);
+            SupabaseScheduleLockClient scheduleLockClient = new SupabaseScheduleLockClient(sessionManager, scheduleFestivalId);
             SupabaseFestivalPlanningRatingClient planningRatingRemote = new SupabaseFestivalPlanningRatingClient(sessionManager);
             this.syncingPlanningRatings = new SyncingFestivalPlanningRatingRepository(
                     planningRatingCache,
@@ -167,6 +184,9 @@ final class AppRepositories {
                     planningRatingCache,
                     (festivalId, band) -> planningRatingRemote.hasRating(session, festivalId, band),
                     festivals);
+            this.festivalDeletion = new DeleteFestivalUseCase(festivals,
+                    new SupabaseFestivalDeletionGateway(supabaseMasterDataClient,
+                            new RoomFestivalDeletion(database)::delete));
             this.festivalPlanningRatings = syncingPlanningRatings;
             this.ratings = new ActiveFestivalRatingRepository(festivals, festivalPlanningRatings, session.groupId());
             this.syncingPersonalRatings = new SyncingPersonalBandRatingHistoryRepository(
@@ -178,6 +198,7 @@ final class AppRepositories {
             this.syncingScheduleLocks = new SyncingScheduleLockStore(scheduleLockCache, scheduleLockClient, session);
             this.scheduleLocks = syncingScheduleLocks;
         } else {
+            this.festivalDeletion = null;
             this.syncingPlanningRatings = null;
             this.pendingPlanningRatingRecovery = null;
             this.syncingPersonalRatings = null;
@@ -192,9 +213,17 @@ final class AppRepositories {
             this.scheduleLocks = new ScheduleLockStore.NoOp();
         }
 
+        this.festivalCreation = sourceMode == SourceMode.SUPABASE && session.isPresent()
+                ? new SupabaseFestivalCreationGateway(supabaseMasterDataClient, new RoomFestivalCreationCache(database))
+                : (group, user, festival, uploaded) -> AddFestivalResult.failure("Sign in before adding a group-wide festival.");
+
         if (sourceMode == SourceMode.TSV_FALLBACK) {
             seedCacheFromSourceIfNeeded(bandCache, stageCache, performanceCache, distanceCache, foodCache);
         }
+    }
+
+    be.wacken.planner.application.FestivalCreationGateway festivalCreation() {
+        return festivalCreation;
     }
 
     BandRepository bands() {
@@ -206,7 +235,30 @@ final class AppRepositories {
     }
 
     PerformanceRepository performances() {
+        return performancesForFestival(activeFestivalId(festivals));
+    }
+
+    PerformanceRepository performancesForFestival(String festivalId) {
+        return new FestivalScopedPerformanceRepository(performances, festivalId);
+    }
+
+    PerformanceRepository performanceImportTarget() {
         return performances;
+    }
+
+    Festival deleteFestival(String festivalId) {
+        if (festivalDeletion == null) {
+            throw new IllegalStateException("Sign in before deleting a festival.");
+        }
+        return festivalDeletion.delete(festivalId);
+    }
+
+    private static String activeFestivalId(FestivalRepository festivals) {
+        return festivals.findAll().stream()
+                .filter(Festival::isActive)
+                .map(Festival::id)
+                .findFirst()
+                .orElse("");
     }
 
     StageDistanceRepository distances() {
@@ -259,8 +311,7 @@ final class AppRepositories {
         int pendingRatings = ratingCache.findPending(session.groupId(), session.userId()).size()
                 + festivalPlanningRatingCache.findPending(session.groupId(), session.userId()).size()
                 + personalRatingCache.findPending(session.userId()).size();
-        int pendingScheduleChoices = scheduleLockCache.findPendingSelections(session.groupId()).size()
-                + scheduleLockCache.findPendingClears(session.groupId()).size();
+        int pendingScheduleChoices = database.scheduleLocks().countPending(session.groupId());
         return PendingSyncSummary.of(pendingRatings, pendingScheduleChoices);
     }
 
@@ -271,7 +322,10 @@ final class AppRepositories {
         }
         try {
             SupabaseDiagnostics.info("schedule_lock_sync", "start", "remote_repository=true");
-            syncingScheduleLocks.pullGroupLocks();
+            for (Festival festival : festivals.findAll()) {
+                new SyncingScheduleLockStore(new RoomScheduleLockStore(database, festival.id()),
+                        new SupabaseScheduleLockClient(sessionManager, festival.id()), session).pullGroupLocks();
+            }
             SupabaseDiagnostics.info("schedule_lock_sync", "success", "remote_repository=true");
         } catch (Exception error) {
             SupabaseDiagnostics.warn("schedule_lock_sync", "failed", "remote_repository=true", error);
@@ -304,6 +358,13 @@ final class AppRepositories {
             throw new IllegalStateException("Sign in before recovering a pending rating.");
         }
         pendingPlanningRatingRecovery.moveToWacken2026(expected, session.groupId(), session.userId());
+    }
+
+    void discardPendingRating(SavedFestivalPlanningRating expected) {
+        if (pendingPlanningRatingRecovery == null) {
+            throw new IllegalStateException("Sign in before discarding a pending rating.");
+        }
+        pendingPlanningRatingRecovery.discardPending(expected, session.groupId(), session.userId());
     }
 
     void syncMasterDataFromSource() {

@@ -39,7 +39,7 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 - Wacken website scraping and Android data-grid validation in the current roadmap.
 - Play Store distribution before a later delivery phase.
 - Business logic in Android UI, Activities, or Fragments.
-- Android instrumentation tests unless a future task makes them meaningful.
+- Android instrumentation tests beyond critical persistence and UI regression flows unless a future task makes them meaningful.
 
 ### Business Rules Index
 
@@ -402,6 +402,9 @@ Scenario: Add a new festival after archiving the current one
   Then the new festival becomes the active festival
   And exact-name band matches reuse existing band records
   And unmatched band names create new band records
+  And the festival, complete lineup, and initial personal planning prefill are saved together
+  And a failed submission leaves no partial new festival
+  And retrying the same submission confirms its result without resetting later edits
 ```
 
 ### Workflow 11a: Rename the active festival
@@ -513,7 +516,7 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-033 | CSV import validation must detect missing references, overlaps, and unknown stages. | An imported performance cannot reference an unknown stage without validation feedback. | Must |
 | BR-034 | Reserved for possible future imported-data review. | Android data-grid validation for proposed scraped or imported changes is out of the current roadmap. | Could |
 | BR-035 | The initial lineup import may contain only bands before final stage and time data is available. | Early rating can start from a band list without performance times. | Must |
-| BR-036 | The band rating screen should follow the official Wacken band detail style where practical, adding rating stars and optional YouTube and Spotify links. | A band detail page shows band information plus star rating controls. | Must |
+| BR-036 | The band rating screen should follow the official Wacken band detail style where practical, adding rating stars and optional YouTube and Spotify links. Unknown music links stay empty in the overview and detail screens; importing a band must not invent a channel or artist link. | Abbie Falls with no stored YouTube channel has no YouTube action; a band with a known channel retains its link. | Must |
 | BR-037 | The current version supports one shared group, not multiple independent groups. | All ratings belong to "my group" for now. | Must |
 | BR-038 | Multi-group support is deferred to next year. | Separate friend groups are not part of the current scope. | Must |
 | BR-038a | Existing app users must belong to the `Sofie and Dino` shared group for MVP2. | Ratings from Sofie, Dino, and any existing signed-in users participate in one shared schedule. | Must |
@@ -572,8 +575,10 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-083 | The start screen shows the active festival when one exists. | The active festival band list is shown by default with an Archive action at the top. | Must |
 | BR-084 | If no festival is active, the start screen shows archived festivals and an add-festival path. | After Wacken is archived, the user sees historical festivals and can add the next festival. | Must |
 | BR-085 | A festival can be manually archived by a user. | Archiving marks the active festival as historical without requiring confirmation in the first version. | Must |
-| BR-086 | Archived festivals are read-only in the first post-Wacken version. | Users can inspect historical lineups and ratings through a read-only band list and band detail screens, but cannot edit archived festival data yet. | Must |
+| BR-086 | Archived festival data is read-only except for explicit festival deletion. | Users can inspect historical lineups and ratings without editing them. A separate confirmed delete action may remove the archived festival under BR-105b. | Must |
 | BR-087 | A new festival can be added after the active festival is archived. | The first post-Wacken version does not manage multiple active or upcoming festivals at the same time. For signed-in users, adding a festival writes the festival and lineup through to Supabase so it is visible group-wide after sync. | Must |
+| BR-087a | Adding a festival is a complete operation. | The festival, full deduplicated lineup, new exact-name bands, and creating user's planning prefill are saved together. A failed save leaves no partial new festival, catalog changes, or prefill. Existing metadata and history survive. | Must |
+| BR-087b | An interrupted creation can be confirmed safely. | Retrying the same name and lineup after an uncertain result confirms the completed creation without duplicating it or resetting later rating edits. Existing archived festival identities cannot be reactivated by adding another festival. | Must |
 | BR-088 | The app remains for one friend group only. | Multi-group support, new invite flows, invite tokens, and invite deep links are out of scope. | Must |
 | BR-089 | Bands are stored independently from festivals. | A band such as Airbourne exists once in the band table and can appear in multiple festival lineups. | Must |
 | BR-090 | Festival lineups link festivals to bands. | Uploading a festival lineup creates festival-band entries and links them to band records in the shared Supabase model, then refreshes the local Room cache. | Must |
@@ -582,18 +587,20 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-093 | Ratings are personal per user. | Each user's ratings belong to that user. The one friend group's schedule still combines personal planning ratings. | Must |
 | BR-094 | Personal band ratings sync to Supabase. | A user's overall opinion of a band is synced for backup, cross-device continuity, and future festival prefilling. | Must |
 | BR-095 | Festival planning ratings sync to Supabase. | Planning ratings are per user, festival, and band, and are used for group schedule decisions. | Must |
-| BR-095a | A pending planning rating with a missing remote festival must remain recoverable. | Sync identifies its stored festival, band, and value without discarding it. The user may explicitly move an intended Wacken 2026 rating only when Wacken is active and no local or remote rating for that user and band would be overwritten; failed checks keep the rating pending. | Must |
+| BR-095a | A pending planning rating with a missing remote festival must remain recoverable. | Sync identifies its stored festival, band, and value without discarding it. The user may explicitly move an intended Wacken 2026 rating only when Wacken is active and no local or remote rating for that user and band would be overwritten. Alternatively, a second confirmation may discard only the displayed unchanged pending rating; other pending changes and synced ratings remain. Failed checks and cancellation keep the rating pending. | Must |
 | BR-096 | Personal band ratings and festival planning ratings are independent. | Changing a festival planning rating must not change the personal band rating. | Must |
 | BR-097 | Festival context can override personal preference for planning. | A user may personally rate a band low but set a high planning rating for one festival because of special context, such as a final show. | Must |
 | BR-098 | Real or seen ratings are stored as personal band rating events. | If a user rates Airbourne after Wacken and later after Rock am Ring, both ratings remain visible with festival and created-date reference. | Must |
 | BR-099 | The current personal band rating is the latest personal band rating event by created date. | Festival planning ratings never overwrite the current personal band rating. | Must |
 | BR-100 | New festival lineups prefill planning ratings from personal band ratings only. | When a known band appears in a new festival lineup, the user's planning rating starts from the latest personal band rating; if none exists, it stays unrated. | Must |
 | BR-101 | Prefilled planning ratings remain editable for the active festival. | Editing the prefilled planning rating affects only that festival's planning decision and does not change personal band history. | Must |
-| BR-102 | Archived festival ratings remain visible with context. | Historical planning ratings and personal band rating events can be inspected with band, festival, and created-date reference. | Must |
+| BR-102 | Retained festival ratings remain visible with context. | Historical planning ratings remain inspectable while the festival is retained. Personal band rating events keep their values, dates, and festival-name context even after explicit festival deletion. | Must |
 | BR-103 | Adding a new festival requires an explicit non-blank festival name. | The add-festival screen starts with an empty name field and blocks creation until the user enters a real name. | Must |
 | BR-104 | The active festival display name can be corrected from Settings. | A typo in the active festival name can be fixed without archiving and re-adding the festival. | Must |
 | BR-105 | Renaming the active festival must preserve festival identity. | Changing `Summer Breeze` to `Summer Breeze 2027` does not change the festival id, lineup entries, planning ratings, personal rating history, or schedule references. | Must |
 | BR-105a | Active festival lifecycle changes are group-wide. | Archiving or renaming the active festival writes to Supabase first so another signed-in app sees the changed status or name after sync. If Supabase rejects the write or cannot be reached, the existing local cache remains usable and the app shows the failure. | Must |
+| BR-105b | A group member may explicitly delete an active or archived festival. | Confirmation identifies that the group-wide deletion removes the festival, lineup, planning ratings, performances, and schedule decisions. Central bands and other festivals remain. Personal rating events retain values, dates, and the deleted festival name. A denied or failed remote deletion keeps the local festival intact; successful sync removes it from other devices and it is never automatically recreated. | Must |
+| BR-105c | Performances and schedule decisions belong to a festival. | The active schedule includes only that festival's performances and locks. Deleting one festival cannot remove or expose another festival's schedule. Legacy schedule records belong to Wacken Open Air 2026. | Must |
 | BR-106 | Imported bands with non-exact names can be reviewed against the own band database. | `Any Given Day` can be searched against existing `Any given Day` before accepting it as a new separate band. | Should |
 | BR-107 | Fuzzy or manual band linking requires user approval per band. | The review table shows the imported band, editable search text, a candidate selector, and a no-match option; no automatic merge occurs. | Should |
 | BR-108 | A user-confirmed band link reuses the existing band as the golden source. | After confirming `Any Given Day` maps to existing `Any given Day`, the lineup points to the existing band and uses its ratings, history, picture, biography, Spotify, and YouTube metadata. | Should |
@@ -607,7 +614,7 @@ Scenario: Rate the same band after seeing it at different festivals
 | Concept | Description | Important fields | Invariants |
 | --- | --- | --- | --- |
 | Festival | A music festival event planned or archived in the app. | Name, status, optional date range | Exactly one festival can be active at a time in the first post-Wacken version. |
-| Archived festival | A completed festival kept for historical reference. | Festival, lineups, performances, planning ratings, personal band rating events | Read-only in the first post-Wacken version. |
+| Archived festival | A completed festival kept for historical reference. | Festival, lineups, performances, planning ratings, personal band rating events | Data is read-only; a separate confirmed action may delete the festival. |
 | Band | A musical act that can appear at one or more festivals. | Stable identity, canonical name, optional English biography, optional image metadata, optional music links, optional aliases where approved | Exists independently from festival lineups. Exact name matching reuses a band in the first post-Wacken version; reviewed fuzzy/manual linking can reuse the band in later admin workflows. |
 | Festival lineup entry | A relationship between a festival and a band. | Festival, band, uploaded festival-specific display name | Must reference one festival and one band. |
 | Band link candidate | A possible mapping from an uploaded festival-specific band name to an existing band. | Uploaded name, editable search term, candidate band, confidence or match reason where available, decision | Must be approved by the user before the lineup is relinked. No match is valid. |

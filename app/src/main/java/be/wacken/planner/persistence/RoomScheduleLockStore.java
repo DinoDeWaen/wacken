@@ -14,35 +14,41 @@ public final class RoomScheduleLockStore implements ScheduleLockLocalStore {
     private static final String DELETE = "DELETE";
 
     private final RoomScheduleLockDao locks;
+    private final String festivalId;
 
     public RoomScheduleLockStore(WackenDatabase database) {
+        this(database, "wacken-2026");
+    }
+
+    public RoomScheduleLockStore(WackenDatabase database, String festivalId) {
         this.locks = database.scheduleLocks();
+        this.festivalId = festivalId;
     }
 
     @Override
     public void savePendingSelection(String groupId, String conflictKey, String selectedCandidateKey) {
-        locks.save(new RoomScheduleLock(groupId, conflictKey, selectedCandidateKey, PENDING, UPSERT));
+        locks.save(new RoomScheduleLock(groupId, festivalId, conflictKey, selectedCandidateKey, PENDING, UPSERT));
     }
 
     @Override
     public void savePendingClear(String groupId, String conflictKey) {
-        locks.save(new RoomScheduleLock(groupId, conflictKey, "", PENDING, DELETE));
+        locks.save(new RoomScheduleLock(groupId, festivalId, conflictKey, "", PENDING, DELETE));
     }
 
     @Override
     public void saveSyncedSelection(String groupId, String conflictKey, String selectedCandidateKey) {
-        locks.save(new RoomScheduleLock(groupId, conflictKey, selectedCandidateKey, SYNCED, UPSERT));
+        locks.save(new RoomScheduleLock(groupId, festivalId, conflictKey, selectedCandidateKey, SYNCED, UPSERT));
     }
 
     @Override
     public void removeSyncedSelection(String groupId, String conflictKey) {
-        locks.delete(groupId, conflictKey);
+        locks.delete(groupId, festivalId, conflictKey);
     }
 
     @Override
     public Map<String, String> findActiveLocks(String groupId) {
         Map<String, String> active = new LinkedHashMap<>();
-        for (RoomScheduleLock lock : locks.findByGroup(groupId)) {
+        for (RoomScheduleLock lock : locks.findByGroup(groupId, festivalId)) {
             if (!DELETE.equals(lock.operation)) {
                 active.put(lock.conflictKey, lock.selectedCandidateKey);
             }
@@ -53,7 +59,7 @@ public final class RoomScheduleLockStore implements ScheduleLockLocalStore {
     @Override
     public Map<String, String> findPendingSelections(String groupId) {
         Map<String, String> pending = new LinkedHashMap<>();
-        for (RoomScheduleLock lock : locks.findPendingSelections(groupId)) {
+        for (RoomScheduleLock lock : locks.findPendingSelections(groupId, festivalId)) {
             pending.put(lock.conflictKey, lock.selectedCandidateKey);
         }
         return pending;
@@ -62,7 +68,7 @@ public final class RoomScheduleLockStore implements ScheduleLockLocalStore {
     @Override
     public List<String> findPendingClears(String groupId) {
         List<String> pending = new ArrayList<>();
-        for (RoomScheduleLock lock : locks.findPendingClears(groupId)) {
+        for (RoomScheduleLock lock : locks.findPendingClears(groupId, festivalId)) {
             pending.add(lock.conflictKey);
         }
         return pending;
@@ -72,7 +78,7 @@ public final class RoomScheduleLockStore implements ScheduleLockLocalStore {
     public void replaceSyncedGroupLocks(String groupId, Map<String, String> remoteLocks) {
         Map<String, String> pendingSelections = findPendingSelections(groupId);
         List<String> pendingClears = findPendingClears(groupId);
-        locks.deleteSyncedByGroup(groupId);
+        locks.deleteSyncedByGroup(groupId, festivalId);
         for (Map.Entry<String, String> lock : remoteLocks.entrySet()) {
             if (!pendingSelections.containsKey(lock.getKey()) && !pendingClears.contains(lock.getKey())) {
                 saveSyncedSelection(groupId, lock.getKey(), lock.getValue());

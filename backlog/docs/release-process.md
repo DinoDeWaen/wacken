@@ -95,6 +95,24 @@ Release notes must include:
 - Known non-goals.
 - Accepted risks.
 
+## Required festival creation regression gate
+
+Before tagging or publishing, both commands must pass on the exact release source:
+
+```bash
+scripts/verify-festival-creation.sh
+./gradlew :app:connectedDebugAndroidTest
+```
+
+Use JDK 21, Android SDK, Docker, Python 3, curl, and a connected emulator.
+The integration runner tests the complete checked-in 63-band Summer Breeze CSV
+against disposable real PostgreSQL/PostgREST with repository migrations and RLS.
+It verifies rollback, archived identity protection, exact-name collisions,
+concurrency, and lost-response retries, and rejects skipped tests.
+The Android suite exercises UI progress/failure and transactional Room updates.
+A successful build, launch, or isolated authorization query does not replace
+these gates. Record their results and any explicit human waiver in the release task.
+
 ## Validation Build
 
 Run the full validation and release build with signing variables configured:

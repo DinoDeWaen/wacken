@@ -49,6 +49,9 @@ final class SupabasePersonalBandRatingClient implements SupabasePersonalBandRati
             if (event.festivalId().isPresent()) {
                 body.put("festival_id", event.festivalId().orElseThrow());
             }
+            if (event.festivalNameSnapshot().isPresent()) {
+                body.put("festival_name_snapshot", event.festivalNameSnapshot().orElseThrow());
+            }
             request("POST", "/rest/v1/personal_band_rating_events?on_conflict=id", body.toString(), true);
         } catch (JSONException error) {
             throw new IOException("Supabase personal rating request could not be created.", error);
@@ -68,7 +71,7 @@ final class SupabasePersonalBandRatingClient implements SupabasePersonalBandRati
         Map<String, String> bandNamesById = bandNamesById();
         String response = request(
                 "GET",
-                "/rest/v1/personal_band_rating_events?select=id,user_id,band_id,festival_id,rating,created_at&user_id=eq." + encode(session.userId()),
+                "/rest/v1/personal_band_rating_events?select=id,user_id,band_id,festival_id,festival_name_snapshot,rating,created_at&user_id=eq." + encode(session.userId()),
                 null,
                 false
         );
@@ -92,7 +95,8 @@ final class SupabasePersonalBandRatingClient implements SupabasePersonalBandRati
                         new Band(bandName),
                         optional(row.optString("festival_id", "")),
                         Rating.of(row.getInt("rating")),
-                        parseCreatedAt(row.getString("created_at"))
+                        parseCreatedAt(row.getString("created_at")),
+                        optional(row.optString("festival_name_snapshot", ""))
                 ));
             }
         }

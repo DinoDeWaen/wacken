@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ import be.wacken.planner.application.BandListItem;
 import be.wacken.planner.application.ListArchivedFestivalBandsUseCase;
 import be.wacken.planner.application.ViewArchivedFestivalHistoryUseCase;
 import be.wacken.planner.domain.Band;
+import be.wacken.planner.domain.Festival;
 
 public final class ArchivedFestivalActivity extends Activity {
     public static final String EXTRA_FESTIVAL_ID = "be.wacken.planner.FESTIVAL_ID";
@@ -35,6 +37,7 @@ public final class ArchivedFestivalActivity extends Activity {
     private String email;
     private List<BandListItem> bands;
     private Map<String, Band> bandsByName;
+    private TextView deletionStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +64,7 @@ public final class ArchivedFestivalActivity extends Activity {
                 repositories.festivalPlanningRatings(),
                 repositories.personalBandRatings(),
                 repositories.realRatings(),
-                repositories.performances()
+                repositories.performancesForFestival(festivalId)
         ).listBands(session.userId(), festivalId);
         bandsByName = bandsByName(repositories);
         setContentView(render());
@@ -86,6 +89,17 @@ public final class ArchivedFestivalActivity extends Activity {
         subtitle.setTextColor(WackenTheme.MUTED);
         subtitle.setPadding(0, 0, 0, dp(12));
         screen.addView(subtitle);
+
+        Button delete = WackenTheme.actionButton(this, "Delete festival", WackenTheme.ButtonStyle.DANGER,
+                view -> DeleteFestivalDialog.show(this, Festival.archived(festivalId, festivalName), () -> {
+                    Toast.makeText(this, "Festival deleted for the group.", Toast.LENGTH_LONG).show();
+                    finish();
+                }, error -> deletionStatus.setText("Delete failed: " + error)));
+        delete.setContentDescription("Delete archived festival and schedule");
+        screen.addView(delete);
+        deletionStatus = new TextView(this);
+        deletionStatus.setTextColor(WackenTheme.AMBER);
+        screen.addView(deletionStatus);
 
         screen.addView(headerRow());
         if (bands.isEmpty()) {

@@ -18,9 +18,15 @@ import java.util.Map;
 
 final class SupabaseScheduleLockClient implements ScheduleLockStore {
     private final SupabaseAuthenticatedRequest authenticatedRequest;
+    private final String festivalId;
 
     SupabaseScheduleLockClient(SupabaseSessionManager sessionManager) {
+        this(sessionManager, "wacken-2026");
+    }
+
+    SupabaseScheduleLockClient(SupabaseSessionManager sessionManager, String festivalId) {
         this.authenticatedRequest = new SupabaseAuthenticatedRequest(sessionManager, "Supabase schedule lock sync failed");
+        this.festivalId = festivalId;
     }
 
     @Override
@@ -29,7 +35,7 @@ final class SupabaseScheduleLockClient implements ScheduleLockStore {
         String response = request(
                 "GET",
                 "/rest/v1/group_schedule_locks?select=conflict_key,selected_candidate_key&group_id=eq."
-                        + encode(session.groupId()),
+                        + encode(session.groupId()) + "&festival_id=eq." + encode(festivalId),
                 null,
                 false
         );
@@ -42,12 +48,13 @@ final class SupabaseScheduleLockClient implements ScheduleLockStore {
             AuthSession session = authenticatedSession();
             JSONObject body = new JSONObject()
                     .put("group_id", session.groupId())
+                    .put("festival_id", festivalId)
                     .put("conflict_key", conflictKey)
                     .put("selected_candidate_key", selectedCandidateKey)
                     .put("updated_by", session.userId());
             request(
                     "POST",
-                    "/rest/v1/group_schedule_locks?on_conflict=group_id,conflict_key",
+                    "/rest/v1/group_schedule_locks?on_conflict=group_id,festival_id,conflict_key",
                     body.toString(),
                     true
             );
@@ -62,6 +69,7 @@ final class SupabaseScheduleLockClient implements ScheduleLockStore {
         request(
                 "DELETE",
                 "/rest/v1/group_schedule_locks?group_id=eq." + encode(session.groupId())
+                        + "&festival_id=eq." + encode(festivalId)
                         + "&conflict_key=eq." + encode(conflictKey),
                 null,
                 false

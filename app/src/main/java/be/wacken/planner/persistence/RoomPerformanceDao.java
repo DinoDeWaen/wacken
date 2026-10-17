@@ -21,6 +21,12 @@ public interface RoomPerformanceDao {
     @Query("SELECT * FROM performances")
     List<RoomPerformance> findAll();
 
+    @Query("SELECT * FROM performances WHERE festivalId = :festivalId")
+    List<RoomPerformance> findByFestival(String festivalId);
+
+    @Query("DELETE FROM performances WHERE festivalId = :festivalId")
+    void deleteByFestival(String festivalId);
+
     @Query("SELECT COUNT(*) FROM performances")
     int count();
 }
