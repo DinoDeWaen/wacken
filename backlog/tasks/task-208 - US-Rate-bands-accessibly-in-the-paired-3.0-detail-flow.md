@@ -4,6 +4,7 @@ title: 'US: Rate bands accessibly in the paired 3.0 detail flow'
 status: To Do
 assignee: []
 created_date: '2026-10-17 09:21'
+updated_date: '2026-10-17 13:21'
 labels:
   - ux
   - release-3.0
@@ -30,4 +31,11 @@ Validated baseline: TASK-201, design/release-2.34/themes.html; user approved 202
 - [ ] #4 Given unknown music links or archived read-only context, then available actions respect metadata and archive rules and the verified discovery action appears only in an allowed context.
 - [ ] #5 Domain/application characterization plus native accessibility tests cover clear, independent ratings, history, read-only archives and theme/recreation.
 - [ ] #6 README and business requirements impacts use canonical delivery-governance wording; approved behavior is documented, diagrams updated only where affected, and the full validation package is recorded before merge.
+- [ ] #7 Given ADR-0016 ratings for one canonical band differ by member/festival, then both appearances show the correct selected-festival values and labeled established/history context; edits cannot change another rating role or festival.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Cross-cutting architecture approved2026-10-17: follow ADR-0016 and the implemented2.34 lifecycle from TASK-216–220. The3.0 appearance/navigation redesign must preserve canonical band metadata, member-specific current band ratings, separate festival planning/after-ratings, one-time creation snapshots, archive-only promotion and source-aware corrections. No theme/layout change may reintroduce latest-event-as-band-rating or cross-festival fallback.
+<!-- SECTION:NOTES:END -->

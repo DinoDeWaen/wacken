@@ -1,10 +1,25 @@
 # Architecture approval request: remaining release 2.34 stories
 
-Status: Proposed. No implementation of the changes below has started.
+Status: Accepted with the user's 2026-10-17 rating-lifecycle clarification, recorded
+in ADR-0016. Implementation of these remaining stories is pending.
 Date: 2026-10-17. Assessment task: TASK-215.
 Feature tasks: TASK-156, TASK-169, TASK-172. Final release gate: TASK-214.
 
-## Why this approval is needed
+## Approval and governing architecture
+
+The user explicitly instructed: "Indeed please use this architecture for all stories
+and add tasks if needed for this." ADR-0016 governs the standard implementation:
+canonical shared bands; personal established band ratings; independent festival
+planning and after-ratings; creation copies band ratings once; archive atomically
+promotes nonempty after-ratings; missing values retain the old band rating; archived
+corrections update only the still-current source. This supersedes any conflicting
+latest-event prefill or correction wording below. No repeated approval is needed
+for this accepted scope; material deviations still require a new decision.
+
+Added TASK-216–220 for model/migration, member-specific creation snapshots, atomic
+archive promotion, correct presentation/export and integrated upgrade validation.
+
+## Why explicit approval was needed
 
 The explicit TASK-202 approval allowed evidence verification with **no new schema**.
 It does not cover durable aliases or correction audit records. AGENTS.md,
@@ -65,7 +80,7 @@ and delivery scope than these stories require. Defer.
   compatible overload with a distinct signature and deterministic request payload.
 - The server validates selected identities against current catalog state and
   commits festival, deduplicated canonical lineup, confirmed aliases and creating
-  user's existing-history prefill in one transaction. Original uploaded names
+  members' established-band-rating prefill in one transaction. Original uploaded names
   remain display/lineage data. Repeated rows selecting one canonical band produce
   one lineup member. Existing bands, ratings and history are never merged/deleted.
 - No match creates a separate band. Cancelling preview writes nothing.
@@ -122,6 +137,9 @@ and delivery scope than these stories require. Defer.
 - Show corrected current values and the old → new change, actor and correction
   time in archive detail. Identify real events by festival identity, not display
   name or fallback to a different festival.
+- A corrected archived after-rating updates the personal established band rating
+  only while that festival remains its source. Planning corrections never promote;
+  older corrections cannot overwrite newer established sources or later planning snapshots.
 - Add an archived-rating/audit export that retains the existing normal ratings CSV
   contract and labels original event dates separately from correction timestamps.
 
@@ -168,11 +186,10 @@ Sources:
 - [Database functions](https://supabase.com/docs/guides/database/functions)
 - [TLS change notice](https://supabase.com/changelog/cbc-tls-ciphers-deprecated)
 
-## Approval needed
+## Approved delivery direction
 
-Approve the **standard option** to implement TASK-156, TASK-169 and TASK-172
-sequentially with the above application ports, additive Room/Flyway schema,
+The user approved the **standard architecture, revised by ADR-0016**, for TASK-156, TASK-169 and TASK-172
+and TASK-216–220, using the above application ports, additive Room/Flyway schema,
 authenticated transactional APIs and validation gates. This approval does not
 claim those features or release2.34 are finished. The selected signed GitHub APK
 channel remains, and the validated Ironline/Field Notes implementation stays in3.0.
-

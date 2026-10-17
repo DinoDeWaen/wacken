@@ -5,6 +5,11 @@
 Accepted. The user explicitly approved the recommended transaction/API change
 with “Please proceed” on 16 October 2026. Related task: TASK-197.
 
+Prefill source/scope revised by accepted [ADR-0016](0016-band-catalog-and-archive-promoted-personal-ratings.md)
+on 2026-10-17: the new creation path copies each applicable member's established
+band rating once, rather than deriving only the creator's value from latest history.
+Atomicity/replay guarantees remain; compatibility work is tracked in TASK-217.
+
 ## Context
 
 The previous Add Festival use case wrote the festival, each band, planning

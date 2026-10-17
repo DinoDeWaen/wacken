@@ -4,6 +4,12 @@
 
 Accepted
 
+Rating lifecycle superseded on 2026-10-17 by [ADR-0016](0016-band-catalog-and-archive-promoted-personal-ratings.md).
+The current band rating is established at festival archive, not by every latest
+history event. Festival planning and after-ratings remain independent per user,
+festival and canonical band; new planning values copy the established band rating.
+The decision below records the earlier implemented model, not the new target.
+
 ## Context
 
 The app has grown from Wacken-only planning into a product that must preserve

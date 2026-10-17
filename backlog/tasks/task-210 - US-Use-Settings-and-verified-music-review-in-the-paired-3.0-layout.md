@@ -4,7 +4,7 @@ title: 'US: Use Settings and verified music review in the paired 3.0 layout'
 status: To Do
 assignee: []
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-17 09:23'
+updated_date: '2026-10-17 13:21'
 labels:
   - ux
   - release-3.0
@@ -34,3 +34,9 @@ Validated baseline: TASK-201, design/release-2.34/themes.html; user approved 202
 - [ ] #5 Native tests cover both entry points, evidence and approval gates, ongoing work across theme/recreation, no overwrite and provider failure states.
 - [ ] #6 README and business requirements impacts use canonical delivery-governance wording; approved behavior is documented, diagrams updated only where affected, and the full validation package is recorded before merge.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Cross-cutting architecture approved2026-10-17: follow ADR-0016 and the implemented2.34 lifecycle from TASK-216–220. The3.0 appearance/navigation redesign must preserve canonical band metadata, member-specific current band ratings, separate festival planning/after-ratings, one-time creation snapshots, archive-only promotion and source-aware corrections. No theme/layout change may reintroduce latest-event-as-band-rating or cross-festival fallback.
+<!-- SECTION:NOTES:END -->

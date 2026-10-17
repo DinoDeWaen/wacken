@@ -11,6 +11,15 @@ Five interactive HTML design directions are available in the [design study](desi
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.
 
 ## Basic Functionality (MVP 1)
+
+> Approved 2.34 target: [ADR-0016](backlog/decisions/0016-band-catalog-and-archive-promoted-personal-ratings.md)
+> defines one canonical band catalog, personal established band ratings and separate
+> festival planning/after-ratings. Creation copies band ratings once; archive promotes
+> nonempty after-ratings atomically. Missing values retain prior band ratings; older
+> corrections cannot overwrite newer sources. TASK-216–220 and the aligned existing
+> stories implement this model. It is approved, **not yet implemented**; the list
+> below describes the current earlier runtime.
+
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
 - Show locally cached lineup, planning ratings, real post-show ratings, schedule data, and manual schedule locks first, while Supabase sync refreshes Room in the background.
 - List bands in a compact dark table with Band, Rating, Stage, Date, and Time columns.

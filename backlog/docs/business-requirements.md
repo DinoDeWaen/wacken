@@ -14,6 +14,15 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 
 ### Current Implemented Capabilities
 
+Approved release 2.34 target (implementation pending TASK-216–220 and aligned
+TASK-156/169/172): shared canonical band metadata plus each member's established
+band rating; independent festival planning and after-ratings; copy established
+ratings once on creation and promote nonempty after-ratings only on archive.
+Missing after-ratings retain the prior band rating. Correcting an older archive
+cannot overwrite a newer established source or existing festival planning snapshots.
+See ADR-0016. The implemented-capability list below describes the earlier runtime
+until these stories are delivered; it is not evidence the new lifecycle is shipped.
+
 - Android band overview and detail screens, with generic Metal Battle placeholder entries hidden from rating lists.
 - 1-5 band ratings with default unrated value of `0`, including clearing a prior rating back to unrated.
 - Room local cache for fast app reads, offline continuity, and queued pending shared-data changes.
@@ -50,7 +59,7 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 | Festival data import | BR-033 to BR-046 | CSV import, Supabase master data, Room cache, admin data, band-only imports |
 | Overview, detail, and app state | BR-047 to BR-072 | Wacken UI, metadata, music links, loading, sync feedback, settings, calendar schedule, returning to app context |
 | MVP3 field use and export | BR-077 to BR-080 | Rating export, real post-show ratings, and no-Wi-Fi festival use |
-| Post-MVP3 festival archive, personal rating history, and import administration | BR-081 to BR-112 | Festival lifecycle, archived festivals, reusable bands, personal band ratings, planning ratings, rating prefill, active festival rename, reviewed band linking, metadata enrichment |
+| Post-MVP3 festival archive, personal rating history, and import administration | BR-081 to BR-117 | Festival lifecycle, archived festivals, reusable bands, personal band ratings, planning/after-ratings, archive promotion, active festival rename, reviewed band linking, metadata enrichment |
 
 ### Requirement Drift Markers
 
@@ -387,6 +396,9 @@ Scenario: Archive the active festival
   Given a festival is active
   When a user archives the festival
   Then the festival becomes read-only history
+  And each member's final nonempty after-rating establishes their current personal band rating atomically with archive
+  And a missing or reset after-rating retains that member's previous band rating
+  And the festival's planning and after-ratings remain preserved with their context
   And it is no longer the active festival on the start screen
   And no archive confirmation is required in the first version
 ```
@@ -402,6 +414,9 @@ Scenario: Add a new festival after archiving the current one
   Then the new festival becomes the active festival
   And exact-name band matches reuse existing band records
   And unmatched band names create new band records
+  And the lineup references canonical bands rather than copying their metadata
+  And each applicable member's established band rating is copied once into their new festival planning rating
+  And unknown personal ratings remain unrated and the new festival after-ratings start empty
   And the festival, complete lineup, and initial personal planning prefill are saved together
   And a failed submission leaves no partial new festival
   And retrying the same submission confirms its result without resetting later edits
@@ -580,7 +595,7 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-075 | The group schedule can locally hide barred overlapping acts. | A user can toggle the schedule view so visible blocks and decision-detail candidates marked as barred/scratched because they lose an overlap to a higher-rated visible act are hidden without changing ratings, generated decisions, manual choices, persistence, or sync data. | Must |
 | BR-076 | The group schedule can locally hide acts at or below a selected star threshold. | A user can choose an inclusive threshold such as 2 stars, and visible blocks plus decision-detail candidates rated at or below that threshold are hidden without changing ratings, generated decisions, manual choices, persistence, or sync data. | Must |
 | BR-077 | MVP3 settings must provide a CSV export for all locally known bands and ratings. | The export contains one row per locally known band and includes stable band identity, display name, planning rating, real post-show rating, available group member ratings, stage/date/time where known, and schedule status where known. | Must |
-| BR-078 | A real post-show rating is separate from the planning rating. | A user can rate a band `5` for planning but later give the actual performance a real rating of `3`; the group schedule still uses the planning rating. | Must |
+| BR-078 | A festival after-rating is separate from its planning rating and the established personal band rating. | Planning5 and after3 belong to one user/festival/band; the group schedule uses planning5 and the established band rating changes only through archive promotion or an eligible correction. | Must |
 | BR-079 | Real post-show ratings use the same visible 1-5 scale with `0`/empty as unrated. | A band not yet seen has no real rating; setting or resetting the real rating must not clear the planning rating. | Must |
 | BR-080 | The app must remain useful without Wi-Fi or mobile data after festival data has been cached or imported. | A user at Wacken with no connection can open cached lineup, band detail, ratings, real ratings, settings, and group schedule without being logged out only because Supabase cannot be reached; changes are stored locally and queued for later sync when sync is supported. | Must |
 | BR-081 | The app supports multiple festivals over time. | Wacken can be archived after completion, and a later festival such as Rock am Ring or Rock im Park can be added for new planning. | Must |
@@ -588,30 +603,30 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-083 | The start screen shows the active festival when one exists. | The active festival band list is shown by default with an Archive action at the top. | Must |
 | BR-084 | If no festival is active, the start screen shows archived festivals and an add-festival path. | After Wacken is archived, the user sees historical festivals and can add the next festival. | Must |
 | BR-085 | A festival can be manually archived by a user. | Archiving marks the active festival as historical without requiring confirmation in the first version. | Must |
-| BR-086 | Archived festival data is read-only except for explicit festival deletion. | Users can inspect historical lineups and ratings without editing them. A separate confirmed delete action may remove the archived festival under BR-105b. | Must |
+| BR-086 | Archived festival data is read-only by default. | Explicit own-rating correction mode may save a correction with audit under BR-116; it does not reopen the festival or permit editing other members. A separate confirmed delete action may remove the festival under BR-105b. | Must |
 | BR-087 | A new festival can be added after the active festival is archived. | The first post-Wacken version does not manage multiple active or upcoming festivals at the same time. For signed-in users, adding a festival writes the festival and lineup through to Supabase so it is visible group-wide after sync. | Must |
-| BR-087a | Adding a festival is a complete operation. | The festival, full deduplicated lineup, new exact-name bands, and creating user's planning prefill are saved together. A failed save leaves no partial new festival, catalog changes, or prefill. Existing metadata and history survive. | Must |
+| BR-087a | Adding a festival is a complete operation. | The festival, deduplicated canonical lineup, required new catalog bands and applicable members' planning snapshots from established personal band ratings are saved together. A failed save leaves no partial festival/catalog/prefill. Existing metadata and history survive. | Must |
 | BR-087b | An interrupted creation can be confirmed safely. | Retrying the same name and lineup after an uncertain result confirms the completed creation without duplicating it or resetting later rating edits. Existing archived festival identities cannot be reactivated by adding another festival. | Must |
 | BR-088 | The app remains for one friend group only. | Multi-group support, new invite flows, invite tokens, and invite deep links are out of scope. | Must |
 | BR-089 | Bands are stored independently from festivals. | A band such as Airbourne exists once in the band table and can appear in multiple festival lineups. | Must |
 | BR-090 | Festival lineups link festivals to bands. | Uploading a festival lineup creates festival-band entries and links them to band records in the shared Supabase model, then refreshes the local Room cache. | Must |
 | BR-091 | The first post-Wacken version matches bands by exact name. | If an uploaded band name exactly matches an existing band name, the app reuses the existing band; otherwise it creates a new band. | Must |
-| BR-092 | Fuzzy band linking and aliases are deferred. | A future version may propose likely existing bands and store aliases after user confirmation, but the first version does not do this. | Could |
+| BR-092 | Nonexact band identities and remembered aliases require explicit confirmation. | Release2.34 TASK-156 proposes existing canonical bands before creation; confirming reuses identity and may remember an alias. No match creates a new catalog band before linking. No automatic fuzzy merge. | Should |
 | BR-093 | Ratings are personal per user. | Each user's ratings belong to that user. The one friend group's schedule still combines personal planning ratings. | Must |
 | BR-094 | Personal band ratings sync to Supabase. | A user's overall opinion of a band is synced for backup, cross-device continuity, and future festival prefilling. | Must |
 | BR-095 | Festival planning ratings sync to Supabase. | Planning ratings are per user, festival, and band, and are used for group schedule decisions. | Must |
 | BR-095a | A pending planning rating with a missing remote festival must remain recoverable. | Sync identifies its stored festival, band, and value without discarding it. The user may explicitly move an intended Wacken 2026 rating only when Wacken is active and no local or remote rating for that user and band would be overwritten. Alternatively, a second confirmation may discard only the displayed unchanged pending rating; other pending changes and synced ratings remain. Failed checks and cancellation keep the rating pending. | Must |
 | BR-096 | Personal band ratings and festival planning ratings are independent. | Changing a festival planning rating must not change the personal band rating. | Must |
 | BR-097 | Festival context can override personal preference for planning. | A user may personally rate a band low but set a high planning rating for one festival because of special context, such as a final show. | Must |
-| BR-098 | Real or seen ratings are stored as personal band rating events. | If a user rates Airbourne after Wacken and later after Rock am Ring, both ratings remain visible with festival and created-date reference. | Must |
-| BR-099 | The current personal band rating is the latest personal band rating event by created date. | Festival planning ratings never overwrite the current personal band rating. | Must |
-| BR-100 | New festival lineups prefill planning ratings from personal band ratings only. | When a known band appears in a new festival lineup, the user's planning rating starts from the latest personal band rating; if none exists, it stays unrated. | Must |
+| BR-098 | After-ratings belong to a user, festival and canonical band, with retained history. | Wacken and Rock am Ring assessments remain separate, with original event dates and context; the final current after-rating, not a stale older edit event, supplies archive promotion. | Must |
+| BR-099 | The current personal band rating is established from an archived festival after-rating with source provenance. | Editing an active festival planning or after-rating cannot change it; it is not derived from every latest history event. | Must |
+| BR-100 | New festival planning copies each applicable member's established personal band rating once. | Known band rating4 seeds that member's planning4; absent values stay unrated. Later band changes and creation retries do not refresh existing planning edits. | Must |
 | BR-101 | Prefilled planning ratings remain editable for the active festival. | Editing the prefilled planning rating affects only that festival's planning decision and does not change personal band history. | Must |
 | BR-102 | Retained festival ratings remain visible with context. | Historical planning ratings remain inspectable while the festival is retained. Personal band rating events keep their values, dates, and festival-name context even after explicit festival deletion. | Must |
 | BR-103 | Adding a new festival requires an explicit non-blank festival name. | The add-festival screen starts with an empty name field and blocks creation until the user enters a real name. | Must |
 | BR-104 | The active festival display name can be corrected from Settings. | A typo in the active festival name can be fixed without archiving and re-adding the festival. | Must |
 | BR-105 | Renaming the active festival must preserve festival identity. | Changing `Summer Breeze` to `Summer Breeze 2027` does not change the festival id, lineup entries, planning ratings, personal rating history, or schedule references. | Must |
-| BR-105a | Active festival lifecycle changes are group-wide. | Archiving or renaming the active festival writes to Supabase first so another signed-in app sees the changed status or name after sync. If Supabase rejects the write or cannot be reached, the existing local cache remains usable and the app shows the failure. | Must |
+| BR-105a | Active festival lifecycle changes are group-wide. | Archive status and rating promotion under BR-113 commit together server-side before cache acknowledgement. Rename preserves identity. Failure/offline use keeps cached data and pending work, reports the error and never claims a partial archive succeeded. | Must |
 | BR-105b | A group member may explicitly delete an active or archived festival. | Confirmation identifies that the group-wide deletion removes the festival, lineup, planning ratings, performances, and schedule decisions. Central bands and other festivals remain. Personal rating events retain values, dates, and the deleted festival name. A denied or failed remote deletion keeps the local festival intact; successful sync removes it from other devices and it is never automatically recreated. | Must |
 | BR-105c | Performances and schedule decisions belong to a festival. | The active schedule includes only that festival's performances and locks. Deleting one festival cannot remove or expose another festival's schedule. Legacy schedule records belong to Wacken Open Air 2026. | Must |
 | BR-106 | Imported bands with non-exact names can be reviewed against the own band database. | `Any Given Day` can be searched against existing `Any given Day` before accepting it as a new separate band. | Should |
@@ -623,6 +638,20 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-112 | Existing non-empty band metadata must not be overwritten automatically. | A band with an existing biography keeps it when enrichment finds another biography unless a future reviewed replace flow explicitly permits replacement. | Must |
 
 ## Data and terminology
+
+### Approved lifecycle rules (ADR-0016; pending implementation)
+
+| Rule ID | Business rule | Example / explanation | Priority |
+| --- | --- | --- | --- |
+| BR-113 | Archive promotes each member's final nonempty festival after-rating to their personal band rating atomically. | Band4 → festival planning5/after3 → archive preserves5/3 and establishes band3; next festival planning starts3. | Must |
+| BR-114 | Missing/reset after-ratings retain established band ratings. | No after-rating never replaces a known band rating with planning or zero. | Must |
+| BR-115 | Rating roles are isolated by user, festival and canonical band identity. | Editing one festival never changes another festival's planning/after-rating or another member's opinion. | Must |
+| BR-116 | Archived corrections preserve audit and respect current source provenance. | Own after-rating correction updates the band rating only if that festival is still its source. Older corrections cannot replace newer sources; planning corrections never promote. Existing later-festival planning snapshots remain. | Must |
+| BR-117 | Legacy migration preserves data and makes uncertain provenance explicit. | Retain original/unknown dates and pending work; do not invent dates or promote active festival results as archived outcomes. | Must |
+
+All BR-113–117 are Must requirements. Revised BR-078/086/087a/092/098–100/105a
+above describe the same approved2.34 target; current runtime gaps are tracked in
+TASK-216–220 and TASK-156/169/172.
 
 | Concept | Description | Important fields | Invariants |
 | --- | --- | --- | --- |
@@ -638,7 +667,9 @@ Scenario: Rate the same band after seeing it at different festivals
 | User | A festival attendee who can rate bands. | Supabase user identity, display label where available | Can provide personal band ratings and festival planning ratings; missing ratings default to `0` unrated. |
 | Group of friends | The single shared group for the app. | Fixed friend group membership | Group decisions use all member planning ratings; multiple groups and invite flows are out of scope. |
 | Festival planning rating | A user's intent to see a band at one festival. | User, festival, band, value, sync status | Must use the 1-5 scale with `0` unrated; used for group schedule decisions; independent from personal band ratings. |
-| Personal band rating event | A user's personal assessment of a band after seeing or rating it. | User, band, festival reference where known, value, created date, sync status | Must use the 1-5 scale with `0` unrated; latest by created date is the user's current personal band rating. |
+| Personal current band rating | A member's established opinion carried between festivals. | User, canonical band, value, source festival/event or explicit legacy provenance, established time | Updated on archive or eligible source correction; never a shared rating column on the canonical band. |
+| Festival after-rating | A member's assessment of one festival performance. | User, festival, canonical band, current value, sync status | Independent from planning and the established band rating; only a nonempty final value is promoted on archive. |
+| Personal band rating event | Historical assessment/edit context. | User, band, festival reference where known, value, original created date, sync status | History is retained; latest edit time alone does not establish the reusable current band rating. |
 | Food option | Imported festival food master data. | Name and optional location metadata | Preserved for future planning but not active in MVP2 schedule behavior. |
 | Schedule | A conflict-aware festival plan. | Day, slots, selected performances, alternatives, walking time | Must respect decision rules, conflicts, walking-time context, and manual group choices. |
 | Timeline slot | One visible item in the daily schedule. | Selected band, stage, time range, walking time, lost alternative | Must be clear enough for in-app timeline display. |

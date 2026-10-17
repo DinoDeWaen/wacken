@@ -4,6 +4,7 @@ title: 'US: Keep festival lifecycle and support flows coherent in dark and light
 status: To Do
 assignee: []
 created_date: '2026-10-17 09:21'
+updated_date: '2026-10-17 13:21'
 labels:
   - ux
   - release-3.0
@@ -31,4 +32,11 @@ Validated baseline: TASK-201, design/release-2.34/themes.html; user approved 202
 - [ ] #4 Given saved-local/pending/shared-saved status, then meaningful words and accessible announcements distinguish these states independently of color.
 - [ ] #5 Tests cover lifecycle confirmations, atomic import failure/retry, offline cache, export/invite boundaries, auth return and theme state retention.
 - [ ] #6 README and business requirements impacts use canonical delivery-governance wording; approved behavior is documented, diagrams updated only where affected, and the full validation package is recorded before merge.
+- [ ] #7 Creation/archive feedback preserves ADR-0016 atomic carry-over/promotion and pending-data recovery, and cannot claim completion after a partial or failed lifecycle operation.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Cross-cutting architecture approved2026-10-17: follow ADR-0016 and the implemented2.34 lifecycle from TASK-216–220. The3.0 appearance/navigation redesign must preserve canonical band metadata, member-specific current band ratings, separate festival planning/after-ratings, one-time creation snapshots, archive-only promotion and source-aware corrections. No theme/layout change may reintroduce latest-event-as-band-rating or cross-festival fallback.
+<!-- SECTION:NOTES:END -->

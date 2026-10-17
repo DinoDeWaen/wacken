@@ -4,7 +4,7 @@ title: 'US: Review imported lineup changes in a data grid'
 status: To Do
 assignee: []
 created_date: '2026-08-19 11:02'
-updated_date: '2026-10-17 11:56'
+updated_date: '2026-10-17 13:21'
 labels:
   - user-story
   - future
@@ -13,6 +13,7 @@ labels:
 milestone: m-0
 dependencies:
   - TASK-215
+  - TASK-216
 priority: low
 ---
 
@@ -35,10 +36,13 @@ Out of scope: Wacken scraping itself and fuzzy alias matching.
 - [ ] #3 Given accepted changes are applied, when existing user ratings already exist, then user rating data is preserved.
 - [ ] #4 Relevant tests cover validation states, accept/reject behavior, and rating preservation.
 - [ ] #5 README, business requirements, diagram, and ADR impact are recorded using delivery-governance wording when implemented.
+- [ ] #6 Given accepted/rejected import rows under ADR-0016, then canonical metadata links, current personal band ratings, festival planning/after-ratings, history, source provenance and pending work remain preserved; imported master data cannot promote or replace user ratings.
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-10-17: The current CSV import directly replaces validated local snapshots; no review grid exists. Proposed row acceptance/rejection preserves baseline data and ratings using the existing local import transaction. See backlog/docs/release-2.34-remaining-architecture-proposal.md and TASK-215 before implementation.
+
+2026-10-17 user-approved architecture: ADR-0016 governs canonical shared bands, member-specific established band ratings, independent festival planning/after-ratings, one-time creation snapshots and atomic archive promotion. Missing after-ratings retain the prior band rating; archived corrections update it only while their festival remains the source. TASK-216–220 implement and validate the lifecycle. This supersedes earlier latest-event prefill wording; do not treat approved planning as shipped behavior.
 <!-- SECTION:NOTES:END -->
