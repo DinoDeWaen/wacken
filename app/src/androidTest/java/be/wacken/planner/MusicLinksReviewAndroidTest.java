@@ -53,8 +53,14 @@ public final class MusicLinksReviewAndroidTest {
     }
     @Test public void returningFromReviewRefreshesNewlySavedProfileOnBandDetail() throws Exception {
         openFrom(BandDetailActivity.class);
+        onUi(()->assertNull(findText(parent.getWindow().getDecorView(),"Open YouTube")));
         new RoomBandRepository(db).save(new Band(NAME,Optional.of(YT),Optional.empty()));
-        onUi(activity::finish);instrumentation.waitForIdleSync();
+        onUi(activity::finish);
+        // finish() schedules a lifecycle transition; an idle queue does not prove
+        // the parent has resumed. Observe both resume and the resulting UI.
+        await(()->androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                .getLifecycleStageOf(parent)==androidx.test.runner.lifecycle.Stage.RESUMED
+                &&findText(parent.getWindow().getDecorView(),"Open YouTube")!=null);
         onUi(()->assertNotNull("Newly approved link must be immediately available on return",
                 findText(parent.getWindow().getDecorView(),"Open YouTube")));
     }
