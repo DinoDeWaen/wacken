@@ -23,6 +23,13 @@ cannot overwrite a newer established source or existing festival planning snapsh
 See ADR-0016. The implemented-capability list below describes the earlier runtime
 until these stories are delivered; it is not evidence the new lifecycle is shipped.
 
+TASK-216 implementation increment: the active detail after-rating is now explicitly
+scoped by member/festival/canonical band, including a synced durable reset. The
+established personal band-rating store is separate and read-only to normal rating
+edits. Additive migration retains legacy records and marks recovered festival
+values for review where old resets cannot be reconstructed. Creation snapshots
+and archive promotion remain TASK-217/218; the complete lifecycle is not yet shipped.
+
 - Android band overview and detail screens, with generic Metal Battle placeholder entries hidden from rating lists.
 - 1-5 band ratings with default unrated value of `0`, including clearing a prior rating back to unrated.
 - Room local cache for fast app reads, offline continuity, and queued pending shared-data changes.

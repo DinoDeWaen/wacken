@@ -42,7 +42,7 @@ public final class CriticalFlowsAndroidTest {
     @Before public void seedOfflineFixture() throws Exception {
         instrumentation=InstrumentationRegistry.getInstrumentation();
         assertEquals("Use the smoke runner: Wi-Fi must be disabled", "0", shell("settings get global wifi_on"));
-        assertEquals("Use the smoke runner: mobile data must be disabled", "0", shell("settings get global mobile_data"));
+        assertEquals("Use the smoke runner: cellular radio must be disabled", "1", shell("settings get global airplane_mode_on"));
         database=WackenDatabase.get(instrumentation.getTargetContext());
         previousSession=new AuthSessionStore(instrumentation.getTargetContext()).load();
         previousFestivals=database.festivals().findAll();
@@ -71,6 +71,9 @@ public final class CriticalFlowsAndroidTest {
             database.festivalLineups().deleteByFestival(FESTIVAL);
             database.performances().deleteByFestival(FESTIVAL);
             database.festivalPlanningRatings().deleteByFestival(FESTIVAL);
+            database.ratingStates().deleteAfterFestival(FESTIVAL);
+            database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM personal_band_ratings WHERE userName = ? AND bandName = ?",new Object[]{USER,BAND});
+            database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM personal_band_rating_events WHERE userName = ? AND bandName = ?",new Object[]{USER,BAND});
             database.festivals().deleteById(FESTIVAL);
             database.festivals().saveAll(previousFestivals);
             if(previousBand!=null&&previousBand.isPresent())new RoomBandRepository(database).save(previousBand.get());
@@ -128,6 +131,31 @@ public final class CriticalFlowsAndroidTest {
             assertNull(findContaining(root(),"Could not generate"));
             assertNotNull(findText(root(),"Back to bands"));
         });
+    }
+
+    @Test public void afterRatingTouchAndResetStayAtFestivalLevelWithoutPromotingBandOpinion() throws Exception {
+        database.ratingStates().saveCurrent(new RoomPersonalBandRating(USER,BAND,4,"previous","Previous festival",
+                "11111111-1111-4111-8111-111111111111","2026-08-01T12:00:00Z"));
+        open(BandDetailActivity.class);
+        onUi(()->{
+            ViewGroup section=(ViewGroup)findText(root(),"Real Rating").getParent();
+            RatingStarsView control=findStars(section);assertNotNull(control);assertTrue(control.getWidth()>0);
+            long time=SystemClock.uptimeMillis();
+            MotionEvent down=MotionEvent.obtain(time,time,MotionEvent.ACTION_DOWN,control.getWidth()*.5f,control.getHeight()/2f,0);
+            MotionEvent up=MotionEvent.obtain(time,time+1,MotionEvent.ACTION_UP,control.getWidth()*.5f,control.getHeight()/2f,0);
+            try{control.dispatchTouchEvent(down);control.dispatchTouchEvent(up);}finally{down.recycle();up.recycle();}
+        });
+        var after=new RoomFestivalAfterRatingRepository(database);
+        assertEquals(3,after.findByUserFestivalAndBand(USER,FESTIVAL,new be.wacken.planner.domain.Band(BAND)).orElseThrow().rating().value());
+        assertEquals(4,database.ratingStates().current(USER,BAND).value);
+        assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+        onUi(()->{
+            ViewGroup section=(ViewGroup)findText(root(),"Real Rating").getParent();
+            findText(section,"Reset").performClick();
+        });
+        assertEquals(0,after.findByUserFestivalAndBand(USER,FESTIVAL,new be.wacken.planner.domain.Band(BAND)).orElseThrow().rating().value());
+        assertEquals(4,database.ratingStates().current(USER,BAND).value);
+        assertEquals(1,after.findPending(USER).size());
     }
 
     @Test public void settingsExposesEnabledExportEntryWithoutNetwork() throws Exception {

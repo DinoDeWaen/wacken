@@ -334,7 +334,7 @@ final class SupabaseMasterDataClient {
         return request("GET", endpoint, null, false);
     }
 
-    private String request(String method, String endpoint, String body, boolean upsert) throws IOException {
+    String request(String method, String endpoint, String body, boolean upsert) throws IOException {
         return requests.execute(method, endpoint, body, upsert);
     }
 

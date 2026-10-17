@@ -15,7 +15,7 @@ public final class WackenDatabaseFestivalMigrationTest {
     public void migratesExistingDatabasesToSeedActiveWackenFestival() throws IOException {
         String source = new String(Files.readAllBytes(databaseSource()), StandardCharsets.UTF_8);
 
-        assertTrue(source.contains("version = 9"));
+        assertTrue(source.contains("version = 10"));
         assertTrue(source.contains("CREATE TABLE IF NOT EXISTS festivals"));
         assertTrue(!source.contains("CREATE UNIQUE INDEX IF NOT EXISTS idx_festivals_one_active"));
         assertTrue(source.contains("VALUES ('wacken-2026', 'Wacken Open Air 2026', 'ACTIVE')"));

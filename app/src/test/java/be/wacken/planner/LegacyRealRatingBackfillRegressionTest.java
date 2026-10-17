@@ -12,12 +12,12 @@ import org.junit.Test;
 
 public final class LegacyRealRatingBackfillRegressionTest {
     @Test
-    public void appRepositoriesBackfillsLegacyRealRatingsForCurrentSessionUser() throws IOException {
+    public void appRepositoriesUsesFestivalScopedRatingsWithoutInventingLegacyFestivalOwnership() throws IOException {
         String source = new String(Files.readAllBytes(source("AppRepositories.java")), StandardCharsets.UTF_8);
 
         assertTrue(source.contains("this.session = authSessionStore.load();"));
-        assertTrue(source.contains("personalRatingCache.backfillLegacyWackenRealRatings("));
-        assertTrue(source.contains("session.isPresent() ? Optional.of(session.userId()) : Optional.empty()"));
+        assertTrue(source.contains("new ActiveFestivalAfterRatingRepository(festivals, afterRatings)"));
+        assertTrue("Unknown legacy ownership must not be reassigned at startup", !source.contains("personalRatingCache.backfillLegacyWackenRealRatings("));
         assertTrue(source.contains("sourceMode == SourceMode.SUPABASE && session.isPresent()"));
     }
 

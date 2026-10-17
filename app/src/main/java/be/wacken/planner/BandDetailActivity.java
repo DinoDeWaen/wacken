@@ -24,7 +24,7 @@ import be.wacken.planner.application.BandDetailItem;
 import be.wacken.planner.application.MusicLinks;
 import be.wacken.planner.application.RateBandResult;
 import be.wacken.planner.application.RateBandUseCase;
-import be.wacken.planner.application.RecordPersonalBandRatingUseCase;
+import be.wacken.planner.application.RecordFestivalAfterRatingUseCase;
 import be.wacken.planner.application.ShowBandDetailUseCase;
 import be.wacken.planner.domain.Band;
 import be.wacken.planner.domain.BandRepository;
@@ -57,6 +57,9 @@ public final class BandDetailActivity extends Activity {
     private RatingStarsView realRatingStars;
     private AuthSession currentSession;
     private LinearLayout musicLinksSection;
+    private RecordFestivalAfterRatingUseCase afterRatingWriter;
+    private be.wacken.planner.domain.FestivalAfterRatingRepository afterRatings;
+    private boolean unresolvedLegacyRating;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +77,8 @@ public final class BandDetailActivity extends Activity {
         realRatings = repositories.realRatings();
         festivals = repositories.festivals();
         personalRatings = repositories.personalBandRatings();
+        afterRatings = repositories.afterRatings();
+        afterRatingWriter = new RecordFestivalAfterRatingUseCase(festivals, repositories.festivalLineups(), afterRatings, Clock.systemUTC());
 
         ShowBandDetailUseCase showBand = new ShowBandDetailUseCase(bands, ratings, realRatings, festivals, personalRatings);
         Optional<BandDetailItem> loaded = showBand.showBand(
@@ -84,6 +89,7 @@ public final class BandDetailActivity extends Activity {
         }
         BandDetailItem detail = loaded.orElseThrow();
         selectedBand = new Band(detail.bandName());
+        unresolvedLegacyRating = repositories.hasUnresolvedLegacyRating(selectedBand.name());
         setContentView(render(detail));
     }
 
@@ -224,13 +230,27 @@ public final class BandDetailActivity extends Activity {
     private LinearLayout realRatingSection(BandDetailItem detail) {
         LinearLayout section = detailSection();
         section.addView(sectionTitle("Real Rating", false));
+        TextView afterStatus = new TextView(this);
+        afterStatus.setTextColor(WackenTheme.MUTED);
+        afterStatus.setContentDescription("Festival after-rating status");
+        String festivalId = be.wacken.planner.domain.FestivalLifecycle.activeFestival(festivals.findAll())
+                .map(be.wacken.planner.domain.Festival::id).orElse("");
+        boolean recovered = afterRatings.findByUserFestivalAndBand(currentUser(), festivalId, selectedBand)
+                .map(be.wacken.planner.domain.FestivalAfterRating::requiresReview).orElse(false);
+        afterStatus.setText(recovered ? "Recovered history: select the final after-rating again before archiving."
+                : unresolvedLegacyRating ? "Legacy device ratings are retained with unresolved dates or ownership. Confirm your after-rating for this festival."
+                : "After-rating for this festival. Your established band rating changes when the festival is archived.");
+        section.addView(afterStatus);
         realRatingStars = new RatingStarsView(this, detail.realRating(), !detail.defaultRealRating(), WackenTheme.AMBER);
         realRatingStars.setPadding(dp(12), 0, dp(12), 0);
         realRatingStars.showAvailableRating();
         realRatingStars.setOnRatingSelected(rating -> {
-            RateBandResult result = new RecordPersonalBandRatingUseCase(festivals, personalRatings, realRatings, Clock.systemUTC()).rateBand(currentUser(), selectedBand, rating);
+            RateBandResult result = saveAfterRating(festivalId, rating);
             if (result.success()) {
                 realRatingStars.applySavedRating(rating);
+                afterStatus.setText("After-rating saved on this device; pending sync.");
+            } else {
+                afterStatus.setText(result.validationMessage().orElse("After-rating was not saved."));
             }
         });
         LinearLayout.LayoutParams starsLayout = new LinearLayout.LayoutParams(dp(150), dp(42));
@@ -245,9 +265,12 @@ public final class BandDetailActivity extends Activity {
         resetRealRating.setContentDescription("Reset real rating");
         resetRealRating.setTextSize(13);
         resetRealRating.setOnClickListener(view -> {
-            RateBandResult result = new RecordPersonalBandRatingUseCase(festivals, personalRatings, realRatings, Clock.systemUTC()).rateBand(currentUser(), selectedBand, 0);
+            RateBandResult result = saveAfterRating(festivalId, 0);
             if (result.success()) {
                 realRatingStars.applySavedRating(0);
+                afterStatus.setText("After-rating reset on this device; pending sync. Established band rating kept.");
+            } else {
+                afterStatus.setText(result.validationMessage().orElse("After-rating was not saved."));
             }
         });
         LinearLayout.LayoutParams resetLayout = new LinearLayout.LayoutParams(dp(96), dp(38));
@@ -270,6 +293,14 @@ public final class BandDetailActivity extends Activity {
             section.addView(line);
         }
         return section;
+    }
+
+    private RateBandResult saveAfterRating(String festivalId, int value) {
+        try {
+            return afterRatingWriter.rateBand(currentUser(), festivalId, selectedBand, value);
+        } catch (RuntimeException error) {
+            return RateBandResult.failure("After-rating could not be saved. Existing data was kept; retry.");
+        }
     }
 
     private LinearLayout runningOrderSection() {

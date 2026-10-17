@@ -14,6 +14,7 @@ import be.wacken.planner.domain.PersonalBandRatingHistoryRepository;
 import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.RealRatingRepository;
 
+/** Legacy compatibility only. Active screens use RecordFestivalAfterRatingUseCase under ADR-0016. */
 public final class RecordPersonalBandRatingUseCase {
     private final FestivalRepository festivals;
     private final PersonalBandRatingHistoryRepository personalRatings;

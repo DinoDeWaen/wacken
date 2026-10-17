@@ -37,6 +37,9 @@ jobs:
       - name: Validate festival creation against PostgreSQL and PostgREST
         run: scripts/verify-festival-creation.sh
 
+      - name: Validate rating isolation, migration and replay against PostgreSQL and PostgREST
+        run: bash scripts/verify-rating-state.sh
+
       - name: Build debug APK
         run: ./gradlew assembleDebug
 

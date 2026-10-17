@@ -22,9 +22,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
                 RoomFestivalCacheMarker.class,
                 RoomFestivalLineupEntry.class,
                 RoomFestivalPlanningRating.class,
-                RoomPersonalBandRatingEvent.class
+                RoomPersonalBandRatingEvent.class,
+                RoomFestivalAfterRating.class,
+                RoomPersonalBandRating.class
         },
-        version = 9,
+        version = 10,
         exportSchema = false
 )
 public abstract class WackenDatabase extends RoomDatabase {
@@ -180,6 +182,57 @@ public abstract class WackenDatabase extends RoomDatabase {
         }
     };
 
+    public static final Migration MIGRATION_9_10 = new Migration(9, 10) {
+        @Override public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS festival_after_ratings (
+                        userName TEXT NOT NULL, festivalId TEXT NOT NULL, bandName TEXT NOT NULL,
+                        operationId TEXT NOT NULL, value INTEGER NOT NULL, recordedAt TEXT NOT NULL,
+                        syncStatus TEXT NOT NULL, requiresReview INTEGER NOT NULL,
+                        PRIMARY KEY(userName, festivalId, bandName))
+                    """);
+            database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS personal_band_ratings (
+                        userName TEXT NOT NULL, bandName TEXT NOT NULL, value INTEGER NOT NULL,
+                        sourceFestivalId TEXT NOT NULL, sourceFestivalName TEXT NOT NULL,
+                        sourceEventId TEXT NOT NULL, establishedAt TEXT NOT NULL,
+                        PRIMARY KEY(userName, bandName))
+                    """);
+            // Keep every original event and legacy global value. Recovered after-values need review:
+            // older apps did not persist resets, so their last positive event cannot prove a final value.
+            database.execSQL("""
+                    INSERT OR IGNORE INTO festival_after_ratings
+                    SELECT e.userName,e.festivalId,e.bandName,e.id,e.value,e.createdAt,
+                        CASE WHEN e.syncStatus='PENDING' THEN 'REVIEW' ELSE 'SYNCED' END,1
+                    FROM personal_band_rating_events e JOIN festivals f ON f.id=e.festivalId
+                    WHERE e.value BETWEEN 1 AND 5 AND length(e.id)=36
+                      AND e.createdAt>'1970-01-01T00:00:00Z'
+                      AND e.id GLOB '????????-????-????-????-????????????'
+                      AND length(replace(e.id,'-',''))=32 AND lower(replace(e.id,'-','')) NOT GLOB '*[^0-9a-f]*'
+                      AND NOT EXISTS (SELECT 1 FROM personal_band_rating_events newer
+                        WHERE newer.userName=e.userName AND newer.festivalId=e.festivalId AND newer.bandName=e.bandName
+                          AND (newer.createdAt>e.createdAt OR (newer.createdAt=e.createdAt AND newer.id>e.id)))
+                    """);
+            // Only acknowledged, dated archived history establishes a migration preference.
+            // Active, pending and unknown-date events stay available without being promoted.
+            database.execSQL("""
+                    INSERT OR IGNORE INTO personal_band_ratings
+                    SELECT e.userName,e.bandName,e.value,e.festivalId,coalesce(e.festivalNameSnapshot,f.name),e.id,e.createdAt
+                    FROM personal_band_rating_events e JOIN festivals f ON f.id=e.festivalId
+                    WHERE f.status='ARCHIVED' AND e.syncStatus='SYNCED' AND e.value BETWEEN 1 AND 5
+                      AND length(e.id)=36 AND e.createdAt>'1970-01-01T00:00:00Z'
+                      AND e.id GLOB '????????-????-????-????-????????????'
+                      AND length(replace(e.id,'-',''))=32 AND lower(replace(e.id,'-','')) NOT GLOB '*[^0-9a-f]*'
+                      AND NOT EXISTS (SELECT 1 FROM personal_band_rating_events newer JOIN festivals nf ON nf.id=newer.festivalId
+                        WHERE nf.status='ARCHIVED' AND newer.syncStatus='SYNCED' AND newer.userName=e.userName
+                          AND newer.bandName=e.bandName AND (newer.createdAt>e.createdAt
+                            OR (newer.createdAt=e.createdAt AND newer.id>e.id)))
+                    """);
+        }
+    };
+
+    public abstract RoomRatingStateDao ratingStates();
+
     public abstract RoomBandDao bands();
 
     public abstract RoomStageDao stages();
@@ -215,7 +268,7 @@ public abstract class WackenDatabase extends RoomDatabase {
                                     WackenDatabase.class,
                                     "wacken-cache.db"
                             )
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
                             .allowMainThreadQueries()
                             .build();
                 }

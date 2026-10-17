@@ -14,6 +14,7 @@ public final class RoomFestivalDeletion {
             String id = festival.id();
             database.personalBandRatingEvents().detachFestival(id, festival.name());
             database.festivalPlanningRatings().deleteByFestival(id);
+            database.ratingStates().deleteAfterFestival(id);
             database.festivalLineups().deleteByFestival(id);
             database.performances().deleteByFestival(id);
             database.scheduleLocks().deleteByFestival(id);

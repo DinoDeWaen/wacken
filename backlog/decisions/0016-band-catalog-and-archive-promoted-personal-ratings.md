@@ -11,6 +11,15 @@ exists, and preventing older archived corrections from overwriting a newer sourc
 It governs all remaining 2.34 stories and subsequent stories, including 3.0.
 Implementation is pending TASK-216–220 and the aligned existing stories.
 
+TASK-216 implementation: separate current-band/festival-after records and ports,
+Room9→10 and additive FlywayV014, owner-scoped sync and durable reset/replay.
+Normal rating edits cannot write the established preference. The public invoker
+RPC delegates to a private-schema privileged function with explicit actor/member,
+active-festival and lineup checks; authenticated roles have no direct table DML.
+This permits atomic state/history/replay without granting client-side arbitrary
+preference writes. Recovered old-client values require review because legacy
+resets were not synced. Creation and archive promotion remain TASK-217/218.
+
 Supersedes ADR-0011's latest-event-as-current-rating rule and immediate promotion
 semantics; revises ADR-0014's history-derived/creator-only prefill for the new
 creation path. Existing deployed contracts remain until compatible migration.
@@ -147,4 +156,3 @@ rollback, concurrency, idempotent retry, RLS, sync/pending work and signed upgra
 - [ADR-0011](0011-post-wacken-festival-rating-model.md).
 - [ADR-0014](0014-atomic-festival-creation.md).
 - [Revised delivery proposal](../docs/release-2.34-remaining-architecture-proposal.md).
-

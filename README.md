@@ -17,8 +17,9 @@ Five interactive HTML design directions are available in the [design study](desi
 > festival planning/after-ratings. Creation copies band ratings once; archive promotes
 > nonempty after-ratings atomically. Missing values retain prior band ratings; older
 > corrections cannot overwrite newer sources. TASK-216–220 and the aligned existing
-> stories implement this model. It is approved, **not yet implemented**; the list
-> below describes the current earlier runtime.
+> stories deliver this model. TASK-216 implements isolated after-ratings and the
+> established-rating store; creation carry-over and archive promotion remain
+> TASK-217/218. Do not publish this intermediate state as the completed lifecycle.
 
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
 - Show locally cached lineup, planning ratings, real post-show ratings, schedule data, and manual schedule locks first, while Supabase sync refreshes Room in the background.
@@ -136,7 +137,33 @@ Current modules:
 | `infrastructure` | Java library | TSV backend-like source adapters, in-memory test adapters, and sync/write-through decorators. Depends inward on `application` and `domain`. |
 | `app` | Android application | Android UI/bootstrap, APK packaging, and Room local-cache adapters. |
 
-Current repositories cover festivals, festival lineups, bands, stages, performances, stage distances, food options, festival planning ratings, personal band rating history, real post-show latest ratings, and group schedule locks. The app reads lineup and mutable shared data from Room first. Supabase is the primary master-data and shared-data sync backend; the CSV/TSV path remains as an explicit fallback/import tool. Real post-show ratings are recorded as personal band rating events for sync and history while the latest real rating remains available locally for the band detail control.
+Current repositories cover festivals, festival lineups, bands, stages, performances, stage distances, food options, festival planning ratings, established personal band ratings, festival after-ratings, personal history and group schedule locks. Room is the first read model; Supabase is the central source and authenticated sync backend. Active detail reads/writes after-ratings by user/festival/canonical band. Positive after-values and their history are saved locally together; zero is a durable festival reset. Neither action updates the established band rating or planning rating. The CSV/TSV path remains an explicit fallback/import tool.
+
+TASK-216 adds Flyway `V014` and Room version10. Established personal band ratings
+retain their archived source identity/name/event/time. Existing dated archived
+history can backfill that store; active, pending and unknown-date local history
+does not establish a new preference. Legacy global values/events remain intact.
+Recovered festival values are marked for explicit review because old clients did
+not sync resets. Detail prompts the member to select the final value again and
+flags retained legacy values whose dates or ownership cannot be established.
+
+After-rating sync reuses authenticated transport and an idempotent operation ID.
+The guarded `save_festival_after_rating` RPC commits a positive history event and
+the after-state together, or records a durable zero reset; a late replay cannot
+restore an older value. Pending local edits survive older acknowledgements and
+remote pulls. Owner-scoped RLS limits reads; direct writes to established ratings
+and after-state tables are denied. The public invoker wrapper delegates to a
+narrowly scoped private-schema function that validates identity, membership,
+active festival and lineup before writing; Android receives no privileged secret.
+
+Apply the tested additive migrations through the existing Flyway process before
+shipping the final2.34APK. TASK-217/218 must complete creation/archive behavior
+before publication. This task's validation APK is not a release. Missing server
+schema/denied writes retain cached/pending data and report a sync failure.
+
+Reproduce the disposable SQL/RLS/HTTP gate with `bash scripts/verify-rating-state.sh`
+(Docker, Python3 and curl), and native persistence checks with
+`sh scripts/verify-android-smoke.sh emulator-5554 be.wacken.planner.persistence.FestivalAfterRatingDatabaseTest`.
 
 The Android five-file CSV import validates the input before writes. Its TSV fallback adapter saves copies of the five source files and replaces the corresponding Room cache tables inside one database transaction. If a write fails, Room rolls back and the adapter restores the TSV files before reporting failure; existing ratings are outside the replacement. A restore failure is reported with the retained backup location. This import boundary does not recover an interrupted process or device power loss.
 
@@ -199,8 +226,8 @@ C4Container
 
     System_Boundary(app, "Wacken Planner 2026") {
         Container(ui, "Android UI", "Java", "Screens for band list, ratings, imports, schedule")
-        Container(appsvc, "Application Layer", "Java", "Use cases for listing, rating, imports, confirmed festival deletion")
-        Container(domain, "Domain", "Java", "Festival-owned schedules, reusable bands, personal rating history")
+        Container(appsvc, "Application Layer", "Java", "Festival-scoped rating use cases, imports, confirmed festival deletion")
+        Container(domain, "Domain", "Canonical bands, separate personal/planning/after ratings and source provenance")
         Container(infra, "Infrastructure", "Java", "Adapters: Supabase source, TSV fallback source, and sync decorators")
         ContainerDb(cache, "Room Local Cache", "SQLite/Room", "Fast local app cache for imported data and ratings")
         ContainerDb(tsv, "TSV Fallback Source", "App-private TSV files", "Fallback import source")
@@ -252,7 +279,7 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew assembleDebug
 
 Useful focused checks:
 
-For the critical native smoke journey on a booted test emulator, run `sh scripts/verify-android-smoke.sh emulator-5554` (set `ANDROID_ADB` if the SDK is elsewhere). Use `sh scripts/verify-android-smoke.sh emulator-5554 all` for the complete instrumentation suite, as CI does. This release gate covers cached offline startup, the actual detail rating/reset control, a populated schedule and the enabled Settings export entry point. It uses fixture data and a fixture session, disables only the selected emulator's Wi-Fi/mobile data, then restores network settings and cached/session fixtures. The runner refuses physical devices or multiple connected targets; keep this as an isolated test emulator. No live Supabase data is required. It reuses the existing Android instrumentation setup; the full boundary suite below is still required before release. Direct Gradle instrumentation commands require the same offline precondition. If a signed release already exists on an emulator, use a separate fresh test emulator/data directory rather than uninstalling it to resolve a debug-signature mismatch.
+For the critical native smoke journey on a booted test emulator, run `sh scripts/verify-android-smoke.sh emulator-5554` (set `ANDROID_ADB` if the SDK is elsewhere). Use `sh scripts/verify-android-smoke.sh emulator-5554 all` for the complete instrumentation suite, as CI does. This release gate covers cached offline startup, the actual detail rating/reset control, a populated schedule and the enabled Settings export entry point. It uses fixture data and a fixture session, enables airplane mode and disables Wi-Fi/mobile data on the selected emulator, then restores its prior network settings and cached/session fixtures. Airplane mode ensures cellular isolation even when a no-SIM emulator retains an enabled mobile-data preference. The runner refuses physical devices or multiple connected targets; keep this as an isolated test emulator. No live Supabase data is required. It reuses the existing Android instrumentation setup; the full boundary suite below is still required before release. Direct Gradle instrumentation commands require the same offline precondition. If a signed release already exists on an emulator, use a separate fresh test emulator/data directory rather than uninstalling it to resolve a debug-signature mismatch.
 
 ```bash
 ./gradlew :domain:compileJava :application:compileJava
