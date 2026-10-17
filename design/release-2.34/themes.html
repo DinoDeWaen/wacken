@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wacken Planner — light & dark flow review</title>
+<link rel="stylesheet" href="styles.css">
+<script src="appearance.js" defer></script>
+<script src="prototype.js" defer></script>
+</head>
+<body data-study="paired" class="paired-study">
+<header class="study-header">
+  <div><p class="study-kicker">Wacken Planner · Release 2.34</p><h1>One flow. Two ways to see it.</h1></div>
+  <a class="study-link" href="compare.html">Original five-style study →</a>
+</header>
+<p class="study-intro">Ironline dark + Field Notes light. Shared layout, controls and navigation. Toggle in the app header or choose System / Dark / Light in Settings. This is a design study, not the released app. Ratings, timetables and verification evidence are sample data; nothing is sent or saved to the real festival.</p>
+<div class="study-layout">
+  <aside class="study-controls" aria-label="Design comparison controls">
+    <h2>Choose appearance</h2>
+    <div id="style-options"></div>
+    <div class="study-field"><label for="screen-select">Jump to a screen</label><select id="screen-select"><option value="bands">Bands</option><option value="detail">Band detail</option><option value="schedule">Schedule</option><option value="settings">Settings & administration</option><option value="review">Music-link review</option></select></div>
+    <div class="study-field"><label for="state-select">Connection / content example</label><select id="state-select"><option value="online">Online · saved</option><option value="offline">Offline · pending</option><option value="error">Sync error · retry</option><option value="loading">Refreshing cached data</option><option value="empty">No active festival</option></select></div>
+    <div class="study-field"><label for="scale-select">Text size</label><select id="scale-select"><option value="100">100%</option><option value="200">200% · reflow check</option></select></div>
+    <div class="study-field"><label for="candidate-select">Lookup result fixture</label><select id="candidate-select"><option value="verified">Identity-verified example</option><option value="ambiguous">Ambiguous namesake example</option><option value="none">No verified match</option></select></div>
+    <p class="study-note">This control simulates a result. No channel has been researched or verified here. Real verification is the separate TASK-202 feature.</p>
+    <button id="reset-study" type="button">Reset this example</button>
+  </aside>
+  <section class="preview-area" aria-label="Selected design prototype">
+<div id="style-caption" class="preview-caption"></div>
+    <p id="appearance-status" role="status" class="visually-hidden"></p>
+    <article id="phone" data-style="iron" data-scale="100" aria-label="Interactive phone prototype">
+      <header id="phone-header"></header>
+      <div id="sync-status" role="status" aria-live="polite"></div>
+      <main id="phone-main" tabindex="-1"></main>
+      <nav id="phone-nav" aria-label="App destinations"></nav>
+    </article>
+    <p class="preview-footnote">Interactive HTML approximation. Browser checks do not certify native Android accessibility, TalkBack, glare or one-handed use.</p>
+  </section>
+  <aside class="review-guide" aria-label="Review tasks">
+    <p class="study-kicker">Try the same tasks in each</p>
+    <h2>Try the flow in both modes</h2>
+    <ol><li>Find Abbie Falls. Set your planning rating to 4. Toggle Light / Dark in the header: your band, rating and position should stay.</li><li>Find music links for this band. Inspect the sample evidence before approving.</li><li>In Settings, find music links for the festival. Reject the sample results.</li><li>Explain the locked schedule choice and inspect its alternative.</li><li>Switch the example to Offline. Rate a band and find your pending change.</li></ol>
+    <h3>Check the theme preference</h3>
+    <p>In Settings choose System, Dark or Light. System follows your device. An explicit choice is remembered in this browser. Compare readability and try 200% text. Demo ratings reset on reload.</p>
+    <div class="study-field"><label for="preferred-style">Your preferred appearance</label><select id="preferred-style"><option value="">Not decided</option><option>Ironline</option><option>Field Notes</option><option>Follow system</option><option>Both equally</option></select></div>
+    <div class="study-field"><label for="review-notes">What felt easy or difficult?</label><textarea id="review-notes" rows="5" placeholder="Which action was hard to find? What should change?"></textarea></div>
+    <button id="download-review" type="button">Download my review notes</button>
+    <p id="review-status" role="status" class="study-note">Your answers stay in this browser. Share them in chat when ready.</p>
+    <a class="study-link" href="review-guide.md">Full review exercise</a>
+  </aside>
+</div>
+<dialog id="app-dialog" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog>
+</body>
+</html>
+

@@ -1,6 +1,18 @@
 # Release 2.34 — design review
 Date: 2026-10-17 · TASK-201 · Review status: awaiting user feedback.
 
+## Paired light/dark flow review
+
+The user requested Ironline dark and Field Notes light as one shared flow. [Open themes.html](themes.html) for the current iteration. This records a design preference; measured usability results remain pending.
+
+1. Open Abbie Falls, set planning to 4, and toggle Light in the app header. Confirm the band, rating and scroll position stay.
+2. Toggle Dark again. Open Find music links, type a search, and switch theme before submitting. Confirm the text stays. Inspect sample evidence and reject or approve in this demo.
+3. In Settings → Appearance try Light, Dark and System default. A header switch selects a manual preference. System follows the actual device appearance; no simulated system toggle is used.
+4. Reload to check the appearance preference is remembered. Reload resets sample ratings and other demo data; it does not clear real app data.
+5. Review Settings → festival music discovery, Schedule → legend/alternative, and the Offline example in both modes. Try 200% text. Note any clipping, unclear labels or controls that seem to move.
+
+Share any flow problems, preferred default and whether light-mode serif headings remain readable. Original five-style exercise follows for reference.
+
 ## Open the HTML
 Open [index.html](index.html) in a browser or use the local preview at http://127.0.0.1:8234/index.html while the server is running. [Compare all five](compare.html) places the same band list in five interactive frames. Each frame has working navigation.
 
@@ -39,4 +51,3 @@ Browser labels and a simulated phone do not validate native Android TalkBack, Sw
 
 ## Decision after review
 Share a preferred direction, a second choice, and anything to combine or change. Confirm any light-theme or navigation departure separately before production implementation. TASK-201 stays In Progress until feedback and resulting changes are recorded; TASK-202 is the separate implementation story for actual verified channel discovery.
-

@@ -1,6 +1,20 @@
 # Release 2.34 — five interactive design directions
 TASK-201 · In Progress · Ready for initial human review, 2026-10-17.
 
+## Current review: paired dark and light mode
+
+User direction, 2026-10-17: combine **Ironline dark** and **Field Notes light** as appearance choices. [Open the paired flow](themes.html). The original five concepts remain below as research references.
+
+The paired version shares page hierarchy, navigation, row spacing, controls and body typography. Light mode keeps the paper/forest palette and serif headings. Use the header Light / Dark action for a quick switch, or Settings → Appearance → System default / Dark / Light. System follows the device; a manual choice overrides it. The appearance preference is remembered locally when browser storage is available. Demo ratings still reset on reload.
+
+Switching appearance updates the existing screen without rebuilding its forms, so band selection, ratings, unfinished searches, expanded sections and scroll position are retained. The header action selects a manual mode; return to System default in Settings to follow the device again.
+
+Review flow: find Abbie Falls → rate 4 → toggle light/dark → find music links → inspect/reject sample evidence → Settings → festival discovery → Schedule. Also inspect offline pending changes and 200% text. This remains an HTML proposal; production theme/navigation requirements have not been changed.
+
+Paired preference tests: `node --test design/release-2.34/appearance.test.cjs` (4 passing cases: system resolution, explicit overrides, invalid stored values, device changes). Tests failed before the preference module existed, then passed after implementation. Syntax and the original 80-pair contrast check also pass; palette tokens are unchanged.
+
+Agent browser checks confirmed a rating of 4 survived dark→light, Settings System selected the current dark device theme, and an unfinished festival search survived another switch. Human task-completion and native Android checks remain pending. User preference for a paired approach is recorded; no timed usability outcome is claimed.
+
 ## View and validate
 [Open the interactive study](index.html) · [Compare all five](compare.html) · [Review exercise](review-guide.md) · [Evidence-based audit](research.md)
 
@@ -70,4 +84,3 @@ Diagram impact: none, because the study changes no architecture or production fl
 ADR impact: none, because no architecture-significant decision or production implementation is made.
 
 No production Android, persistence, API or dependency changes. TASK-201 stays In Progress for full validation and actual reviewer feedback. Actual channel verification and saving are separate TASK-202 work.
-

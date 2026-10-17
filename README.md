@@ -2,6 +2,8 @@
 
 ## Release 2.34 design review
 
+Current review: [paired Ironline dark / Field Notes light flow](design/release-2.34/themes.html), with a header toggle and System / Dark / Light preference in Settings. This is an interactive HTML proposal awaiting flow review.
+
 Five interactive HTML design directions are available in the [design study](design/release-2.34/README.md): [open the prototype](design/release-2.34/index.html), [compare the styles](design/release-2.34/compare.html), and follow the [review exercise](design/release-2.34/review-guide.md). These are proposals with simulated data, awaiting user validation; they do not change the released Android app. Run `python3 -m http.server 8234 --bind 127.0.0.1 --directory design/release-2.34` and visit `http://127.0.0.1:8234/index.html` for a local browser preview.
 
 ## Context

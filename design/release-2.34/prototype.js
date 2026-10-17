@@ -15,8 +15,13 @@ const fixtureBands = [
   {id:'orchestra',name:'Summer Breeze Legends & Orchestra',genre:'Festival special',rating:0,known:false}
 ];
 const params = new URLSearchParams(location.search);
+const paired = document.body.dataset.study==='paired';
+const deviceAppearance = window.matchMedia('(prefers-color-scheme: dark)');
+let savedAppearance='system';
+if(paired){try{savedAppearance=localStorage.getItem('wacken-design-appearance')||'system';}catch{}}
 const allowedScreens = ['bands','detail','schedule','settings','review','festival'];
 const state = {
+  preference:paired?Appearance.normalizePreference(params.get('theme')||savedAppearance):'system',
   style:styles[params.get('style')]?params.get('style'):'iron',
   screen:allowedScreens.includes(params.get('screen'))?params.get('screen'):'bands',
   mode:['online','offline','error','loading','empty'].includes(params.get('state'))?params.get('state'):'online',
@@ -41,6 +46,7 @@ const offline = ()=>state.mode==='offline';
 function updateUrl(){
   const p=new URLSearchParams({style:state.style,screen:state.screen,state:state.mode,scale:state.scale,candidate:state.candidate});
   if(params.get('embed')==='1')p.set('embed','1');
+  if(paired)p.set('theme',state.preference);
   history.replaceState(null,'','?'+p.toString());
 }
 function setScreen(screen){
@@ -56,6 +62,7 @@ function syncStatus(){
   return pending?'Saved on this device · '+pending+' changes pending':'Up to date · all changes saved';
 }
 function render(){
+  if(paired)state.style=Appearance.resolveTheme(state.preference,deviceAppearance.matches);
   phone.dataset.style=state.style;phone.dataset.scale=state.scale;
   dialog.dataset.style=state.style;dialog.style.fontSize=state.scale==='200'?'32px':'16px';
   document.querySelectorAll('[data-style-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.styleChoice===state.style)));
@@ -64,18 +71,43 @@ function render(){
   document.getElementById('state-select').value=state.mode;
   document.getElementById('scale-select').value=state.scale;
   document.getElementById('candidate-select').value=state.candidate;
-  document.getElementById('phone-header').innerHTML='<div class="app-bar"><span class="app-brand">'+(state.style==='rivet'?'W/P — FIELD SYSTEM':'Wacken / Planner')+'</span>'+button('↻','sync','quiet','aria-label="Sync now"')+'</div><p class="festival-label">'+(state.noActive?'No active festival':esc(state.festival))+'</p>';
+  document.getElementById('phone-header').innerHTML='<div class="app-bar"><span class="app-brand">'+(state.style==='rivet'?'W/P — FIELD SYSTEM':'Wacken / Planner')+'</span><div class="header-actions">'+(paired?button('','toggle-theme','quiet','id="theme-toggle"'):'')+button('↻','sync','quiet','aria-label="Sync now"')+'</div></div><p class="festival-label">'+(state.noActive?'No active festival':esc(state.festival))+'</p>';
   document.getElementById('sync-status').innerHTML='<span class="sync-dot" aria-hidden="true"></span><span>'+syncStatus()+'</span>'+(state.mode==='error'?button('Retry','sync','quiet','aria-label="Retry sync"'):'');
   const views={bands:bandsView,detail:detailView,schedule:scheduleView,settings:settingsView,review:reviewView,festival:festivalView};
   main.innerHTML=views[state.screen]();
   const current=['detail','festival'].includes(state.screen)?'bands':state.screen==='review'?(state.scope==='festival'?'settings':'bands'):state.screen;
   document.getElementById('phone-nav').innerHTML=[['bands','Bands','≡'],['schedule','Schedule','▦'],['settings','Settings','⚙']].map(([id,label,icon])=>button('<span class="nav-symbol" aria-hidden="true">'+icon+'</span>'+label,'nav-'+id,'',current===id?'aria-current="page"':'')).join('');
+  if(paired)refreshAppearance();
   updateUrl();
 }
+function refreshAppearance(){
+  state.style=Appearance.resolveTheme(state.preference,deviceAppearance.matches);
+  phone.dataset.style=state.style;dialog.dataset.style=state.style;
+  const light=state.style==='field';
+  const caption=document.getElementById('style-caption');
+  caption.textContent=(light?'Light · Field Notes':'Dark · Ironline')+(state.preference==='system'?' · following system':' · manual preference');
+  const toggle=document.getElementById('theme-toggle');
+  if(toggle){toggle.textContent=light?'☾ Dark':'☀ Light';toggle.setAttribute('aria-label',light?'Switch to dark mode':'Switch to light mode');}
+  document.querySelectorAll('[data-theme-choice]').forEach(e=>e.setAttribute('aria-pressed',String(e.dataset.themeChoice===state.preference)));
+  document.querySelectorAll('input[name="theme-preference"]').forEach(e=>{e.checked=e.value===state.preference;});
+  const current=document.getElementById('appearance-current');if(current)current.textContent=caption.textContent;
+}
+function setAppearance(preference){
+  state.preference=Appearance.normalizePreference(preference);
+  try{localStorage.setItem('wacken-design-appearance',state.preference);}catch{}
+  // Update colors and preference controls only: keep the actual form DOM,
+  // search text, rating, expanded sections, scroll and keyboard focus intact.
+  refreshAppearance();updateUrl();
+  document.getElementById('appearance-status').textContent=(state.style==='field'?'Light mode':'Dark mode')+(state.preference==='system'?' · following system.':'.');
+}
+function appearanceSection(){
+  return '<section class="section"><h3>Appearance</h3><p id="appearance-current" class="small muted"></p><fieldset class="appearance-options"><legend>Theme preference</legend>'+[['system','System default','Follow your device appearance'],['dark','Dark · Ironline','Charcoal and amber'],['light','Light · Field Notes','Warm paper and forest green']].map(([value,label,description])=>'<label class="appearance-option"><input type="radio" name="theme-preference" value="'+value+'" '+(state.preference===value?'checked':'')+'><span><strong>'+label+'</strong><small>'+description+'</small></span></label>').join('')+'</fieldset><p class="small muted">Only this appearance preference is remembered in your browser. The flow and your in-progress demo stay the same when you switch.</p></section>';
+}
+if(paired)deviceAppearance.addEventListener('change',()=>{if(state.preference==='system'){refreshAppearance();document.getElementById('appearance-status').textContent='Appearance updated to follow your system.';}});
 function bandsView(){
   if(state.noActive)return '<p class="eyebrow">Between festivals</p><h2>What’s next?</h2><p class="muted">Your previous festivals and personal ratings are still here.</p>'+button('Add festival','add-festival','primary block')+'<section class="section"><h3>Festival archive</h3><p>Wacken Open Air 2026</p><p class="small muted">Archived · ratings are read-only</p>'+button('View archive example','archive-example','block')+'</section>'+flash();
-  const titles={iron:'The line-up',field:'Bands, worth hearing.',pulse:'Find your next favourite.',rivet:'Band register',backstage:'Turn it up.'};
-  return '<p class="eyebrow">'+(state.style==='field'?'Your festival notebook':'Summer Breeze / 2027')+'</p><h2>'+titles[state.style]+'</h2><p class="muted small">63 bands · six-band study sample</p><label for="band-search" class="search-label">Find a band</label><input id="band-search" type="search" placeholder="Search the line-up" value="'+esc(state.query)+'"><div class="filter-row" aria-label="Band filters">'+button('All bands','filter-all','', 'aria-pressed="'+(state.filter==='all')+'"')+button('Unrated','filter-unrated','','aria-pressed="'+(state.filter==='unrated')+'"')+'</div><div id="band-results">'+bandRows()+'</div>'+flash();
+  const titles={iron:'The line-up',field:paired?'The line-up':'Bands, worth hearing.',pulse:'Find your next favourite.',rivet:'Band register',backstage:'Turn it up.'};
+  return '<p class="eyebrow">'+(!paired&&state.style==='field'?'Your festival notebook':'Summer Breeze / 2027')+'</p><h2>'+titles[state.style]+'</h2><p class="muted small">63 bands · six-band study sample</p><label for="band-search" class="search-label">Find a band</label><input id="band-search" type="search" placeholder="Search the line-up" value="'+esc(state.query)+'"><div class="filter-row" aria-label="Band filters">'+button('All bands','filter-all','', 'aria-pressed="'+(state.filter==='all')+'"')+button('Unrated','filter-unrated','','aria-pressed="'+(state.filter==='unrated')+'"')+'</div><div id="band-results">'+bandRows()+'</div>'+flash();
 }
 function bandRows(){
   const list=fixtureBands.filter(b=>b.name.toLowerCase().includes(state.query.toLowerCase())&&(state.filter!=='unrated'||state.ratings[b.id]===0));
@@ -96,7 +128,7 @@ function scheduleView(){
   return '<p class="eyebrow">An evening together</p><h2>The schedule</h2><p class="small muted">Illustrative times and stages · not a published festival timetable</p><div class="button-row">'+button('Day 1','day','primary','aria-pressed="true"')+button('Legend','legend','','aria-label="Explain schedule symbols"')+'</div><p class="small"><strong>Current group choice:</strong> '+selected+'</p><div class="timeline-scroll" tabindex="0" aria-label="Evening timetable, scroll horizontally"><table class="timeline"><caption class="small">Example evening · stage labels stay visible</caption><thead><tr><th scope="col">Stage</th><th scope="col">18:00</th><th scope="col">19:00</th><th scope="col">20:00</th></tr></thead><tbody><tr><th scope="row">Main Stage</th><td>—</td><td>—</td><td>'+button('<strong>20:00–21:00</strong><strong>Electric Callboy</strong><span>★ 5 · '+(state.lock==='callboy'?'Locked choice':'Alternative')+'</span>','decision','set-block','aria-label="Show decision for Electric Callboy"')+'</td></tr><tr><th scope="row">T-Stage</th><td>—</td><td>—</td><td>'+button('<strong>20:15–21:15</strong><strong>HammerFall</strong><span>★ 3 · '+(state.lock==='callboy'?'Overlap · skip':'Locked choice')+'</span>','decision','set-block '+(state.lock==='callboy'?'skipped':''),'aria-label="Show decision for HammerFall"')+'</td></tr></tbody></table></div><p class="legend-summary">Locked = your group’s choice. Dashed = a skipped overlap. Tap a set to review alternatives.</p><section class="section"><h3>Plan without losing your place</h3><p class="muted">Ratings and shared choices stay separate. Changing a choice does not rewrite a rating.</p></section>'+flash();
 }
 function settingsView(){
-  return '<p class="eyebrow">Your festival, together</p><h2>Settings</h2><section class="section"><h3>Sync & offline</h3><p>'+syncStatus()+'</p>'+button('Sync now','sync','primary block')+'<p class="small muted">Cached bands and your saved ratings remain available if the network drops.</p></section><section class="section"><h3>Festival administration</h3><p class="small muted">'+esc(state.festival)+'</p>'+button('Link bands','link-bands','block')+button('Find music links','find-festival','block','aria-label="Find festival music links"')+button('Import line-up','import-info','block')+'<details class="details-row"><summary>Festival management</summary>'+button('Archive festival','archive','danger block',offline()?'disabled':'')+'<p class="small muted">Archiving keeps past ratings and history.</p></details></section><section class="section"><h3>Your group</h3><p>Sofie and Dino</p><p class="small muted">Single shared planning group</p>'+button('Share group invite','invite','block')+'</section><section class="section"><h3>Your ratings</h3><p class="muted">Your personal archive travels with you.</p>'+button('Export ratings CSV','export','block')+'</section>'+flash();
+  return '<p class="eyebrow">Your festival, together</p><h2>Settings</h2>'+(paired?appearanceSection():'')+'<section class="section"><h3>Sync & offline</h3><p>'+syncStatus()+'</p>'+button('Sync now','sync','primary block')+'<p class="small muted">Cached bands and your saved ratings remain available if the network drops.</p></section><section class="section"><h3>Festival administration</h3><p class="small muted">'+esc(state.festival)+'</p>'+button('Link bands','link-bands','block')+button('Find music links','find-festival','block','aria-label="Find festival music links"')+button('Import line-up','import-info','block')+'<details class="details-row"><summary>Festival management</summary>'+button('Archive festival','archive','danger block',offline()?'disabled':'')+'<p class="small muted">Archiving keeps past ratings and history.</p></details></section><section class="section"><h3>Your group</h3><p>Sofie and Dino</p><p class="small muted">Single shared planning group</p>'+button('Share group invite','invite','block')+'</section><section class="section"><h3>Your ratings</h3><p class="muted">Your personal archive travels with you.</p>'+button('Export ratings CSV','export','block')+'</section>'+flash();
 }
 function reviewView(){
   const festival=state.scope==='festival',disabled=offline()||state.lookupRunning||state.noActive;
@@ -126,6 +158,7 @@ function showDialog(title,content,actions){
 }
 function closeDialog(){dialog.close()}
 function handleAction(action,target){
+  if(paired&&action==='toggle-theme'){setAppearance(state.style==='field'?'dark':'light');return;}
   if(action.startsWith('nav-')){setScreen(action.slice(4));return;}
   if(action==='band'){state.band=target.dataset.band;setScreen('detail');return;}
   if(action==='back-bands'){setScreen('bands');return;}
@@ -179,12 +212,14 @@ document.addEventListener('click',event=>{
   if(target){handleAction(target.dataset.action,target);return;}
   const choice=event.target.closest('[data-style-choice]');
   if(choice){state.style=choice.dataset.styleChoice;render();}
+  const theme=event.target.closest('[data-theme-choice]');if(paired&&theme)setAppearance(theme.dataset.themeChoice);
 });
 main.addEventListener('input',event=>{
   if(event.target.id==='band-search'){state.query=event.target.value;document.getElementById('band-results').innerHTML=bandRows();}
 });
 main.addEventListener('change',event=>{
   const input=event.target;
+  if(paired&&input.name==='theme-preference'){setAppearance(input.value);return;}
   if(input.name==='planning'||input.name==='real'){
     const kind=input.name;if(kind==='planning')state.ratings[state.band]=+input.value;else state.real[state.band]=+input.value;
     markSaved(kind);const id=input.id;render();document.getElementById(id)?.focus({preventScroll:true});
@@ -206,12 +241,12 @@ main.addEventListener('submit',event=>{
     state.festival=name;state.noActive=false;state.mode='online';setScreen('bands');state.message='Festival example created. No file was uploaded.';render();
   }
 });
-document.getElementById('style-options').innerHTML=Object.entries(styles).map(([id,s],i)=>'<button type="button" class="style-choice" data-style-choice="'+id+'" aria-pressed="'+(id===state.style)+'"><strong>0'+(i+1)+' / '+s.name+'</strong><span>'+s.note+'</span></button>').join('');
+document.getElementById('style-options').innerHTML=paired?([['system','System default','Follow your device'],['dark','Dark · Ironline','Charcoal / amber'],['light','Light · Field Notes','Paper / forest']].map(([id,label,note])=>'<button type="button" class="style-choice" data-theme-choice="'+id+'" aria-pressed="false"><strong>'+label+'</strong><span>'+note+'</span></button>').join('')):Object.entries(styles).map(([id,s],i)=>'<button type="button" class="style-choice" data-style-choice="'+id+'" aria-pressed="'+(id===state.style)+'"><strong>0'+(i+1)+' / '+s.name+'</strong><span>'+s.note+'</span></button>').join('');
 document.getElementById('screen-select').addEventListener('change',event=>{if(event.target.value==='review')state.scope='band';setScreen(event.target.value)});
 document.getElementById('state-select').addEventListener('change',event=>{state.mode=event.target.value;state.noActive=state.mode==='empty';state.message='';render()});
 document.getElementById('scale-select').addEventListener('change',event=>{state.scale=event.target.value;render()});
 document.getElementById('candidate-select').addEventListener('change',event=>{state.candidate=event.target.value;state.lookupDone=false;state.approved=false;state.evidenceSeen=false;render()});
-document.getElementById('reset-study').addEventListener('click',()=>{location.href='?style='+state.style});
+document.getElementById('reset-study').addEventListener('click',()=>{location.href=paired?'?theme='+state.preference:'?style='+state.style});
 document.getElementById('download-review').addEventListener('click',()=>{
   const text='# Wacken Planner 2.34 design review\n\nPreferred direction: '+(document.getElementById('preferred-style').value||'Undecided')+'\n\n'+document.getElementById('review-notes').value+'\n\nSelf-reported user feedback; not an automated usability score.\n';
   const url=URL.createObjectURL(new Blob([text],{type:'text/markdown'}));
@@ -221,4 +256,3 @@ document.getElementById('download-review').addEventListener('click',()=>{
 if(params.get('embed')==='1')document.body.classList.add('embed');
 window.study={styles,state,render};
 render();
-

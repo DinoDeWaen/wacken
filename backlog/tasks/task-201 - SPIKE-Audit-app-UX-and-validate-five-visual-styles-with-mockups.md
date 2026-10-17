@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 07:50'
-updated_date: '2026-10-17 08:46'
+updated_date: '2026-10-17 09:13'
 labels:
   - ux
   - research
@@ -25,6 +25,9 @@ modified_files:
   - design/release-2.34/contrast-results.json
   - design/release-2.34/README.md
   - README.md
+  - design/release-2.34/appearance.test.cjs
+  - design/release-2.34/appearance.js
+  - design/release-2.34/themes.html
 priority: medium
 type: spike
 ---
@@ -67,6 +70,8 @@ Deliver viewable mockups and clickable prototypes, an accessibility/usability co
 Standard design/research spike for release 2.34. 1. Audit the latest published V2.33.5 UI source and prior TASK-125/TASK-130 findings, recording code-backed observations and gaps requiring device/user evidence. 2. Research current primary Android/Material, WCAG and usability guidance with citations/access dates. 3. Build five distinct standalone prototype styles under design/release-2.34, sharing realistic sample content and comparable overview, detail, schedule, settings and music-link review journeys plus feedback states. 4. Validate real interactions, contrast, targets, keyboard access, 320px layout and 200% text using bundled browser tooling; save screenshots/contact sheets and a reproducible review exercise. 5. Document priorities, comparative trade-offs, recommended shortlist and follow-up story proposals; keep actual user feedback pending until the user evaluates the prototypes. No production UI/domain/schema/dependency change or final style choice; no architecture approval/ADR required for the study. Current design-system/business rules stay implemented source of truth; research variants and any proposed exceptions are explicitly labeled. Update README with study/review entry point and task validation evidence.
 
 Initial HTML review increment completed. Syntax and palette checks pass; in-app browser smoke review performed. Deviation: full automated browser run did not complete; user accepted directly reviewing HTML. Actual human feedback and remaining layout/native accessibility validation are pending; keep task In Progress.
+
+User review direction: combine Ironline dark and Field Notes light with shared geometry, hierarchy and navigation. Add dedicated HTML flow review with an instant light/dark toggle and System/Dark/Light preference in Settings; preserve in-progress demo state, selected band, search and scroll across switches. Test preference resolution and manually validate rating/music review continuity. This authorizes prototype iteration only, not Android implementation.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -115,4 +120,15 @@ Diagram impact: none, because no production architecture or flow changes.
 
 ## Risks and follow-up
 Sample evidence does not verify real channels. TASK-202 remains separate implementation. Heuristic shortlist Ironline/Pulse; no preference winner. Complete layout/accessibility validation and record user review before closing TASK-201 or implementing production redesign. Existing user changes preserved.
+
+## Paired appearance iteration — 2026-10-17
+User feedback: combine Ironline dark and Field Notes light as a light/dark choice; requested HTML flow and toggle review. Added themes.html with shared layout/hierarchy, header toggle and Settings System/Dark/Light radios. The preference follows real prefers-color-scheme in System mode and is remembered in local browser storage when available. Theme changes update appearance without replacing forms, preserving in-progress input, selected band, ratings, expanded sections and scroll.
+
+Validation: appearance.test.cjs first failed before module creation, then all 4 cases passed (system in both modes, manual overrides, invalid stored preference, device changes). JavaScript syntax and 80 contrast-token assertions pass. In-app browser confirmed planning 4 survives dark-to-light, Settings System follows current dark system appearance, unfinished festival search Abbie survives switching, and navigating to themes.html without URL overrides restores saved Light preference. Remaining full layout/native accessibility and actual user task-completion review are pending. HTML is available on localhost:8234/themes.html; no Android behavior was implemented.
+
+README impact: updated root and study entry points with paired flow, toggle behavior and review steps.
+Business requirements impact: none, because the user authorized prototype iteration for review; production requirements remain unchanged until implementation is approved.
+Diagram impact: none, because no production architecture or flow changes.
+ADR impact: none, because static design iteration makes no architecture-significant change.
+Task remains In Progress awaiting flow review; original five-style artifacts retained as research references.
 <!-- SECTION:NOTES:END -->
