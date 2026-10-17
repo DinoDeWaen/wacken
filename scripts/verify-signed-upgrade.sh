@@ -39,7 +39,7 @@ for entry in candidate probe; do
     { echo "Signing certificate mismatch: $entry" >&2; exit 2; }
 done
 for entry in baseline candidate; do
-  rg -q "^package: name='be.wacken.planner' " "$UPGRADE_REPORT/$entry-metadata.txt" || exit 2
+  grep -q "^package: name='be.wacken.planner' " "$UPGRADE_REPORT/$entry-metadata.txt" || exit 2
 done
 UPGRADE_OLD_CODE=$(sed -n "s/^package:.*versionCode='\([0-9]*\)'.*/\1/p" "$UPGRADE_REPORT/baseline-metadata.txt")
 UPGRADE_NEW_CODE=$(sed -n "s/^package:.*versionCode='\([0-9]*\)'.*/\1/p" "$UPGRADE_REPORT/candidate-metadata.txt")
@@ -78,16 +78,16 @@ test "$("$UPGRADE_ADB" -s "$UPGRADE_SERIAL" shell settings get global airplane_m
 probe_phase() {
   "$UPGRADE_ADB" -s "$UPGRADE_SERIAL" shell am instrument -w -e upgradePhase "$1" \
     be.wacken.planner.test/be.wacken.planner.SignedUpgradeInstrumentation >"$UPGRADE_REPORT/$1.txt"
-  rg -q 'upgrade_result=PASS' "$UPGRADE_REPORT/$1.txt" &&
-    rg -q 'INSTRUMENTATION_CODE: -1' "$UPGRADE_REPORT/$1.txt" ||
+  grep -q 'upgrade_result=PASS' "$UPGRADE_REPORT/$1.txt" &&
+    grep -q 'INSTRUMENTATION_CODE: -1' "$UPGRADE_REPORT/$1.txt" ||
     { cat "$UPGRADE_REPORT/$1.txt" >&2; exit 1; }
 }
 probe_phase seed
 # Red control: the same assertions must reject the old Room9 installation.
 "$UPGRADE_ADB" -s "$UPGRADE_SERIAL" shell am instrument -w -e upgradePhase verify \
   be.wacken.planner.test/be.wacken.planner.SignedUpgradeInstrumentation >"$UPGRADE_REPORT/before-update-rejected.txt"
-rg -q 'upgrade_result=FAIL' "$UPGRADE_REPORT/before-update-rejected.txt" &&
-  rg -q 'Candidate migrated to Room12' "$UPGRADE_REPORT/before-update-rejected.txt" ||
+grep -q 'upgrade_result=FAIL' "$UPGRADE_REPORT/before-update-rejected.txt" &&
+  grep -q 'Candidate migrated to Room12' "$UPGRADE_REPORT/before-update-rejected.txt" ||
   { cat "$UPGRADE_REPORT/before-update-rejected.txt" >&2; exit 1; }
 "$UPGRADE_ADB" -s "$UPGRADE_SERIAL" shell am force-stop be.wacken.planner
 "$UPGRADE_ADB" -s "$UPGRADE_SERIAL" install -r "$UPGRADE_CANDIDATE" >"$UPGRADE_REPORT/install-update.txt"
