@@ -516,7 +516,7 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-033 | CSV import validation must detect missing references, overlaps, and unknown stages. | An imported performance cannot reference an unknown stage without validation feedback. | Must |
 | BR-034 | Reserved for possible future imported-data review. | Android data-grid validation for proposed scraped or imported changes is out of the current roadmap. | Could |
 | BR-035 | The initial lineup import may contain only bands before final stage and time data is available. | Early rating can start from a band list without performance times. | Must |
-| BR-036 | The band rating screen should follow the official Wacken band detail style where practical, adding rating stars and optional YouTube and Spotify links. | A band detail page shows band information plus star rating controls. | Must |
+| BR-036 | The band rating screen should follow the official Wacken band detail style where practical, adding rating stars and optional YouTube and Spotify links. Unknown music links stay empty in the overview and detail screens; importing a band must not invent a channel or artist link. | Abbie Falls with no stored YouTube channel has no YouTube action; a band with a known channel retains its link. | Must |
 | BR-037 | The current version supports one shared group, not multiple independent groups. | All ratings belong to "my group" for now. | Must |
 | BR-038 | Multi-group support is deferred to next year. | Separate friend groups are not part of the current scope. | Must |
 | BR-038a | Existing app users must belong to the `Sofie and Dino` shared group for MVP2. | Ratings from Sofie, Dino, and any existing signed-in users participate in one shared schedule. | Must |
