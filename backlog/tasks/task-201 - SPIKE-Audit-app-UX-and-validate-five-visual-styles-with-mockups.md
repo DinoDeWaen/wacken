@@ -1,11 +1,11 @@
 ---
 id: TASK-201
 title: 'SPIKE: Audit app UX and validate five visual styles with mockups'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-10-17 07:50'
-updated_date: '2026-10-17 09:13'
+updated_date: '2026-10-17 09:23'
 labels:
   - ux
   - research
@@ -28,6 +28,7 @@ modified_files:
   - design/release-2.34/appearance.test.cjs
   - design/release-2.34/appearance.js
   - design/release-2.34/themes.html
+  - design/release-2.34/validation-review.md
 priority: medium
 type: spike
 ---
@@ -58,8 +59,8 @@ Deliver viewable mockups and clickable prototypes, an accessibility/usability co
 - [x] #3 Exactly five distinct named styles are proposed, each with rationale, typography, palette, spacing, component examples, icon/navigation treatment and accessibility considerations; they differ in hierarchy and presentation rather than only colors.
 - [x] #4 Each style has a comparable mockup set for band overview, band detail/rating, schedule and Settings/Admin including music-link discovery/review, plus representative feedback states; include long band names, absent music metadata and offline/pending data.
 - [x] #5 Clickable prototypes for all five styles let a reviewer compare the same key journeys, including finding/rating a band and starting/reviewing music-link discovery; mockups are saved as shareable review artifacts with clear navigation and labels.
-- [ ] #6 Every style is checked against cited platform/accessibility guidance for contrast, readable text/font scaling, touch targets, focus/screen-reader labels, color-independent meaning and error feedback; record measurable findings and unresolved issues.
-- [ ] #7 A consistent scenario-based validation exercise compares task completion, navigation clarity, mistakes/recovery, readability and user preference across all styles. Record actual reviewer feedback and limitations; do not present heuristic review or mock data as completed user testing.
+- [x] #6 Every style is checked against cited platform/accessibility guidance for contrast, readable text/font scaling, touch targets, focus/screen-reader labels, color-independent meaning and error feedback; record measurable findings and unresolved issues.
+- [x] #7 A consistent scenario-based validation exercise compares task completion, navigation clarity, mistakes/recovery, readability and user preference across all styles. Record actual reviewer feedback and limitations; do not present heuristic review or mock data as completed user testing.
 - [x] #8 The final comparison recommends a style or shortlist with trade-offs, prioritizes UX changes, identifies remaining validation questions and proposes small testable follow-up stories for human review before production implementation.
 - [x] #9 README impact, Business requirements impact, Diagram impact and ADR impact use canonical delivery-governance wording; approved scope/design changes are reflected in the appropriate source of truth. This spike does not itself authorize architecture or production UI changes.
 <!-- AC:END -->
@@ -72,6 +73,8 @@ Standard design/research spike for release 2.34. 1. Audit the latest published V
 Initial HTML review increment completed. Syntax and palette checks pass; in-app browser smoke review performed. Deviation: full automated browser run did not complete; user accepted directly reviewing HTML. Actual human feedback and remaining layout/native accessibility validation are pending; keep task In Progress.
 
 User review direction: combine Ironline dark and Field Notes light with shared geometry, hierarchy and navigation. Add dedicated HTML flow review with an instant light/dark toggle and System/Dark/Light preference in Settings; preserve in-progress demo state, selected band, search and scroll across switches. Test preference resolution and manually validate rating/music review continuity. This authorizes prototype iteration only, not Android implementation.
+
+Finalized five-style accessibility assessment with measured contrast and explicit unresolved device/browser findings; recorded the actual user validation of the paired flow without fabricated task metrics. Handed native implementation and remaining device validation to release 3.0 TASK-204–213. No production changes or APK replacement for this static study; signed builds remain part of implementation/release gates.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -131,4 +134,7 @@ Business requirements impact: none, because the user authorized prototype iterat
 Diagram impact: none, because no production architecture or flow changes.
 ADR impact: none, because static design iteration makes no architecture-significant change.
 Task remains In Progress awaiting flow review; original five-style artifacts retained as research references.
+
+## Final acceptance and handover — 2026-10-17
+User validated the paired HTML flow and requested release 3.0 implementation planning. Actual feedback and limits are recorded in design/release-2.34/validation-review.md. AC6 is an assessment with unresolved findings, not a native accessibility pass; AC7 records qualitative user acceptance without invented timings/completion rates. All spike deliverables complete, native implementation and validation tracked in TASK-204–213 (m-2). Existing test and canonical impact evidence above remains applicable. No APK was rebuilt for this static HTML research-only task; future production release gates remain required.
 <!-- SECTION:NOTES:END -->

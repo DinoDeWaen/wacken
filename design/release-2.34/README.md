@@ -1,5 +1,5 @@
 # Release 2.34 — five interactive design directions
-TASK-201 · In Progress · Ready for initial human review, 2026-10-17.
+TASK-201 · Design validated by the user, 2026-10-17. Implementation is planned in release 3.0 (TASK-204–213). [Validation, limitations and handover](validation-review.md).
 
 ## Current review: paired dark and light mode
 
