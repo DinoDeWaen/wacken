@@ -24,6 +24,13 @@ import be.wacken.planner.domain.Band;
 import be.wacken.planner.domain.BandRepository;
 
 public final class YouTubeMetadataProviderTest {
+    @Test public void lookupKeepsUnicodeAndReservedCharactersInsideTheQuery() throws Exception {
+        List<String> requests=new ArrayList<>();
+        YouTubeMetadataProvider provider=new YouTubeMetadataProvider("key&+",path->{requests.add(path);return "{\"items\":[]}";});
+        assertTrue(provider.search("Björk & 雪/+?").isEmpty());
+        assertEquals(List.of("/search?part=snippet&q=Bj%C3%B6rk+%26+%E9%9B%AA%2F%2B%3F&type=channel&maxResults=5&key=key%26%2B"),requests);
+    }
+
     @Test
     public void mapsConfiguredChannelSearchToYouTubeCandidate() throws Exception {
         FakeYouTubeClient client = new FakeYouTubeClient();

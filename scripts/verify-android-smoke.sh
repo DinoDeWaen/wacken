@@ -13,10 +13,23 @@ fi
 WACKEN_WIFI=$("$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell settings get global wifi_on | tr -d '\r')
 WACKEN_DATA=$("$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell settings get global mobile_data | tr -d '\r')
 WACKEN_FLIGHT=$("$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell settings get global airplane_mode_on | tr -d '\r')
+WACKEN_API=$("$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell getprop ro.build.version.sdk | tr -d '\r')
+case "$WACKEN_API" in ''|*[!0-9]*) echo "Could not determine emulator API level." >&2; exit 2;; esac
 case "$WACKEN_WIFI:$WACKEN_DATA:$WACKEN_FLIGHT" in [0123]:[01]:[01]) ;; *) echo "Emulator settings are not ready; wait for boot before running." >&2; exit 2;; esac
+set_airplane_mode() {
+  if [ "$1" = 1 ]; then WACKEN_FLIGHT_COMMAND=enable; WACKEN_FLIGHT_STATE=true;
+  else WACKEN_FLIGHT_COMMAND=disable; WACKEN_FLIGHT_STATE=false; fi
+  if [ "$WACKEN_API" -ge 30 ]; then
+    "$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell cmd connectivity airplane-mode "$WACKEN_FLIGHT_COMMAND"
+  else
+    # API23 has no modern connectivity shell command. Notify the system after
+    # changing the setting so cellular state follows it on the older emulator.
+    "$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell settings put global airplane_mode_on "$1"
+    "$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell am broadcast -a android.intent.action.AIRPLANE_MODE --ez state "$WACKEN_FLIGHT_STATE" >/dev/null
+  fi
+}
 restore_network() {
-  if [ "$WACKEN_FLIGHT" = 1 ]; then "$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell cmd connectivity airplane-mode enable;
-  else "$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell cmd connectivity airplane-mode disable; fi
+  set_airplane_mode "$WACKEN_FLIGHT"
   if [ "$WACKEN_WIFI" = 1 ] || [ "$WACKEN_WIFI" = 3 ]; then "$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell svc wifi enable;
   else "$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell svc wifi disable; fi
   if [ "$WACKEN_DATA" = 1 ]; then "$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell svc data enable;
@@ -25,7 +38,7 @@ restore_network() {
 trap restore_network EXIT HUP INT TERM
 # A no-SIM emulator may keep the mobile-data preference enabled after svc data
 # disable. Airplane mode disables cellular radio independently of that preference.
-"$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell cmd connectivity airplane-mode enable
+set_airplane_mode 1
 "$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell svc wifi disable
 "$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell svc data disable
 if [ "$("$WACKEN_ADB" -s "$WACKEN_TEST_SERIAL" shell settings get global airplane_mode_on | tr -d '\r')" != 1 ]; then

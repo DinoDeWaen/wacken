@@ -34,6 +34,11 @@ jobs:
       - name: Run QA suite
         run: ./gradlew qaTest
 
+      - name: Validate supported Android API usage
+        run: |
+          python3 scripts/tests/test_android_smoke_runner.py
+          ./gradlew :app:lintDebug
+
       - name: Validate immutable test-image acquisition and registry failure handling
         run: python3 scripts/tests/test_test_images.py
 
@@ -54,8 +59,12 @@ jobs:
           if-no-files-found: error
 
   android-creation:
-    name: Android creation UI and Room regressions
+    name: Android API ${{ matrix.api-level }} UI and Room regressions
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [23, 36]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -74,7 +83,7 @@ jobs:
       - name: Run Android instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 36
+          api-level: ${{ matrix.api-level }}
           arch: x86_64
           target: google_apis
           script: ANDROID_ADB=adb sh scripts/verify-android-smoke.sh emulator-5554 all

@@ -667,6 +667,20 @@ Coverage gates:
 
 ## Troubleshooting
 
+### Supported Android Java APIs
+
+The app keeps minimum Android API23 support. Its existing Java compatibility
+runtime uses the pinned **desugar_jdk_libs_nio:2.1.5** variant, which includes the
+NIO file APIs used by local TSV storage and the newer UTF-8 URL-encoding overloads
+used by sync/music providers. The standard variant omits those backports; switching
+back can cause startup or lookup failures on older Android versions.
+See the [official NIO support table](https://developer.android.com/studio/write/java11-nio-support-table).
+
+Run `./gradlew :app:lintDebug` to validate API availability. CI requires this full
+lint gate and runs the native suite on API23 and API36; release lint-vital alone
+does not detect every supported-device compatibility problem. Local native
+validation uses installed emulator images; report the API version actually tested.
+
 If Gradle fails while creating `:application:test` with `Type T not present`, check the active Java version:
 
 ```bash
@@ -692,6 +706,7 @@ The CI workflow:
 - Sets up JDK 21 and the Android SDK.
 - Runs `./gradlew test`, including the current JUnit 5 tests and JaCoCo coverage gates.
 - Runs `./gradlew qaTest` for MVP listing/rating scenario coverage.
+- Runs `./gradlew :app:lintDebug` and the native suite on Android API23/API36.
 - Runs `./gradlew assembleDebug`.
 - Publishes `app/build/outputs/apk/debug/app-debug.apk` as a versioned artifact named `wacken-planner-0.1.<run-number>-debug-apk`.
 
