@@ -75,7 +75,7 @@ public final class FestivalCsvReader {
                 continue;
             }
             if (character == ',' || character == '\n' || character == '\r') {
-                if (character == ',' || state != State.START || !values.isEmpty() || !value.isEmpty()) {
+                if (character == ',' || state != State.START || !values.isEmpty() || value.length() > 0) {
                     values.add(value.toString());
                     value.setLength(0);
                 }
@@ -109,7 +109,7 @@ public final class FestivalCsvReader {
         if (state == State.QUOTED) {
             throw new FormatException(fileName, recordLine, "unterminated quoted field");
         }
-        if (state != State.START || !values.isEmpty() || !value.isEmpty()) {
+        if (state != State.START || !values.isEmpty() || value.length() > 0) {
             values.add(value.toString());
             if (values.size() > 1 || !values.get(0).isBlank()) {
                 records.add(new Record(recordLine, List.copyOf(values)));

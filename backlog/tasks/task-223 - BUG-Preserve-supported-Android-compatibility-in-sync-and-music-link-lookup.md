@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 16:45'
-updated_date: '2026-10-17 17:50'
+updated_date: '2026-10-17 17:55'
 labels:
   - bug
   - android
@@ -45,6 +45,9 @@ modified_files:
   - scripts/verify-android-smoke.sh
   - app/src/androidTest/java/be/wacken/planner/CriticalFlowsAndroidTest.java
   - app/src/main/java/be/wacken/planner/FestivalBandReviewDialog.java
+  - >-
+    application/src/main/java/be/wacken/planner/application/FestivalCsvReader.java
+  - app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java
 priority: high
 ---
 
@@ -81,4 +84,6 @@ Validated minimal root fix: retain existing File.toPath/Charset-overload code an
 Historical cause: commit1e36f6131621e73391ebdbdf81a227df651a6790 (2026-06-10, Fix V2.1 BlueStacks install packaging) lowered minSdk26→23 and enabled the standard desugar runtime. It did not supply NIO backports required by existing file storage; newer Charset URL-encoding calls also need supported backports below33. Why undetected: CI built/tested JVM and modern API36 but did not run full Android lint or minimum-device native tests. The same-version NIO variant and mandatory lint/API23 matrix address this gap. No production data/migration change.
 
 The first real API23 run caught an unsupported readAllBytes call in the test shell fixture and a process crash while opening the new review dialog. Replaced the fixture read with a compatible buffered loop; guarded Spinner callbacks before the dialog button exists. Native CI now retains failure diagnostics so remaining older-device failures can be diagnosed. Task remains In Progress until the required matrix passes.
+
+Second API23 run completed all59 tests and exposed two unsupported StringBuilder.isEmpty calls in application CSV parsing (hidden from Android-module lint) plus rotation review invalidation on redundant text restoration. Replaced builder emptiness checks with length and made unchanged/restoring text notifications preserve retained review. Existing failing native CSV and rotation scenarios are regression evidence; rerun required. Full API36 CI and JVM/API/lint jobs passed on the prior source.
 <!-- SECTION:NOTES:END -->

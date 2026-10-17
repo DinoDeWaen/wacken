@@ -117,7 +117,9 @@ public final class MusicLinksReviewActivity extends Activity {
         term.addTextChangedListener(new TextWatcher(){
             public void beforeTextChanged(CharSequence s,int start,int count,int after){}
             public void onTextChanged(CharSequence s,int start,int before,int count){
-                session.terms.put(name,s.toString());
+                if(isDestroyed()||isChangingConfigurations())return;
+                String previous=session.terms.put(name,s.toString());
+                if(Objects.equals(previous,s.toString()))return;
                 // Editing invalidates the prior candidate choices; a fresh search is required.
                 session.reviews.remove(name);session.selected.remove(name);session.acknowledged.remove(name);
             }
