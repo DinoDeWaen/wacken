@@ -230,6 +230,8 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew assembleDebug
 
 Useful focused checks:
 
+For the critical native smoke journey on a booted test emulator, run `sh scripts/verify-android-smoke.sh emulator-5554` (set `ANDROID_ADB` if the SDK is elsewhere). Use `sh scripts/verify-android-smoke.sh emulator-5554 all` for the complete instrumentation suite, as CI does. This release gate covers cached offline startup, the actual detail rating/reset control, a populated schedule and the enabled Settings export entry point. It uses fixture data and a fixture session, disables only the selected emulator's Wi-Fi/mobile data, then restores network settings and cached/session fixtures. The runner refuses physical devices or multiple connected targets; keep this as an isolated test emulator. No live Supabase data is required. It reuses the existing Android instrumentation setup; the full boundary suite below is still required before release. Direct Gradle instrumentation commands require the same offline precondition. If a signed release already exists on an emulator, use a separate fresh test emulator/data directory rather than uninstalling it to resolve a debug-signature mismatch.
+
 ```bash
 ./gradlew :domain:compileJava :application:compileJava
 ./gradlew :domain:test :application:test

@@ -71,4 +71,4 @@ jobs:
           api-level: 36
           arch: x86_64
           target: google_apis
-          script: ./gradlew :app:connectedDebugAndroidTest --no-daemon
+          script: ANDROID_ADB=adb sh scripts/verify-android-smoke.sh emulator-5554 all
