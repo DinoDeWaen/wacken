@@ -13,6 +13,10 @@ INSERT INTO public.personal_band_rating_events(user_id,band_id,rating,created_at
 ('11111111-1111-1111-1111-111111111111','airbourne',2,'2026-01-01'),
 ('11111111-1111-1111-1111-111111111111','airbourne',4,'2026-02-01'),
 ('22222222-2222-2222-2222-222222222222','airbourne',5,'2026-03-01');
+INSERT INTO public.personal_band_ratings(user_id,band_id,rating,source_festival_id,source_festival_name,source_event_id,established_at) VALUES
+('11111111-1111-1111-1111-111111111111','airbourne',4,'wacken-2026','Wacken history',gen_random_uuid(),'2026-02-01'),
+('22222222-2222-2222-2222-222222222222','airbourne',5,'wacken-2026','Wacken history',gen_random_uuid(),'2026-03-01'),
+('33333333-3333-3333-3333-333333333333','airbourne',1,'wacken-2026','Wacken history',gen_random_uuid(),'2026-03-01');
 
 CREATE FUNCTION public.test_creation_failure() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
@@ -47,13 +51,17 @@ BEGIN
  ASSERT jsonb_array_length(response->'lineup') = 7;
  ASSERT (SELECT count(*) FROM public.bands WHERE name IN ('Any Given Day','Any given Day'))=2;
  ASSERT (SELECT biography_html FROM public.bands WHERE id='any-given-day')='Original biography';
- ASSERT (SELECT rating FROM public.festival_planning_ratings WHERE festival_id='test-creation')=4;
+ ASSERT (SELECT rating FROM public.festival_planning_ratings WHERE festival_id='test-creation' AND user_id=auth.uid())=4;
+ ASSERT (SELECT count(*) FROM public.festival_planning_ratings WHERE festival_id='test-creation')=2;
+ ASSERT (SELECT rating FROM public.festival_planning_ratings WHERE festival_id='test-creation' AND user_id='22222222-2222-2222-2222-222222222222')=5;
+ ASSERT jsonb_array_length(response->'planning_ratings')=1;
+ ASSERT NOT EXISTS(SELECT 1 FROM public.festival_after_ratings WHERE festival_id='test-creation');
  ASSERT (SELECT count(*) FROM public.personal_band_rating_events)=2; -- RLS exposes only this user's history
- UPDATE public.festival_planning_ratings SET rating=2 WHERE festival_id='test-creation';
+ UPDATE public.festival_planning_ratings SET rating=2 WHERE festival_id='test-creation' AND user_id=auth.uid();
  response := public.create_festival_from_bands('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
  '00000000-0000-0000-0000-000000000001','test-creation','Test creation',
  ARRAY['Any Given Day','Any given Day','Airbourne','A+B','A B','東京','!!!','Airbourne']);
- ASSERT (SELECT rating FROM public.festival_planning_ratings WHERE festival_id='test-creation')=2;
+ ASSERT (SELECT rating FROM public.festival_planning_ratings WHERE festival_id='test-creation' AND user_id=auth.uid())=2;
  ASSERT (SELECT count(*) FROM public.festival_lineup_entries WHERE festival_id='test-creation')=7;
  BEGIN
   PERFORM public.create_festival_from_bands('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
@@ -100,6 +108,8 @@ BEGIN
  END;
  ASSERT NOT has_function_privilege('anon',
  'public.create_festival_from_bands(uuid,uuid,text,text,text[])','EXECUTE');
+ ASSERT NOT has_table_privilege('authenticated','public.festival_creation_requests','INSERT');
+ ASSERT NOT has_table_privilege('authenticated','public.personal_band_ratings','INSERT');
 END
 $test$;
 RESET ROLE;

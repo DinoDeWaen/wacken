@@ -18,8 +18,9 @@ Five interactive HTML design directions are available in the [design study](desi
 > nonempty after-ratings atomically. Missing values retain prior band ratings; older
 > corrections cannot overwrite newer sources. TASK-216–220 and the aligned existing
 > stories deliver this model. TASK-216 implements isolated after-ratings and the
-> established-rating store; creation carry-over and archive promotion remain
-> TASK-217/218. Do not publish this intermediate state as the completed lifecycle.
+> established-rating store. TASK-217 adds once-only creation snapshots for each
+> current group member; archive promotion remains TASK-218. Do not publish this
+> intermediate state as the completed lifecycle.
 
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
 - Show locally cached lineup, planning ratings, real post-show ratings, schedule data, and manual schedule locks first, while Supabase sync refreshes Room in the background.
@@ -32,7 +33,7 @@ Five interactive HTML design directions are available in the [design study](desi
 - Delete an active or archived festival after confirmation, including its lineup, planning ratings, performances, and schedule decisions; preserve central bands and personal rating history.
 - Export all locally cached band rating data from Settings as a CSV file for Android share/save targets, including planning ratings, real post-show ratings, cached group member ratings, and schedule metadata where known.
 - Start on the active festival band list, with `Wacken Open Air 2026` seeded as the default active festival. The top action row includes **Archive**; archiving the active festival immediately moves the app to a no-active-festival start state that lists archived festivals as read-only, opens archived festivals as read-only band lists with band detail screens, and shows the next add-festival entry point.
-- Add the next festival from a band CSV after the active festival is archived; the festival name starts empty and must be filled in explicitly. Exact band-name matches reuse existing band records, new names create new band records, and known bands get festival planning ratings prefilled from the user's latest personal band rating.
+- Add the next festival from a band CSV after the active festival is archived; the festival name starts empty and must be filled in explicitly. Exact band-name matches reuse existing band records and new names create catalog records without invented metadata or links. The atomic creation transaction copies each current member's established band rating into their own planning rating once; missing opinions stay unrated and festival after-ratings start empty. Later edits and retries preserve the snapshot. The response contains only the creator's planning values, while shared planning sync supplies the existing group schedule view.
 - Save rating and manual schedule-lock changes locally immediately, queue them as pending offline operations, and sync them with Supabase in the background on start/reactivation, on manual sync, or before close.
 - Open known YouTube and Spotify links from overview rows and band detail screens. If no channel or artist link is stored, leave the action empty; importing a band does not invent a music link.
 - Find missing music links from Settings → Admin → Find music links for the active festival, or Band Links → Find music links for one band. Review identity evidence and explicitly approve verified profiles; edited search terms never rename the band.
@@ -157,7 +158,7 @@ narrowly scoped private-schema function that validates identity, membership,
 active festival and lineup before writing; Android receives no privileged secret.
 
 Apply the tested additive migrations through the existing Flyway process before
-shipping the final2.34APK. TASK-217/218 must complete creation/archive behavior
+shipping the final2.34APK. TASK-218 must complete archive behavior
 before publication. This task's validation APK is not a release. Missing server
 schema/denied writes retain cached/pending data and report a sync failure.
 
@@ -303,7 +304,10 @@ through the real API. It fails on skipped integration tests. The Android suite
 requires a connected emulator and checks the actual Add Festival screen and
 Room publication/rollback. Both checks run in CI and are mandatory before release.
 
-Add Festival uses the atomic `V013` creation operation. Exact names reuse
+Add Festival retains the atomic `V013` RPC contract, extended by `V015` to copy
+each current member's established band ratings once. The server validates the
+actor and membership, and returns only the creator's planning values without
+other members' private source history. Exact names reuse
 catalog records; different names get independent identities even if their
 simplified spelling matches. Repeating the same name and CSV confirms the same
 creation after a lost response without resetting later ratings. Archived
@@ -502,7 +506,9 @@ unsynced rating.
 | `bands` | `id` | Golden-source band catalog with canonical `name`, active flag, biography, image URL, Spotify artist id, and YouTube URL. | Referenced by festival lineups, performances, planning ratings, and personal rating history. |
 | `festival_lineup_entries` | `festival_id`, `band_id` | Shared many-to-many lineup relation. Keeps `uploaded_display_name` for the source CSV name. | Links one `festival` to one golden-source `band`. |
 | `festival_planning_ratings` | `group_id`, `user_id`, `festival_id`, `band_id` | Editable planning rating used by the group schedule. | Links group, user, festival, and band. |
-| `personal_band_rating_events` | `id` | Historical personal band rating event. | Links user, band, and optionally festival; latest event can prefill future planning ratings. |
+| `personal_band_rating_events` | `id` | Historical personal band rating event. | Links user, band, and optionally festival; retained independently of current opinions. |
+| `personal_band_ratings` | `user_id`, `band_id` | Established personal opinion and source provenance. | Supplies the member's once-only new-festival planning snapshot. |
+| `festival_after_ratings` | `user_id`, `festival_id`, `band_id` | Current after-rating, including durable zero reset and legacy review flag. | Independent of planning and established opinions. |
 | `schedule_locks` | `group_id`, `festival_id`, conflict key | Shared manual group schedule override. | Links a group and festival schedule decision to the selected band/performance. |
 
 Rating scale migration: app database version 3 migrates old local explicit

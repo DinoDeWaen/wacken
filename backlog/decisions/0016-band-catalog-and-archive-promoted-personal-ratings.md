@@ -18,7 +18,12 @@ RPC delegates to a private-schema privileged function with explicit actor/member
 active-festival and lineup checks; authenticated roles have no direct table DML.
 This permits atomic state/history/replay without granting client-side arbitrary
 preference writes. Recovered old-client values require review because legacy
-resets were not synced. Creation and archive promotion remain TASK-217/218.
+resets were not synced. TASK-217 implements per-member creation snapshots through
+additive FlywayV015. The published RPC signature and creator-only response remain
+compatible. Its private transaction validates membership and copies established
+ratings for current group members; it never derives preferences from latest
+history or creates after-ratings. Request replay preserves subsequent edits, and
+clients cannot forge creation-ledger entries. Archive promotion remains TASK-218.
 
 Supersedes ADR-0011's latest-event-as-current-rating rule and immediate promotion
 semantics; revises ADR-0014's history-derived/creator-only prefill for the new

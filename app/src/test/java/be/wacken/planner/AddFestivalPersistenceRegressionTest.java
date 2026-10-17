@@ -38,7 +38,10 @@ public final class AddFestivalPersistenceRegressionTest {
             +"INSERT INTO public.bands(id,name,biography_html) VALUES('any-given-day','Any given Day','Golden biography'),('airbourne','Airbourne','Original'),('h-blockx','H-Blockx','Original');"
             +"INSERT INTO public.personal_band_rating_events(user_id,band_id,rating,created_at) VALUES"
             +"('"+USER+"','airbourne',2,'2026-01-01'),('"+USER+"','airbourne',4,'2026-02-01'),"
-            +"('22222222-2222-2222-2222-222222222222','airbourne',5,'2026-03-01');");
+            +"('22222222-2222-2222-2222-222222222222','airbourne',5,'2026-03-01');"
+            +"INSERT INTO public.personal_band_ratings(user_id,band_id,rating,source_festival_id,source_festival_name,source_event_id,established_at) VALUES"
+            +"('"+USER+"','airbourne',4,'wacken-2026','Wacken history',gen_random_uuid(),'2026-02-01'),"
+            +"('22222222-2222-2222-2222-222222222222','airbourne',5,'wacken-2026','Wacken history',gen_random_uuid(),'2026-03-01');");
     }
 
     @Test public void completeSummerBreezeCsvDoesNotOverwriteOrCollideWithKnownBand() throws Exception {
@@ -80,7 +83,7 @@ public final class AddFestivalPersistenceRegressionTest {
         assertEquals(4,result.createdBands());
         assertEquals(1,result.reusedBands());
         assertEquals(1,result.prefilledRatings());
-        assertEquals("4",sql("SELECT rating FROM public.festival_planning_ratings WHERE festival_id='collisions'"));
+        assertEquals("4",sql("SELECT rating FROM public.festival_planning_ratings WHERE festival_id='collisions' AND user_id='"+USER+"'"));
         assertEquals("3",sql("SELECT count(*) FROM public.personal_band_rating_events"));
     }
 
@@ -93,10 +96,13 @@ public final class AddFestivalPersistenceRegressionTest {
                 }),snapshots::add));
         expectFailure(()->lost.addFestival(GROUP,USER,"retry","retry",List.of(new Band("Airbourne"))));
         assertTrue(snapshots.isEmpty());
-        sql("UPDATE public.festival_planning_ratings SET rating=2 WHERE festival_id='retry'");
+        sql("UPDATE public.festival_planning_ratings SET rating=2 WHERE festival_id='retry' AND user_id='"+USER+"';"
+            +"UPDATE public.personal_band_ratings SET rating=1 WHERE band_id='airbourne';"
+            +"INSERT INTO public.festival_after_ratings VALUES('"+USER+"','retry','airbourne',gen_random_uuid(),3,now(),false)");
         assertTrue(create("retry",List.of(new Band("Airbourne"))).success());
         assertEquals("1",sql("SELECT count(*) FROM public.festival_creation_requests"));
-        assertEquals("2",sql("SELECT rating FROM public.festival_planning_ratings WHERE festival_id='retry'"));
+        assertEquals("2",sql("SELECT rating FROM public.festival_planning_ratings WHERE festival_id='retry' AND user_id='"+USER+"'"));
+        assertEquals("3",sql("SELECT rating FROM public.festival_after_ratings WHERE festival_id='retry'"));
         assertEquals(2,snapshots.get(0).ratings().get(0).rating().value());
     }
 
@@ -152,6 +158,37 @@ public final class AddFestivalPersistenceRegressionTest {
             assertEquals("1",sql("SELECT count(*) FROM public.festival_lineup_entries"));
             assertEquals("4",sql("SELECT count(*) FROM public.bands"));
         } finally {workers.shutdownNow();}
+    }
+
+    @Test public void eachMemberStartsFromOwnEstablishedOpinionAndResponseContainsOnlyCreator() throws Exception {
+        assertTrue(create("members",List.of(new Band("Airbourne"),new Band("Brand New"))).success());
+        assertEquals("11111111-1111-1111-1111-111111111111|4\n22222222-2222-2222-2222-222222222222|5",
+                sql("SELECT user_id,rating FROM public.festival_planning_ratings WHERE festival_id='members' ORDER BY user_id"));
+        assertEquals(1,snapshots.get(0).ratings().size());
+        assertEquals(1,snapshots.get(0).result().prefilledRatings());
+        assertEquals(USER,snapshots.get(0).ratings().get(0).userName());
+        assertEquals("0",sql("SELECT count(*) FROM public.festival_after_ratings WHERE festival_id='members'"));
+        assertEquals("0",sql("SELECT count(*) FROM public.festival_planning_ratings WHERE band_id=(SELECT id FROM public.bands WHERE name='Brand New')"));
+        assertTrue(snapshots.get(0).bands().stream().filter(b->b.name().equals("Brand New")).findFirst().orElseThrow().youtubeUrl().isEmpty());
+    }
+
+    @Test public void latestHistoryCannotReplaceEstablishedOpinionOrSeedUnknownPreference() throws Exception {
+        sql("INSERT INTO public.personal_band_rating_events(user_id,band_id,rating,created_at) VALUES"
+                +"('"+USER+"','airbourne',1,'2026-10-01'),('"+USER+"','h-blockx',3,'2026-10-01')");
+        assertTrue(create("history-independent",List.of(new Band("Airbourne"),new Band("H-Blockx"))).success());
+        assertEquals(1,snapshots.get(0).ratings().size());
+        assertEquals(4,snapshots.get(0).ratings().get(0).rating().value());
+    }
+
+    @Test public void failedOtherMemberSnapshotRollsBackEntireCreation() throws Exception {
+        sql("CREATE OR REPLACE FUNCTION public.test_reject_other_prefill() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.user_id='22222222-2222-2222-2222-222222222222' THEN RAISE EXCEPTION 'Injected member failure'; END IF; RETURN NEW; END $$;"
+                +"CREATE TRIGGER test_reject_other_prefill BEFORE INSERT ON public.festival_planning_ratings FOR EACH ROW EXECUTE FUNCTION public.test_reject_other_prefill()");
+        try {
+            expectFailure(()->create("member-failure",List.of(new Band("Airbourne"),new Band("New Act"))));
+            assertEquals("0",sql("SELECT count(*) FROM public.festivals WHERE status='ACTIVE'"));
+            assertEquals("3",sql("SELECT count(*) FROM public.bands"));
+            assertTrue(snapshots.isEmpty());
+        } finally {sql("DROP TRIGGER test_reject_other_prefill ON public.festival_planning_ratings");}
     }
 
     private AddFestivalResult create(String id,List<Band> bands) {

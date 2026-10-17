@@ -57,6 +57,23 @@ public final class FestivalCreationAndroidTest {
         assertEquals("Golden biography",new RoomBandRepository(database).findByName("Any given Day").orElseThrow().biography().orElseThrow());
     }
 
+    @Test public void creationPublishesOnlyPlanningAndReplayPreservesAfterAndEstablishedOpinions() throws Exception {
+        database.ratingStates().saveCurrent(new RoomPersonalBandRating(USER,"Airbourne",4,"wacken-2026","Wacken history","source-event","2026-01-01T00:00:00Z"));
+        SupabaseFestivalCreationGateway.Snapshot snapshot=SupabaseFestivalCreationGateway.parse(response(List.of("Airbourne")),GROUP,USER);
+        RoomFestivalCreationCache cache=new RoomFestivalCreationCache(database);
+        cache.accept(snapshot);
+        RoomFestivalPlanningRatingRepository planning=new RoomFestivalPlanningRatingRepository(database);
+        assertEquals(Optional.of(Rating.of(4)),planning.findByUserFestivalAndBand(USER,"new-festival",new Band("Airbourne")));
+        assertTrue(database.ratingStates().afterByUser(USER).isEmpty());
+        RoomFestivalAfterRatingRepository after=new RoomFestivalAfterRatingRepository(database);
+        after.save(new FestivalAfterRating(UUID.randomUUID().toString(),USER,"new-festival",new Band("Airbourne"),Rating.of(3),java.time.Instant.parse("2026-10-01T00:00:00Z")));
+        planning.save(GROUP,USER,"new-festival",new Band("Airbourne"),Rating.of(5));
+        cache.accept(snapshot);
+        assertEquals(Optional.of(Rating.of(5)),planning.findByUserFestivalAndBand(USER,"new-festival",new Band("Airbourne")));
+        assertEquals(3,after.findByUserFestivalAndBand(USER,"new-festival",new Band("Airbourne")).orElseThrow().rating().value());
+        assertEquals(4,new RoomPersonalBandRatingRepository(database).findByUserAndBand(USER,new Band("Airbourne")).orElseThrow().rating().value());
+    }
+
     @Test public void cacheFailureRollsBackAllTablesAndRetryUsesSameRemoteCommand() throws Exception {
         List<String> requests=new ArrayList<>();
         String result=response(List.of("Airbourne"));

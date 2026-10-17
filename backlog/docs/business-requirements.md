@@ -27,8 +27,11 @@ TASK-216 implementation increment: the active detail after-rating is now explici
 scoped by member/festival/canonical band, including a synced durable reset. The
 established personal band-rating store is separate and read-only to normal rating
 edits. Additive migration retains legacy records and marks recovered festival
-values for review where old resets cannot be reconstructed. Creation snapshots
-and archive promotion remain TASK-217/218; the complete lifecycle is not yet shipped.
+values for review where old resets cannot be reconstructed. TASK-217 implements
+atomic once-only creation snapshots from each current member's established band
+ratings, without exposing their private source history. Missing opinions remain
+unrated; after-ratings start empty. Replays preserve later edits. Archive promotion
+remains TASK-218; the complete lifecycle is not yet shipped.
 
 - Android band overview and detail screens, with generic Metal Battle placeholder entries hidden from rating lists.
 - 1-5 band ratings with default unrated value of `0`, including clearing a prior rating back to unrated.
