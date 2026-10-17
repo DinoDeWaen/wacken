@@ -437,6 +437,19 @@ Scenario: Review and link an imported band
 
 A festival admin can fill missing band metadata after import while preserving existing golden-source data.
 
+The dedicated Find music links action is available beside Link imported bands in
+Settings/Admin for the active festival and in Band Links for one band. Festival
+lookup is limited to that lineup's missing music fields. Editable search terms
+do not rename stored bands. Reviews show identity, canonical channel/artist URLs,
+clickable sources and verification rationale. Matching MusicBrainz/Wikidata artist
+identifiers and an official website declared by both sources must corroborate
+each proposed platform profile. A name, search rank or badge alone is insufficient.
+Ambiguous namesakes require refinement; unresolved links remain empty. Explicit
+approval alone fills missing golden-source fields through existing shared sync.
+Existing links, ratings, history and lineup identity are retained. Cancellation,
+offline use, source errors and rate limits preserve saved data and allow retry of
+unfinished festival work without repeating completed reviews.
+
 ```gherkin
 Scenario: Fetch missing band metadata
   Given a band is missing picture, biography, Spotify, or YouTube metadata

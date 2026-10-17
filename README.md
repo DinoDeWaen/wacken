@@ -25,6 +25,7 @@ Five interactive HTML design directions are available in the [design study](desi
 - Add the next festival from a band CSV after the active festival is archived; the festival name starts empty and must be filled in explicitly. Exact band-name matches reuse existing band records, new names create new band records, and known bands get festival planning ratings prefilled from the user's latest personal band rating.
 - Save rating and manual schedule-lock changes locally immediately, queue them as pending offline operations, and sync them with Supabase in the background on start/reactivation, on manual sync, or before close.
 - Open known YouTube and Spotify links from overview rows and band detail screens. If no channel or artist link is stored, leave the action empty; importing a band does not invent a music link.
+- Find missing music links from Settings → Admin → Find music links for the active festival, or Band Links → Find music links for one band. Review identity evidence and explicitly approve verified profiles; edited search terms never rename the band.
 - Show readable imported English band biography/explanation and available band image metadata on the detail screen when source data provides it, without leaking raw HTML tags.
 - Return from band detail to the same overview band row after refresh so users can continue rating without losing their place.
 - Sign in with Supabase Auth so ratings can be associated with a user and the shared Wacken planning group.
@@ -272,6 +273,40 @@ The script keeps the keystore in `.local/release/`, which is ignored by git,
 and updates the macOS keychain `WACKEN_RELEASE_STORE_FILE` path when needed.
 
 ## External Metadata
+
+### Verified music-link review
+
+The dedicated **Find music links** actions search only missing YouTube/Spotify
+fields for the selected band or active festival lineup. Each band has an editable
+search term, progress, candidate identity, source buttons and verification rationale.
+Select a verified identity, check its evidence, then choose **Save approved links**.
+Reject all leaves missing links empty. Search alone never writes metadata.
+
+Verification requires matching MusicBrainz and Wikidata artist identifiers, a
+matching band name or alias, and each proposed channel/artist profile linked from
+an official website declared by both sources. Search ranking, names and badges
+alone do not verify identity. Ambiguous namesakes require refinement to an artist
+identifier and a new search. Existing profiles must agree with the candidate;
+existing links, biographies, ratings and history are preserved. Unresolved or
+unsupported profiles stay empty. YouTube video and Spotify playlist/user URLs
+cannot be approved as artist profiles.
+
+MusicBrainz and Wikidata public lookups need no new credentials. Optional Spotify
+and YouTube search use the existing configuration below; missing keys are reported
+without blocking public identity checks. Official website evidence uses bounded
+HTTPS requests (5-second connection/read timeouts, 512 KiB HTML, up to three
+redirects and two pages per candidate) with private/local address checks. Sites
+that block retrieval or omit usable cross-links cannot produce verified links.
+No evidence is stored in a new backend table. Rotation retains the active review;
+after process restart, search again to retrieve fresh proof.
+
+Search and saving run off the UI thread. Cancel preserves saved data; retry skips
+completed festival reviews unless their search terms changed. Offline, rate-limit
+and save failures show an error rather than claiming success. Approved missing
+metadata uses the existing remote-first shared-band save, then Room cache; server
+permissions still apply. See [ADR-0015](backlog/decisions/0015-verified-music-link-evidence.md).
+
+Native verification: `sh scripts/verify-android-smoke.sh emulator-5554 be.wacken.planner.MusicLinksReviewAndroidTest`.
 
 MusicBrainz, Wikidata, Wikipedia, optional Spotify, and optional YouTube lookups
 are available from the Settings metadata review workflow. MusicBrainz,

@@ -173,7 +173,7 @@ final class WikidataMetadataProvider implements BandMetadataLookupProvider {
     private record EntitySearchResult(String id, String label, int confidence) {
     }
 
-    private static final class UrlConnectionWikidataHttpClient implements WikidataHttpClient {
+    static final class UrlConnectionWikidataHttpClient implements WikidataHttpClient {
         @Override
         public String get(String pathAndQuery) throws IOException {
             HttpURLConnection connection = (HttpURLConnection) new URL(API_ROOT + pathAndQuery).openConnection();

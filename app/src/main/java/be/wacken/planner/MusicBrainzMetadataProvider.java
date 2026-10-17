@@ -131,11 +131,11 @@ final class MusicBrainzMetadataProvider implements BandMetadataLookupProvider {
     private record ArtistSearchResult(String id, String name, int score) {
     }
 
-    private static final class RateLimitedMusicBrainzHttpClient implements MusicBrainzHttpClient {
+    static final class RateLimitedMusicBrainzHttpClient implements MusicBrainzHttpClient {
         private final String userAgent;
         private long lastRequestAtMillis;
 
-        private RateLimitedMusicBrainzHttpClient(String userAgent) {
+        RateLimitedMusicBrainzHttpClient(String userAgent) {
             this.userAgent = userAgent == null || userAgent.isBlank()
                     ? "WackenPlanner/2.31 ( local-maintainer )"
                     : userAgent.trim();

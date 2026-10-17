@@ -139,6 +139,9 @@ public final class SettingsActivity extends Activity {
         adminSection.addView(actionButton("Link imported bands", WackenTheme.ButtonStyle.SECONDARY, view -> {
             startActivity(new Intent(this, BandLinkReviewActivity.class));
         }));
+        activeFestival().ifPresent(festival -> adminSection.addView(actionButton("Find music links", WackenTheme.ButtonStyle.SECONDARY,
+                view -> startActivity(new Intent(this, MusicLinksReviewActivity.class)
+                        .putExtra(MusicLinksReviewActivity.EXTRA_FESTIVAL_ID, festival.id())))));
         adminSection.addView(actionButton("Fetch band metadata", WackenTheme.ButtonStyle.SECONDARY, view -> fetchBandMetadata()));
         adminSection.addView(actionButton("Import lineup CSV files", WackenTheme.ButtonStyle.PREMIUM, view -> {
             startActivityForResult(new Intent(this, ImportCsvActivity.class), REQUEST_IMPORT);

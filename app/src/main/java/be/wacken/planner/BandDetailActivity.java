@@ -56,6 +56,7 @@ public final class BandDetailActivity extends Activity {
     private RatingStarsView ratingStars;
     private RatingStarsView realRatingStars;
     private AuthSession currentSession;
+    private LinearLayout musicLinksSection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +89,22 @@ public final class BandDetailActivity extends Activity {
 
     private String currentUser() {
         return currentSession.userId();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (selectedBand == null || musicLinksSection == null
+                || !(musicLinksSection.getParent() instanceof android.view.ViewGroup parent)) return;
+        // Returning from reviewed enrichment updates just the links, preserving ratings and scroll.
+        new ShowBandDetailUseCase(bands, ratings, realRatings, festivals, personalRatings)
+                .showBand(currentUser(), selectedBand.name(), musicLinksFromIntent()).ifPresent(detail -> {
+                    LinearLayout previous = musicLinksSection;
+                    int position = parent.indexOfChild(previous);
+                    LinearLayout refreshed = linksSection(detail);
+                    parent.removeView(previous);
+                    parent.addView(refreshed, position);
+                });
     }
 
     private View renderMissingBand() {
@@ -266,6 +283,7 @@ public final class BandDetailActivity extends Activity {
 
     private LinearLayout linksSection(BandDetailItem detail) {
         LinearLayout section = detailSection();
+        musicLinksSection = section;
         section.addView(sectionTitle("Band Links", false));
         LinearLayout links = new LinearLayout(this);
         links.setOrientation(LinearLayout.HORIZONTAL);
@@ -274,6 +292,9 @@ public final class BandDetailActivity extends Activity {
         detail.youtubeUrl().ifPresent(url -> links.addView(iconButton("▶", "Open YouTube", COLOR_ACCENT, url)));
         detail.spotifyUrl().ifPresent(url -> links.addView(iconButton("♬", "Open Spotify", WackenTheme.SUCCESS_GREEN, url)));
         section.addView(links);
+        section.addView(WackenTheme.actionButton(this, "Find music links", WackenTheme.ButtonStyle.SECONDARY,
+                view -> startActivity(new Intent(this, MusicLinksReviewActivity.class)
+                        .putExtra(MusicLinksReviewActivity.EXTRA_BAND_NAME, detail.bandName()))));
         return section;
     }
 

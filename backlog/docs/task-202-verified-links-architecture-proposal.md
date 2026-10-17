@@ -1,5 +1,5 @@
 # Architecture approval request: TASK-202 verified music links
-Status: Proposed, awaiting explicit human approval. Date: 2026-10-17.
+Status: Standard option explicitly approved by the user on 2026-10-17. Accepted decision: ADR-0015.
 
 ## Proposed architectural change
 Extend the accepted ADR-0012 reviewed-metadata boundary with source-evidence facts and an application-owned identity-verification result. Existing candidate records currently carry a name, URL and confidence score; those do not establish band identity. Add a band/festival-scoped music-only orchestration path with edited search terms that never rename the band.
@@ -29,4 +29,3 @@ Current YouTube exact-name search reports confidence 95 without identity evidenc
 
 ## Approval needed
 Approve the standard option, choose a different option, or reject. Repository AGENTS.md, architecture-decision-rules.md and delivery-governance.md require explicit approval before provider-contract/integration changes. Approval of the 3.0 visual design does not by itself approve this integration change.
-
