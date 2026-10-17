@@ -232,10 +232,10 @@ final class SupabaseMasterDataClient {
     static Band toBand(JSONObject row) throws JSONException {
         return new Band(
                 row.getString("name"),
-                optional(row.optString("biography_html", "")),
-                optional(row.optString("image_url", "")),
-                optional(row.optString("youtube_url", "")),
-                spotifyUrl(row.optString("spotify_artist_id", ""))
+                optional(textOrEmpty(row, "biography_html")),
+                optional(textOrEmpty(row, "image_url")),
+                optional(textOrEmpty(row, "youtube_url")),
+                spotifyUrl(textOrEmpty(row, "spotify_artist_id"))
         );
     }
 
@@ -378,6 +378,11 @@ final class SupabaseMasterDataClient {
         return text.toString();
     }
 
+    private static String textOrEmpty(JSONObject row, String field) {
+        // Android optString converts JSONObject.NULL to the nonempty string "null".
+        return row.isNull(field) ? "" : row.optString(field, "");
+    }
+
     private static Optional<String> optional(String value) {
         if (value == null || value.isBlank()) {
             return Optional.empty();
@@ -439,7 +444,7 @@ final class SupabaseMasterDataClient {
     }
 
     private static void putIfMissing(JSONObject patch, JSONObject existing, String field, Optional<String> candidate) throws JSONException {
-        if (candidate.isPresent() && existing.optString(field, "").isBlank()) {
+        if (candidate.isPresent() && textOrEmpty(existing, field).isBlank()) {
             patch.put(field, candidate.get());
         }
     }
