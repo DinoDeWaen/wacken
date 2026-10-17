@@ -4,7 +4,7 @@ title: 'REL: Validate and publish the completed 2.34 milestone'
 status: To Do
 assignee: []
 created_date: '2026-10-17 09:59'
-updated_date: '2026-10-17 14:46'
+updated_date: '2026-10-17 16:47'
 labels:
   - release
   - android
@@ -26,6 +26,7 @@ dependencies:
   - TASK-220
   - TASK-221
   - TASK-222
+  - TASK-223
 priority: high
 type: task
 ---
@@ -52,4 +53,6 @@ As the release owner, I want a signed, regression-validated 2.34 package so user
 2026-10-17 independent preflight on f7e3628: real PostgreSQL/PostgREST festival-creation runner passed10scenarios with no skipped tests and SQL transaction/permission assertions. TASK-174,175,201,202areDone.156/169/172and architecture215remain; repeat all required gates on final release source before publication. No2.34tag or asset has been published.
 
 2026-10-17 user-approved architecture: ADR-0016 governs canonical shared bands, member-specific established band ratings, independent festival planning/after-ratings, one-time creation snapshots and atomic archive promotion. Missing after-ratings retain the prior band rating; archived corrections update it only while their festival remains the source. TASK-216–220 implement and validate the lifecycle. This supersedes earlier latest-event prefill wording; do not treat approved planning as shipped behavior.
+
+Full lintDebug still reports14 existing NewApi errors while minSdk is23. TASK223 is now a required 2.34 dependency; resolve compatible storage/UTF-8 encoding and pass full lint before final publication, rather than accepting a suppressed baseline.
 <!-- SECTION:NOTES:END -->
