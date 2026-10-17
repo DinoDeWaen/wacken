@@ -1,0 +1,17 @@
+.gradle/
+.idea/
+build/
+local.properties
+.env.supabase*
+.local/
+
+*/build/
+
+*.apk
+*.aab
+*.jks
+*.keystore
+*.iml
+
+.DS_Store
+/.idea

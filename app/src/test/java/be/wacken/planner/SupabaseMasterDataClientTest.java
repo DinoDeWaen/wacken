@@ -1,0 +1,221 @@
+package be.wacken.planner;
+
+import org.json.JSONObject;
+import org.junit.Test;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import be.wacken.planner.domain.Band;
+import be.wacken.planner.domain.Festival;
+import be.wacken.planner.domain.FestivalLineupEntry;
+import be.wacken.planner.domain.FestivalStatus;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+public final class SupabaseMasterDataClientTest {
+    @Test
+    public void mapsBandRowsToDomainBandsWithSpotifyArtistUrl() throws Exception {
+        JSONObject row = new JSONObject()
+                .put("name", "5th Avenue")
+                .put("biography_html", "Heavy metal from Hamburg")
+                .put("image_url", "https://example.test/band.jpg")
+                .put("youtube_url", "https://youtube.test/watch")
+                .put("spotify_artist_id", "artist-123");
+
+        Band band = SupabaseMasterDataClient.toBand(row);
+
+        assertEquals("5th Avenue", band.name());
+        assertEquals("Heavy metal from Hamburg", band.biography().orElseThrow());
+        assertEquals("https://example.test/band.jpg", band.imageUrl().orElseThrow());
+        assertEquals("https://youtube.test/watch", band.youtubeUrl().orElseThrow());
+        assertEquals("https://open.spotify.com/artist/artist-123", band.spotifyUrl().orElseThrow());
+    }
+
+    @Test
+    public void mapsBlankOptionalBandFieldsToEmptyOptionals() throws Exception {
+        JSONObject row = new JSONObject()
+                .put("name", "No Links")
+                .put("biography_html", "")
+                .put("image_url", "")
+                .put("youtube_url", "")
+                .put("spotify_artist_id", "");
+
+        Band band = SupabaseMasterDataClient.toBand(row);
+
+        assertTrue(band.biography().isEmpty());
+        assertTrue(band.imageUrl().isEmpty());
+        assertTrue(band.youtubeUrl().isEmpty());
+        assertTrue(band.spotifyUrl().isEmpty());
+    }
+
+    @Test
+    public void mapsSupabaseTimestampToLocalDateTime() {
+        assertEquals(
+                LocalDateTime.of(2026, 7, 30, 18, 15),
+                SupabaseMasterDataClient.toLocalDateTime("2026-07-30T18:15:00")
+        );
+    }
+
+    @Test
+    public void mapsFestivalRowsToDomainFestivals() throws Exception {
+        JSONObject row = new JSONObject()
+                .put("id", "summer-breeze-2027")
+                .put("name", "Summer Breeze 2027")
+                .put("status", "ACTIVE");
+
+        Festival festival = SupabaseMasterDataClient.toFestival(row);
+
+        assertEquals(new Festival("summer-breeze-2027", "Summer Breeze 2027", FestivalStatus.ACTIVE), festival);
+    }
+
+    @Test
+    public void archivesExistingFestivalWithUpdateInsteadOfInsert() throws Exception {
+        RecordingRequests requests = new RecordingRequests("[{\"id\":\"wacken-2026\"}]");
+        SupabaseMasterDataClient client = new SupabaseMasterDataClient(requests);
+
+        client.saveFestival(Festival.active("wacken-2026", "Wacken Open Air 2026").archive());
+
+        assertEquals(List.of("GET", "PATCH"), requests.methods);
+        assertEquals("/rest/v1/festivals?id=eq.wacken-2026", requests.endpoints.get(1));
+        assertEquals("ARCHIVED", new JSONObject(requests.bodies.get(1)).getString("status"));
+    }
+
+    @Test
+    public void renamesExistingActiveFestivalWithUpdate() throws Exception {
+        RecordingRequests requests = new RecordingRequests("[{\"id\":\"wacken-2026\"}]");
+        SupabaseMasterDataClient client = new SupabaseMasterDataClient(requests);
+
+        client.saveFestival(Festival.active("wacken-2026", "Wacken Open Air"));
+
+        assertEquals(List.of("GET", "PATCH"), requests.methods);
+        assertEquals("Wacken Open Air", new JSONObject(requests.bodies.get(1)).getString("name"));
+    }
+
+    @Test
+    public void createsNewFestivalWithInsert() throws Exception {
+        RecordingRequests requests = new RecordingRequests("[]");
+        SupabaseMasterDataClient client = new SupabaseMasterDataClient(requests);
+
+        client.saveFestival(Festival.active("summer-breeze-2027", "Summer Breeze 2027"));
+
+        assertEquals(List.of("GET", "POST"), requests.methods);
+        assertEquals("/rest/v1/festivals", requests.endpoints.get(1));
+        assertEquals("summer-breeze-2027", new JSONObject(requests.bodies.get(1)).getString("id"));
+    }
+
+    @Test
+    public void reusingExistingBandDoesNotRequireAdminUpdatePermission() throws Exception {
+        RecordingRequests requests = new RecordingRequests("[{\"id\":\"airbourne\",\"name\":\"Airbourne\",\"active\":true}]");
+        SupabaseMasterDataClient client = new SupabaseMasterDataClient(requests);
+
+        client.saveBand(new Band("Airbourne"));
+
+        assertEquals(List.of("GET"), requests.methods);
+    }
+
+    @Test
+    public void newBandUsesInsertWithoutUpdatePrivilege() throws Exception {
+        RecordingRequests requests = new RecordingRequests("[]");
+        SupabaseMasterDataClient client = new SupabaseMasterDataClient(requests);
+
+        client.saveBand(new Band("New Act"));
+
+        assertEquals(List.of("GET", "POST"), requests.methods);
+        assertEquals("/rest/v1/bands", requests.endpoints.get(1));
+        assertEquals(List.of(false, false), requests.upserts);
+    }
+
+    @Test
+    public void newFestivalLineupUsesInsertWithoutUpdatePrivilege() throws Exception {
+        RecordingRequests requests = new RecordingRequests("[{\"id\":\"airbourne\",\"name\":\"Airbourne\",\"active\":true}]");
+        SupabaseMasterDataClient client = new SupabaseMasterDataClient(requests);
+
+        client.saveFestivalLineup("summer-breeze-2027", List.of(
+                new FestivalLineupEntry("summer-breeze-2027", new Band(
+                        "Airbourne", Optional.of("Cached biography"), Optional.empty(), Optional.empty(), Optional.empty()
+                ), "Airbourne")
+        ));
+
+        assertEquals(List.of("DELETE", "GET", "POST"), requests.methods);
+        assertEquals("/rest/v1/festival_lineup_entries", requests.endpoints.get(2));
+        assertEquals(false, requests.upserts.get(2));
+    }
+
+    @Test
+    public void mapsFestivalLineupRowsToDomainEntries() throws Exception {
+        org.json.JSONArray rows = new org.json.JSONArray()
+                .put(new JSONObject()
+                        .put("festival_id", "summer-breeze-2027")
+                        .put("band_id", "any-given-day")
+                        .put("uploaded_display_name", "Any Given Day"));
+
+        List<FestivalLineupEntry> entries = SupabaseMasterDataClient.parseFestivalLineupEntries(
+                rows,
+                Map.of("any-given-day", "Any given Day")
+        );
+
+        assertEquals(List.of(new FestivalLineupEntry("summer-breeze-2027", new Band("Any given Day"), "Any Given Day")), entries);
+    }
+
+    @Test
+    public void derivesStableBandIdsAndSpotifyArtistIdsForWrites() {
+        assertEquals(SupabaseMasterDataClient.bandIdFor(new Band("Any Given Day")), SupabaseMasterDataClient.bandIdFor(new Band("Any Given Day")));
+        for (String other : List.of("Any given Day", "Any-Given-Day", "東京", "!!!")) {
+            org.junit.Assert.assertNotEquals(SupabaseMasterDataClient.bandIdFor(new Band("Any Given Day")), SupabaseMasterDataClient.bandIdFor(new Band(other)));
+        }
+        org.junit.Assert.assertNotEquals(SupabaseMasterDataClient.bandIdFor(new Band("東京")), SupabaseMasterDataClient.bandIdFor(new Band("!!!")));
+        assertEquals(
+                Optional.of("spotify-artist"),
+                SupabaseMasterDataClient.spotifyArtistId(Optional.of("https://open.spotify.com/artist/spotify-artist?si=abc"))
+        );
+    }
+
+    @Test
+    public void missingMetadataPatchDoesNotOverwriteExistingValues() throws Exception {
+        JSONObject existing = new JSONObject()
+                .put("biography_html", "Existing bio")
+                .put("image_url", "")
+                .put("youtube_url", "https://youtube.example/existing")
+                .put("spotify_artist_id", "");
+        Band candidate = new Band(
+                "Any Given Day",
+                Optional.of("New bio"),
+                Optional.of("https://images.example/agd.jpg"),
+                Optional.of("https://youtube.example/new"),
+                Optional.of("https://open.spotify.com/artist/spotify-artist")
+        );
+
+        JSONObject patch = SupabaseMasterDataClient.missingMetadataPatch(existing, candidate);
+
+        assertEquals("https://images.example/agd.jpg", patch.getString("image_url"));
+        assertEquals("spotify-artist", patch.getString("spotify_artist_id"));
+        assertTrue(patch.isNull("biography_html") || !patch.has("biography_html"));
+        assertTrue(patch.isNull("youtube_url") || !patch.has("youtube_url"));
+    }
+
+    private static final class RecordingRequests implements SupabaseMasterDataClient.RequestExecutor {
+        private final String lookupResponse;
+        private final List<String> methods = new ArrayList<>();
+        private final List<String> endpoints = new ArrayList<>();
+        private final List<String> bodies = new ArrayList<>();
+        private final List<Boolean> upserts = new ArrayList<>();
+
+        private RecordingRequests(String lookupResponse) {
+            this.lookupResponse = lookupResponse;
+        }
+
+        @Override
+        public String execute(String method, String endpoint, String body, boolean upsert) {
+            methods.add(method);
+            endpoints.add(endpoint);
+            bodies.add(body);
+            upserts.add(upsert);
+            return "GET".equals(method) ? lookupResponse : "";
+        }
+    }
+}

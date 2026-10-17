@@ -1,0 +1,182 @@
+package be.wacken.planner;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.junit.Test;
+
+import be.wacken.planner.application.ScheduleDecisionCandidate;
+
+public final class ScheduleBlockStyleTest {
+    @Test
+    public void fiveStarVisibleActsUseGoldBorderAndDarkGoldFill() {
+        ScheduleDecisionCandidate visible = candidate("Def Leppard", 5, 22, 0, 0);
+
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(visible, List.of(visible));
+
+        assertEquals(0xFFFFD24A, style.borderColor());
+        assertEquals(0xFF2F2A18, style.fillColor());
+    }
+
+    @Test
+    public void fourStarVisibleActsUseMetalRedBorderAndDarkPanelFill() {
+        ScheduleDecisionCandidate visible = candidate("Normal Winner", 4, 18, 0, 0);
+
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(visible, List.of(visible));
+
+        assertEquals(0xFFFF3B6B, style.borderColor());
+        assertEquals(0xFF263033, style.fillColor());
+    }
+
+    @Test
+    public void twoAndThreeStarVisibleActsUseSteelBorderAndMutedFill() {
+        ScheduleDecisionCandidate twoStar = candidate("Weak Winner", 2, 18, 0, 0);
+        ScheduleDecisionCandidate threeStar = candidate("Optional Winner", 3, 19, 0, 0);
+
+        ScheduleBlockStyle twoStarStyle = ScheduleBlockStyle.from(twoStar, List.of(twoStar));
+        ScheduleBlockStyle threeStarStyle = ScheduleBlockStyle.from(threeStar, List.of(threeStar));
+
+        assertEquals(0xFFAAB3B7, twoStarStyle.borderColor());
+        assertEquals(0xFF20282A, twoStarStyle.fillColor());
+        assertEquals(0xFFAAB3B7, threeStarStyle.borderColor());
+        assertEquals(0xFF20282A, threeStarStyle.fillColor());
+    }
+
+    @Test
+    public void scratchesOnlyLowerRatedVisibleBlockWhenOverlapIsMoreThanFifteenMinutes() {
+        ScheduleDecisionCandidate winner = candidate("Hämatom", 4, 22, 0, 120);
+        ScheduleDecisionCandidate lowerRatedOverlap = candidate("Kadavar", 3, 21, 15, 75);
+
+        ScheduleBlockStyle winnerStyle = ScheduleBlockStyle.from(winner, List.of(winner, lowerRatedOverlap));
+        ScheduleBlockStyle lowerRatedStyle = ScheduleBlockStyle.from(lowerRatedOverlap, List.of(winner, lowerRatedOverlap));
+
+        assertFalse(winnerStyle.scratched());
+        assertTrue(lowerRatedStyle.scratched());
+    }
+
+    @Test
+    public void scratchesMiddleActWhenItLosesToHigherRatedVisibleOverlapInChain() {
+        ScheduleDecisionCandidate pigDestroyer = candidate("Pig Destroyer", 2, 18, 0, 45);
+        ScheduleDecisionCandidate saxon = candidate("Saxon", 3, 18, 15, 75);
+        ScheduleDecisionCandidate hatebreed = candidate("Hatebreed", 4, 19, 0, 60);
+        List<ScheduleDecisionCandidate> visible = List.of(pigDestroyer, saxon, hatebreed);
+
+        ScheduleBlockStyle pigDestroyerStyle = ScheduleBlockStyle.from(pigDestroyer, visible);
+        ScheduleBlockStyle saxonStyle = ScheduleBlockStyle.from(saxon, visible);
+        ScheduleBlockStyle hatebreedStyle = ScheduleBlockStyle.from(hatebreed, visible);
+
+        assertTrue(pigDestroyerStyle.scratched());
+        assertTrue(saxonStyle.scratched());
+        assertFalse(hatebreedStyle.scratched());
+    }
+
+    @Test
+    public void doesNotScratchWhenVisibleOverlapIsFifteenMinutes() {
+        ScheduleDecisionCandidate first = candidate("Yngwie Malmsteen", 5, 17, 30, 75);
+        ScheduleDecisionCandidate second = candidate("Storm Seeker", 4, 18, 30, 60);
+
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(second, List.of(first, second));
+
+        assertFalse(style.scratched());
+    }
+
+    @Test
+    public void scratchesLowerRatedBlockWhenFifteenMinuteOverlapAlsoNeedsFifteenMinuteWalk() {
+        ScheduleDecisionCandidate higherRated = candidate("Hatebreed", 4, 19, 0, 60, "Harder");
+        ScheduleDecisionCandidate lowerRated = candidate("Saxon", 3, 18, 15, 60, "Headbangers Stage");
+
+        ScheduleBlockStyle higherRatedStyle = ScheduleBlockStyle.from(higherRated, List.of(higherRated, lowerRated));
+        ScheduleBlockStyle lowerRatedStyle = ScheduleBlockStyle.from(lowerRated, List.of(higherRated, lowerRated));
+
+        assertFalse(higherRatedStyle.scratched());
+        assertTrue(lowerRatedStyle.scratched());
+    }
+
+    @Test
+    public void doesNotScratchWhenFifteenMinuteOverlapOnlyNeedsNearbyFiveMinuteWalk() {
+        ScheduleDecisionCandidate higherRated = candidate("Hatebreed", 4, 19, 0, 60, "Louder");
+        ScheduleDecisionCandidate lowerRated = candidate("Saxon", 3, 18, 15, 60, "Harder");
+
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(lowerRated, List.of(higherRated, lowerRated));
+
+        assertFalse(style.scratched());
+    }
+
+    @Test
+    public void doesNotScratchWhenThereIsNoVisibleOverlap() {
+        ScheduleDecisionCandidate visible = candidate("Thundermother", 5, 15, 15, 60);
+        ScheduleDecisionCandidate other = candidate("Ricky Warwick", 4, 16, 45, 60);
+
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(visible, List.of(visible, other));
+
+        assertFalse(style.scratched());
+    }
+
+    @Test
+    public void equalRatedVisibleOverlapsDoNotScratchEachOther() {
+        ScheduleDecisionCandidate first = candidate("Uli Jon Roth", 5, 16, 15, 90);
+        ScheduleDecisionCandidate second = candidate("Yngwie Malmsteen", 5, 17, 0, 105);
+
+        ScheduleBlockStyle firstStyle = ScheduleBlockStyle.from(first, List.of(first, second));
+        ScheduleBlockStyle secondStyle = ScheduleBlockStyle.from(second, List.of(first, second));
+
+        assertFalse(firstStyle.scratched());
+        assertFalse(secondStyle.scratched());
+    }
+
+    @Test
+    public void lostAlternativeTextAloneDoesNotScratchWinningBlock() {
+        ScheduleDecisionCandidate winner = candidate("Hämatom", 4, 22, 0, 120);
+
+        ScheduleBlockStyle style = ScheduleBlockStyle.from(winner, List.of(winner));
+
+        assertFalse(style.scratched());
+    }
+
+    private ScheduleDecisionCandidate candidate(
+            String bandName,
+            int rating,
+            int startHour,
+            int startMinute,
+            int durationMinutes
+    ) {
+        return candidate(bandName, rating, startHour, startMinute, durationMinutes, "Harder");
+    }
+
+    private ScheduleDecisionCandidate candidate(
+            String bandName,
+            int rating,
+            int startHour,
+            int startMinute,
+            int durationMinutes,
+            String stageName
+    ) {
+        return candidate(bandName, rating, startHour, startMinute, durationMinutes, stageName, "CHOSEN", true);
+    }
+
+    private ScheduleDecisionCandidate candidate(
+            String bandName,
+            int rating,
+            int startHour,
+            int startMinute,
+            int durationMinutes,
+            String stageName,
+            String status,
+            boolean selected
+    ) {
+        LocalDateTime start = LocalDateTime.of(2026, 7, 30, startHour, startMinute);
+        return new ScheduleDecisionCandidate(
+                bandName,
+                rating,
+                stageName,
+                start,
+                start.plusMinutes(durationMinutes),
+                status,
+                selected
+        );
+    }
+}

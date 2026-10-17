@@ -1,0 +1,2 @@
+performance_id,band_id,stage_id,festival_day_id,start_at,end_at,performance_type,title,source_id
+p-invalid,unknown-band,unknown-stage,thu,2026-07-30T18:00:00,2026-07-30T19:00:00,Concert,,

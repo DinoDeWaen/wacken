@@ -1,0 +1,511 @@
+{
+  "method": "WCAG relative luminance of CSS palette tokens; excludes disabled opacity, compositing and rendered focus geometry",
+  "productionWhiteOnRed": 3.4483363176250528,
+  "styles": [
+    {
+      "style": "iron",
+      "checks": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "ratio": 16.702816998312844,
+          "minimum": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "panel",
+          "ratio": 14.548734098516247,
+          "minimum": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "raised",
+          "ratio": 12.164045833889649,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "ratio": 10.043895756497836,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "panel",
+          "ratio": 8.748582271437382,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "raised",
+          "ratio": 7.314598989211837,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "ratio": 12.876318012613481,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "panel",
+          "ratio": 11.21572049507406,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "raised",
+          "ratio": 9.377347694882266,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "bg",
+          "ratio": 10.323440857023945,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "panel",
+          "ratio": 8.992075769361007,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "raised",
+          "ratio": 7.518181379881767,
+          "minimum": 4.5
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "ratio": 12.47958339550453,
+          "minimum": 4.5
+        },
+        {
+          "fg": "line",
+          "bg": "bg",
+          "ratio": 5.875207814695923,
+          "minimum": 3
+        },
+        {
+          "fg": "line",
+          "bg": "panel",
+          "ratio": 5.1175101947276165,
+          "minimum": 3
+        },
+        {
+          "fg": "line",
+          "bg": "raised",
+          "ratio": 4.278697249021329,
+          "minimum": 3
+        }
+      ]
+    },
+    {
+      "style": "field",
+      "checks": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "ratio": 13.724576586713583,
+          "minimum": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "panel",
+          "ratio": 15.462939065039807,
+          "minimum": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "raised",
+          "ratio": 11.895804597185661,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "ratio": 6.482968663315525,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "panel",
+          "ratio": 7.304105067871887,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "raised",
+          "ratio": 5.619126239795074,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "ratio": 7.175706955858217,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "panel",
+          "ratio": 8.084585976549038,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "raised",
+          "ratio": 6.219558560093647,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "bg",
+          "ratio": 6.651571738981994,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "panel",
+          "ratio": 7.4940635025628906,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "raised",
+          "ratio": 5.765263297644601,
+          "minimum": 4.5
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "ratio": 8.233324382607321,
+          "minimum": 4.5
+        },
+        {
+          "fg": "line",
+          "bg": "bg",
+          "ratio": 4.266481999023008,
+          "minimum": 3
+        },
+        {
+          "fg": "line",
+          "bg": "panel",
+          "ratio": 4.806876974029797,
+          "minimum": 3
+        },
+        {
+          "fg": "line",
+          "bg": "raised",
+          "ratio": 3.6979819273201255,
+          "minimum": 3
+        }
+      ]
+    },
+    {
+      "style": "pulse",
+      "checks": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "ratio": 16.543803260524715,
+          "minimum": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "panel",
+          "ratio": 14.323531533811114,
+          "minimum": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "raised",
+          "ratio": 12.411038458215366,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "ratio": 10.067153353977835,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "panel",
+          "ratio": 8.716084581680427,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "raised",
+          "ratio": 7.552303752251459,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "ratio": 10.44230633768831,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "panel",
+          "ratio": 9.040889918612963,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "raised",
+          "ratio": 7.8337407371589585,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "bg",
+          "ratio": 11.054408195663529,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "panel",
+          "ratio": 9.570844254175723,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "raised",
+          "ratio": 8.2929350094822,
+          "minimum": 4.5
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "ratio": 9.771132534740001,
+          "minimum": 4.5
+        },
+        {
+          "fg": "line",
+          "bg": "bg",
+          "ratio": 5.436456467046136,
+          "minimum": 3
+        },
+        {
+          "fg": "line",
+          "bg": "panel",
+          "ratio": 4.706853340291532,
+          "minimum": 3
+        },
+        {
+          "fg": "line",
+          "bg": "raised",
+          "ratio": 4.078389305433704,
+          "minimum": 3
+        }
+      ]
+    },
+    {
+      "style": "rivet",
+      "checks": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "ratio": 16.514950345078617,
+          "minimum": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "panel",
+          "ratio": 14.263548865920653,
+          "minimum": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "raised",
+          "ratio": 11.025028503686658,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "ratio": 9.901990507533997,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "panel",
+          "ratio": 8.55210112794446,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "raised",
+          "ratio": 6.610357603728982,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "ratio": 11.32028668233096,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "panel",
+          "ratio": 9.77704800170804,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "raised",
+          "ratio": 7.557181870655461,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "bg",
+          "ratio": 10.764709229857033,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "panel",
+          "ratio": 9.297209674823392,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "raised",
+          "ratio": 7.1862902166362925,
+          "minimum": 4.5
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "ratio": 9.83325243494626,
+          "minimum": 4.5
+        },
+        {
+          "fg": "line",
+          "bg": "bg",
+          "ratio": 6.038876628960744,
+          "minimum": 3
+        },
+        {
+          "fg": "line",
+          "bg": "panel",
+          "ratio": 5.215626453161929,
+          "minimum": 3
+        },
+        {
+          "fg": "line",
+          "bg": "raised",
+          "ratio": 4.031425197980059,
+          "minimum": 3
+        }
+      ]
+    },
+    {
+      "style": "backstage",
+      "checks": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "ratio": 16.821836452497237,
+          "minimum": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "panel",
+          "ratio": 14.404535186664432,
+          "minimum": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "raised",
+          "ratio": 12.339519931882782,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "ratio": 10.200128756312635,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "panel",
+          "ratio": 8.734368212039136,
+          "minimum": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "raised",
+          "ratio": 7.482220651218233,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "ratio": 10.75270117221625,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "panel",
+          "ratio": 9.207535861156437,
+          "minimum": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "raised",
+          "ratio": 7.8875556073097295,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "bg",
+          "ratio": 11.837595886005916,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "panel",
+          "ratio": 10.13653098738652,
+          "minimum": 4.5
+        },
+        {
+          "fg": "danger",
+          "bg": "raised",
+          "ratio": 8.683371211783431,
+          "minimum": 4.5
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "ratio": 10.166264624796163,
+          "minimum": 4.5
+        },
+        {
+          "fg": "line",
+          "bg": "bg",
+          "ratio": 5.981894677894156,
+          "minimum": 3
+        },
+        {
+          "fg": "line",
+          "bg": "panel",
+          "ratio": 5.122295215149086,
+          "minimum": 3
+        },
+        {
+          "fg": "line",
+          "bg": "raised",
+          "ratio": 4.387969697407246,
+          "minimum": 3
+        }
+      ]
+    }
+  ]
+}

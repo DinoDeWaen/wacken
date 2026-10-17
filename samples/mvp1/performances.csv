@@ -1,0 +1,3 @@
+performance_id,band_id,stage_id,festival_day_id,start_at,end_at,performance_type,title,source_id
+p-5th-avenue,5th-avenue,faster,thu,2026-07-30T18:00:00,2026-07-30T19:00:00,Concert,,
+p-skyline,skyline,harder,thu,2026-07-30T19:30:00,2026-07-30T20:30:00,Concert,,

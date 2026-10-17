@@ -1,0 +1,46 @@
+package be.wacken.planner;
+
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+import org.junit.Test;
+
+public final class BandMetadataReviewActivityRegressionTest {
+    @Test
+    public void keepsReviewedMetadataControlsVisibleInSource() throws IOException {
+        String source = new String(Files.readAllBytes(activitySource()), StandardCharsets.UTF_8);
+
+        assertTrue("Review screen must fetch proposals through the application use case.", source.contains("new SearchBandMetadataUseCase"));
+        assertTrue("Review screen must register MusicBrainz as the first metadata provider.", source.contains("new MusicBrainzMetadataProvider"));
+        assertTrue("Review screen must register Wikidata after MusicBrainz.", source.contains("new WikidataMetadataProvider"));
+        assertTrue("Review screen must register Wikipedia as a biography and image metadata provider.", source.contains("new WikipediaMetadataProvider"));
+        assertTrue("Review screen must register optional Spotify enrichment.", source.contains("new SpotifyMetadataProvider"));
+        assertTrue("Review screen must register optional YouTube enrichment.", source.contains("new YouTubeMetadataProvider"));
+        assertTrue("Review screen must require selectable proposal approval.", source.contains("new CheckBox(this)"));
+        assertTrue("Review screen must save only accepted metadata proposals.", source.contains("\"Save accepted metadata\""));
+        assertTrue("Review screen must call the approval use case.", source.contains("applyMetadata.apply"));
+        assertTrue("Review screen must show missing-field proposal source context.", source.contains("proposal.sourceName()"));
+        assertTrue("Review screen must show a metadata task/status panel.", source.contains("Metadata enrichment tasks"));
+        assertTrue("Review screen must summarize completed metadata tasks.", source.contains("Done:"));
+        assertTrue("Review screen must summarize missing metadata tasks.", source.contains("Needed:"));
+        assertTrue("Review screen must summarize proposals needing review.", source.contains("Needs review:"));
+        assertTrue("Review screen must surface provider configuration or lookup status.", source.contains("Provider status:"));
+        assertTrue("Review screen must keep save outcome visible after refresh.", source.contains("Last save:"));
+    }
+
+    private Path activitySource() {
+        return List.of(
+                        Path.of("app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java"),
+                        Path.of("src/main/java/be/wacken/planner/BandMetadataReviewActivity.java")
+                )
+                .stream()
+                .filter(Files::exists)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("BandMetadataReviewActivity source file not found."));
+    }
+}

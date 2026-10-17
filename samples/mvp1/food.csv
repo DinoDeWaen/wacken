@@ -1,0 +1,2 @@
+food_id,name,near_stage_id,walking_minutes_from_stage,category,notes,latitude,longitude
+pizza,Pizza,faster,4,Food,Sample MVP food option,,

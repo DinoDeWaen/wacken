@@ -1,0 +1,35 @@
+package be.wacken.planner.persistence;
+
+import androidx.room.Dao;
+import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
+import androidx.room.Query;
+
+import java.util.List;
+
+@Dao
+public interface RoomPersonalBandRatingEventDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void save(RoomPersonalBandRatingEvent event);
+
+    @Query("DELETE FROM personal_band_rating_events WHERE id = :id")
+    void deleteById(String id);
+
+    @Query("UPDATE personal_band_rating_events SET festivalNameSnapshot = :festivalName, festivalId = NULL WHERE festivalId = :festivalId")
+    void detachFestival(String festivalId, String festivalName);
+
+    @Query("SELECT * FROM personal_band_rating_events WHERE userName = :userName ORDER BY createdAt DESC, id")
+    List<RoomPersonalBandRatingEvent> findByUser(String userName);
+
+    @Query("SELECT * FROM personal_band_rating_events WHERE userName = :userName AND bandName = :bandName ORDER BY createdAt DESC")
+    List<RoomPersonalBandRatingEvent> findByUserAndBand(String userName, String bandName);
+
+    @Query("SELECT * FROM personal_band_rating_events WHERE userName = :userName AND festivalId = :festivalId ORDER BY createdAt DESC")
+    List<RoomPersonalBandRatingEvent> findByUserAndFestival(String userName, String festivalId);
+
+    @Query("SELECT * FROM personal_band_rating_events WHERE userName = :userName AND syncStatus = 'PENDING'")
+    List<RoomPersonalBandRatingEvent> findPendingByUser(String userName);
+
+    @Query("UPDATE personal_band_rating_events SET syncStatus='RESOLVED' WHERE userName=:user AND festivalId=:festival AND bandName=:band AND id=:operation AND syncStatus='PENDING'")
+    void resolveReviewedPending(String user,String festival,String band,String operation);
+}
