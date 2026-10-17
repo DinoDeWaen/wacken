@@ -30,8 +30,8 @@ public final class ArchivedFestivalLayoutRegressionTest {
     public void archivedBandDetailUsesActiveDetailSectionsReadOnly() throws IOException {
         String source = new String(Files.readAllBytes(source("ArchivedBandDetailActivity.java")), StandardCharsets.UTF_8);
 
-        assertTrue(source.contains("sectionTitle(\"Your Rating\")"));
-        assertTrue(source.contains("sectionTitle(\"Real Rating\")"));
+        assertTrue(source.contains("sectionTitle(\"Festival planning rating\")"));
+        assertTrue(source.contains("sectionTitle(\"Festival after-rating\")"));
         assertTrue(source.contains("sectionTitle(\"Running Order\")"));
         assertTrue(source.contains("sectionTitle(\"Band Links\")"));
         assertTrue(source.contains("imagePanel(url)"));

@@ -61,7 +61,7 @@ public final class ListActiveFestivalBandsUseCase {
 
     private Optional<Performance> performanceFor(List<Performance> performances, Band band) {
         return performances.stream()
-                .filter(performance -> performance.band().equals(band))
+                .filter(performance -> performance.band().name().equals(band.name()))
                 .findFirst();
     }
 

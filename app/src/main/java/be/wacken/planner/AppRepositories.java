@@ -314,6 +314,11 @@ final class AppRepositories {
         return personalBandRatings;
     }
 
+    be.wacken.planner.application.ViewBandRatingContextUseCase ratingContext() {
+        return new be.wacken.planner.application.ViewBandRatingContextUseCase(bands,festivals,festivalLineups,
+                festivalPlanningRatings,afterRatings,currentBandRatings);
+    }
+
     RatingRepository ratings() {
         return ratings;
     }

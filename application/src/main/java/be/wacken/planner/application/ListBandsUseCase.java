@@ -83,7 +83,7 @@ public final class ListBandsUseCase {
     private List<PersonRatingStars> personRatingsFor(Band band) {
         return ratingRepository.findAll()
                 .stream()
-                .filter(rating -> rating.band().equals(band))
+                .filter(rating -> rating.band().name().equals(band.name()))
                 .filter(rating -> rating.rating().value() > 0)
                 .sorted(Comparator.comparing(SavedRating::userName, String.CASE_INSENSITIVE_ORDER))
                 .map(rating -> new PersonRatingStars(rating.userName(), rating.rating().value()))

@@ -61,7 +61,7 @@ public final class ViewArchivedFestivalHistoryUseCase {
         List<SavedFestivalPlanningRating> planning = planningRatings.findByFestival(festivalId);
         List<PersonalBandRatingEvent> festivalPersonalEvents = personalRatings.findByUserAndFestival(userName, festivalId);
         List<SavedRating> legacyRealRatingFallbacks = legacyRealRatingFallbacks(userName, festivalId);
-        TreeSet<String> bandNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        TreeSet<String> bandNames = new TreeSet<>();
         entries.stream().map(entry -> entry.band().name()).forEach(bandNames::add);
         planning.stream().map(rating -> rating.band().name()).forEach(bandNames::add);
         festivalPersonalEvents.stream().map(event -> event.band().name()).forEach(bandNames::add);
@@ -124,9 +124,9 @@ public final class ViewArchivedFestivalHistoryUseCase {
                 .collect(Collectors.toList());
         TreeSet<String> bandsWithHistory = history.stream()
                 .map(PersonalRatingHistoryItem::bandName)
-                .collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER)));
+                .collect(Collectors.toCollection(() -> new TreeSet<>()));
         List<PersonalRatingHistoryItem> legacyFallbacks = legacyRealRatingFallbacks.stream()
-                .filter(rating -> bandNames.stream().anyMatch(name -> name.equalsIgnoreCase(rating.band().name())))
+                .filter(rating -> bandNames.stream().anyMatch(name -> name.equals(rating.band().name())))
                 .filter(rating -> !bandsWithHistory.contains(rating.band().name()))
                 .map(rating -> new PersonalRatingHistoryItem(
                         rating.band().name(),

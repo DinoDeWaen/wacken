@@ -106,6 +106,7 @@ public final class SettingsActivity extends Activity {
         ratingAllocation.setPadding(0, dp(4), 0, 0);
         ratingSection.addView(ratingAllocation);
         ratingSection.addView(actionButton("Export ratings CSV", WackenTheme.ButtonStyle.PREMIUM, view -> exportRatingsCsv()));
+        ratingSection.addView(actionButton("Export rating lifecycle CSV (v2)", WackenTheme.ButtonStyle.SECONDARY, view -> exportRatingLifecycleCsv()));
         ratingSection.addView(actionButton("Export archived correction audit CSV", WackenTheme.ButtonStyle.SECONDARY, view -> exportCorrectionsCsv()));
         screen.addView(ratingSection);
         refreshRatingAllocation();
@@ -259,6 +260,24 @@ public final class SettingsActivity extends Activity {
                 });
             }
         }).start();
+    }
+
+    private void exportRatingLifecycleCsv() {
+        try {
+            AppRepositories repositories = new AppRepositories(this);
+            String csv = new be.wacken.planner.application.ExportRatingLifecycleCsvUseCase(
+                    repositories.bands(), repositories.festivals(), repositories.festivalLineups(),
+                    repositories.festivalPlanningRatings(), repositories.afterRatings(), repositories.currentBandRatings(),
+                    repositories.personalBandRatings(), repositories.ratingCorrectionHistory()).export(currentSession.userId());
+            File file = writeExportFile(csv, "wacken-rating-lifecycle-v2.csv");
+            Intent share = new Intent(Intent.ACTION_SEND);
+            share.setType("text/csv");
+            share.putExtra(Intent.EXTRA_STREAM, exportUri(file));
+            share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(share, "Export rating lifecycle CSV (v2)"));
+        } catch (RuntimeException | java.io.IOException error) {
+            showStatus("Lifecycle export failed. Cached data remains unchanged.", COLOR_AMBER);
+        }
     }
 
     private void exportCorrectionsCsv() {

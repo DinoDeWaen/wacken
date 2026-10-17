@@ -138,7 +138,7 @@ public final class CriticalFlowsAndroidTest {
                 "11111111-1111-4111-8111-111111111111","2026-08-01T12:00:00Z"));
         open(BandDetailActivity.class);
         onUi(()->{
-            ViewGroup section=(ViewGroup)findText(root(),"Real Rating").getParent();
+            ViewGroup section=(ViewGroup)findText(root(),"Festival after-rating").getParent();
             RatingStarsView control=findStars(section);assertNotNull(control);assertTrue(control.getWidth()>0);
             long time=SystemClock.uptimeMillis();
             MotionEvent down=MotionEvent.obtain(time,time,MotionEvent.ACTION_DOWN,control.getWidth()*.5f,control.getHeight()/2f,0);
@@ -150,7 +150,7 @@ public final class CriticalFlowsAndroidTest {
         assertEquals(4,database.ratingStates().current(USER,BAND).value);
         assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
         onUi(()->{
-            ViewGroup section=(ViewGroup)findText(root(),"Real Rating").getParent();
+            ViewGroup section=(ViewGroup)findText(root(),"Festival after-rating").getParent();
             findText(section,"Reset").performClick();
         });
         assertEquals(0,after.findByUserFestivalAndBand(USER,FESTIVAL,new be.wacken.planner.domain.Band(BAND)).orElseThrow().rating().value());
@@ -166,6 +166,92 @@ public final class CriticalFlowsAndroidTest {
             assertTrue(export.isEnabled());assertTrue(export.hasOnClickListeners());
         });
         assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+    }
+
+    @Test public void detailAndOfflineExportSeparateEstablishedPlanningAndAfterWithCanonicalLinks() throws Exception {
+        Band canonical=new Band(BAND,Optional.of("Canonical biography"),Optional.empty(),Optional.empty(),Optional.empty());
+        new RoomBandRepository(database).save(canonical);
+        database.ratingStates().saveCurrent(new RoomPersonalBandRating(USER,BAND,4,"deleted","Deleted source",
+                "source","2026-08-01T12:00:00Z"));
+        database.festivalPlanningRatings().save(new RoomFestivalPlanningRating(GROUP,USER,FESTIVAL,BAND,5,"PENDING"));
+        database.ratingStates().saveAfter(new RoomFestivalAfterRating(USER,FESTIVAL,BAND,
+                "11111111-1111-4111-8111-111111111111",3,"2026-08-02T12:00:00Z","SYNCED",false));
+        // A stale navigation extra cannot fabricate a missing canonical channel.
+        activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),BandDetailActivity.class)
+                .putExtra(BandDetailActivity.EXTRA_BAND_NAME,BAND)
+                .putExtra(BandDetailActivity.EXTRA_YOUTUBE_URL,"https://youtube.test/stale").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        onUi(()->{
+            assertNotNull(findContaining(root(),"Established band rating: 4"));
+            assertNotNull(findContaining(root(),"Festival planning rating: 5"));
+            assertNotNull(findContaining(root(),"Festival after-rating: 3"));
+            assertNotNull(findContaining(root(),"Deleted source [deleted] (deleted festival)"));
+            assertNotNull(findContaining(root(),"Group: T ★★★★★"));
+        });
+        var repositories=new AppRepositories(instrumentation.getTargetContext());
+        String csv=new be.wacken.planner.application.ExportRatingLifecycleCsvUseCase(repositories.bands(),repositories.festivals(),
+                repositories.festivalLineups(),repositories.festivalPlanningRatings(),repositories.afterRatings(),
+                repositories.currentBandRatings(),repositories.personalBandRatings(),repositories.ratingCorrectionHistory()).export(USER);
+        assertTrue(csv.contains("ESTABLISHED_BAND,"+USER+","+BAND));
+        assertTrue(csv.contains("FESTIVAL_PLANNING,"+USER+","+BAND));
+        assertTrue(csv.contains("FESTIVAL_AFTER,"+USER+","+BAND));
+        assertFalse(csv.contains("https://youtube.test/stale"));
+    }
+
+    @Test public void missingSelectedAfterShowsUnratedWhileDetachedHistoryRemainsExportable() throws Exception {
+        new RoomPersonalBandRatingHistoryRepository(database).saveSynced(new be.wacken.planner.domain.PersonalBandRatingEvent(
+                "detached",USER,new Band(BAND),Optional.empty(),be.wacken.planner.domain.Rating.of(5),
+                java.time.Instant.EPOCH,Optional.of("Deleted festival")));
+        open(BandDetailActivity.class);
+        onUi(()->{
+            assertNotNull(findContaining(root(),"Festival after-rating: Unrated"));
+            assertNotNull(findContaining(root(),"Deleted festival - 5 stars - date unknown"));
+        });
+        assertEquals(1,new AppRepositories(instrumentation.getTargetContext()).personalBandRatings().findByUser(USER).size());
+    }
+
+    @Test public void returningAndRotationKeepSelectedFestivalScrollAndRejectArchivedPlanningEdits() throws Exception {
+        new RoomBandRepository(database).save(new Band(BAND,Optional.of("Long biography. ".repeat(100)),
+                Optional.empty(),Optional.empty(),Optional.empty()));
+        open(BandDetailActivity.class);
+        Activity original=activity;
+        AtomicReference<android.widget.ScrollView> scroll=new AtomicReference<>();
+        onUi(()->{scroll.set(findScroll(root()));scroll.get().scrollTo(0,150);});
+        AtomicReference<Integer> position=new AtomicReference<>();
+        onUi(()->position.set(scroll.get().getScrollY()));
+        assertTrue(position.get()>0);
+        Activity settings=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),SettingsActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        database.festivalPlanningRatings().save(new RoomFestivalPlanningRating(GROUP,USER,FESTIVAL,BAND,5,"PENDING"));
+        onUi(settings::finish);
+        await(()->androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED).contains(original));
+        onUi(()->{
+            assertSame(scroll.get(),findScroll(root()));
+            assertEquals(position.get().intValue(),scroll.get().getScrollY());
+            assertNotNull(findContaining(root(),"Festival planning rating: 5"));
+        });
+        new RoomFestivalRepository(database).save(be.wacken.planner.domain.Festival.archived(FESTIVAL,"Renamed opened festival"));
+        onUi(original::recreate);
+        await(()->{
+            for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED)){
+                if(candidate instanceof BandDetailActivity&&candidate!=original){activity=candidate;return true;}
+            }
+            return false;
+        });
+        onUi(()->{
+            assertNotNull(findContaining(root(),"Festival: Renamed opened festival ["+FESTIVAL+"]"));
+            ViewGroup section=(ViewGroup)findText(root(),"Festival planning rating").getParent();
+            findText(section,"Reset").performClick();
+        });
+        assertEquals(5,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+    }
+    private static android.widget.ScrollView findScroll(View view) {
+        if(view instanceof android.widget.ScrollView scroll)return scroll;
+        if(view instanceof ViewGroup group)for(int i=0;i<group.getChildCount();i++){
+            var found=findScroll(group.getChildAt(i));if(found!=null)return found;
+        }
+        return null;
     }
 
     private void open(Class<? extends Activity> type) {

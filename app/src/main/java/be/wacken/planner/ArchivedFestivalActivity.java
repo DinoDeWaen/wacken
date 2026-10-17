@@ -56,14 +56,14 @@ public final class ArchivedFestivalActivity extends Activity {
                 repositories.festivalLineups(),
                 repositories.festivalPlanningRatings(),
                 repositories.personalBandRatings(),
-                repositories.realRatings()
+                new be.wacken.planner.application.FestivalAfterRatingView(repositories.afterRatings(), festivalId)
         ).show(session.userId(), festivalId);
         festivalName = history.festivalName();
         bands = new ListArchivedFestivalBandsUseCase(
                 repositories.festivalLineups(),
                 repositories.festivalPlanningRatings(),
                 repositories.personalBandRatings(),
-                repositories.realRatings(),
+                new be.wacken.planner.application.FestivalAfterRatingView(repositories.afterRatings(), festivalId),
                 repositories.performancesForFestival(festivalId)
         ).listBands(session.userId(), festivalId);
         bandsByName = bandsByName(repositories);

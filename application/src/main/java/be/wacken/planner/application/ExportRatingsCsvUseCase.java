@@ -89,7 +89,7 @@ public final class ExportRatingsCsvUseCase {
     private String groupRatings(Band band) {
         return planningRatings.findAll()
                 .stream()
-                .filter(rating -> rating.band().equals(band))
+                .filter(rating -> rating.band().name().equals(band.name()))
                 .filter(rating -> rating.rating().value() > 0)
                 .sorted(Comparator.comparing(SavedRating::userName, String.CASE_INSENSITIVE_ORDER))
                 .map(rating -> rating.userName() + "=" + rating.rating().value())

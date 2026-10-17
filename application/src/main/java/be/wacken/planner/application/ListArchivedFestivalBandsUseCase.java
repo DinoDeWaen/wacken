@@ -47,7 +47,7 @@ public final class ListArchivedFestivalBandsUseCase {
     }
 
     public List<BandListItem> listBands(String userName, String festivalId) {
-        TreeSet<String> bandNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        TreeSet<String> bandNames = new TreeSet<>();
         lineups.findByFestival(festivalId).stream()
                 .map(FestivalLineupEntry::band)
                 .map(Band::name)
@@ -79,7 +79,7 @@ public final class ListArchivedFestivalBandsUseCase {
 
     private Optional<Performance> performanceFor(List<Performance> performances, Band band) {
         return performances.stream()
-                .filter(performance -> performance.band().equals(band))
+                .filter(performance -> performance.band().name().equals(band.name()))
                 .findFirst();
     }
 
@@ -111,7 +111,7 @@ public final class ListArchivedFestivalBandsUseCase {
     private List<PersonRatingStars> personRatingsFor(String festivalId, Band band) {
         return planningRatings.findByFestival(festivalId)
                 .stream()
-                .filter(rating -> rating.band().equals(band))
+                .filter(rating -> rating.band().name().equals(band.name()))
                 .filter(rating -> rating.rating().value() > 0)
                 .sorted(Comparator.comparing(SavedFestivalPlanningRating::userName, String.CASE_INSENSITIVE_ORDER))
                 .map(rating -> new PersonRatingStars(rating.userName(), rating.rating().value()))

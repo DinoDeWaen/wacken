@@ -8,6 +8,11 @@ public interface PersonalBandRatingHistoryRepository {
 
     List<PersonalBandRatingEvent> findByUserAndBand(String userName, Band band);
 
+    /** All cached events owned by this member, including detached/deleted festival history. */
+    default List<PersonalBandRatingEvent> findByUser(String userName) {
+        return List.of();
+    }
+
     default List<PersonalBandRatingEvent> findByUserAndFestival(String userName, String festivalId) {
         return List.of();
     }

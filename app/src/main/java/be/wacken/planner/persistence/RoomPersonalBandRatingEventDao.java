@@ -18,6 +18,9 @@ public interface RoomPersonalBandRatingEventDao {
     @Query("UPDATE personal_band_rating_events SET festivalNameSnapshot = :festivalName, festivalId = NULL WHERE festivalId = :festivalId")
     void detachFestival(String festivalId, String festivalName);
 
+    @Query("SELECT * FROM personal_band_rating_events WHERE userName = :userName ORDER BY createdAt DESC, id")
+    List<RoomPersonalBandRatingEvent> findByUser(String userName);
+
     @Query("SELECT * FROM personal_band_rating_events WHERE userName = :userName AND bandName = :bandName ORDER BY createdAt DESC")
     List<RoomPersonalBandRatingEvent> findByUserAndBand(String userName, String bandName);
 

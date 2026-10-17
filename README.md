@@ -20,8 +20,8 @@ Five interactive HTML design directions are available in the [design study](desi
 > stories deliver this model. TASK-216 implements isolated after-ratings and the
 > established-rating store. TASK-217 adds once-only creation snapshots for each
 > current group member. TASK-218 adds atomic archive promotion.
-> TASK-172 adds audited own-rating corrections. Contextual views and integrated
-> upgrade validation remain TASK-219/220;
+> TASK-172 adds audited own-rating corrections. TASK-219 adds separate rating
+> context and a versioned lifecycle export. Integrated upgrade validation remains TASK-220;
 > do not publish this intermediate state as the completed release.
 
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
@@ -356,7 +356,7 @@ C4Container
 
     System_Boundary(app, "Wacken Planner 2026") {
         Container(ui, "Android UI", "Java", "Screens for band list, ratings, imports, schedule")
-        Container(appsvc, "Application Layer", "Java", "Festival ratings, reviewed canonical identities, archived corrections, local CSV review and deletion")
+        Container(appsvc, "Application Layer", "Java", "Festival rating context/export, reviewed canonical identities, archived corrections, local CSV review and deletion")
         Container(domain, "Domain", "Canonical bands, separate personal/planning/after ratings and source provenance")
         Container(infra, "Infrastructure", "Java", "Adapters: Supabase source, TSV fallback source, and sync decorators")
         ContainerDb(cache, "Room Local Cache", "SQLite/Room", "Imported data, confirmed aliases, independent ratings, pending work and correction audit")
@@ -373,6 +373,39 @@ C4Container
     Rel(infra, tsv, "Uses only for explicit fallback CSV import")
     Rel(csvSource, infra, "Supplies fallback import files", "CSV")
 ```
+
+## Rating context and lifecycle export
+
+Active and archived band details distinguish **Established band rating**,
+**Festival planning rating** and **Festival after-rating**. The context includes
+the signed-in member, selected festival identity, established source snapshot and
+time, and after-state recorded time. Deleted sources retain their snapshot label.
+Missing/zero values show **Unrated**; another festival's after-rating never fills
+the selected value. Established ratings are read-only here. Detail edits remain
+bound to the festival opened, including rotation and return from other screens;
+an archived/deleted target or removed lineup rejects a planning write. Links come
+from canonical metadata; stale navigation extras cannot invent a channel.
+Group scheduling uses the selected festival's planning votes only. Canonical
+joins use exact band names, independently of biography or channel changes.
+
+Settings → **Export rating lifecycle CSV (v2)** shares
+`wacken-rating-lifecycle-v2.csv` from the cache, including offline. This separate
+22-column contract starts with `schema_version=2` and explicit `record_type`:
+`ESTABLISHED_BAND`, `FESTIVAL_PLANNING`, `FESTIVAL_AFTER`, `HISTORY_AFTER`,
+`CORRECTION_PLANNING` and `CORRECTION_AFTER`. The original nine-column
+`wacken-ratings.csv` and separate correction audit CSV retain their contracts.
+
+Lifecycle rows identify the owner, exact band, festival ID/current name/status and
+historical name snapshot. Established rows carry source festival/event and
+`established_at` (archive promotion time, retained when corrected); after/history
+rows carry original `recorded_at`; corrections carry `corrected_at`,
+`original_recorded_at` and before/after values. No timestamp is invented for
+planning or an unknown legacy date. A blank rating is missing; zero is a retained
+reset. History remains exportable after festival deletion, including detached
+events. An empty detached identity is `UNKNOWN`; a retained missing ID is
+`DELETED`. Canonical YouTube/Spotify fields stay empty when unknown. Private
+rows belong only to the signed-in member; the legacy export still includes
+shared planning votes. Export reflects cached sync state and never writes data.
 
 ## Install and update
 

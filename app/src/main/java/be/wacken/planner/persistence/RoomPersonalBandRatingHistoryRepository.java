@@ -57,6 +57,11 @@ public final class RoomPersonalBandRatingHistoryRepository implements PersonalBa
     }
 
     @Override
+    public List<PersonalBandRatingEvent> findByUser(String userName) {
+        return events.findByUser(userName).stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public List<PersonalBandRatingEvent> findByUserAndBand(String userName, Band band) {
         return events.findByUserAndBand(userName, band.name()).stream().map(this::toDomain).collect(Collectors.toList());
     }

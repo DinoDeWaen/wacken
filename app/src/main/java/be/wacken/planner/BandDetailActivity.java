@@ -47,6 +47,9 @@ public final class BandDetailActivity extends Activity {
     private static final int COLOR_TEXT = WackenTheme.TEXT;
     private static final int COLOR_ACCENT = WackenTheme.RED;
 
+    private String selectedFestivalId;
+    private be.wacken.planner.application.ViewBandRatingContextUseCase ratingContext;
+    private TextView contextText;
     private BandRepository bands;
     private RatingRepository ratings;
     private RealRatingRepository realRatings;
@@ -73,8 +76,14 @@ public final class BandDetailActivity extends Activity {
 
         AppRepositories repositories = new AppRepositories(this);
         bands = repositories.bands();
-        ratings = repositories.ratings();
-        realRatings = repositories.realRatings();
+        selectedFestivalId = savedInstanceState == null
+                ? be.wacken.planner.domain.FestivalLifecycle.activeFestival(repositories.festivals().findAll())
+                    .map(be.wacken.planner.domain.Festival::id).orElse("")
+                : savedInstanceState.getString("selectedFestivalId", "");
+        ratings = new be.wacken.planner.application.FestivalPlanningRatingView(repositories.festivals(),
+                repositories.festivalLineups(), repositories.festivalPlanningRatings(), currentSession.groupId(), selectedFestivalId);
+        realRatings = new be.wacken.planner.application.FestivalAfterRatingView(repositories.afterRatings(), selectedFestivalId);
+        ratingContext = repositories.ratingContext();
         festivals = repositories.festivals();
         personalRatings = repositories.personalBandRatings();
         afterRatings = repositories.afterRatings();
@@ -93,6 +102,19 @@ public final class BandDetailActivity extends Activity {
         setContentView(render(detail));
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle state) {
+        state.putString("selectedFestivalId", selectedFestivalId);
+        super.onSaveInstanceState(state);
+    }
+
+    private void refreshContext() {
+        if (contextText != null && selectedBand != null) {
+            ratingContext.show(currentUser(), selectedFestivalId, selectedBand.name())
+                    .ifPresent(value -> contextText.setText(String.join("\n", value.lines())));
+        }
+    }
+
     private String currentUser() {
         return currentSession.userId();
     }
@@ -102,9 +124,12 @@ public final class BandDetailActivity extends Activity {
         super.onResume();
         if (selectedBand == null || musicLinksSection == null
                 || !(musicLinksSection.getParent() instanceof android.view.ViewGroup parent)) return;
-        // Returning from reviewed enrichment updates just the links, preserving ratings and scroll.
+        // Refresh values and links in place, retaining the selected festival and scroll.
         new ShowBandDetailUseCase(bands, ratings, realRatings, festivals, personalRatings)
                 .showBand(currentUser(), selectedBand.name(), musicLinksFromIntent()).ifPresent(detail -> {
+                    ratingStars.applySavedRating(detail.rating());
+                    realRatingStars.applySavedRating(detail.realRating());
+                    refreshContext();
                     LinearLayout previous = musicLinksSection;
                     int position = parent.indexOfChild(previous);
                     LinearLayout refreshed = linksSection(detail);
@@ -177,6 +202,11 @@ public final class BandDetailActivity extends Activity {
         ));
         main.addView(detailSections);
 
+        contextText = new TextView(this);
+        contextText.setTextColor(COLOR_TEXT);
+        contextText.setContentDescription("Rating context");
+        refreshContext();
+        detailSections.addView(contextText);
         detailSections.addView(ratingSection(detail));
         detailSections.addView(realRatingSection(detail));
         if (detail.hasPersonalRatingHistory()) {
@@ -192,14 +222,15 @@ public final class BandDetailActivity extends Activity {
 
     private LinearLayout ratingSection(BandDetailItem detail) {
         LinearLayout section = detailSection();
-        section.addView(sectionTitle("Your Rating", false));
+        section.addView(sectionTitle("Festival planning rating", false));
         ratingStars = new RatingStarsView(this, detail.rating(), !detail.defaultRating(), COLOR_ACCENT);
         ratingStars.setPadding(dp(12), 0, dp(12), 0);
         ratingStars.showAvailableRating();
         ratingStars.setOnRatingSelected(rating -> {
-            RateBandResult result = new RateBandUseCase(ratings).rateBand(currentUser(), selectedBand, rating);
+            RateBandResult result = savePlanningRating(rating);
             if (result.success()) {
                 ratingStars.applySavedRating(rating);
+                refreshContext();
             }
         });
         LinearLayout.LayoutParams starsLayout = new LinearLayout.LayoutParams(dp(150), dp(42));
@@ -214,9 +245,10 @@ public final class BandDetailActivity extends Activity {
         clearRating.setContentDescription("Clear rating");
         clearRating.setTextSize(13);
         clearRating.setOnClickListener(view -> {
-            RateBandResult result = new RateBandUseCase(ratings).rateBand(currentUser(), selectedBand, 0);
+            RateBandResult result = savePlanningRating(0);
             if (result.success()) {
                 ratingStars.applySavedRating(0);
+                refreshContext();
             }
         });
         LinearLayout.LayoutParams resetLayout = new LinearLayout.LayoutParams(dp(96), dp(38));
@@ -229,12 +261,11 @@ public final class BandDetailActivity extends Activity {
 
     private LinearLayout realRatingSection(BandDetailItem detail) {
         LinearLayout section = detailSection();
-        section.addView(sectionTitle("Real Rating", false));
+        section.addView(sectionTitle("Festival after-rating", false));
         TextView afterStatus = new TextView(this);
         afterStatus.setTextColor(WackenTheme.MUTED);
         afterStatus.setContentDescription("Festival after-rating status");
-        String festivalId = be.wacken.planner.domain.FestivalLifecycle.activeFestival(festivals.findAll())
-                .map(be.wacken.planner.domain.Festival::id).orElse("");
+        String festivalId = selectedFestivalId;
         boolean recovered = afterRatings.findByUserFestivalAndBand(currentUser(), festivalId, selectedBand)
                 .map(be.wacken.planner.domain.FestivalAfterRating::requiresReview).orElse(false);
         afterStatus.setText(recovered ? "Recovered history: select the final after-rating again before archiving."
@@ -248,6 +279,7 @@ public final class BandDetailActivity extends Activity {
             RateBandResult result = saveAfterRating(festivalId, rating);
             if (result.success()) {
                 realRatingStars.applySavedRating(rating);
+                refreshContext();
                 afterStatus.setText("After-rating saved on this device; pending sync.");
             } else {
                 afterStatus.setText(result.validationMessage().orElse("After-rating was not saved."));
@@ -268,6 +300,7 @@ public final class BandDetailActivity extends Activity {
             RateBandResult result = saveAfterRating(festivalId, 0);
             if (result.success()) {
                 realRatingStars.applySavedRating(0);
+                refreshContext();
                 afterStatus.setText("After-rating reset on this device; pending sync. Established band rating kept.");
             } else {
                 afterStatus.setText(result.validationMessage().orElse("After-rating was not saved."));
@@ -293,6 +326,18 @@ public final class BandDetailActivity extends Activity {
             section.addView(line);
         }
         return section;
+    }
+
+    private RateBandResult savePlanningRating(int value) {
+        RateBandResult result;
+        try {
+            result = new RateBandUseCase(ratings).rateBand(currentUser(), selectedBand, value);
+        } catch (RuntimeException error) {
+            result = RateBandResult.failure("Planning rating could not be saved. Retry.");
+        }
+        if (!result.success()) android.widget.Toast.makeText(this,
+                result.validationMessage().orElse("Rating was not saved."), android.widget.Toast.LENGTH_LONG).show();
+        return result;
     }
 
     private RateBandResult saveAfterRating(String festivalId, int value) {
@@ -448,8 +493,8 @@ public final class BandDetailActivity extends Activity {
 
     private MusicLinks musicLinksFromIntent() {
         return new MusicLinks(
-                Optional.ofNullable(getIntent().getStringExtra(EXTRA_YOUTUBE_URL)),
-                Optional.ofNullable(getIntent().getStringExtra(EXTRA_SPOTIFY_URL))
+                Optional.empty(),
+                Optional.empty()
         );
     }
 

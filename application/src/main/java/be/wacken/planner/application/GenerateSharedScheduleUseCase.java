@@ -69,7 +69,7 @@ public final class GenerateSharedScheduleUseCase {
             return SharedSchedule.noScheduledPerformances();
         }
 
-        Map<Band, List<Rating>> groupRatings = groupRatingsByBand();
+        Map<Band, List<Rating>> groupRatings = groupRatingsByBand(scheduled);
         List<TimelineSlot> slots = conflictDetector.detect(scheduled)
                 .stream()
                 .flatMap(conflictSet -> toSlots(conflictSet, groupRatings).stream())
@@ -83,14 +83,15 @@ public final class GenerateSharedScheduleUseCase {
         return SharedSchedule.generated(groupByDay(slots));
     }
 
-    private Map<Band, List<Rating>> groupRatingsByBand() {
-        return ratings.findAll()
-                .stream()
-                .collect(Collectors.groupingBy(
-                        SavedRating::band,
-                        LinkedHashMap::new,
-                        Collectors.mapping(SavedRating::rating, Collectors.toList())
-                ));
+    private Map<Band, List<Rating>> groupRatingsByBand(List<Performance> scheduled) {
+        Map<String,List<Rating>> byName = ratings.findAll().stream().collect(Collectors.groupingBy(
+                rating -> rating.band().name(), LinkedHashMap::new,
+                Collectors.mapping(SavedRating::rating, Collectors.toList())));
+        Map<Band,List<Rating>> result = new LinkedHashMap<>();
+        for (Performance performance : scheduled) {
+            result.put(performance.band(), byName.getOrDefault(performance.band().name(), List.of()));
+        }
+        return result;
     }
 
     private List<TimelineSlot> toSlots(PerformanceConflictSet conflictSet, Map<Band, List<Rating>> groupRatings) {
@@ -228,7 +229,7 @@ public final class GenerateSharedScheduleUseCase {
     private List<PersonRatingStars> personRatingsFor(Band band) {
         return ratings.findAll()
                 .stream()
-                .filter(rating -> rating.band().equals(band))
+                .filter(rating -> rating.band().name().equals(band.name()))
                 .filter(rating -> rating.rating().value() > 0)
                 .sorted(Comparator.comparing(SavedRating::userName, String.CASE_INSENSITIVE_ORDER))
                 .map(rating -> new PersonRatingStars(rating.userName(), rating.rating().value()))

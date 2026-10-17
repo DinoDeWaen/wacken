@@ -66,7 +66,7 @@ public final class ArchivedBandDetailActivity extends Activity {
                 repositories.festivalLineups(),
                 repositories.festivalPlanningRatings(),
                 repositories.personalBandRatings(),
-                repositories.realRatings()
+                new be.wacken.planner.application.FestivalAfterRatingView(repositories.afterRatings(), festivalId)
         ).show(session.userId(), festivalId);
         Optional<Band> band = repositories.bands().findByName(bandName);
         setContentView(render(archivedDetail(session.userId(), bandName, band, history)));
@@ -80,19 +80,19 @@ public final class ArchivedBandDetailActivity extends Activity {
     ) {
         Optional<Integer> planningRating = history.planningRatings()
                 .stream()
-                .filter(item -> item.bandName().equalsIgnoreCase(bandName))
+                .filter(item -> item.bandName().equals(bandName))
                 .filter(item -> item.userName().equals(userName))
                 .map(ViewArchivedFestivalHistoryUseCase.ArchivedPlanningRatingItem::rating)
                 .findFirst();
         List<PersonRatingStars> groupPlanningRatings = history.planningRatings()
                 .stream()
-                .filter(item -> item.bandName().equalsIgnoreCase(bandName))
+                .filter(item -> item.bandName().equals(bandName))
                 .filter(item -> item.rating() > 0)
                 .map(item -> new PersonRatingStars(item.userName(), item.rating()))
                 .collect(Collectors.toList());
         List<PersonalRatingHistoryItem> bandHistory = history.personalRatings()
                 .stream()
-                .filter(item -> item.bandName().equalsIgnoreCase(bandName))
+                .filter(item -> item.bandName().equals(bandName))
                 .collect(Collectors.toList());
         Optional<be.wacken.planner.domain.Rating> festivalRealRating = repositories.afterRatings()
                 .findByUserFestivalAndBand(userName,history.festivalId(),new Band(bandName))
@@ -103,8 +103,8 @@ public final class ArchivedBandDetailActivity extends Activity {
                 band.flatMap(Band::imageUrl),
                 planningRating.orElse(0),
                 planningRating.isEmpty() || planningRating.get() == 0,
-                band.flatMap(Band::youtubeUrl).or(() -> Optional.ofNullable(getIntent().getStringExtra(EXTRA_YOUTUBE_URL))),
-                band.flatMap(Band::spotifyUrl).or(() -> Optional.ofNullable(getIntent().getStringExtra(EXTRA_SPOTIFY_URL))),
+                band.flatMap(Band::youtubeUrl),
+                band.flatMap(Band::spotifyUrl),
                 festivalRealRating.map(be.wacken.planner.domain.Rating::value).orElse(0),
                 festivalRealRating.isEmpty() || festivalRealRating.get().value() == 0,
                 groupPlanningRatings,
@@ -157,6 +157,12 @@ public final class ArchivedBandDetailActivity extends Activity {
         ));
         main.addView(detailSections);
 
+        TextView context = new TextView(this);
+        context.setTextColor(WackenTheme.TEXT);
+        context.setContentDescription("Rating context");
+        repositories.ratingContext().show(session.userId(), festivalId, bandName)
+                .ifPresent(value -> context.setText(String.join("\n", value.lines())));
+        detailSections.addView(context);
         detailSections.addView(ratingSection(detail));
         detailSections.addView(realRatingSection(detail));
         detailSections.addView(correctionSection());
@@ -200,7 +206,7 @@ public final class ArchivedBandDetailActivity extends Activity {
 
     private LinearLayout ratingSection(BandDetailItem detail) {
         LinearLayout section = detailSection();
-        section.addView(sectionTitle("Your Rating"));
+        section.addView(sectionTitle("Festival planning rating"));
         section.addView(disabledStars(detail.rating(), !detail.defaultRating(), WackenTheme.RED));
         section.addView(disabledResetButton("Clear archived planning rating"));
         section.addView(groupRatingsView(detail));
@@ -209,7 +215,7 @@ public final class ArchivedBandDetailActivity extends Activity {
 
     private LinearLayout realRatingSection(BandDetailItem detail) {
         LinearLayout section = detailSection();
-        section.addView(sectionTitle("Real Rating"));
+        section.addView(sectionTitle("Festival after-rating"));
         section.addView(disabledStars(detail.realRating(), !detail.defaultRealRating(), WackenTheme.AMBER));
         section.addView(disabledResetButton("Reset archived real rating"));
         return section;

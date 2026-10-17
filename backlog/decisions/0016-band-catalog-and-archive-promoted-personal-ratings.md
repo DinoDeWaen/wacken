@@ -37,6 +37,16 @@ Supersedes ADR-0011's latest-event-as-current-rating rule and immediate promotio
 semantics; revises ADR-0014's history-derived/creator-only prefill for the new
 creation path. Existing deployed contracts remain until compatible migration.
 
+TASK-219 adds read-only context composition over the existing rating repositories,
+plus festival-bound compatibility views for active detail. Catalog joins compare
+exact canonical names rather than full metadata records; group scheduling still
+consumes planning only. The separate own lifecycle CSV v2 retains existing CSV
+contracts and exports provenance/dates without inferring an established opinion
+from history. A read-only owner event query includes detached historical records;
+Room schema and remote contracts are unchanged. UI never supplies promotion
+policy and cannot write established ratings. Missing canonical music links remain
+empty even if old navigation extras contain URLs.
+
 ## Context
 
 A band is reusable across festivals. Shared metadata belongs to that band;

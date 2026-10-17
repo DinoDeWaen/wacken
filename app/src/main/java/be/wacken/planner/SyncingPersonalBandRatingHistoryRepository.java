@@ -24,6 +24,11 @@ final class SyncingPersonalBandRatingHistoryRepository implements PersonalBandRa
     }
 
     @Override
+    public List<PersonalBandRatingEvent> findByUser(String userName) {
+        return cache.findByUser(userName);
+    }
+
+    @Override
     public List<PersonalBandRatingEvent> findByUserAndBand(String userName, Band band) {
         return cache.findByUserAndBand(userName, band);
     }
