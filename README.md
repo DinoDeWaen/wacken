@@ -52,6 +52,7 @@ Five interactive HTML design directions are available in the [design study](desi
 - Visual design system: [`visual-design-system.md`](backlog/docs/visual-design-system.md).
 - Atomic festival creation: [`0014-atomic-festival-creation.md`](backlog/decisions/0014-atomic-festival-creation.md).
 - Release process: [`release-process.md`](backlog/docs/release-process.md).
+
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
 - V2.31 UAT overview: [`v2.31-user-acceptance-test-overview.md`](backlog/docs/v2.31-user-acceptance-test-overview.md).
@@ -206,6 +207,17 @@ C4Container
     Rel(infra, tsv, "Uses only for explicit fallback CSV import")
     Rel(csvSource, infra, "Supplies fallback import files", "CSV")
 ```
+
+## Install and update
+
+Release 2.34 retains signed GitHub APK distribution, as selected by the release
+owner. Download `app-release.apk` from the official GitHub release, compare its
+SHA-256 with the release notes, and install it on Android. Compatible updates keep
+the same package and signing certificate and increase the version code; install
+over the existing app to retain local data. Do not uninstall to perform a normal
+update. GitHub does not deliver automatic updates. Play/Firebase distribution is
+deferred. See the [release process](backlog/docs/release-process.md) for install,
+upgrade, privacy/data-handling notes and the exceptional older-key recovery case.
 
 ## Setup and Run
 1. Clone: `git clone git@github.com:DinoDeWaen/wacken.git` and `cd wacken`.

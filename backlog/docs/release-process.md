@@ -11,6 +11,60 @@ signing evidence, release notes, Git tag, and GitHub release asset.
 Current official Android releases are direct-install `release` variant APKs.
 They are not Play Store releases and do not establish Play App Signing custody.
 
+For 2.34 the release owner explicitly chose to retain **signed GitHub APK
+distribution** (2026-10-17, TASK-175). This keeps the existing package, signing key
+and group install process without requiring a managed testing account. Play
+internal testing and Firebase App Distribution are deferred. GitHub does not
+automatically install updates; each member downloads and installs the next APK.
+
+### Member install and update
+
+1. Open this repository's official GitHub release page and choose the intended
+   version. Download its `app-release.apk`; avoid debug/unsigned artifacts.
+2. Compare the downloaded file's SHA-256 with the digest recorded in that release.
+   The maintainer also checks its signer against the preceding stable-key APK.
+3. On Android, allow installation from the browser/file manager used for this
+   download, open the APK and choose Install or Update. Device policy may prohibit
+   direct installation; GitHub cannot override it.
+4. An update requires package `be.wacken.planner`, the same signing certificate,
+   and a higher `versionCode`. Do not uninstall a working stable-key installation
+   to update it: Android retains its data during a compatible update.
+5. Open the app and confirm cached festivals/ratings remain visible. Sign in/sync
+   if needed. Keep local pending ratings protected until sync is confirmed.
+
+The lost older-key exception described below requires a one-time reinstall;
+uninstalling clears local data, including unsynced changes. Confirm synced data
+and export available local ratings before considering that recovery. A signature
+mismatch must be investigated rather than treated as a normal update step.
+
+### Privacy and distribution information
+
+This is a private friend-group planning app. Authentication, shared festival/band
+data and member ratings use the configured Supabase project; cached data and
+pending operations live on the device. Export/sharing is explicitly triggered by
+the user and sends a CSV to the chosen Android destination. Metadata lookup sends
+the edited band search term to configured/public music sources and retrieves
+official website evidence. These requests expose normal network information to
+those services. See the README for provider configuration and credential limits.
+
+GitHub hosts the APK/release notes and processes download requests under its own
+policies. There is no Play/Firebase tester enrollment, managed update delivery,
+store privacy review or submitted store Data safety form in this channel. Do not
+claim store approval. Any future managed track must separately establish account
+ownership, tester access, privacy declarations and signing/update continuity.
+
+### Promotion checks
+
+TASK-214 owns publication of 2.34. Publish only after its feature, real API, native,
+signed-build and upgrade-preservation gates pass. Compare the previous published
+APK and candidate using `apksigner verify --print-certs`; the signer certificate
+SHA-256 must match. On an isolated release-test emulator, install the previous
+signed APK, seed cached/pending data, install the higher-code candidate with
+`adb install -r`, and verify retained data and normal launch. Record the exact
+versions and result. Never replace the key or wipe user data to force this gate.
+After upload, download the published asset and compare its digest with the local
+verified APK before announcing availability. A draft/tag alone is not delivery.
+
 Debug APKs are only acceptable when a task explicitly asks for a debug release.
 For normal release requests, create an official signed release APK.
 
