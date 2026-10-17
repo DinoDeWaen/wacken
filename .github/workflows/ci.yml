@@ -87,3 +87,13 @@ jobs:
           arch: x86_64
           target: google_apis
           script: ANDROID_ADB=adb sh scripts/verify-android-smoke.sh emulator-5554 all
+
+      - name: Retain native failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-api-${{ matrix.api-level }}-failure-diagnostics
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+          if-no-files-found: warn

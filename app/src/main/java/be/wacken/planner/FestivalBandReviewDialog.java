@@ -49,7 +49,8 @@ final class FestivalBandReviewDialog {
             public void onNothingSelected(android.widget.AdapterView<?> parent) {}
             public void onItemSelected(android.widget.AdapterView<?> parent,android.view.View view,int index,long id) {
                 remember.setEnabled(index>=2);if(index<2)remember.setChecked(false);
-                if(dialog!=null)dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(index>0);
+                if(dialog!=null && dialog.getButton(AlertDialog.BUTTON_POSITIVE)!=null)
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(index>0);
             }
         });
         dialog=new AlertDialog.Builder(activity).setTitle("Review "+(position+1)+"/"+proposals.size()+": "+row.uploadedName())

@@ -208,7 +208,10 @@ public final class CriticalFlowsAndroidTest {
     private String shell(String command) throws Exception {
         try(ParcelFileDescriptor result=instrumentation.getUiAutomation().executeShellCommand(command);
             FileInputStream stream=new FileInputStream(result.getFileDescriptor())){
-            return new String(stream.readAllBytes(),StandardCharsets.UTF_8).trim();
+            java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();
+            byte[] buffer=new byte[1024];int count;
+            while((count=stream.read(buffer))!=-1)bytes.write(buffer,0,count);
+            return new String(bytes.toByteArray(),StandardCharsets.UTF_8).trim();
         }
     }
 }
