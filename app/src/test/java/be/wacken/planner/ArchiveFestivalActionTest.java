@@ -22,7 +22,7 @@ public final class ArchiveFestivalActionTest {
         FakeFestivals festivals = new FakeFestivals();
         List<FestivalStartState> successes = new ArrayList<>();
         List<String> failures = new ArrayList<>();
-        ArchiveFestivalAction action = new ArchiveFestivalAction(worker, ui, () -> festivals);
+        ArchiveFestivalAction action = new ArchiveFestivalAction(worker, ui, () -> new be.wacken.planner.application.ArchiveActiveFestivalUseCase(festivals,f->festivals.save(f.archive())));
 
         action.execute(successes::add, failures::add);
 
@@ -44,7 +44,7 @@ public final class ArchiveFestivalActionTest {
         festivals.failSave = true;
         List<FestivalStartState> successes = new ArrayList<>();
         List<String> failures = new ArrayList<>();
-        ArchiveFestivalAction action = new ArchiveFestivalAction(worker, ui, () -> festivals);
+        ArchiveFestivalAction action = new ArchiveFestivalAction(worker, ui, () -> new be.wacken.planner.application.ArchiveActiveFestivalUseCase(festivals,f->festivals.save(f.archive())));
 
         action.execute(successes::add, failures::add);
         worker.runNext();

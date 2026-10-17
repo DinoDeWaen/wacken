@@ -371,7 +371,7 @@ public final class MainActivity extends Activity {
         new ArchiveFestivalAction(
                 command -> new Thread(command, "archive-festival").start(),
                 this::runOnUiThread,
-                () -> new AppRepositories(this).festivals()
+                () -> new AppRepositories(this).archiveFestivalUseCase()
         ).execute(state -> {
             AppRepositories repositories = new AppRepositories(this);
             renderFestivalStartState(state);

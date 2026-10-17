@@ -346,6 +346,24 @@ final class AppRepositories {
         }
     }
 
+    be.wacken.planner.application.ArchiveActiveFestivalUseCase archiveFestivalUseCase() {
+        return new be.wacken.planner.application.ArchiveActiveFestivalUseCase(festivals, festival -> {
+            if (!session.isPresent() || ratingStateSync == null) {
+                throw new IllegalStateException("Sign in and connect before archiving the festival.");
+            }
+            syncRatings();
+            syncScheduleLocks();
+            if (pendingSyncSummary().hasPendingChanges()) {
+                throw new IllegalStateException("Sync or recover pending changes before archiving. Cached edits were retained.");
+            }
+            SupabaseMasterDataClient client = new SupabaseMasterDataClient(sessionManager);
+            new SupabaseFestivalArchiveGateway(client::request,
+                    new SupabaseRatingStateClient(sessionManager, session.userId()),
+                    new RoomFestivalArchiveCache(database, session.userId(), () -> pendingSyncSummary().hasPendingChanges()))
+                    .archive(festival);
+        });
+    }
+
     void syncRatings() {
         if (syncingPlanningRatings == null) {
             SupabaseDiagnostics.info("ratings_sync", "skipped", "remote_repository=false");

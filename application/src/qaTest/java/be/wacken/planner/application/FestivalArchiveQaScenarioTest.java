@@ -14,7 +14,7 @@ final class FestivalArchiveQaScenarioTest {
             public List<Festival> findAll(){return List.copyOf(festivals);}
             public void save(Festival festival){festivals.removeIf(f->f.id().equals(festival.id()));festivals.add(festival);}
         };
-        FestivalStartState state=new ArchiveActiveFestivalUseCase(repository).archiveActiveFestival();
+        FestivalStartState state=new ArchiveActiveFestivalUseCase(repository,f->repository.save(f.archive())).archiveActiveFestival();
         assertTrue(state.activeFestival().isEmpty());
         assertEquals(List.of(Festival.archived("wacken-2026","Wacken Open Air 2026")),state.archivedFestivals());
         assertTrue(state.archivedFestivalsReadOnly());

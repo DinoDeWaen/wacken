@@ -23,7 +23,15 @@ additive FlywayV015. The published RPC signature and creator-only response remai
 compatible. Its private transaction validates membership and copies established
 ratings for current group members; it never derives preferences from latest
 history or creates after-ratings. Request replay preserves subsequent edits, and
-clients cannot forge creation-ledger entries. Archive promotion remains TASK-218.
+clients cannot forge creation-ledger entries. TASK-218 implements archive/promotion
+with FlywayV016: a private authenticated transaction, festival row/lifecycle locks,
+positive confirmed lineup outcomes only, source provenance and a replay ledger.
+An invoker trigger rejects authenticated status-only lifecycle changes while the
+private transaction runs with the table owner's authority. Room publishes the
+acknowledged festival/owner rating snapshots atomically. Pending work is synced
+first; newly arriving local edits remain pending on cache conflict. Unsynced edits
+on another device cannot be detected remotely and require explicit archived
+correction recovery (TASK-172), never silent loss or automatic source changes.
 
 Supersedes ADR-0011's latest-event-as-current-rating rule and immediate promotion
 semantics; revises ADR-0014's history-derived/creator-only prefill for the new

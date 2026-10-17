@@ -19,8 +19,9 @@ Five interactive HTML design directions are available in the [design study](desi
 > corrections cannot overwrite newer sources. TASK-216–220 and the aligned existing
 > stories deliver this model. TASK-216 implements isolated after-ratings and the
 > established-rating store. TASK-217 adds once-only creation snapshots for each
-> current group member; archive promotion remains TASK-218. Do not publish this
-> intermediate state as the completed lifecycle.
+> current group member. TASK-218 adds atomic archive promotion. Archived corrections,
+> contextual views and integrated upgrade validation remain TASK-172/219/220;
+> do not publish this intermediate state as the completed release.
 
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
 - Show locally cached lineup, planning ratings, real post-show ratings, schedule data, and manual schedule locks first, while Supabase sync refreshes Room in the background.
@@ -32,7 +33,7 @@ Five interactive HTML design directions are available in the [design study](desi
 - Store every real post-show rating as personal band rating history with festival and created-date context, sync that history to Supabase, and show it on band detail and archived festival history screens.
 - Delete an active or archived festival after confirmation, including its lineup, planning ratings, performances, and schedule decisions; preserve central bands and personal rating history.
 - Export all locally cached band rating data from Settings as a CSV file for Android share/save targets, including planning ratings, real post-show ratings, cached group member ratings, and schedule metadata where known.
-- Start on the active festival band list, with `Wacken Open Air 2026` seeded as the default active festival. The top action row includes **Archive**; archiving the active festival immediately moves the app to a no-active-festival start state that lists archived festivals as read-only, opens archived festivals as read-only band lists with band detail screens, and shows the next add-festival entry point.
+- Start on the active festival band list, with `Wacken Open Air 2026` seeded as the default active festival. **Archive** first syncs pending work, then commits archive status and each current member's final nonempty after-ratings to their established band ratings together. Planning ratings stay unchanged; missing/reset after-ratings retain established opinions. Only confirmed success moves to the archive list and add-festival entry point. Recovered legacy after-ratings must be reviewed on band detail before archive. Offline or conflicting work stays cached with an error and recovery guidance.
 - Add the next festival from a band CSV after the active festival is archived; the festival name starts empty and must be filled in explicitly. Exact band-name matches reuse existing band records and new names create catalog records without invented metadata or links. The atomic creation transaction copies each current member's established band rating into their own planning rating once; missing opinions stay unrated and festival after-ratings start empty. Later edits and retries preserve the snapshot. The response contains only the creator's planning values, while shared planning sync supplies the existing group schedule view.
 - Save rating and manual schedule-lock changes locally immediately, queue them as pending offline operations, and sync them with Supabase in the background on start/reactivation, on manual sync, or before close.
 - Open known YouTube and Spotify links from overview rows and band detail screens. If no channel or artist link is stored, leave the action empty; importing a band does not invent a music link.
@@ -158,9 +159,22 @@ narrowly scoped private-schema function that validates identity, membership,
 active festival and lineup before writing; Android receives no privileged secret.
 
 Apply the tested additive migrations through the existing Flyway process before
-shipping the final2.34APK. TASK-218 must complete archive behavior
-before publication. This task's validation APK is not a release. Missing server
+shipping the final2.34APK. Remaining corrections, contextual views and integrated
+release validation must complete before publication. Task-validation APKs are not releases. Missing server
 schema/denied writes retain cached/pending data and report a sync failure.
+
+Flyway `V016` adds `archive_festival`: a private authenticated transaction locks
+the festival against after-rating edits, rejects unreconciled recovered lineup
+values, promotes each current member's positive final value with source provenance,
+and archives once. Replays confirm the same operation without overwriting a newer
+source. A status guard rejects authenticated legacy status-only changes; older
+clients must update to use Archive. Rename remains available. Apply the migration
+before the new APK; an old APK may report this explicit upgrade-required error.
+The new APK syncs pending work first and publishes acknowledged status/current/after
+snapshots in one Room transaction. A new pending edit during the request is retained
+and reported for recovery. Other devices' unsynced edits cannot be known to the
+server; they stay pending if their festival was archived and require review through
+the archived correction flow (TASK-172), rather than silently changing the source.
 
 Reproduce the disposable SQL/RLS/HTTP gate with `bash scripts/verify-rating-state.sh`
 (Docker, Python3 and curl), and native persistence checks with

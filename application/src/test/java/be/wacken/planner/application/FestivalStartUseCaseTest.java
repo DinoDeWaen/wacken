@@ -29,7 +29,7 @@ final class FestivalStartUseCaseTest {
     void archivesActiveFestivalAndLeavesNoActiveFestival() {
         FakeFestivalRepository repository = new FakeFestivalRepository(List.of(Festival.active("wacken-2026", "Wacken Open Air 2026")));
 
-        FestivalStartState state = new ArchiveActiveFestivalUseCase(repository).archiveActiveFestival();
+        FestivalStartState state = new ArchiveActiveFestivalUseCase(repository, f->repository.save(f.archive())).archiveActiveFestival();
 
         assertTrue(state.activeFestival().isEmpty());
         assertTrue(repository.findAll().get(0).isArchived());

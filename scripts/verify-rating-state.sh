@@ -38,6 +38,8 @@ SQL
 docker exec "$TEST_PREFIX" bash -c 'set -e; for migration in /tmp/wacken-migrations/V*.sql; do version=${migration##*/V}; version=${version%%__*}; if ((10#$version < 14)); then continue; fi; psql -X -v ON_ERROR_STOP=1 -U postgres -f "$migration" >/dev/null; done'
 docker cp "$ROOT_DIR/backend/flyway/tests/rating_state.sql" "$TEST_PREFIX:/tmp/rating_state.sql"
 docker exec "$TEST_PREFIX" psql -X -v ON_ERROR_STOP=1 -U postgres -f /tmp/rating_state.sql
+docker cp "$ROOT_DIR/backend/flyway/tests/festival_archive.sql" "$TEST_PREFIX:/tmp/festival_archive.sql"
+docker exec "$TEST_PREFIX" psql -X -v ON_ERROR_STOP=1 -U postgres -f /tmp/festival_archive.sql
 docker run -d --name "$TEST_PREFIX-api" --network "$TEST_PREFIX" -p 127.0.0.1::3000 \
   -e "PGRST_DB_URI=postgres://postgres:rating-state-tests-only@$TEST_PREFIX:5432/postgres" \
   -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon \

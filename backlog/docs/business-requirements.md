@@ -31,7 +31,13 @@ values for review where old resets cannot be reconstructed. TASK-217 implements
 atomic once-only creation snapshots from each current member's established band
 ratings, without exposing their private source history. Missing opinions remain
 unrated; after-ratings start empty. Replays preserve later edits. Archive promotion
-remains TASK-218; the complete lifecycle is not yet shipped.
+is implemented by TASK-218 as an authorized atomic server operation, including
+source provenance, nonempty-only promotion, replay protection and a guard against
+legacy status-only archive writes. New clients sync pending work first and publish
+acknowledged archive/rating cache state together. Recovered lineup values require
+explicit review before archive. Unsent edits from other devices remain pending
+for archived correction; the server cannot inspect another device's offline data.
+TASK-172/219/220 still gate the completed correction/view/upgrade lifecycle.
 
 - Android band overview and detail screens, with generic Metal Battle placeholder entries hidden from rating lists.
 - 1-5 band ratings with default unrated value of `0`, including clearing a prior rating back to unrated.

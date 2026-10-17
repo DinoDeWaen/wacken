@@ -70,7 +70,7 @@ BEGIN
  EXCEPTION WHEN SQLSTATE 'P0001' THEN
   ASSERT SQLERRM LIKE '%active festival%';
  END;
- UPDATE public.festivals SET status='ARCHIVED' WHERE id='test-creation';
+ PERFORM public.archive_festival('test-creation');
  BEGIN
   PERFORM public.create_festival_from_bands('cccccccc-cccc-cccc-cccc-cccccccccccc',
    '00000000-0000-0000-0000-000000000001','test-creation','Overwrite history',ARRAY['Other']);

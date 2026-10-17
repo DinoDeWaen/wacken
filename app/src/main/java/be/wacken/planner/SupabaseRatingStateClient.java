@@ -31,6 +31,7 @@ final class SupabaseRatingStateClient implements RatingStateSync.Remote {
             if(!result.optBoolean("confirmed",false)||!rating.operationId().equals(result.optString("operation_id","")))
                 throw new IOException("After-rating save could not be confirmed. Retry pending work.");
         }catch(JSONException|IllegalArgumentException error){throw new IOException("After-rating response could not be read. Refresh or retry pending work.",error);}
+        catch(IOException error){throw new IOException("After-rating remains pending. Retry sync; if the festival was archived on another device, review the retained value using archived rating correction. "+error.getMessage(),error);}
     }
     @Override public List<FestivalAfterRating> afterRatings()throws IOException{
         List<FestivalAfterRating> result=new ArrayList<>();

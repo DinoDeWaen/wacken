@@ -26,6 +26,14 @@ public final class SupabaseRatingStateClientTest {
         },user);
         client.push(state);assertEquals("/rest/v1/rpc/save_festival_after_rating",paths.get(1));
     }
+    @Test public void archiveConflictGivesRecoveryWithoutAcknowledgingThePendingValue() throws Exception{
+        var client=new SupabaseRatingStateClient((m,p,b,u)->{
+            if(m.equals("GET"))return "[{\"id\":\"canonical-band\"}]";
+            throw new IOException("Choose a band in an active festival before recording an after-rating.");
+        },user);
+        try{client.push(new FestivalAfterRating(UUID.randomUUID().toString(),user,"festival",new Band("Band"),Rating.of(2),Instant.now()));fail();}
+        catch(IOException expected){assertTrue(expected.getMessage().contains("remains pending"));assertTrue(expected.getMessage().contains("archived rating correction"));}
+    }
     @Test public void anotherMembersWriteIsRejectedBeforeNetwork() throws Exception{
         var client=new SupabaseRatingStateClient((m,p,b,u)->{throw new AssertionError();},user);
         try{client.push(new FestivalAfterRating(UUID.randomUUID().toString(),"other","festival",new Band("Band"),Rating.of(3),Instant.now()));fail();}

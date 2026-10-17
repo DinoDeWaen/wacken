@@ -12,18 +12,18 @@ import be.wacken.planner.domain.FestivalRepository;
 final class ArchiveFestivalAction {
     private final Executor worker;
     private final Executor ui;
-    private final Supplier<FestivalRepository> festivals;
+    private final Supplier<ArchiveActiveFestivalUseCase> archive;
 
-    ArchiveFestivalAction(Executor worker, Executor ui, Supplier<FestivalRepository> festivals) {
+    ArchiveFestivalAction(Executor worker, Executor ui, Supplier<ArchiveActiveFestivalUseCase> archive) {
         this.worker = Objects.requireNonNull(worker);
         this.ui = Objects.requireNonNull(ui);
-        this.festivals = Objects.requireNonNull(festivals);
+        this.archive = Objects.requireNonNull(archive);
     }
 
     void execute(Consumer<FestivalStartState> onSuccess, Consumer<String> onFailure) {
         worker.execute(() -> {
             try {
-                FestivalStartState state = new ArchiveActiveFestivalUseCase(festivals.get()).archiveActiveFestival();
+                FestivalStartState state = archive.get().archiveActiveFestival();
                 ui.execute(() -> onSuccess.accept(state));
             } catch (RuntimeException error) {
                 String message = error.getMessage() == null || error.getMessage().isBlank()

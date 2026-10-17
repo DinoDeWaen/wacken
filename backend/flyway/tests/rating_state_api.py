@@ -70,3 +70,44 @@ archived = command(3)
 archived["p_festival_id"] = "rating-archived"
 assert request("/rpc/save_festival_after_rating", payload=archived)[0] == 403
 print("Real PostgREST rating API: concurrent replay, durable reset, canonical joins, no promotion, owner isolation and denied edits passed.")
+
+# Archive retries are identical and promote only the final nonempty member value.
+assert request("/rpc/archive_festival", "33333333-3333-3333-3333-333333333333",
+               {"p_festival_id": "rating-active"})[0] == 403
+with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+    archives = list(pool.map(lambda _: request("/rpc/archive_festival",
+        payload={"p_festival_id": "rating-active"}), range(4)))
+assert all(status == 200 and body["confirmed"] for status, body in archives), archives
+assert all(body == archives[0][1] for _, body in archives), archives
+status, current = request("/personal_band_ratings?select=rating,source_festival_id")
+assert status == 200 and current == [{"rating": 4, "source_festival_id": "rating-archived"}], (status, current)
+status, current = request("/personal_band_ratings?select=rating,source_festival_id",
+                         "22222222-2222-2222-2222-222222222222")
+assert status == 200 and current == [{"rating": 4, "source_festival_id": "rating-active"}], (status, current)
+assert request("/rpc/save_festival_after_rating", payload=command(1))[0] == 403
+
+# A new planning snapshot keeps the established opinion, and old archive replay
+# cannot overwrite the newer source after another complete festival.
+new_festival = {"p_request_id": str(uuid.uuid4()),
+    "p_group_id": "00000000-0000-0000-0000-000000000001",
+    "p_festival_id": "archive-race", "p_festival_name": "Archive Race", "p_band_names": ["Rating Band"]}
+status, created = request("/rpc/create_festival_from_bands", payload=new_festival)
+assert status == 200 and created["planning_ratings"] == [{"band_name": "Rating Band", "rating": 4}], (status, created)
+before_race = command(2)
+before_race["p_festival_id"] = "archive-race"
+assert request("/rpc/save_festival_after_rating", payload=before_race)[0] == 200
+racing = command(5)
+racing["p_festival_id"] = "archive-race"
+with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+    edit = pool.submit(request, "/rpc/save_festival_after_rating", payload=racing)
+    archive = pool.submit(request, "/rpc/archive_festival", payload={"p_festival_id": "archive-race"})
+    edited, archived_result = edit.result(), archive.result()
+assert archived_result[0] == 200, archived_result
+assert edited[0] in (200, 403), edited
+expected = 5 if edited[0] == 200 else 2
+status, current = request("/personal_band_ratings?select=rating,source_festival_id")
+assert status == 200 and current == [{"rating": expected, "source_festival_id": "archive-race"}], (status, current)
+assert request("/rpc/archive_festival", payload={"p_festival_id": "rating-active"})[0] == 200
+status, current = request("/personal_band_ratings?select=rating,source_festival_id")
+assert current == [{"rating": expected, "source_festival_id": "archive-race"}], current
+print("Real PostgREST archive API: concurrent replay, member promotion, reset retention, edit race and old-replay source protection passed.")
