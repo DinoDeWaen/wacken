@@ -164,6 +164,39 @@ PowerShell:
 backlog task edit <id> --notes "Line 1`nLine 2"
 ```
 
+### Codex command invocation and task locks
+
+Backlog.md uses a shared `.git/backlog.md/locks/create` lock to prevent duplicate
+task IDs across Git worktrees. This is normal even with `auto_commit: false`;
+creating a task does not require a Git commit. Codex may protect `.git` from
+sandbox writes, so an authorized Backlog mutation can require execution outside
+the sandbox using the existing, narrowly scoped Backlog command approval.
+
+- Invoke one direct `backlog task create ...` or `backlog task edit ...` command
+  per mutation. Prefer `exec_command` with `login: false`; do not add a nested
+  `zsh -lc`, script wrapper, or shell command substitution around the CLI.
+- Keep shell arguments simple enough for the existing command-prefix approval
+  to recognize. Apostrophe quote-splicing can make the command appear as an
+  opaque shell string and trigger an unnecessary whole-command approval. For
+  text containing apostrophes, use double-quoted arguments with backslashes,
+  dollar signs, backticks, and double quotes properly escaped. Preserve real
+  newlines. `JSON.stringify()` is not shell escaping.
+- If a lock write fails with `EPERM`, retry the same authorized CLI mutation
+  with `sandbox_permissions: require_escalated`, scoped to the appropriate
+  `backlog task create` or `backlog task edit` prefix. Do not request a broad
+  shell approval when that Backlog prefix is already approved.
+- A returned session ID means the mutation is still running. Wait for its exit
+  status and inspect its result before starting another task mutation; do not
+  accidentally overlap task creation commands.
+- Keep task locks and Git integration enabled. Do not disable locking, switch
+  the repository to filesystem-only mode, change ownership, broaden sandbox
+  permissions, or remove a lock to work around command invocation mistakes.
+
+The 2026-10-17 regression was verified by creating TASK-202 and round-tripping
+its multiline description containing apostrophes through the approved CLI.
+Simple, safely quoted direct calls reused the existing command approval;
+quote-spliced calls had fallen back to a generic shell approval.
+
 ### Backlog CLI Troubleshooting
 
 | Problem | Fix |
