@@ -1,5 +1,9 @@
 # Wacken Planner 2026
 
+## Release 2.34 design review
+
+Five interactive HTML design directions are available in the [design study](design/release-2.34/README.md): [open the prototype](design/release-2.34/index.html), [compare the styles](design/release-2.34/compare.html), and follow the [review exercise](design/release-2.34/review-guide.md). These are proposals with simulated data, awaiting user validation; they do not change the released Android app. Run `python3 -m http.server 8234 --bind 127.0.0.1 --directory design/release-2.34` and visit `http://127.0.0.1:8234/index.html` for a local browser preview.
+
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.
