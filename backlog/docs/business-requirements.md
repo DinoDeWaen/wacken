@@ -65,7 +65,7 @@ Rotation retains decisions; no shared-source import API is introduced.
 - The canonical current shared group is named `Sofie and Dino`, and existing app users must be members so their ratings participate in MVP2 planning.
 - Android share-sheet invite text for the single shared `Sofie and Dino` group, using provisioned Supabase accounts and no token/deep-link flow.
 - Implemented MVP3 field-use capabilities include recording a separate local real post-show rating on band detail, exporting locally cached rating data to CSV from settings, and keeping cached/imported data usable without Wi-Fi during the festival.
-- Implemented post-MVP3 festival archive and rating-history capabilities include a seeded active `Wacken Open Air 2026` festival, a manual Archive action on the active festival start screen, a no-active-festival archive state with read-only archived festival band lists and band detail screens, adding the next festival from a band CSV after archiving as a group-wide Supabase-backed festival, exact-name reusable band matching, explicit non-blank new-festival naming, active-festival renaming from Settings, reviewed own-database band linking for similar imported names, reviewed missing-field metadata proposal handling from existing catalog records, festival-specific planning ratings, synced personal band rating history, and planning-rating prefill from the user's latest personal band rating.
+- Implemented post-MVP3 festival archive and rating-history capabilities include a seeded active `Wacken Open Air 2026` festival, a manual Archive action on the active festival start screen, a no-active-festival archive state with read-only archived festival band lists and band detail screens, adding the next festival from a band CSV after archiving as a group-wide Supabase-backed festival, exact-name reusable band matching, explicit non-blank new-festival naming, active-festival renaming from Settings, reviewed own-database band linking for similar imported names, reviewed missing-field metadata proposal handling from existing catalog records, festival-specific planning ratings, synced personal band rating history, and planning-rating prefill from the user's established archive-sourced band rating.
 
 ### Current Non-Goals
 
@@ -242,7 +242,7 @@ Release assumptions:
 | Reusable band catalog | Store bands independently from festival lineups so the same band can appear across festivals. | Must | Post-MVP3 |
 | Personal band rating history | Store and sync historical personal band ratings by user, band, festival, and created date. | Must | Post-MVP3 |
 | Festival planning ratings | Store and sync editable per-festival planning ratings separately from personal band ratings. | Must | Post-MVP3 |
-| Future festival rating prefill | Prefill planning ratings for known bands from the user's latest personal band rating. | Must | Post-MVP3 |
+| Future festival rating prefill | Prefill planning ratings for known bands from the user's established archive-sourced band rating. | Must | Post-MVP3 |
 | Festival administration | Require deliberate festival naming, allow active-festival display-name corrections, and keep festival identity stable when names change. | Must | Post-MVP3 |
 | Reviewed band linking and aliases | Propose likely existing bands for new lineup names, let the user approve one match or no match, and store/reuse the existing band identity after confirmation. | Should | Post-MVP3 |
 | Band metadata enrichment | Fill missing band picture, biography/text, Spotify, and YouTube metadata from the own band catalog first, then reviewed external sources when needed, without overwriting existing values automatically. | Should | Post-MVP3 |
@@ -511,11 +511,12 @@ Future festival planning starts from each user's own historical band experience,
 
 ```gherkin
 Scenario: Prefill a new festival planning rating
-  Given a user has a latest personal band rating for Airbourne
+  Given a user has an established archive-sourced band rating for Airbourne
   And Airbourne is uploaded in a new festival lineup
-  When the new festival becomes active
-  Then the user's planning rating for Airbourne is prefilled from the latest personal band rating
-  And changing the planning rating does not change the personal band rating
+  When the new festival is created
+  Then the user's planning rating for Airbourne is copied once from the established band rating
+  And changing the planning rating does not change the established band rating
+  And later source changes or creation retries do not refresh the copied planning value
 ```
 
 ### Workflow 13: Preserve personal band rating history
@@ -528,7 +529,10 @@ Scenario: Rate the same band after seeing it at different festivals
   When the user later rates Airbourne after seeing them at Rock am Ring
   Then both personal band ratings remain visible
   And each rating shows the festival and created date for reference
-  And the current personal band rating is the latest personal band rating by created date
+  And the established band rating remains unchanged while Rock am Ring is active
+  When Rock am Ring is archived with a confirmed nonempty after-rating
+  Then that after-rating becomes the established band rating with its source
+  And a later correction of an older source cannot overwrite it
 ```
 
 ## Business rules
@@ -794,7 +798,7 @@ Post-MVP3 adds historical reference needs: archived festivals must remain readab
 - A band is missing picture, biography, Spotify, or YouTube metadata.
 - An external metadata source proposes a value for a field that is already present on the band.
 - A known band has no personal band rating history when added to a new festival.
-- A known band has a latest personal band rating that should prefill a new festival planning rating.
+- A known band has an established archive-sourced band rating that should seed a new festival planning rating once.
 - A user changes a prefilled planning rating because festival context makes the band more or less important to see.
 - A user rates the same band after seeing it at more than one festival.
 - Two personal band rating events have different created dates for the same band.
