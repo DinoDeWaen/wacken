@@ -21,8 +21,9 @@ Five interactive HTML design directions are available in the [design study](desi
 > established-rating store. TASK-217 adds once-only creation snapshots for each
 > current group member. TASK-218 adds atomic archive promotion.
 > TASK-172 adds audited own-rating corrections. TASK-219 adds separate rating
-> context and a versioned lifecycle export. Integrated upgrade validation remains TASK-220;
-> do not publish this intermediate state as the completed release.
+> context and a versioned lifecycle export. TASK-220 validates integrated lifecycle
+> and signed migration; final versioning, database rollout and publication remain
+> TASK-214. Do not publish this intermediate state as the completed release.
 
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
 - Show locally cached lineup, planning ratings, real post-show ratings, schedule data, and manual schedule locks first, while Supabase sync refreshes Room in the background.
@@ -374,6 +375,7 @@ C4Container
     Rel(csvSource, infra, "Supplies fallback import files", "CSV")
 ```
 
+[TASK-220 validation evidence](backlog/docs/release-2.34-lifecycle-validation.md) records the green integrated lifecycle, API23/API36 suites and signed migration.
 Signed update validation uses a separate fixture-only test APK and fresh emulator.
 See [the signed upgrade probe](backlog/docs/release-process.md#reproducible-signed-upgrade-probe-task-220)
 for build/sign/run commands and evidence. The probe validates actual published

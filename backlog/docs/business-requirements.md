@@ -41,7 +41,7 @@ TASK-172 implements explicit own archived corrections with reviewed revision,
 confirmation, atomic audit and conditional current-source update. Original dates
 are retained separately from correction times; a separate cached audit CSV keeps
 the normal ratings CSV contract unchanged. Archives remain read-only by default.
-TASK-219 implements distinct established/planning/after context and an own cached lifecycle CSV v2. TASK-220 still gates integrated lifecycle/upgrade validation.
+TASK-219 implements distinct established/planning/after context and an own cached lifecycle CSV v2. TASK-220 validates integrated lifecycle and signed legacy migration; final higher-code upgrade, deployment and publication remain TASK-214.
 TASK-156 adds pre-creation review of nonexact canonical identities and remembered
 aliases, with optional explicit alias confirmation. Festival/aliases/lineup and
 member planning snapshots commit together; conflicts require fresh review. The
