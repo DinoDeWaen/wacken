@@ -122,9 +122,21 @@ public final class MusicLinksReviewAndroidTest {
         try{
             onUi(()->{((EditText)find("Search term for "+NAME)).setText("edited identity");click("Search missing music links");});
             await(started::get);
-            Instrumentation.ActivityMonitor monitor=instrumentation.addMonitor(MusicLinksReviewActivity.class.getName(),null,false);
-            onUi(activity::recreate);Activity recreated=monitor.waitForActivityWithTimeout(5000);instrumentation.removeMonitor(monitor);
-            assertNotNull(recreated);activity=recreated;release.set(true);
+            Activity old=activity;Object retained=field(old,"session");
+            AtomicReference<Activity> recreated=new AtomicReference<>();
+            onUi(old::recreate);
+            await(()->{
+                for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                        .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
+                    if(candidate instanceof MusicLinksReviewActivity&&candidate!=old)recreated.set(candidate);
+                return recreated.get()!=null;
+            });
+            activity=recreated.get();
+            assertSame("Recreation must retain the in-flight review",retained,field(activity,"session"));
+            release.set(true);
+            await(()->!Boolean.TRUE.equals(field(retained,"busy")));
+            assertTrue("Completed retained reviews: "+field(retained,"reviews"),
+                ((Map<?,?>)field(retained,"reviews")).containsKey(NAME));
             await(()->find("Choose verified identity")!=null);
             onUi(()->assertEquals("edited identity",((EditText)find("Search term for "+NAME)).getText().toString()));
             assertEquals(1,calls.get());assertTrue(saved.get(NAME).youtubeUrl().isEmpty());
@@ -166,6 +178,10 @@ public final class MusicLinksReviewAndroidTest {
             List.of(site),List.of(site),List.of(YT),List.of(),List.of(new MusicLinkEvidence.Page(site,List.of(YT))));
     }
     private void onUi(Runnable r){instrumentation.runOnMainSync(r);}
+    private static Object field(Object target,String name){
+        try{var field=target.getClass().getDeclaredField(name);field.setAccessible(true);return field.get(target);}
+        catch(Exception error){throw new AssertionError(error);}
+    }
     private View find(String s){return findText(activity.getWindow().getDecorView(),s);}
     private void click(String s){View v=find(s);assertNotNull(s,v);assertTrue(s,v.isEnabled());v.performClick();}
     private View findContaining(String s){return findContaining(activity.getWindow().getDecorView(),s);}

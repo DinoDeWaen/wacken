@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 16:45'
-updated_date: '2026-10-17 17:55'
+updated_date: '2026-10-17 18:00'
 labels:
   - bug
   - android
@@ -21,6 +21,8 @@ references:
   - wikipediametadataprovider
   - youtubemetadataprovider
   - apprepositories
+  - festivalcsvreader
+  - musiclinksreviewactivity
 modified_files:
   - app/src/test/java/be/wacken/planner/AndroidJavaCompatibilityTest.java
   - app/src/main/java/be/wacken/planner/AndroidJavaCompatibility.java
@@ -48,6 +50,7 @@ modified_files:
   - >-
     application/src/main/java/be/wacken/planner/application/FestivalCsvReader.java
   - app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java
+  - app/src/androidTest/java/be/wacken/planner/MusicLinksReviewAndroidTest.java
 priority: high
 ---
 
@@ -86,4 +89,6 @@ Historical cause: commit1e36f6131621e73391ebdbdf81a227df651a6790 (2026-06-10, Fi
 The first real API23 run caught an unsupported readAllBytes call in the test shell fixture and a process crash while opening the new review dialog. Replaced the fixture read with a compatible buffered loop; guarded Spinner callbacks before the dialog button exists. Native CI now retains failure diagnostics so remaining older-device failures can be diagnosed. Task remains In Progress until the required matrix passes.
 
 Second API23 run completed all59 tests and exposed two unsupported StringBuilder.isEmpty calls in application CSV parsing (hidden from Android-module lint) plus rotation review invalidation on redundant text restoration. Replaced builder emptiness checks with length and made unchanged/restoring text notifications preserve retained review. Existing failing native CSV and rotation scenarios are regression evidence; rerun required. Full API36 CI and JVM/API/lint jobs passed on the prior source.
+
+Third API23 run passes58/59; only the rotation test remains. It used ActivityMonitor as proof of a recreated/resumed screen. Updated the test to observe a different RESUMED activity through the lifecycle registry and explicitly assert retained session identity, completed worker and retained reviews before the visible result. This preserves all behavioral assertions and adds diagnostics rather than increasing a timeout.
 <!-- SECTION:NOTES:END -->
