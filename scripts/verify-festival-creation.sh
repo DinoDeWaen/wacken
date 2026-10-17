@@ -2,6 +2,8 @@
 set -euo pipefail
 # Only disposable local containers and fixture identities are used.
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/scripts/test-container-images.sh"
+prepare_test_images
 TEST_PREFIX="wacken-festival-$$"
 TEST_DB="${TEST_PREFIX}-db"
 TEST_API="${TEST_PREFIX}-api"
@@ -14,7 +16,7 @@ trap cleanup EXIT
 docker network create "$TEST_PREFIX" >/dev/null
 docker run -d --name "$TEST_DB" --network "$TEST_PREFIX" \
   -e POSTGRES_PASSWORD=festival-tests-only \
-  public.ecr.aws/supabase/postgres:17.6.1.166 >/dev/null
+  "$WACKEN_TEST_DB_IMAGE" >/dev/null
 for attempt in {1..60}; do
   if docker exec "$TEST_DB" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then break; fi
   if [[ "$attempt" == 60 ]]; then docker logs "$TEST_DB"; exit 1; fi
@@ -35,7 +37,7 @@ docker exec "$TEST_DB" psql -X -v ON_ERROR_STOP=1 -U postgres -c \
 docker run -d --name "$TEST_API" --network "$TEST_PREFIX" -p 127.0.0.1::3000 \
   -e "PGRST_DB_URI=postgres://postgres:festival-tests-only@$TEST_DB:5432/postgres" \
   -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon -e "PGRST_JWT_SECRET=$TEST_SECRET" \
-  public.ecr.aws/supabase/postgrest:v14.5 >/dev/null
+  "$WACKEN_TEST_API_IMAGE" >/dev/null
 TEST_PORT="$(docker port "$TEST_API" 3000/tcp | cut -d: -f2)"
 export WACKEN_FESTIVAL_API="http://127.0.0.1:$TEST_PORT"
 export WACKEN_FESTIVAL_DB="$TEST_DB"

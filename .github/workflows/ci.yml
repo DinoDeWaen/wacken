@@ -34,6 +34,9 @@ jobs:
       - name: Run QA suite
         run: ./gradlew qaTest
 
+      - name: Validate immutable test-image acquisition and registry failure handling
+        run: python3 scripts/tests/test_test_images.py
+
       - name: Validate festival creation against PostgreSQL and PostgREST
         run: scripts/verify-festival-creation.sh
 

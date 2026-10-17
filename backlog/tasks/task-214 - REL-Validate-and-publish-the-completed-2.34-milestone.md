@@ -4,7 +4,7 @@ title: 'REL: Validate and publish the completed 2.34 milestone'
 status: To Do
 assignee: []
 created_date: '2026-10-17 09:59'
-updated_date: '2026-10-17 14:41'
+updated_date: '2026-10-17 14:46'
 labels:
   - release
   - android
@@ -25,6 +25,7 @@ dependencies:
   - TASK-219
   - TASK-220
   - TASK-221
+  - TASK-222
 priority: high
 type: task
 ---

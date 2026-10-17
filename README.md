@@ -180,6 +180,14 @@ Reproduce the disposable SQL/RLS/HTTP gate with `bash scripts/verify-rating-stat
 (Docker, Python3 and curl), and native persistence checks with
 `sh scripts/verify-android-smoke.sh emulator-5554 be.wacken.planner.persistence.FestivalAfterRatingDatabaseTest`.
 
+Both disposable database/API runners source `scripts/test-container-images.sh`:
+Postgres17.6.1.166 and PostgREST14.5 use verified immutable amd64/arm64 manifest
+digests shared by ECR and official Docker Hub repositories. Cached verified images
+are reused; ECR download failure falls back once to the identical official Docker
+Hub image. Both-source or digest-verification failure stops validation. No tests
+are skipped. Run `python3 scripts/tests/test_test_images.py` to check acquisition
+and failure handling without containers or network.
+
 The Android five-file CSV import validates the input before writes. Its TSV fallback adapter saves copies of the five source files and replaces the corresponding Room cache tables inside one database transaction. If a write fails, Room rolls back and the adapter restores the TSV files before reporting failure; existing ratings are outside the replacement. A restore failure is reported with the retained backup location. This import boundary does not recover an interrupted process or device power loss.
 
 The implemented post-MVP3 slice adds explicit festival lifecycle and rating history state. Room stores the initially seeded active `Wacken Open Air 2026` festival, archived festival status, festival lineup entries, festival-scoped planning ratings, and personal band rating events. Flyway migrations `V009`–`V011` create the Supabase contracts, including festival ownership for performances and schedule locks. `V012__group_member_festival_creation.sql` permits members of the single shared group to insert the next active festival, new bands, and its lineup. When signed in, festival lifecycle changes and lineup writes go to Supabase first and then update Room. Group members can add a festival from a band CSV, archive, rename, or delete a festival. The Add Festival and Archive actions run remote writes in the background and report progress or errors. A rejected Supabase write leaves the existing Room cache usable and shows an error. Band metadata updates and lineup replacement retain their existing policy restrictions.

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/scripts/test-container-images.sh"
+prepare_test_images
 TEST_PREFIX="wacken-rating-state-$$"
 cleanup() {
   docker rm -f "$TEST_PREFIX-api" >/dev/null 2>&1 || true
@@ -9,7 +11,7 @@ cleanup() {
 }
 trap cleanup EXIT
 docker network create "$TEST_PREFIX" >/dev/null
-docker run -d --name "$TEST_PREFIX" --network "$TEST_PREFIX" -e POSTGRES_PASSWORD=rating-state-tests-only public.ecr.aws/supabase/postgres:17.6.1.166 >/dev/null
+docker run -d --name "$TEST_PREFIX" --network "$TEST_PREFIX" -e POSTGRES_PASSWORD=rating-state-tests-only "$WACKEN_TEST_DB_IMAGE" >/dev/null
 for attempt in {1..60}; do
   if docker exec "$TEST_PREFIX" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then break; fi
   if [[ "$attempt" == 60 ]]; then docker logs "$TEST_PREFIX"; exit 1; fi
@@ -44,7 +46,7 @@ docker run -d --name "$TEST_PREFIX-api" --network "$TEST_PREFIX" -p 127.0.0.1::3
   -e "PGRST_DB_URI=postgres://postgres:rating-state-tests-only@$TEST_PREFIX:5432/postgres" \
   -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon \
   -e PGRST_JWT_SECRET=rating-state-http-fixture-secret-never-use-outside-tests \
-  public.ecr.aws/supabase/postgrest:v14.5 >/dev/null
+  "$WACKEN_TEST_API_IMAGE" >/dev/null
 TEST_PORT="$(docker port "$TEST_PREFIX-api" 3000/tcp | cut -d: -f2)"
 export WACKEN_RATING_API="http://127.0.0.1:$TEST_PORT"
 for attempt in {1..30}; do
