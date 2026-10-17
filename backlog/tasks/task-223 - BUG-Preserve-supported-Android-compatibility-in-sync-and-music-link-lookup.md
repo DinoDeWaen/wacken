@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 16:45'
-updated_date: '2026-10-17 16:57'
+updated_date: '2026-10-17 16:58'
 labels:
   - bug
   - android
@@ -75,4 +75,6 @@ Root cause confirmed against official Android/desugar documentation: the existin
 The same-version NIO variant fixes all14 lint errors while retaining the original storage/provider code. The provisional source wrappers were removed because the runtime configuration is the root cause. Final changes are the pinned runtime variant, regression tests against actual YouTube query/storage behavior, and existing lint/native CI gates extended to API23/API36. Local API36 image is installed; API23 runtime validation is delegated to the required GitHub matrix and must pass before this task is Done.
 
 Validated minimal root fix: retain existing File.toPath/Charset-overload code and select same-version NIO runtime. Full JVM/QA/coverage, full lintDebug (zero errors) and release lintVital passed. Added actual provider UTF-8 query regression and native real TSV/metadata/history round-trip plus provider request. Added three fake-device runner tests: API23 legacy settings/broadcast, API36 connectivity command, and restoration on test failure; first API23 assertion failed, all three now pass. CI now requires full lint and full native matrix23/36. Local full native59 is running; API23 CI and fresh signed APK remain before Done. Previously touched wrapper/client paths were restored and provisional helper/tests removed, so they are absent from the final code diff.
+
+Historical cause: commit1e36f6131621e73391ebdbdf81a227df651a6790 (2026-06-10, Fix V2.1 BlueStacks install packaging) lowered minSdk26→23 and enabled the standard desugar runtime. It did not supply NIO backports required by existing file storage; newer Charset URL-encoding calls also need supported backports below33. Why undetected: CI built/tested JVM and modern API36 but did not run full Android lint or minimum-device native tests. The same-version NIO variant and mandatory lint/API23 matrix address this gap. No production data/migration change.
 <!-- SECTION:NOTES:END -->
