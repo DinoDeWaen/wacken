@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 08:11'
-updated_date: '2026-10-17 09:24'
+updated_date: '2026-10-17 09:25'
 labels:
   - administration
   - metadata
@@ -129,6 +129,7 @@ modified_files:
   - README.md
   - app/src/main/java/be/wacken/planner/ImportCsvActivity.java
   - backlog/decisions/0011-post-wacken-festival-rating-model.md
+  - backlog/docs/task-202-verified-links-architecture-proposal.md
 priority: medium
 type: enhancement
 ---
@@ -170,4 +171,6 @@ Standard scope. First integrate published v2.33.5 fixes into codex/release-2-34 
 
 <!-- SECTION:NOTES:BEGIN -->
 Integrated the published v2.33.5 baseline before new development. Resolved three merge conflicts by retaining the released atomic festival gateway, creation recovery wording and accepted ADR-0014; preserved the new design-study entry points. This integration reuses already published architecture and adds no new architectural decision.
+
+Architecture assessment: existing provider candidates expose only name, source URL and confidence; they cannot enforce the required identity verification. Prepared backlog/docs/task-202-verified-links-architecture-proposal.md with minimal/standard/maximum options. Recommended standard extension reuses ADR-0012, adds application-owned evidence gating and bounded official cross-link retrieval, with no new schema/service/secrets. Await explicit architecture approval before integration coding. Continuing independent 2.34 native smoke coverage meanwhile.
 <!-- SECTION:NOTES:END -->
