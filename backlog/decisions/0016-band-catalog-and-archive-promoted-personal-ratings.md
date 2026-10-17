@@ -9,7 +9,9 @@ This accepts the lifecycle explained immediately before that instruction, includ
 personal ratings per member, retaining the previous band rating when no after-rating
 exists, and preventing older archived corrections from overwriting a newer source.
 It governs all remaining 2.34 stories and subsequent stories, including 3.0.
-Implementation is pending TASK-216–220 and the aligned existing stories.
+Implemented and validated by TASK-216–220 and aligned TASK-156/169/172 for2.34.
+The production database is migrated throughV018; TASK-214 records final signed
+APK/upgrade/rollout/publication evidence. See the linked README validation reports.
 
 TASK-216 implementation: separate current-band/festival-after records and ports,
 Room9→10 and additive FlywayV014, owner-scoped sync and durable reset/replay.

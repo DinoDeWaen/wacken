@@ -12,18 +12,15 @@ Five interactive HTML design directions are available in the [design study](desi
 
 ## Basic Functionality (MVP 1)
 
-> Approved 2.34 target: [ADR-0016](backlog/decisions/0016-band-catalog-and-archive-promoted-personal-ratings.md)
+> Release 2.34 architecture: [ADR-0016](backlog/decisions/0016-band-catalog-and-archive-promoted-personal-ratings.md)
 > defines one canonical band catalog, personal established band ratings and separate
 > festival planning/after-ratings. Creation copies band ratings once; archive promotes
 > nonempty after-ratings atomically. Missing values retain prior band ratings; older
-> corrections cannot overwrite newer sources. TASK-216–220 and the aligned existing
-> stories deliver this model. TASK-216 implements isolated after-ratings and the
-> established-rating store. TASK-217 adds once-only creation snapshots for each
-> current group member. TASK-218 adds atomic archive promotion.
-> TASK-172 adds audited own-rating corrections. TASK-219 adds separate rating
-> context and a versioned lifecycle export. TASK-220 validates integrated lifecycle
-> and signed migration; final versioning, database rollout and publication remain
-> TASK-214. Do not publish this intermediate state as the completed release.
+> corrections cannot overwrite newer sources. TASK-216–220 and the aligned
+> stories implement and validate this model, including reviewed aliases/local CSV,
+> audited archived corrections, contextual detail and lifecycle export. Signed
+> GitHub APK distribution remains the selected release channel; native paired
+> appearance changes remain in3.0.
 
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
 - Show locally cached lineup, planning ratings, real post-show ratings, schedule data, and manual schedule locks first, while Supabase sync refreshes Room in the background.
@@ -73,6 +70,7 @@ Five interactive HTML design directions are available in the [design study](desi
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
 - V2.31 UAT overview: [`v2.31-user-acceptance-test-overview.md`](backlog/docs/v2.31-user-acceptance-test-overview.md).
+- V2.34 canonical ratings, verified music links and reviewed festival imports: [`releases/v2.34.md`](releases/v2.34.md).
 - V2.33.5 missing music links hotfix: [`releases/v2.33.5.md`](releases/v2.33.5.md).
 - V2.33.4 festival creation hotfix: [`releases/v2.33.4.md`](releases/v2.33.4.md).
 - V2.33.3 hotfix notes: [`releases/v2.33.3.md`](releases/v2.33.3.md).
@@ -163,10 +161,10 @@ and after-state tables are denied. The public invoker wrapper delegates to a
 narrowly scoped private-schema function that validates identity, membership,
 active festival and lineup before writing; Android receives no privileged secret.
 
-Apply the tested additive migrations through the existing Flyway process before
-shipping the final2.34APK. Remaining corrections, contextual views and integrated
-release validation must complete before publication. Task-validation APKs are not releases. Missing server
-schema/denied writes retain cached/pending data and report a sync failure.
+The tested additive FlywayV014–V018 are deployed before the2.34APK. All feature,
+lifecycle and signed migration tasks are complete; TASK214 records final-code
+validation/publication evidence. Missing server schema or denied writes retain
+cached/pending data and report a sync failure.
 
 Flyway `V016` adds `archive_festival`: a private authenticated transaction locks
 the festival against after-rating edits, rejects unreconciled recovered lineup

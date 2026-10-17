@@ -10,18 +10,17 @@ Use this section for most tasks. Read deeper sections only when the active task 
 
 Wacken Planner 2026 is an Android app for one shared friend group to rate Wacken bands and prepare a conflict-aware festival schedule. The current implementation focuses on band import, band listing, band detail, 1-5 ratings with unrated state, local cache behavior, Supabase-backed lifecycle master-data sync, Supabase Auth, shared rating sync, and MVP2 schedule planning. MVP3 extends the product toward festival-field use with rating export, post-show real ratings, and stronger no-Wi-Fi operation.
 
-The validated post-MVP3 direction keeps the product for one friend group and extends it from a Wacken-only planning app into a festival-over-time rating archive. Users can archive the completed active festival, add the next festival, reuse known bands across festivals, sync personal band rating history to Supabase, and prefill new festival planning ratings from the latest personal band rating. Current admin improvements make festival naming explicit, allow active-festival renaming, and add reviewed own-database band linking plus missing-field metadata enrichment from the existing band catalog for future festival imports. Reviewed online metadata lookup remains a planned external-integration step.
+The validated post-MVP3 direction keeps the product for one friend group and extends it from a Wacken-only planning app into a festival-over-time rating archive. Users can archive the completed active festival, add the next festival, reuse known bands across festivals, sync personal band rating history to Supabase, and prefill new festival planning ratings once from each member's established archive-sourced band rating. Current admin improvements make festival naming explicit, allow active-festival renaming, and add reviewed own-database band linking plus missing-field metadata enrichment from the existing band catalog for future festival imports. Reviewed online metadata and verified music-link lookup are implemented through the existing providers with explicit evidence review and confirmation.
 
 ### Current Implemented Capabilities
 
-Approved release 2.34 target (implementation pending TASK-216–220 and aligned
-TASK-156/169/172): shared canonical band metadata plus each member's established
+Release2.34 implements TASK-216–220 and aligned TASK-156/169/172: shared canonical band metadata plus each member's established
 band rating; independent festival planning and after-ratings; copy established
 ratings once on creation and promote nonempty after-ratings only on archive.
 Missing after-ratings retain the prior band rating. Correcting an older archive
 cannot overwrite a newer established source or existing festival planning snapshots.
-See ADR-0016. The implemented-capability list below describes the earlier runtime
-until these stories are delivered; it is not evidence the new lifecycle is shipped.
+See ADR-0016 and the signed lifecycle/upgrade validation report. TASK-214 records
+final version/signature/rollout/publication evidence.
 
 TASK-216 implementation increment: the active detail after-rating is now explicitly
 scoped by member/festival/canonical band, including a synced durable reset. The
@@ -41,7 +40,7 @@ TASK-172 implements explicit own archived corrections with reviewed revision,
 confirmation, atomic audit and conditional current-source update. Original dates
 are retained separately from correction times; a separate cached audit CSV keeps
 the normal ratings CSV contract unchanged. Archives remain read-only by default.
-TASK-219 implements distinct established/planning/after context and an own cached lifecycle CSV v2. TASK-220 validates integrated lifecycle and signed legacy migration; final higher-code upgrade, deployment and publication remain TASK-214.
+TASK-219 implements distinct established/planning/after context and an own cached lifecycle CSV v2. TASK-220 validates integrated lifecycle and signed legacy migration; final higher-code upgrade/publication evidence is recorded in TASK-214; approved additive database migrations are deployed before the APK.
 TASK-156 adds pre-creation review of nonexact canonical identities and remembered
 aliases, with optional explicit alias confirmation. Festival/aliases/lineup and
 member planning snapshots commit together; conflicts require fresh review. The
