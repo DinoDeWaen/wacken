@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 11:53'
-updated_date: '2026-10-17 11:56'
+updated_date: '2026-10-17 12:31'
 labels:
   - architecture
   - release
@@ -14,6 +14,7 @@ milestone: m-0
 dependencies: []
 modified_files:
   - backlog/docs/release-2.34-remaining-architecture-proposal.md
+  - README.md
 priority: high
 ---
 
@@ -40,4 +41,6 @@ Inspect the current import/relink/cache/server and archived rating/export contra
 
 <!-- SECTION:NOTES:BEGIN -->
 Prepared the concrete standard/minimal/maximum proposal in backlog/docs/release-2.34-remaining-architecture-proposal.md after inspecting application, Android, Room, existing Flyway/RLS/RPC and ADR contracts. Identified that TASK-179 does not complete156, current CSV import has no review169, and172 lacks correction audit. Proposed additive aliases/reviewed atomic creation, local import diff review and own archived-rating atomic audit. No implementation or production DB mutation. Await explicit human approval; AC2 remains unchecked. README impact: none, because this is an unimplemented proposal. Business requirements impact: none, because scope/rules are only proposed; affected rules are listed for approved implementation. Diagram impact: none, because the proposal does not change the current architecture. ADR impact: none, because acceptance is pending; planned decisions are identified in the proposal. Validation: source inspection and current official Supabase RLS/functions/changelog review; no runtime tests warranted for the proposal itself. Completed features already pass unit/QA/coverage,26native checks and fresh signed build.
+
+README impact: updated the stale design-review banner to record the user's actual validation and the separate3.0 milestone; proposal remains unimplemented. Independent release preflight: existing scripts/verify-festival-creation.sh passed all10real PostgreSQL/PostgREST scenarios with zero failures/skips plus SQL rollback/authorization checks on current source. This is not final2.34 validation; rerun after remaining feature implementation.
 <!-- SECTION:NOTES:END -->

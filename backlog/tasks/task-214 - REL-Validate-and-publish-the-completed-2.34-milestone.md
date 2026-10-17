@@ -4,7 +4,7 @@ title: 'REL: Validate and publish the completed 2.34 milestone'
 status: To Do
 assignee: []
 created_date: '2026-10-17 09:59'
-updated_date: '2026-10-17 11:56'
+updated_date: '2026-10-17 12:31'
 labels:
   - release
   - android
@@ -37,3 +37,9 @@ As the release owner, I want a signed, regression-validated 2.34 package so user
 - [ ] #4 Given the signed artifact, then versionName 2.34, an incremented versionCode, Git tag, checksum, release notes and published APK all refer to the same validated commit.
 - [ ] #5 README, business requirements, distribution documentation and the complete delivery-governance validation package accurately describe shipped features, remaining limitations and the separate 3.0 design roadmap.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-10-17 independent preflight on f7e3628: real PostgreSQL/PostgREST festival-creation runner passed10scenarios with no skipped tests and SQL transaction/permission assertions. TASK-174,175,201,202areDone.156/169/172and architecture215remain; repeat all required gates on final release source before publication. No2.34tag or asset has been published.
+<!-- SECTION:NOTES:END -->
