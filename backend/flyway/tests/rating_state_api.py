@@ -23,13 +23,14 @@ def token(user):
     return (data + b"." + base64.urlsafe_b64encode(hmac.new(secret.encode(), data, hashlib.sha256).digest()).rstrip(b"=")).decode()
 
 
-def request(path, user=owner, payload=None):
+def request(path, user=owner, payload=None, method=None):
     headers = {"Authorization": "Bearer " + token(user), "Content-Type": "application/json"}
     req = urllib.request.Request(base + path, headers=headers,
-        data=json.dumps(payload).encode() if payload is not None else None)
+        data=json.dumps(payload).encode() if payload is not None else None, method=method)
     try:
         with urllib.request.urlopen(req, timeout=15) as response:
-            return response.status, json.load(response)
+            data = response.read()
+            return response.status, json.loads(data) if data else None
     except urllib.error.HTTPError as error:
         return error.code, json.load(error)
 
@@ -155,3 +156,86 @@ assert request("/rpc/correct_archived_rating", payload=old_correction)[0] == 200
 status, current_after = request("/personal_band_ratings?select=rating,source_festival_id")
 assert current_before == current_after, (current_before, current_after)
 print("Real PostgREST corrections: reviewed revision, concurrent conflict, audit/replay, original date, owner isolation and newer-source preservation passed.")
+
+# TASK220: one continuous authenticated lifecycle rather than isolated table checks.
+group = "00000000-0000-0000-0000-000000000001"
+
+
+def own_current():
+    status, rows = request("/personal_band_ratings?select=rating,source_festival_id&band_id=eq.rating-band")
+    assert status == 200 and len(rows) == 1, (status, rows)
+    return rows[0]
+
+
+def correct_after(festival, value):
+    status, reviewed = request("/rpc/review_archived_rating", payload={
+        "p_festival_id": festival, "p_band_id": "rating-band", "p_kind": "AFTER"})
+    assert status == 200, (status, reviewed)
+    payload = {"p_operation_id": str(uuid.uuid4()), "p_festival_id": festival,
+        "p_band_id": "rating-band", "p_kind": "AFTER", "p_expected_rating": reviewed["rating"],
+        "p_expected_revision": reviewed["revision"], "p_new_rating": value}
+    status, result = request("/rpc/correct_archived_rating", payload=payload)
+    assert status == 200 and result["confirmed"], (status, result)
+    assert request("/rpc/correct_archived_rating", payload=payload) == (status, result)
+    return payload
+
+
+def create_lifecycle(festival, expected_rating):
+    payload = {"p_request_id": str(uuid.uuid4()), "p_group_id": group, "p_festival_id": festival,
+        "p_festival_name": festival, "p_band_names": ["Rating Band"]}
+    status, result = request("/rpc/create_festival_from_bands", payload=payload)
+    assert status == 200 and result["planning_ratings"] == [
+        {"band_name": "Rating Band", "rating": expected_rating}], (status, result)
+    return payload
+
+
+def planning_value(festival):
+    status, rows = request("/festival_planning_ratings?select=rating&festival_id=eq." + festival + "&user_id=eq." + owner)
+    assert status == 200 and len(rows) == 1, (status, rows)
+    return rows[0]["rating"]
+
+
+def after_for(festival, value):
+    payload = dict(command(value), p_festival_id=festival)
+    status, body = request("/rpc/save_festival_after_rating", payload=payload)
+    assert status == 200 and body["confirmed"], (status, body)
+    return payload
+
+
+correct_after("archive-race", 4)
+assert own_current() == {"rating": 4, "source_festival_id": "archive-race"}
+first_creation = create_lifecycle("lifecycle-one", 4)
+status, body = request("/festival_planning_ratings?group_id=eq." + group + "&user_id=eq." + owner +
+                      "&festival_id=eq.lifecycle-one&band_id=eq.rating-band", payload={"rating": 5}, method="PATCH")
+assert status in (200, 204), (status, body)
+final_after = after_for("lifecycle-one", 3)
+assert planning_value("lifecycle-one") == 5 and own_current()["rating"] == 4
+# An uncertain creation response/retry preserves subsequent planning/after edits.
+assert request("/rpc/create_festival_from_bands", payload=first_creation)[0] == 200
+assert planning_value("lifecycle-one") == 5
+assert request("/rpc/archive_festival", payload={"p_festival_id": "lifecycle-one"})[0] == 200
+assert own_current() == {"rating": 3, "source_festival_id": "lifecycle-one"}
+assert planning_value("lifecycle-one") == 5
+status, result = request("/festival_after_ratings?select=rating,recorded_at&festival_id=eq.lifecycle-one")
+assert status == 200 and result == [{"rating": 3, "recorded_at": final_after["p_recorded_at"].replace("Z", "+00:00")}], (status, result)
+status, events = request("/personal_band_rating_events?select=id,rating&id=eq." + final_after["p_operation_id"])
+assert status == 200 and events == [{"id": final_after["p_operation_id"], "rating": 3}], (status, events)
+second_creation = create_lifecycle("lifecycle-two", 3)
+# Current-source correction updates established only; the already seeded next plan stays3.
+correct_after("lifecycle-one", 4)
+assert own_current() == {"rating": 4, "source_festival_id": "lifecycle-one"}
+assert planning_value("lifecycle-two") == 3
+after_for("lifecycle-two", 2)
+assert request("/rpc/archive_festival", payload={"p_festival_id": "lifecycle-two"})[0] == 200
+assert own_current() == {"rating": 2, "source_festival_id": "lifecycle-two"}
+correct_after("lifecycle-one", 5)
+assert own_current() == {"rating": 2, "source_festival_id": "lifecycle-two"}
+assert planning_value("lifecycle-two") == 3
+create_lifecycle("lifecycle-reset", 2)
+after_for("lifecycle-reset", 0)
+assert request("/rpc/archive_festival", payload={"p_festival_id": "lifecycle-reset"})[0] == 200
+assert own_current() == {"rating": 2, "source_festival_id": "lifecycle-two"}
+status, other = request("/personal_band_ratings?select=rating,source_festival_id",
+                        "22222222-2222-2222-2222-222222222222")
+assert status == 200 and other == [{"rating": 4, "source_festival_id": "rating-active"}], (status, other)
+print("Integrated lifecycle passed: band4 → planning4 → planning5/after3 → archive band3 → next planning3; current/older corrections, reset, replay, dates and separate members.")

@@ -39,6 +39,9 @@ jobs:
           python3 scripts/tests/test_android_smoke_runner.py
           ./gradlew :app:lintDebug
 
+      - name: Validate signed upgrade runner safety
+        run: python3 scripts/tests/test-signed-upgrade-runner.py
+
       - name: Validate immutable test-image acquisition and registry failure handling
         run: python3 scripts/tests/test_test_images.py
 

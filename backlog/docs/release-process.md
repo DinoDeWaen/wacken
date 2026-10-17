@@ -266,6 +266,51 @@ Before setting the release task to Done:
   canonical wording from `delivery-governance.md`.
 - Record risks, especially signing-certificate upgrade constraints.
 
+## Reproducible signed upgrade probe (TASK-220)
+
+The previous published stable-key2.33.5 APK uses Room9. The opt-in instrumentation
+probe seeds archived/active/unknown-date history, canonical metadata/links,
+pending planning/history/schedule work, another member and an offline fixture
+session in that actual installation. It then verifies Room12 migration and normal
+cached startup after a signed update. It uses no real account or production data.
+
+Build the probe APK separately from the normal AndroidJUnitRunner suite:
+
+```bash
+./gradlew :app:assembleDebugAndroidTest -PwackenUpgradeProbe
+apksigner sign --ks "$WACKEN_RELEASE_STORE_FILE" \\
+  --ks-key-alias "$WACKEN_RELEASE_KEY_ALIAS" \\
+  --ks-pass env:WACKEN_RELEASE_STORE_PASSWORD \\
+  --key-pass env:WACKEN_RELEASE_KEY_PASSWORD \\
+  --out /private/tmp/wacken-upgrade-probe.apk \\
+  app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+sh scripts/verify-signed-upgrade.sh emulator-5554 \\
+  /path/to/published-2.33.5.apk /path/to/candidate.apk \\
+  /private/tmp/wacken-upgrade-probe.apk /private/tmp/wacken-upgrade-evidence
+```
+
+Signing credentials must already be configured securely; never print/commit them.
+The probe and both APKs must have the same certificate. Start a **separate fresh
+emulator data directory**, wait for boot completion, and connect only that target.
+The runner refuses physical devices and existing app installations; it never
+uninstalls or wipes an app to force an update. It disables Wi-Fi/cellular radio
+using airplane mode and restores the original settings after stopping the fixture
+app. Package versions, signatures, digests, install logs and probe results go to
+the selected report directory.
+
+A negative control requires the old Room9 APK to fail the candidate assertions;
+after `adb install -r`, the same probe must pass. By default the candidate must
+have a higher versionCode. The explicit `--allow-same-version` option is only for
+intermediate migration validation and does not replace the final higher-code
+release gate. Do not pass `-PwackenUpgradeProbe` to normal native tests; without
+it the existing AndroidJUnitRunner/68-test suite is unchanged. The probe is
+packaged only in the test APK.
+
+Runner safety checks: `python3 scripts/tests/test-signed-upgrade-runner.py`.
+The existing `bash scripts/verify-rating-state.sh` now also checks one continuous
+authenticated band4→planning4→planning5/after3→archive band3→next planning3 flow,
+current/older source corrections, reset retention, replay and separate members.
+
 ## Signing Failure Recovery
 
 If signing credentials are unavailable:

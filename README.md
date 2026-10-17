@@ -374,6 +374,14 @@ C4Container
     Rel(csvSource, infra, "Supplies fallback import files", "CSV")
 ```
 
+Signed update validation uses a separate fixture-only test APK and fresh emulator.
+See [the signed upgrade probe](backlog/docs/release-process.md#reproducible-signed-upgrade-probe-task-220)
+for build/sign/run commands and evidence. The probe validates actual published
+Room9 → candidate Room12 migration, auth/metadata/history/pending preservation and
+normal offline startup, with a failing old-version control. It is not packaged in
+the production app. `verify-rating-state.sh` also exercises the complete4→4→5/3→3→3
+lifecycle through authenticated real PostgREST calls.
+
 ## Rating context and lifecycle export
 
 Active and archived band details distinguish **Established band rating**,
