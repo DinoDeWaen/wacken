@@ -1,11 +1,11 @@
 ---
 id: TASK-223
 title: 'BUG: Preserve supported Android compatibility in sync and music-link lookup'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-10-17 16:45'
-updated_date: '2026-10-17 18:00'
+updated_date: '2026-10-17 18:05'
 labels:
   - bug
   - android
@@ -62,33 +62,90 @@ As a member using a supported Android version, I need app startup, rating sync a
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Given the declared minimum Android API23, startup/local storage and URL encoding use compatible APIs while preserving UTF-8 query behavior.
-- [ ] #2 Full Android lintDebug and release lintVital pass without suppressing or baselining the NewApi findings.
-- [ ] #3 Regression tests cover reserved characters, spaces, Unicode and the changed startup/storage path; existing sync/provider/native suites remain green.
-- [ ] #4 README, business requirements, diagram and ADR impacts are recorded with delivery-governance wording.
-- [ ] #5 Given CI runs on release changes, full lint and native tests run on minimum API23 and current API36, and an incompatible runtime configuration blocks publication.
+- [x] #1 Given the declared minimum Android API23, startup/local storage and URL encoding use compatible APIs while preserving UTF-8 query behavior.
+- [x] #2 Full Android lintDebug and release lintVital pass without suppressing or baselining the NewApi findings.
+- [x] #3 Regression tests cover reserved characters, spaces, Unicode and the changed startup/storage path; existing sync/provider/native suites remain green.
+- [x] #4 README, business requirements, diagram and ADR impacts are recorded with delivery-governance wording.
+- [x] #5 Given CI runs on release changes, full lint and native tests run on minimum API23 and current API36, and an incompatible runtime configuration blocks publication.
 <!-- AC:END -->
 
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-Actual root fix: use existing pinned desugar runtime's NIO variant2.1.5 so Java file and newer URL encoding APIs are backported for declared minSdk23; no source wrappers/version upgrade/framework or architecture boundary change. Preserve original storage/provider behavior. Add actual Unicode/reserved query regression, native real TSV/metadata/history round-trip and provider requests; extend existing full-lint/native CI to23/36. TDD runner coverage adds supported API23 airplane control and failure restoration. Full JVM/QA/coverage/full lint and release lintVital pass. Await local59 native, required API23/36 CI and clean signed task APK before closure. README documents runtime and gate; BR/diagram/ADR have no product/boundary impact. Provisional no-config helper approach was removed when lint proved the missing NIO runtime was the root cause.
+Completed same-version NIO runtime configuration with original storage/provider code preserved; actual UTF-8 query and native TSV/metadata/history tests; compatible CSV builder checks and dialog callback; retained text notifications and deterministic recreated/resumed-session test; compatible emulator network runner with three tests and diagnostics; mandatory full lint/API23/API36 CI. Full source84f72db CI is green, native59 per API with no failures/skips, JVM/QA/coverage/real API/SQL/lint and signed clean APK pass. README updated; BR/diagram/ADR no architecture/product impact. Deviation: source wrappers were removed after identifying missing runtime backports; minimum-device validation exposed additional parser, dialog, fixture and lifecycle issues, all resolved. No new framework/major dependency version/schema/API/domain boundary or minSdk change.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Root cause confirmed against official Android/desugar documentation: the existing standard desugar_jdk_libs:2.1.5 variant omits java.nio.file support below26, so merely changing File.toPath to Paths.get leaves the same compatibility failure. Revise the bounded fix to select the same-version desugar_jdk_libs_nio:2.1.5 variant of the existing runtime. This is not a version upgrade, new framework/service/module/schema/API or architecture boundary; it supplies already-used NIO APIs for the already-declared API23 support. No additional architecture-significant decision is introduced. Keep default support23, no lint suppression. Source: https://developer.android.com/studio/write/java11-nio-support-table and https://github.com/google/desugar_jdk_libs/blob/master/CHANGELOG.md .
+## Implementation summary
 
-The same-version NIO variant fixes all14 lint errors while retaining the original storage/provider code. The provisional source wrappers were removed because the runtime configuration is the root cause. Final changes are the pinned runtime variant, regression tests against actual YouTube query/storage behavior, and existing lint/native CI gates extended to API23/API36. Local API36 image is installed; API23 runtime validation is delegated to the required GitHub matrix and must pass before this task is Done.
+Restored the existing declared Android API23 support by selecting the NIO variant of the already-pinned Java compatibility runtime2.1.5. Existing File/Path storage and UTF-8 URL encoding are now backported. The original provider/storage code remains; no wrapper layer, version upgrade, minSdk increase or lint suppression was added.
 
-Validated minimal root fix: retain existing File.toPath/Charset-overload code and select same-version NIO runtime. Full JVM/QA/coverage, full lintDebug (zero errors) and release lintVital passed. Added actual provider UTF-8 query regression and native real TSV/metadata/history round-trip plus provider request. Added three fake-device runner tests: API23 legacy settings/broadcast, API36 connectivity command, and restoration on test failure; first API23 assertion failed, all three now pass. CI now requires full lint and full native matrix23/36. Local full native59 is running; API23 CI and fresh signed APK remain before Done. Previously touched wrapper/client paths were restored and provisional helper/tests removed, so they are absent from the final code diff.
+The minimum-device gate also caught and fixed unsupported StringBuilder.isEmpty calls in CSV parsing, a pre-show dialog callback and an unsupported test-fixture stream read. Retained music-link text handling ignores unchanged/restoring notifications. Rotation validation observes the actual new RESUMED activity and checks retained session/worker/review state.
 
-Historical cause: commit1e36f6131621e73391ebdbdf81a227df651a6790 (2026-06-10, Fix V2.1 BlueStacks install packaging) lowered minSdk26→23 and enabled the standard desugar runtime. It did not supply NIO backports required by existing file storage; newer Charset URL-encoding calls also need supported backports below33. Why undetected: CI built/tested JVM and modern API36 but did not run full Android lint or minimum-device native tests. The same-version NIO variant and mandatory lint/API23 matrix address this gap. No production data/migration change.
+## Acceptance criteria validation
 
-The first real API23 run caught an unsupported readAllBytes call in the test shell fixture and a process crash while opening the new review dialog. Replaced the fixture read with a compatible buffered loop; guarded Spinner callbacks before the dialog button exists. Native CI now retains failure diagnostics so remaining older-device failures can be diagnosed. Task remains In Progress until the required matrix passes.
+1. Same supported minimum23 and existing UTF-8/storage semantics; real TSV/provider native regression and full API23/API36 matrix are required.
+2. Full lintDebug now passes with zero errors; release lintVital passes.
+3. Unicode/reserved query test plus actual native TSV/metadata/history round-trip, existing CSV/creation/ratings/provider suites and rotation coverage.
+4. Canonical documentation impacts below.
+5. CI runs full lint and native API23/API36 and retains failure diagnostics; runner's API23/API36 setup/restore and failure cleanup have three passing tests.
 
-Second API23 run completed all59 tests and exposed two unsupported StringBuilder.isEmpty calls in application CSV parsing (hidden from Android-module lint) plus rotation review invalidation on redundant text restoration. Replaced builder emptiness checks with length and made unchanged/restoring text notifications preserve retained review. Existing failing native CSV and rotation scenarios are regression evidence; rerun required. Full API36 CI and JVM/API/lint jobs passed on the prior source.
+## How to test
 
-Third API23 run passes58/59; only the rotation test remains. It used ActivityMonitor as proof of a recreated/resumed screen. Updated the test to observe a different RESUMED activity through the lifecycle registry and explicitly assert retained session identity, completed worker and retained reviews before the visible result. This preserves all behavioral assertions and adds diagnostics rather than increasing a timeout.
+### Automated tests
+
+- JDK21 ./gradlew test qaTest :app:lintDebug :app:lintVitalRelease: passed with domain/application coverage gates.
+- python3 scripts/tests/test_android_smoke_runner.py:3 passed; sh -n scripts/verify-android-smoke.sh and git diff --check passed.
+- Existing full local API36 native59 tests passed; final affected15 passed, and revised rotation suite7 checked. The current-source GitHub matrix supplies minimum/current-device full-suite proof.
+- JDK21 clean signed task build including full lint and release lintVital: see final artifact evidence below.
+- Real PostgreSQL/PostgREST creation16 and rating/archive/correction/deletion/alias gates are required CI steps and remain passing.
+- No skipped native/API gates may be represented as passed.
+
+### Manual validation
+
+No human acceptance claimed. Local native runs use the isolated API36 emulator, never a physical device or existing release data. API23 is exercised in Linux CI because only the API36 image is installed locally.
+
+## TDD / BDD / approval-test evidence
+
+Full lint initially failed with14 actual NewApi findings; swapping source calls left a remaining NIO failure. The same-version NIO runtime fixed the configuration root cause, so provisional wrappers were removed. API23 CI then demonstrated failures hidden by API36: unsupported test-fixture stream read, early dialog callback and StringBuilder emptiness checks. Existing failing CSV and rotation scenarios were retained, with stronger lifecycle/session assertions. Runner's API23 branch was first red and then all three tests passed. No assertions or compatibility checks were suppressed.
+
+## Architecture impact
+
+- Architecture-significant change: no new framework, major dependency version, module, persistence/API/domain boundary or supported-device policy. This selects the compatible variant of the same existing pinned runtime.
+- Approval received: existing architecture and supported-device direction retained; no new architecture decision required.
+- ADR impact: none, because the existing architecture and supported range remain; the change repairs runtime configuration and implementation compatibility.
+- Existing TSV/Room/Supabase boundaries and production data stay unchanged.
+
+## README impact
+
+README impact: updated the pinned NIO runtime requirement, supported-API troubleshooting, full lint command and native23/36 CI gates.
+
+## Business requirements impact
+
+Business requirements impact: none, because this restores existing supported-device and rotation/CSV behavior without changing product scope or rating rules.
+
+## Diagram impact
+
+Diagram impact: none, because there are no boundary, module or data-flow changes.
+
+## Commits / logical change list
+
+- 47f0d95: pinned NIO runtime variant, actual encoding/storage regression and lint/native CI matrix.
+- c216b74: historical cause and validation gap.
+- 392c102: compatible fixture read, early dialog callback and failure artifacts.
+- af62646: compatible CSV builder checks and retained text behavior.
+- 84f72db: actual recreated RESUMED activity/session/worker assertions.
+- Provisional helper/client files listed in touched-file metadata were restored/removed and are not final changes.
+
+## Risks and follow-up
+
+Historical cause:1e36f6131621e73391ebdbdf81a227df651a6790 (2026-06-10) lowered minSdk26→23 with the standard desugar variant, which omitted NIO support. Later Charset encoding also required a backport below33. CI previously ran JVM/current API36 without full lint/minimum-device validation. The required lint and real23/36 matrix close that gap.
+
+This task validation APK is not published2.34; release214 still requires169/219/220, final exact-source validation, data-preserving upgrade and DB-before-APK rollout. 
+
+Official reference: https://developer.android.com/studio/write/java11-nio-support-table .
+
+Final validation: CI run https://github.com/DinoDeWaen/wacken/actions/runs/39056235776 at84f72db is fully green: native59 on API23, native59 on API36, and full JVM/QA/coverage/lint/real SQL/API/build job. No native failures/skips. Final affected15 and revised rotation suite7 also passed locally. Clean signed build (test qaTest lintDebug lintVitalRelease assembleRelease) passed; APK SHA256 b8967f92b35dc0ac169a1e4800ccb351da11ea3e0f35a522e3023f502dc57175; certificate SHA256 ede2ae97735a305900e87bc0fdc021c03382db4e30435f2349a96a3fdcc7545f. Intermediate version2.33.5/code41, not a published2.34 release.
 <!-- SECTION:NOTES:END -->
