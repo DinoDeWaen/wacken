@@ -159,6 +159,37 @@ hashes over new meaning. See [baseline verification evidence](backlog/docs/groma
 - V1.1 release notes: [`releases/v1.1.md`](releases/v1.1.md).
 - V1.0 release notes: [`releases/v1.0.md`](releases/v1.0.md).
 
+### Runtime and storage boundaries
+
+The installed Android app runs the UI, application workflows, domain rules and
+adapters in one process. Room is owned on-device storage. The shared planner
+database is owned application data hosted by the external Supabase platform;
+Auth and API hosting belong to that platform. Gradle modules describe code
+dependencies rather than independently deployed applications.
+
+```mermaid
+C4Container
+    Person(attendee, "Festival attendee", "Rates bands and plans with the group")
+    System_Boundary(planner, "Wacken Planner") {
+        Container(android, "Installed Android application", "Android / Java", "UI, workflows, domain rules, repository and network adapters")
+        ContainerDb(room, "On-device cache", "Room / SQLite", "Cached festival data and pending rating/schedule changes")
+        ContainerDb(shared, "Shared planner database", "PostgreSQL on Supabase", "Owned schema, canonical catalog, member-scoped ratings, RPCs and RLS")
+    }
+    System_Ext(supabase, "Supabase platform", "Authentication and hosted PostgREST API")
+    Rel(attendee, android, "Uses")
+    Rel(android, room, "Reads cached data and queues writes", "Room")
+    Rel(android, supabase, "Authenticates and synchronizes", "HTTPS")
+    Rel(supabase, shared, "Serves authorized data and RPCs", "PostgREST / PostgreSQL")
+```
+
+TSV fallback files also live in app-private storage; the local CSV workflow can
+publish to the Room cache. SQL and platform rules need separate source evidence
+because the Groma scanner covers Java only. Groma 0.6.6 cannot currently complete
+the preservation-safe container migration tested in TASK-227; its map still
+places components directly under the system. See the [exact CLI limitations and
+unresolved remedy](backlog/docs/groma-container-limitations-2026-10-20.md).
+The C4 view above documents current boundaries while that map repair remains open.
+
 ### Module Map
 
 ```mermaid
