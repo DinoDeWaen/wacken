@@ -1,8 +1,5 @@
 package be.wacken.planner;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.util.Locale;
 
@@ -84,15 +81,7 @@ final class SupabaseAuthenticatedRequest {
     }
 
     private String errorMessage(String response, int status) {
-        if (response == null || response.isBlank()) {
-            return failureMessage + " with status " + status;
-        }
-        try {
-            JSONObject json = new JSONObject(response);
-            return json.optString("message", json.optString("msg", response));
-        } catch (JSONException ignored) {
-            return response;
-        }
+        return SupabaseErrorMessages.select(response, status, failureMessage);
     }
 
     interface Request {

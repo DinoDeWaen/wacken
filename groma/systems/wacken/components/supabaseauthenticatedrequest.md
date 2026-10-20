@@ -17,6 +17,9 @@ groma:
     - scanner: java
       file: app/src/main/java/be/wacken/planner/SupabaseSyncException.java
       symbol: SupabaseSyncException
+    - scanner: java
+      file: app/src/main/java/be/wacken/planner/SupabaseErrorMessages.java
+      symbol: SupabaseErrorMessages
   group: Storage and synchronization
 description: Send configured Supabase requests
 ---

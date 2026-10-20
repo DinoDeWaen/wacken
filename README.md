@@ -820,6 +820,17 @@ Coverage gates:
 
 ## Troubleshooting
 
+### Backend error messages
+
+Login and authenticated sync use the same display rule: the first nonblank
+string `message`, then `msg`, with surrounding whitespace removed. Missing,
+non-string or malformed messages fall back to the operation and HTTP status
+(for example, `Supabase request failed with status 401` or
+`Supabase rating sync failed with status 503`). Raw JSON/proxy payloads are not
+displayed. Selected text uses the existing credential/token redaction used by
+diagnostics. This changes error presentation only; session refresh, one retry
+after rejected JWTs and offline session retention keep their existing behavior.
+
 ### Supported Android Java APIs
 
 The app keeps minimum Android API23 support. Its existing Java compatibility

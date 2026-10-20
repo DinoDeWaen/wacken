@@ -31,3 +31,4 @@ Calls Supabase Auth, manages session lifecycle, and reports invalid or missing a
 | Source | Target | Description | Technology |
 | --- | --- | --- | --- |
 | [app/src/main/java/be/wacken/planner/SupabaseAuthClient.java](../../../../app/src/main/java/be/wacken/planner/SupabaseAuthClient.java) | [supabase](../../../externals/supabase.md) | Authenticates users | HTTPS/Auth |
+| [app/src/main/java/be/wacken/planner/SupabaseAuthClient.java](../../../../app/src/main/java/be/wacken/planner/SupabaseAuthClient.java) | [app/src/main/java/be/wacken/planner/SupabaseErrorMessages.java](../../../../app/src/main/java/be/wacken/planner/SupabaseErrorMessages.java) | Selects safe failure messages | Java call |
