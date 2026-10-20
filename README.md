@@ -102,6 +102,7 @@ hashes over new meaning. See [baseline verification evidence](backlog/docs/groma
 - ADR: [`0008-supabase-postgres-flyway-migrations.md`](backlog/decisions/0008-supabase-postgres-flyway-migrations.md).
 - ADR: [`0009-supabase-group-schedule-winner-locks.md`](backlog/decisions/0009-supabase-group-schedule-winner-locks.md).
 - ADR: [`0010-offline-first-sync-boundary.md`](backlog/decisions/0010-offline-first-sync-boundary.md).
+- ADR: [`0020-bounded-supabase-adapter-transport.md`](backlog/decisions/0020-bounded-supabase-adapter-transport.md) defines bounded rating/history/planning/schedule HTTP mechanics while preserving auth and pending-write ownership.
 - ADR: [`0013-festival-deletion-and-schedule-ownership.md`](backlog/decisions/0013-festival-deletion-and-schedule-ownership.md).
 - ADR: [`0011-post-wacken-festival-rating-model.md`](backlog/decisions/0011-post-wacken-festival-rating-model.md) defines the accepted post-MVP3 festival archive, reusable band, planning rating, and personal rating history direction.
 - ADR: [`0012-reviewed-band-metadata-search-framework.md`](backlog/decisions/0012-reviewed-band-metadata-search-framework.md) defines the reviewed metadata proposal boundary for own-catalog and external provider enrichment.
@@ -830,6 +831,20 @@ non-string or malformed messages fall back to the operation and HTTP status
 displayed. Selected text uses the existing credential/token redaction used by
 diagnostics. This changes error presentation only; session refresh, one retry
 after rejected JWTs and offline session retention keep their existing behavior.
+
+### Rating and schedule network timeouts
+
+Rating, festival planning, personal history and schedule-lock HTTP calls use a
+15-second connection timeout and a 30-second inactive-read timeout. On timeout,
+the operation reports failure; pending edits and cached data remain available
+for retry. These settings match the existing master-data client. An expired JWT
+can still trigger one refresh/retry through the existing authenticated wrapper.
+
+These are per-connection/read limits, not a total sync deadline: one sync may
+make multiple requests, and DNS, blocked uploads or a continuously trickling
+response are not bounded by an overall deadline here. If sync fails, retain local
+data and retry when connectivity improves; clearing app storage can lose pending
+work. No new timeout policy is introduced for login or metadata/image providers.
 
 ### Supported Android Java APIs
 

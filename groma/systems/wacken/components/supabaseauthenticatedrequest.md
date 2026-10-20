@@ -20,6 +20,8 @@ groma:
     - scanner: java
       file: app/src/main/java/be/wacken/planner/SupabaseErrorMessages.java
       symbol: SupabaseErrorMessages
+    - scanner: java
+      file: app/src/main/java/be/wacken/planner/SupabaseHttpTransport.java
   group: Storage and synchronization
 description: Send configured Supabase requests
 ---
