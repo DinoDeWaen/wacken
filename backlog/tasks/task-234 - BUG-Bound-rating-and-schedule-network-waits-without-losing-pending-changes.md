@@ -1,9 +1,11 @@
 ---
 id: TASK-234
 title: 'BUG: Bound rating and schedule network waits without losing pending changes'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@codex'
 created_date: '2026-10-20 06:26'
+updated_date: '2026-10-20 19:38'
 labels:
   - groma-audit
   - release-2.35
@@ -13,6 +15,8 @@ references:
   - wacken
 documentation:
   - backlog/docs/groma-audit-2026-10-20.md
+modified_files:
+  - backlog/docs/task-234-transport-approval.md
 priority: medium
 type: bug
 ---
@@ -47,3 +51,20 @@ README and diagram impacts are assessed for the affected workflow. ADR impact: n
 - [ ] #6 Architecture impact is assessed before implementation; significant boundary, dependency, persistence or test-strategy changes receive explicit human approval before coding and an ADR is recorded when required.
 - [ ] #7 README, business requirements, diagram and ADR impacts use canonical delivery-governance wording; test evidence, manual verification, finalized plan and remaining risks are recorded before merge.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Characterize existing rating/history/planning/schedule HTTP request contracts and pending-write retention; define controlled connection/read stall scenarios.
+2. Obtain explicit architecture approval before adding a shared package-private HttpURLConnection transport inside the Android adapter package; retain SupabaseAuthenticatedRequest auth/retry and operation-specific client mapping.
+3. After approval, write red transport tests, implement bounded 15000ms connect / 30000ms read policy and request cleanup, and migrate only the affected send mechanics. Local tests use injected connections and short controlled loopback stalls.
+4. Verify auth refresh/member binding, request methods/headers/body/upsert/status handling and pending/cache retention with focused client/sync regressions; run Android compatibility lint and applicable native checks.
+5. Update README timeout/retry troubleshooting, relevant business requirement wording if public contract changes, Groma task links/map, approved ADR and complete delivery validation before closure.
+Standard adapter-boundary work. Architecture approval required for shared transport; no coding until approved. No new network framework, schema or public API. Domain/application receive no HTTP dependency. Risks: per-I/O timeouts are not a total sync deadline; auth retry may send twice; stalled uploads and slow trickles require explicit limits rather than inaccurate end-to-end guarantees.
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Pre-implementation assessment complete: four duplicated send methods have no explicit timeouts, while master-data uses 15s connect/30s read. Concrete minimal/standard/maximum options, recommended package-private shared transport, unchanged auth/business ownership, test plan, timeout limits and ADR impact are documented in backlog/docs/task-234-transport-approval.md. Explicit approval required by AC4 and delivery-governance before implementation; no application code changed.
+<!-- SECTION:NOTES:END -->
