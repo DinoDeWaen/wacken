@@ -45,6 +45,52 @@ Five interactive HTML design directions are available in the [design study](desi
 - Generate and view an MVP2 day-filtered calendar schedule with fixed stage labels on the left and horizontally scrollable time columns across the top, using shared ratings, middle-30-minute conflict rules, optional decisions, winner stars, and lost-alternative stars; the view can locally hide barred overlapping acts or acts at/below a selected star threshold; tapping a performance block opens the chosen act and alternatives, and alternatives can be selected as Supabase-synced locked group winners.
 
 ## Architecture
+
+The versioned [Groma map](groma/project.md) preserves source ownership, stable
+element IDs, groups, descriptions, authored relationships and scenario flows.
+The [20 October audit](backlog/docs/groma-audit-2026-10-20.md) records its known
+gaps: no container records, 72 disconnected records and 99 duplicate candidate
+groups. TASK-226 preserves that baseline; TASK-227–233 repair and validate it.
+Preservation does not establish architecture completeness.
+
+Use **Groma CLI 0.6.6**, with **@groma/scanner-java@0.2.2** pinned in
+[`groma/scanners.json`](groma/scanners.json). Verify the locally installed tools
+before scanning; do not silently substitute a newer version:
+
+```bash
+groma --version
+groma scanner list
+groma view --plain
+groma scan
+groma lint --max-count 200
+```
+
+Scanning refreshes Java evidence and ownership; curation interprets the evidence
+and authors responsibilities and collaborations through the Groma CLI. A scan
+does not finish the map. The scanner covers main Java sources only, excluding
+`InMemory*Repository.java`; it does not establish SQL/RLS/RPC behavior, Android
+resources/manifest wiring, Gradle deployment or verification scripts. Its
+unresolved framework/cross-module symbols are analysis limitations, not compiler
+results. Groma lint reports review candidates and currently exits 1 for the 99
+known groups; this is separate from Android lint and the application test suite.
+
+For a clean checkout of the TASK-226 baseline commit, verify all 126 stored files
+before and after two scans using the [SHA-256 inventory](backlog/docs/groma-baseline-2026-10-20.sha256):
+
+```bash
+shasum -a 256 -c backlog/docs/groma-baseline-2026-10-20.sha256
+groma scan
+shasum -a 256 -c backlog/docs/groma-baseline-2026-10-20.sha256
+groma scan
+shasum -a 256 -c backlog/docs/groma-baseline-2026-10-20.sha256
+git status --short -- groma
+```
+
+Every checksum must pass and scans must add no files. Missing records fail this
+verification. The inventory characterizes the historical baseline byte for byte;
+later intentional curation requires reviewing its differences, not restoring old
+hashes over new meaning. See [baseline verification evidence](backlog/docs/groma-baseline-verification-2026-10-20.md).
+
 - Clean Architecture with DDD boundaries: domain, application, infrastructure, and Android UI modules.
 - Business rules live in the domain; application orchestrates use cases; infrastructure provides adapters (e.g., CSV, persistence); Android module handles presentation only.
 - Dependencies point inward only; UI never contains business logic.
