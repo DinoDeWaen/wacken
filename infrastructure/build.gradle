@@ -12,9 +12,18 @@ dependencies {
     implementation project(":domain")
     testImplementation platform("org.junit:junit-bom:${rootProject.junitVersion}")
     testImplementation "org.junit.jupiter:junit-jupiter"
+    testImplementation "com.tngtech.archunit:archunit:1.5.1"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 test {
     useJUnitPlatform()
+    // Explicit main outputs prevent test fixtures or an incomplete classpath import
+    // from accidentally defining the architecture being checked.
+    [":domain", ":application", ":infrastructure"].each { modulePath ->
+        def module = project(modulePath)
+        dependsOn module.tasks.named("classes")
+        inputs.files(module.sourceSets.main.output.classesDirs)
+        systemProperty "architecture.${module.name}.classes", module.sourceSets.main.output.classesDirs.asPath
+    }
 }

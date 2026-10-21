@@ -188,6 +188,18 @@ Tests must:
 
 ## Required final check
 
+### Compiled JVM architecture checks
+
+TASK-243 / [ADR0023](../decisions/0023-archunit-jvm-boundary-tests.md) adds
+ArchUnit 1.5.1 as an infrastructure test dependency under the existing JUnit5
+runner. Ordinary Gradle `test`/`check` and required CI execute the suite against
+explicit, complete domain/application/infrastructure main outputs. Missing or
+empty imports fail. Positive/negative compiled fixtures protect dependency
+direction, framework exclusion and inter-layer cycle rules from vacuous passes.
+Use the focused command in README when editing rules. Android-side bytecode,
+within-layer cycles, runtime reachability and unused-code decisions are outside
+this suite; retain Groma, behavior, native and database validation.
+
 Before completing a task, report in implementation notes:
 
 - Which tests were added or updated.
