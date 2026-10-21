@@ -173,7 +173,7 @@ public final class CriticalFlowsAndroidTest {
             assertNull(findBandImage(root()));
             assertNull(findDescription(root(),"Open YouTube"));
             assertNull(findDescription(root(),"Open Spotify"));
-            assertNotNull(findDescription(root(),"Home"));
+            assertNotNull(findDescription(root(),"Back"));
             assertTrue(findText(root(),"Reset").isEnabled());
             assertTrue(findText(root(),"Find music links").isEnabled());
         });
@@ -310,6 +310,144 @@ public final class CriticalFlowsAndroidTest {
             assertTrue(export.isEnabled());assertTrue(export.hasOnClickListeners());
         });
         assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+    }
+
+    @Test public void sharedDestinationsExposeSelectionAndReuseExistingActivities() throws Exception {
+        Object previous=AppearanceController.store(instrumentation.getTargetContext()).getAll().get(AppearanceController.MODE);
+        open(MainActivity.class);
+        await(()->findText(root(),BAND)!=null);
+        Activity bands=activity;
+        AtomicReference<Activity> settings=new AtomicReference<>(),schedule=new AtomicReference<>();
+        try {
+            onUi(()->{
+                assertNavigation("Bands");
+                for(AppearancePreference mode:new AppearancePreference[]{AppearancePreference.LIGHT,AppearancePreference.DARK}) {
+                    AppearanceController.choose(activity,mode);assertNavigation("Bands");
+                }
+                View content=root().findViewWithTag("main-navigation");
+                navigationButton("Bands").performClick();
+                assertSame(content,root().findViewWithTag("main-navigation"));
+                navigationButton("Settings").performClick();
+            });
+            awaitActivity(SettingsActivity.class);settings.set(activity);
+            onUi(()->{assertNavigation("Settings");navigationButton("Schedule").performClick();});
+            awaitActivity(ScheduleActivity.class);schedule.set(activity);
+            onUi(()->{assertNavigation("Schedule");navigationButton("Bands").performClick();});
+            awaitActivity(MainActivity.class);
+            onUi(()->{assertSame(bands,activity);assertNavigation("Bands");});
+            await(()->!booleanField(bands,"syncInProgress"));
+            assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+        } finally {
+            onUi(()->{
+                if(schedule.get()!=null)schedule.get().finish();
+                if(settings.get()!=null)settings.get().finish();
+                bands.finish();
+                var editor=AppearanceController.store(instrumentation.getTargetContext()).edit();
+                if(previous instanceof String mode)editor.putString(AppearanceController.MODE,mode);
+                else editor.remove(AppearanceController.MODE);
+                editor.commit();
+            });
+        }
+    }
+
+    @Test public void reviewBackRecreationAndLauncherReturnKeepTheSettingsDestination() throws Exception {
+        Intent initialLaunch=instrumentation.getTargetContext().getPackageManager()
+                .getLaunchIntentForPackage(instrumentation.getTargetContext().getPackageName());
+        assertNotNull(initialLaunch);
+        activity=instrumentation.startActivitySync(initialLaunch);
+        instrumentation.waitForIdleSync();
+        await(()->findText(root(),BAND)!=null);
+        Activity bands=activity;
+        AtomicReference<Activity> settings=new AtomicReference<>();
+        try {
+            onUi(()->navigationButton("Settings").performClick());
+            awaitActivity(SettingsActivity.class);settings.set(activity);
+            AtomicReference<Integer> scrollPosition=new AtomicReference<>();
+            onUi(()->{
+                findScroll(root()).scrollTo(0,120);
+                scrollPosition.set(findScroll(root()).getScrollY());
+                findText(root(),"Link imported bands").performClick();
+            });
+            awaitActivity(BandLinkReviewActivity.class);
+            instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);
+            awaitActivity(SettingsActivity.class);
+            onUi(()->{
+                assertSame(settings.get(),activity);
+                assertNavigation("Settings");
+                assertEquals(scrollPosition.get().intValue(),findScroll(root()).getScrollY());
+            });
+            Activity previous=activity;
+            onUi(previous::recreate);
+            await(()->{
+                for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                        .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
+                    if(candidate instanceof SettingsActivity&&candidate!=previous){activity=candidate;return true;}
+                return false;
+            });
+            settings.set(activity);
+            onUi(()->{
+                assertNavigation("Settings");
+                assertEquals(scrollPosition.get().intValue(),findScroll(root()).getScrollY());
+            });
+            shell("input keyevent KEYCODE_HOME");
+            await(()->androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.STOPPED).contains(settings.get()));
+            Intent launcher=instrumentation.getTargetContext().getPackageManager()
+                    .getLaunchIntentForPackage(instrumentation.getTargetContext().getPackageName());
+            assertNotNull(launcher);instrumentation.getTargetContext().startActivity(launcher);
+            awaitActivity(SettingsActivity.class);
+            onUi(()->{assertSame(settings.get(),activity);assertNavigation("Settings");});
+        } finally {
+            onUi(()->{if(settings.get()!=null)settings.get().finish();bands.finish();});
+        }
+    }
+
+    private void assertNavigation(String selected) {
+        ViewGroup navigation=root().findViewWithTag("main-navigation");
+        assertNotNull("Every primary destination needs the shared navigation",navigation);
+        assertEquals(3,navigation.getChildCount());
+        String[] labels={"Bands","Schedule","Settings"};
+        for(int i=0;i<3;i++) {
+            TextView button=(TextView)navigation.getChildAt(i);
+            assertEquals(labels[i],button.getText().toString());
+            assertEquals(labels[i].equals(selected),button.isSelected());
+            assertEquals(labels[i]+(labels[i].equals(selected)?", current destination":""),button.getContentDescription());
+            assertTrue(button.isEnabled());
+        }
+    }
+
+    @Test public void detailBackReturnsToTheOriginalBandRowWithSyncAndFestivalActionsReachable() throws Exception {
+        open(MainActivity.class);
+        await(()->findText(root(),BAND)!=null);
+        Activity bands=activity;
+        onUi(()->{
+            View row=findText(root(),BAND);
+            while(!row.isClickable()&&row.getParent() instanceof View parent)row=parent;
+            assertTrue("Band row must open detail",row.isClickable());row.performClick();
+        });
+        awaitActivity(BandDetailActivity.class);
+        onUi(()->findDescription(root(),"Back").performClick());
+        awaitActivity(MainActivity.class);
+        await(()->findText(root(),BAND)!=null&&!booleanField(bands,"syncInProgress"));
+        onUi(()->{
+            assertSame(bands,activity);assertNavigation("Bands");
+            assertNotNull(findText(root(),BAND));
+            assertTrue(findDescription(root(),"Sync and exit").isShown());
+            assertTrue(findDescription(root(),"Archive active festival").isShown());
+        });
+    }
+    private TextView navigationButton(String label) {
+        ViewGroup navigation=root().findViewWithTag("main-navigation");
+        assertNotNull(navigation);
+        return findText(navigation,label);
+    }
+    private void awaitActivity(Class<? extends Activity> type) throws Exception {
+        await(()->{
+            for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
+                if(type.isInstance(candidate)&&!candidate.isFinishing()){activity=candidate;return true;}
+            return false;
+        });
     }
 
     @Test public void detailAndOfflineExportSeparateEstablishedPlanningAndAfterWithCanonicalLinks() throws Exception {

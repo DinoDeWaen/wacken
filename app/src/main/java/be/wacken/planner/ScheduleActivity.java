@@ -71,7 +71,7 @@ public final class ScheduleActivity extends Activity {
         setContentView(render());
     }
 
-    private ScrollView render() {
+    private View render() {
         LinearLayout screen = new LinearLayout(this);
         screen.setOrientation(LinearLayout.VERTICAL);
         WackenTheme.backgroundColor(screen, COLOR_BACKGROUND);
@@ -93,7 +93,8 @@ public final class ScheduleActivity extends Activity {
         subtitle.setPadding(0, dp(4), 0, dp(16));
         screen.addView(subtitle);
 
-        Button back = WackenTheme.actionButton(this, "Back to bands", WackenTheme.ButtonStyle.SECONDARY, view -> finish());
+        Button back = WackenTheme.actionButton(this, "Back to bands", WackenTheme.ButtonStyle.SECONDARY,
+                view -> MainNavigation.open(this,MainNavigation.Destination.BANDS));
         screen.addView(back, fullWidthButtonLayout());
 
         try {
@@ -119,7 +120,7 @@ public final class ScheduleActivity extends Activity {
         ScrollView scrollView = new ScrollView(this);
         WackenTheme.backgroundColor(scrollView, COLOR_BACKGROUND);
         scrollView.addView(screen);
-        return scrollView;
+        return MainNavigation.wrap(this,scrollView,MainNavigation.Destination.SCHEDULE);
     }
 
     private void requestScheduleLocks(ScheduleLockStore scheduleLocks) {

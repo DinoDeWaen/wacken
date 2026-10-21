@@ -331,8 +331,8 @@ public final class BandDetailActivity extends Activity {
     }
 
     private Button homeButton() {
-        Button button = baseIconButton("⌂", "Home", WackenTheme.WHITE);
-        button.setOnClickListener(view -> finish());
+        Button button = WackenTheme.actionButton(this,"Back",WackenTheme.ButtonStyle.SECONDARY,view->finish());
+        button.setContentDescription("Back");
         return button;
     }
 

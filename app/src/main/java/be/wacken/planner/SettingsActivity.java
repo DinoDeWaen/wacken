@@ -55,7 +55,7 @@ public final class SettingsActivity extends Activity {
             redirectToLogin();
             return;
         }
-        setContentView(content());
+        setContentView(MainNavigation.wrap(this,content(),MainNavigation.Destination.SETTINGS));
     }
 
     private boolean loadCurrentSession() {
@@ -157,7 +157,8 @@ public final class SettingsActivity extends Activity {
         }));
         screen.addView(adminSection);
 
-        screen.addView(actionButton("Back to bands", WackenTheme.ButtonStyle.SECONDARY, view -> finish()));
+        screen.addView(actionButton("Back to bands", WackenTheme.ButtonStyle.SECONDARY,
+                view -> MainNavigation.open(this,MainNavigation.Destination.BANDS)));
         return scroll;
     }
 
