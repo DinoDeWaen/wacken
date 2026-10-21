@@ -47,6 +47,7 @@ public final class MusicLinksReviewActivity extends Activity {
 
     @Override protected void onCreate(Bundle state){
         super.onCreate(state);
+        AppearanceController.attach(this);
         if(!new AuthSessionStore(this).load().isPresent()){
             startActivity(new Intent(this,LoginActivity.class));finish();return;
         }
@@ -83,9 +84,9 @@ public final class MusicLinksReviewActivity extends Activity {
         super.onDestroy();
     }
     private ScrollView content(){
-        scroll=new ScrollView(this);scroll.setBackgroundColor(WackenTheme.BACKGROUND);
+        scroll=new ScrollView(this);WackenTheme.backgroundColor(scroll, WackenTheme.BACKGROUND);
         LinearLayout screen=column();screen.setPadding(dp(16),dp(16),dp(16),dp(16));scroll.addView(screen);
-        TextView title=label("Find music links");title.setTextSize(26);title.setTextColor(WackenTheme.AMBER);screen.addView(title);
+        TextView title=label("Find music links");title.setTextSize(26);WackenTheme.textColor(title, WackenTheme.AMBER);screen.addView(title);
         screen.addView(label(session.festival==null?"Selected band only":"Selected festival: "+session.festival));
         screen.addView(label("Existing links and ratings are kept. Search terms never rename bands. Unverified links stay empty."));
         status=label("");screen.addView(status);
@@ -112,7 +113,7 @@ public final class MusicLinksReviewActivity extends Activity {
             row.addView(label("Known YouTube: "+b.youtubeUrl().orElse("empty")));
             row.addView(label("Known Spotify: "+b.spotifyUrl().orElse("empty")));
         });
-        EditText term=new EditText(this);term.setSingleLine(true);term.setTextColor(WackenTheme.TEXT);
+        EditText term=new EditText(this);term.setSingleLine(true);WackenTheme.textColor(term, WackenTheme.TEXT);
         term.setContentDescription("Search term for "+name);term.setText(session.terms.get(name));term.setEnabled(!session.busy);
         term.addTextChangedListener(new TextWatcher(){
             public void beforeTextChanged(CharSequence s,int start,int count,int after){}
@@ -142,7 +143,7 @@ public final class MusicLinksReviewActivity extends Activity {
                 for(String url:evidence.youtubeUrls())row.addView(label("Unverified YouTube: "+url));
                 for(String url:evidence.spotifyUrls())row.addView(label("Unverified Spotify: "+url));
             }
-            CheckBox choose=new CheckBox(this);choose.setText("Choose verified identity");choose.setTextColor(WackenTheme.TEXT);
+            CheckBox choose=new CheckBox(this);choose.setText("Choose verified identity");WackenTheme.textColor(choose, WackenTheme.TEXT);
             choose.setMinHeight(dp(48));choose.setChecked(Objects.equals(session.selected.get(name),index));
             choose.setEnabled(!session.busy&&review.state()==FindBandMusicLinksUseCase.State.REVIEW&&candidate.verified());
             choose.setOnCheckedChangeListener((v,checked)->{
@@ -155,7 +156,7 @@ public final class MusicLinksReviewActivity extends Activity {
             });refine.setEnabled(!session.busy);row.addView(refine);
         }
         CheckBox checked=new CheckBox(this);checked.setText("I checked the identity evidence for "+name);
-        checked.setTextColor(WackenTheme.TEXT);checked.setMinHeight(dp(48));
+        WackenTheme.textColor(checked, WackenTheme.TEXT);checked.setMinHeight(dp(48));
         checked.setChecked(session.acknowledged.contains(name));checked.setEnabled(!session.busy&&session.selected.containsKey(name));
         Button save=button("Save approved links for "+name,v->save(name,review));
         save.setEnabled(!session.busy&&session.selected.containsKey(name)&&session.acknowledged.contains(name));
@@ -215,7 +216,7 @@ public final class MusicLinksReviewActivity extends Activity {
     }
     private LinearLayout column(){LinearLayout view=new LinearLayout(this);view.setOrientation(LinearLayout.VERTICAL);return view;}
     private TextView label(String text){
-        TextView view=new TextView(this);view.setText(text);view.setTextColor(WackenTheme.TEXT);
+        TextView view=new TextView(this);view.setText(text);WackenTheme.textColor(view, WackenTheme.TEXT);
         view.setPadding(0,dp(6),0,dp(6));return view;
     }
     private Button button(String text,View.OnClickListener action){

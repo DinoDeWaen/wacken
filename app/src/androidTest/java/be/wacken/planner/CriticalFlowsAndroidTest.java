@@ -103,6 +103,62 @@ public final class CriticalFlowsAndroidTest {
         assertNotNull(new RoomBandRepository(database).findByName(BAND).orElse(null));
     }
 
+    @Test public void appearanceChangesKeepSelectedFestivalAndPendingRatingWithoutHistoryWrites() throws Exception {
+        Object previous=AppearanceController.store(instrumentation.getTargetContext()).getAll().get(AppearanceController.MODE);
+        open(BandDetailActivity.class);
+        int historyBefore;
+        try(var cursor=database.getOpenHelper().getReadableDatabase().query(
+                "SELECT COUNT(*) FROM personal_band_rating_events WHERE userName = ? AND bandName = ?",new Object[]{USER,BAND})) {
+            assertTrue(cursor.moveToFirst());historyBefore=cursor.getInt(0);
+        }
+        try {
+            onUi(()->{
+                View context=findDescription(root(),"Rating context");
+                AppearanceController.choose(activity,AppearancePreference.DARK);
+                AppearanceController.toggle(activity);
+                assertSame(context,findDescription(root(),"Rating context"));
+                assertNotNull(findText(root(),BAND));
+            });
+            var pending=database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND);
+            assertEquals(4,pending.value);assertEquals("PENDING",pending.syncStatus);
+            try(var cursor=database.getOpenHelper().getReadableDatabase().query(
+                    "SELECT COUNT(*) FROM personal_band_rating_events WHERE userName = ? AND bandName = ?",new Object[]{USER,BAND})) {
+                assertTrue(cursor.moveToFirst());assertEquals(historyBefore,cursor.getInt(0));
+            }
+        } finally {
+            onUi(()->{
+                var editor=AppearanceController.store(activity).edit();
+                if(previous instanceof String mode)editor.putString(AppearanceController.MODE,mode);
+                else editor.remove(AppearanceController.MODE);
+                editor.commit();
+            });
+        }
+    }
+
+    @Test public void settingsChoicesAndQuickToggleShareOnePreference() throws Exception {
+        Object previous=AppearanceController.store(instrumentation.getTargetContext()).getAll().get(AppearanceController.MODE);
+        open(SettingsActivity.class);
+        try {
+            onUi(()->{
+                AppearanceController.choose(activity,AppearancePreference.SYSTEM);
+                assertTrue(((android.widget.RadioButton)findText(root(),"System")).isChecked());
+                findText(root(),"Field Notes light").performClick();
+                assertEquals(AppearancePreference.LIGHT,AppearanceController.preference(activity));
+                assertTrue(findText(root(),"Switch to dark").performClick());
+                assertTrue(((android.widget.RadioButton)findText(root(),"Ironline dark")).isChecked());
+                assertFalse(((android.widget.RadioButton)findText(root(),"Field Notes light")).isChecked());
+                assertEquals(AppearancePreference.DARK,AppearanceController.preference(activity));
+            });
+        } finally {
+            onUi(()->{
+                var editor=AppearanceController.store(activity).edit();
+                if(previous instanceof String mode)editor.putString(AppearanceController.MODE,mode);
+                else editor.remove(AppearanceController.MODE);
+                editor.commit();
+            });
+        }
+    }
+
     @Test public void activeAndArchivedMissingMetadataKeepTheirDistinctAvailableActions() throws Exception {
         open(BandDetailActivity.class);
         onUi(()->{

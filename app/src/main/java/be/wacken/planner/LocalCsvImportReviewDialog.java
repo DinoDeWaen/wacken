@@ -56,7 +56,7 @@ final class LocalCsvImportReviewDialog {
     }
     void show() {
         LinearLayout panel=new LinearLayout(activity);panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setPadding(dp(12),dp(8),dp(12),dp(8));panel.setBackgroundColor(WackenTheme.BACKGROUND);
+        panel.setPadding(dp(12),dp(8),dp(12),dp(8));WackenTheme.backgroundColor(panel, WackenTheme.BACKGROUND);
         TextView scope=label("Local CSV review. Shared data may refresh this cache on the next sync. Ratings and archived data are kept.",WackenTheme.MUTED);
         panel.addView(scope);status=label("",WackenTheme.TEXT);panel.addView(status);
         list=new ListView(activity);panel.addView(list,new LinearLayout.LayoutParams(-1,dp(340)));
@@ -105,9 +105,9 @@ final class LocalCsvImportReviewDialog {
         public View getView(int position,View reused,ViewGroup parent) {
             var row=(ReviewFestivalCsvUseCase.Change)getItem(position);
             LinearLayout view=new LinearLayout(activity);view.setOrientation(LinearLayout.VERTICAL);
-            view.setPadding(dp(8),dp(6),dp(8),dp(10));view.setBackgroundColor(WackenTheme.PANEL);
+            view.setPadding(dp(8),dp(6),dp(8),dp(10));WackenTheme.backgroundColor(view, WackenTheme.PANEL);
             CheckBox accept=new CheckBox(activity);accept.setText("Accept "+row.operation()+" · "+row.kind()+" · "+row.identity());
-            accept.setTextColor(WackenTheme.TEXT);accept.setContentDescription("Accept "+row.key());
+            WackenTheme.textColor(accept, WackenTheme.TEXT);accept.setContentDescription("Accept "+row.key());
             accept.setChecked(state.accepted.contains(row.key()));accept.setEnabled(row.valid()&&!state.busy);
             accept.setOnCheckedChangeListener((button,checked)->{
                 if(state.busy||!row.valid())return;
@@ -125,6 +125,6 @@ final class LocalCsvImportReviewDialog {
         List<String> values=new ArrayList<>();fields.forEach((name,value)->{if(!value.isBlank())values.add(name+"="+value);});
         return String.join("; ",values);
     }
-    private TextView label(String text,int color){TextView view=new TextView(activity);view.setText(text);view.setTextColor(color);view.setPadding(0,dp(4),0,dp(4));return view;}
+    private TextView label(String text,int color){TextView view=new TextView(activity);view.setText(text);WackenTheme.textColor(view,color);view.setPadding(0,dp(4),0,dp(4));return view;}
     private int dp(int value){return (int)(value*activity.getResources().getDisplayMetrics().density);}
 }

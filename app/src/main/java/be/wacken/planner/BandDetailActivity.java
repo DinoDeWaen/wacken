@@ -65,6 +65,7 @@ public final class BandDetailActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppearanceController.attach(this);
         currentSession = new AuthSessionStore(this).load();
         if (!currentSession.isPresent()) {
             startActivity(new Intent(this, LoginActivity.class));
@@ -141,11 +142,11 @@ public final class BandDetailActivity extends Activity {
         screen.setOrientation(LinearLayout.VERTICAL);
         screen.setGravity(Gravity.CENTER);
         screen.setPadding(dp(24), dp(24), dp(24), dp(24));
-        screen.setBackgroundColor(COLOR_BACKGROUND);
+        WackenTheme.backgroundColor(screen, COLOR_BACKGROUND);
 
         TextView message = new TextView(this);
         message.setText("Band details are unavailable. Return to the previous screen and try syncing.");
-        message.setTextColor(COLOR_TEXT);
+        WackenTheme.textColor(message, COLOR_TEXT);
         message.setTextSize(18);
         message.setGravity(Gravity.CENTER);
         screen.addView(message);
@@ -210,7 +211,7 @@ public final class BandDetailActivity extends Activity {
         LinearLayout section = detailSection();
         section.addView(sectionTitle("Festival after-rating", false));
         TextView afterStatus = new TextView(this);
-        afterStatus.setTextColor(WackenTheme.MUTED);
+        WackenTheme.textColor(afterStatus, WackenTheme.MUTED);
         afterStatus.setContentDescription("Festival after-rating status");
         String festivalId = selectedFestivalId;
         boolean recovered = afterRatings.findByUserFestivalAndBand(currentUser(), festivalId, selectedBand)

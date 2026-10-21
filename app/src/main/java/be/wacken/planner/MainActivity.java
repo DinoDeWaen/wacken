@@ -86,6 +86,7 @@ public final class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppearanceController.attach(this);
         if (savedInstanceState != null) {
             pendingScrollBandName = savedInstanceState.getString(STATE_PENDING_SCROLL_BAND_NAME);
         }
@@ -101,7 +102,7 @@ public final class MainActivity extends Activity {
         screen.addView(header());
         screen.addView(actionRow());
         syncStatus = new TextView(this);
-        syncStatus.setTextColor(COLOR_MUTED);
+        WackenTheme.textColor(syncStatus, COLOR_MUTED);
         syncStatus.setTextSize(13);
         syncStatus.setGravity(Gravity.CENTER_HORIZONTAL);
         syncStatus.setPadding(0, 0, 0, dp(10));
@@ -110,7 +111,7 @@ public final class MainActivity extends Activity {
         screen.addView(tableHeader);
 
         status = new TextView(this);
-        status.setTextColor(COLOR_MUTED);
+        WackenTheme.textColor(status, COLOR_MUTED);
         status.setGravity(Gravity.CENTER_HORIZONTAL);
         status.setPadding(0, dp(20), 0, dp(20));
         screen.addView(status);
@@ -123,7 +124,7 @@ public final class MainActivity extends Activity {
         bandList = new ListView(this);
         bandList.setDivider(null);
         bandList.setCacheColorHint(COLOR_BACKGROUND);
-        bandList.setBackgroundColor(COLOR_BACKGROUND);
+        WackenTheme.backgroundColor(bandList, COLOR_BACKGROUND);
         screen.addView(bandList, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0,
@@ -187,7 +188,7 @@ public final class MainActivity extends Activity {
     private LinearLayout contentView() {
         LinearLayout screen = new LinearLayout(this);
         screen.setOrientation(LinearLayout.VERTICAL);
-        screen.setBackgroundColor(COLOR_BACKGROUND);
+        WackenTheme.backgroundColor(screen, COLOR_BACKGROUND);
         int padding = dp(14);
         screen.setPadding(padding, padding, padding, padding);
         return screen;
@@ -315,7 +316,7 @@ public final class MainActivity extends Activity {
 
         title = new TextView(this);
         title.setText("Bands");
-        title.setTextColor(WackenTheme.AMBER);
+        WackenTheme.textColor(title, WackenTheme.AMBER);
         title.setTextSize(28);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.START);
@@ -323,9 +324,10 @@ public final class MainActivity extends Activity {
 
         subtitle = new TextView(this);
         subtitle.setText("Line-up ratings for my group");
-        subtitle.setTextColor(COLOR_MUTED);
+        WackenTheme.textColor(subtitle, COLOR_MUTED);
         subtitle.setGravity(Gravity.START);
         header.addView(subtitle);
+        header.addView(WackenTheme.appearanceToggle(this));
 
         return header;
     }
@@ -510,7 +512,7 @@ public final class MainActivity extends Activity {
         if (syncStatus == null) {
             return;
         }
-        syncStatus.setTextColor(color);
+        WackenTheme.textColor(syncStatus,color);
         syncStatus.setText(state + " · " + repositories.pendingSyncSummary().description());
     }
 
@@ -539,11 +541,11 @@ public final class MainActivity extends Activity {
         panel.setOrientation(LinearLayout.HORIZONTAL);
         panel.setGravity(Gravity.CENTER);
         panel.setPadding(dp(18), dp(16), dp(18), dp(16));
-        panel.setBackgroundColor(Color.argb(188, 6, 8, 9));
+        WackenTheme.backgroundColor(panel,WackenTheme.PANEL);
 
         TextView title = new TextView(this);
         title.setText("SYNC");
-        title.setTextColor(Color.WHITE);
+        WackenTheme.textColor(title,WackenTheme.TEXT);
         title.setTextSize(16);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER);
@@ -556,7 +558,7 @@ public final class MainActivity extends Activity {
         panel.addView(syncAnimation, animationLayout);
 
         syncOverlayMessage = new TextView(this);
-        syncOverlayMessage.setTextColor(COLOR_TEXT);
+        WackenTheme.textColor(syncOverlayMessage, COLOR_TEXT);
         syncOverlayMessage.setTextSize(14);
         syncOverlayMessage.setTypeface(Typeface.DEFAULT_BOLD);
         syncOverlayMessage.setGravity(Gravity.CENTER_VERTICAL);
@@ -641,7 +643,7 @@ public final class MainActivity extends Activity {
 
     private TextView headerCell(String text, float weight) {
         TextView cell = cell(text, Typeface.DEFAULT_BOLD, weight);
-        cell.setTextColor(COLOR_TEXT);
+        WackenTheme.textColor(cell, COLOR_TEXT);
         cell.setTextSize(13);
         cell.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, COLOR_GRID, 4));
         return cell;
@@ -655,7 +657,7 @@ public final class MainActivity extends Activity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setBackgroundColor(backgroundColor);
+        WackenTheme.backgroundColor(row,backgroundColor);
         row.setLayoutParams(new ListView.LayoutParams(
                 ListView.LayoutParams.MATCH_PARENT,
                 dp(heightDp)
@@ -668,7 +670,7 @@ public final class MainActivity extends Activity {
         cell.setText(text);
         cell.setSingleLine(true);
         cell.setEllipsize(TextUtils.TruncateAt.END);
-        cell.setTextColor(COLOR_TEXT);
+        WackenTheme.textColor(cell, COLOR_TEXT);
         cell.setTextSize(12);
         cell.setTypeface(typeface);
         cell.setGravity(Gravity.CENTER_VERTICAL);
@@ -686,7 +688,7 @@ public final class MainActivity extends Activity {
 
         name.setSingleLine(true);
         name.setEllipsize(TextUtils.TruncateAt.END);
-        name.setTextColor(COLOR_TEXT);
+        WackenTheme.textColor(name, COLOR_TEXT);
         name.setTextSize(12);
         name.setTypeface(Typeface.DEFAULT_BOLD);
 
@@ -876,7 +878,7 @@ public final class MainActivity extends Activity {
 
         private void bindRow(RowHolder holder, int position) {
             BandListItem band = getItem(position);
-            holder.row.setBackgroundColor(position % 2 == 0 ? COLOR_ROW_DARK : COLOR_ROW_LIGHT);
+            WackenTheme.backgroundColor(holder.row,position % 2 == 0 ? COLOR_ROW_DARK : COLOR_ROW_LIGHT);
             holder.row.setOnClickListener(view -> {
                 if (!loading) {
                     openBandDetail(bandsByName, band);

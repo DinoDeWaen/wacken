@@ -24,17 +24,17 @@ final class BandDetailPresentation {
 
     View render(BandDetailItem detail, BiConsumer<String, ImageView> loadImage, List<View> sections) {
         ScrollView scroll = new ScrollView(activity);
-        scroll.setBackgroundColor(WackenTheme.BACKGROUND);
+        WackenTheme.backgroundColor(scroll, WackenTheme.BACKGROUND);
         LinearLayout screen = new LinearLayout(activity);
         screen.setOrientation(LinearLayout.VERTICAL);
         screen.setGravity(Gravity.CENTER_HORIZONTAL);
-        screen.setBackgroundColor(WackenTheme.BACKGROUND);
+        WackenTheme.backgroundColor(screen, WackenTheme.BACKGROUND);
         screen.setPadding(dp(16), dp(16), dp(16), dp(16));
         scroll.addView(screen, new ScrollView.LayoutParams(ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
 
         TextView title = new TextView(activity);
         title.setText(detail.bandName());
-        title.setTextColor(WackenTheme.AMBER);
+        WackenTheme.textColor(title, WackenTheme.AMBER);
         title.setTextSize(26);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -62,7 +62,7 @@ final class BandDetailPresentation {
 
     TextView context() {
         TextView context = new TextView(activity);
-        context.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(context, WackenTheme.TEXT);
         context.setContentDescription("Rating context");
         return context;
     }
@@ -82,7 +82,7 @@ final class BandDetailPresentation {
     TextView sectionTitle(String text, boolean spacious) {
         TextView title = new TextView(activity);
         title.setText(text);
-        title.setTextColor(WackenTheme.AMBER);
+        WackenTheme.textColor(title, WackenTheme.AMBER);
         title.setTextSize(18);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -96,7 +96,7 @@ final class BandDetailPresentation {
         for (var item : detail.personalRatingHistory()) {
             TextView line = new TextView(activity);
             line.setText(item.displayText());
-            line.setTextColor(WackenTheme.TEXT);
+            WackenTheme.textColor(line, WackenTheme.TEXT);
             line.setTextSize(14);
             line.setGravity(Gravity.CENTER_HORIZONTAL);
             line.setPadding(0, dp(3), 0, dp(3));
@@ -132,7 +132,7 @@ final class BandDetailPresentation {
     TextView infoLine(String label, String value) {
         TextView line = new TextView(activity);
         line.setText(label + ": " + value);
-        line.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(line, WackenTheme.TEXT);
         line.setTextSize(15);
         line.setGravity(Gravity.CENTER_HORIZONTAL);
         line.setPadding(0, dp(3), 0, dp(3));
@@ -142,7 +142,7 @@ final class BandDetailPresentation {
     TextView groupRatings(BandDetailItem detail) {
         TextView ratings = new TextView(activity);
         ratings.setText(detail.hasPersonRatings() ? "Group: " + detail.personRatingSummary() : "Group ratings: not synced yet");
-        ratings.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(ratings, WackenTheme.TEXT);
         ratings.setTextSize(13);
         ratings.setGravity(Gravity.CENTER_HORIZONTAL);
         ratings.setPadding(0, dp(6), 0, dp(2));
@@ -170,7 +170,7 @@ final class BandDetailPresentation {
         panel.setLayoutParams(layout);
         TextView paragraph = new TextView(activity);
         paragraph.setText(text);
-        paragraph.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(paragraph, WackenTheme.TEXT);
         paragraph.setTextSize(15);
         paragraph.setGravity(Gravity.START);
         paragraph.setLineSpacing(dp(2), 1.0f);

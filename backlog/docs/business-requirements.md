@@ -86,6 +86,47 @@ Rotation retains decisions; no shared-source import API is introduced.
 - Business logic in Android UI, Activities, or Fragments.
 - Android instrumentation tests beyond critical persistence and UI regression flows unless a future task makes them meaningful.
 
+### Approved release 3.0 scope — planned, not yet shipped
+
+Development increment TASK-205 adds the approved presentation-only appearance
+foundation: System/Dark/Light device-local preference, shared semantic palette
+bindings and non-rebuilding theme updates. The latest published release remains
+2.35.1. Remaining3.0 navigation/layout/accessibility and screen-specific recovery
+tasks are not implied complete; TASK-212 still owns integrated native validation.
+ADR0024 records explicit standard-approach approval. No rating, ownership,
+provider, authentication or backend data contract changes.
+
+The user validated the paired Ironline dark / Field Notes light proposal on
+17 October2026. [The design and flow contract](release-3.0-design-contract.md)
+defines the palettes, shared layout, state wording and complete screen/dialog
+inventory for TASK-204–213. Release2.35.1 remains the implemented baseline.
+
+For3.0, the approved appearance choice supersedes the dark-only intent of
+BR-047/BR-047a: default System follows device appearance; explicit Dark/Light
+is stored on the device, and the header toggle selects the opposite explicit
+appearance. Both use the same proportional body type, hierarchy, geometry and
+48dp minimum interactive targets; light uses selective serif headings. Appearance
+changes/recreation preserve screen, selected context, drafts, scroll, expanded
+sections and pending work without replaying writes.
+
+For3.0, the approved main navigation supersedes BR-061 compact icon-only intent:
+visible labeled Bands, Schedule and Settings destinations in that order, with
+accessible current state and correct detail/review Back behavior. Icons supplement
+labels; sync/close, festival management and external-app return remain reachable.
+Loading, empty, cached/offline, locally saved/pending, acknowledged shared save
+and error/retry states must be distinguishable in words in both appearances.
+
+This is a presentation change. ADR0016 remains authoritative: canonical metadata,
+member-specific established opinion, selected-festival planning and after-ratings,
+atomic one-time creation snapshots, archive-only nonempty promotion and audited
+source-aware corrections. No latest-history fallback, cross-member/festival
+overwrite, new provider, backend theme synchronization or business-policy change.
+TASK-212 must verify native contrast, 200% text, focus/TalkBack, physical targets,
+state retention and critical flows before TASK-213 release; prototype approval
+and CSS contrast results do not establish native accessibility or measured
+festival usability. The current BR-047/047a/061 rows below still describe shipped
+behavior until their native implementation tasks are completed.
+
 ### Business Rules Index
 
 | Area | Rules | Read when |

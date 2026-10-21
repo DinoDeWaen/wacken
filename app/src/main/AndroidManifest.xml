@@ -10,37 +10,37 @@
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
+        <activity android:configChanges="uiMode"
             android:name=".BandDetailActivity"
             android:exported="false" />
-        <activity
+        <activity android:configChanges="uiMode"
             android:name=".ScheduleActivity"
             android:exported="false" />
-        <activity
+        <activity android:configChanges="uiMode"
             android:name=".SettingsActivity"
             android:exported="false" />
-        <activity
+        <activity android:configChanges="uiMode"
             android:name=".ImportCsvActivity"
             android:exported="false" />
-        <activity
+        <activity android:configChanges="uiMode"
             android:name=".BandLinkReviewActivity"
             android:exported="false" />
-        <activity
+        <activity android:configChanges="uiMode"
             android:name=".BandMetadataReviewActivity"
             android:exported="false" />
-        <activity
+        <activity android:configChanges="uiMode"
             android:name=".MusicLinksReviewActivity"
             android:exported="false" />
-        <activity
+        <activity android:configChanges="uiMode"
             android:name=".ArchivedFestivalActivity"
             android:exported="false" />
-        <activity
+        <activity android:configChanges="uiMode"
             android:name=".ArchivedBandDetailActivity"
             android:exported="false" />
-        <activity
+        <activity android:configChanges="uiMode"
             android:name=".LoginActivity"
             android:exported="false" />
-        <activity
+        <activity android:configChanges="uiMode"
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop">

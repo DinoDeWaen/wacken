@@ -49,6 +49,7 @@ public final class SettingsActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppearanceController.attach(this);
         sessionStore = new AuthSessionStore(this);
         if (!loadCurrentSession()) {
             redirectToLogin();
@@ -69,17 +70,17 @@ public final class SettingsActivity extends Activity {
 
     private ScrollView content() {
         ScrollView scroll = new ScrollView(this);
-        scroll.setBackgroundColor(COLOR_BACKGROUND);
+        WackenTheme.backgroundColor(scroll, COLOR_BACKGROUND);
 
         LinearLayout screen = new LinearLayout(this);
         screen.setOrientation(LinearLayout.VERTICAL);
-        screen.setBackgroundColor(COLOR_BACKGROUND);
+        WackenTheme.backgroundColor(screen, COLOR_BACKGROUND);
         screen.setPadding(dp(16), dp(16), dp(16), dp(16));
         scroll.addView(screen);
 
         TextView title = new TextView(this);
         title.setText("Settings");
-        title.setTextColor(COLOR_AMBER);
+        WackenTheme.textColor(title, COLOR_AMBER);
         title.setTextSize(28);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -87,10 +88,16 @@ public final class SettingsActivity extends Activity {
 
         TextView subtitle = new TextView(this);
         subtitle.setText("Group, import, and sync");
-        subtitle.setTextColor(COLOR_MUTED);
+        WackenTheme.textColor(subtitle, COLOR_MUTED);
         subtitle.setGravity(Gravity.CENTER_HORIZONTAL);
         subtitle.setPadding(0, dp(4), 0, dp(18));
         screen.addView(subtitle);
+
+        LinearLayout appearanceSection = section("Appearance");
+        appearanceSection.addView(infoText("System follows this device. Dark and Light stay selected until changed."));
+        appearanceSection.addView(WackenTheme.appearanceChoices(this));
+        appearanceSection.addView(WackenTheme.appearanceToggle(this));
+        screen.addView(appearanceSection);
 
         LinearLayout groupSection = section("Group");
         groupSection.addView(infoText("Signed in as " + currentSession.email()));
@@ -99,7 +106,7 @@ public final class SettingsActivity extends Activity {
 
         LinearLayout ratingSection = section("Rating allocation");
         ratingAllocation = new TextView(this);
-        ratingAllocation.setTextColor(COLOR_TEXT);
+        WackenTheme.textColor(ratingAllocation, COLOR_TEXT);
         ratingAllocation.setTextSize(15);
         ratingAllocation.setTypeface(Typeface.DEFAULT_BOLD);
         ratingAllocation.setGravity(Gravity.START);
@@ -118,7 +125,7 @@ public final class SettingsActivity extends Activity {
 
         syncIndicator = new TextView(this);
         syncIndicator.setText("⚡");
-        syncIndicator.setTextColor(COLOR_ACCENT);
+        WackenTheme.textColor(syncIndicator, COLOR_ACCENT);
         syncIndicator.setTextSize(36);
         syncIndicator.setTypeface(Typeface.DEFAULT_BOLD);
         syncIndicator.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -126,7 +133,7 @@ public final class SettingsActivity extends Activity {
         syncSection.addView(syncIndicator);
 
         status = new TextView(this);
-        status.setTextColor(COLOR_MUTED);
+        WackenTheme.textColor(status, COLOR_MUTED);
         status.setGravity(Gravity.START);
         status.setPadding(0, dp(8), 0, 0);
         refreshSyncStatus("Cached data", COLOR_MUTED);
@@ -170,7 +177,7 @@ public final class SettingsActivity extends Activity {
         if (feedback == null || feedback.isBlank()) {
             return;
         }
-        status.setTextColor(resultCode == RESULT_OK ? WackenTheme.SUCCESS_GREEN : COLOR_AMBER);
+        WackenTheme.textColor(status,resultCode == RESULT_OK ? WackenTheme.SUCCESS_GREEN : COLOR_AMBER);
         status.setText(feedback);
     }
 
@@ -199,7 +206,7 @@ public final class SettingsActivity extends Activity {
 
         TextView heading = new TextView(this);
         heading.setText(title);
-        heading.setTextColor(COLOR_AMBER);
+        WackenTheme.textColor(heading, COLOR_AMBER);
         heading.setTextSize(15);
         heading.setTypeface(Typeface.DEFAULT_BOLD);
         heading.setPadding(0, 0, 0, dp(6));
@@ -210,7 +217,7 @@ public final class SettingsActivity extends Activity {
     private TextView infoText(String text) {
         TextView info = new TextView(this);
         info.setText(text);
-        info.setTextColor(COLOR_MUTED);
+        WackenTheme.textColor(info, COLOR_MUTED);
         info.setTextSize(13);
         info.setPadding(0, 0, 0, dp(8));
         return info;
@@ -331,7 +338,7 @@ public final class SettingsActivity extends Activity {
         input.setSingleLine(true);
         input.setSelectAllOnFocus(true);
         input.setHint("Festival name");
-        input.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(input, WackenTheme.TEXT);
         input.setHintTextColor(WackenTheme.MUTED);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
@@ -437,7 +444,7 @@ public final class SettingsActivity extends Activity {
     }
 
     private void showStatus(String message, int color) {
-        status.setTextColor(color);
+        WackenTheme.textColor(status,color);
         status.setText(message);
     }
 

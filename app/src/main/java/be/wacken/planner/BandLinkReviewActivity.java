@@ -33,6 +33,7 @@ public final class BandLinkReviewActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppearanceController.attach(this);
         repositories = new AppRepositories(this);
         reviewBands = new ReviewImportedBandLinksUseCase(
                 repositories.festivals(),
@@ -50,7 +51,7 @@ public final class BandLinkReviewActivity extends Activity {
 
     private ScrollView content() {
         ScrollView scroll = new ScrollView(this);
-        scroll.setBackgroundColor(WackenTheme.BACKGROUND);
+        WackenTheme.backgroundColor(scroll, WackenTheme.BACKGROUND);
 
         LinearLayout screen = new LinearLayout(this);
         screen.setOrientation(LinearLayout.VERTICAL);
@@ -59,13 +60,13 @@ public final class BandLinkReviewActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText("Link Imported Bands");
-        title.setTextColor(WackenTheme.AMBER);
+        WackenTheme.textColor(title, WackenTheme.AMBER);
         title.setTextSize(26);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
         screen.addView(title);
 
         status = new TextView(this);
-        status.setTextColor(WackenTheme.MUTED);
+        WackenTheme.textColor(status, WackenTheme.MUTED);
         status.setPadding(0, dp(8), 0, dp(12));
         status.setText("Review possible matches. No match is valid.");
         screen.addView(status);
@@ -85,7 +86,7 @@ public final class BandLinkReviewActivity extends Activity {
         if (candidates.isEmpty()) {
             TextView empty = new TextView(this);
             empty.setText("No likely imported-band matches found.");
-            empty.setTextColor(WackenTheme.TEXT);
+            WackenTheme.textColor(empty, WackenTheme.TEXT);
             empty.setPadding(dp(12), dp(10), dp(12), dp(10));
             empty.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
             rows.addView(empty);
@@ -110,7 +111,7 @@ public final class BandLinkReviewActivity extends Activity {
 
         TextView imported = new TextView(this);
         imported.setText(candidate.uploadedDisplayName());
-        imported.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(imported, WackenTheme.TEXT);
         imported.setTextSize(16);
         LinearLayout.LayoutParams importedLayout = new LinearLayout.LayoutParams(
                 0,
@@ -133,7 +134,7 @@ public final class BandLinkReviewActivity extends Activity {
         search.setText(candidate.searchTerm());
         search.setSingleLine(true);
         search.setHint("Search own band database");
-        search.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(search, WackenTheme.TEXT);
         search.setHintTextColor(WackenTheme.MUTED);
         controls.addView(search);
 
