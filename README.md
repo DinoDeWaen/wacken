@@ -13,6 +13,22 @@ evidence before publication; qualitative prototype approval is not a native pass
 
 Five interactive HTML design directions are available in the [design study](design/release-2.34/README.md): [open the prototype](design/release-2.34/index.html), [compare the styles](design/release-2.34/compare.html), and follow the [review exercise](design/release-2.34/review-guide.md). They use simulated data and do not change the released Android app. The [validation record](design/release-2.34/validation-review.md) distinguishes user approval from the native accessibility/device checks still needed for 3.0. Run `python3 -m http.server 8234 --bind 127.0.0.1 --directory design/release-2.34` and visit `http://127.0.0.1:8234/index.html` for a local browser preview.
 
+The3.0 development branch now adds the approved
+[shared appearance controller (ADR0024)](backlog/decisions/0024-shared-native-appearance-controller.md).
+Settings → Appearance offers System, Ironline dark and Field Notes light;
+System follows device appearance, explicit choices persist locally, and the
+header action selects the opposite explicit mode. Shared semantic bindings
+update existing views/panels and system bars without replaying business writes.
+Activity recreation uses screen-owned saved/retained state; login passwords are
+retained for configuration changes in memory only. TASK-206–211 still own the
+remaining navigation, layout, control accessibility and screen-specific recovery
+work; this foundation does not establish completed3.0 usability or publication.
+
+Focused checks: `./gradlew :app:testDebugUnitTest --tests '*AppearancePreferenceTest'`
+and, on an isolated booted emulator,
+`sh scripts/verify-android-smoke.sh emulator-5554 be.wacken.planner.AppearanceAndroidTest,be.wacken.planner.CriticalFlowsAndroidTest`.
+Use the full native suite and TASK-212 matrix before release.
+
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.
@@ -278,6 +294,12 @@ reviewed duplicate identities rather than allowing a total finding count or
 ignoring lint exit1. Two exact TASK228 stale rows are reported as accepted stale
 claims; no other dangling endpoints, deleted-file ownership or flow use are
 accepted. There are no accepted component islands.
+
+The [TASK205 appearance review](backlog/docs/groma-appearance-review-2026-10-21.md)
+updates only the visual-theme ownership/prose, seven duplicate identities and
+reviewed scanner diagnostics for the approved controller. It retains95 components,
+now296 owned Java sources,13 flows and88 individually reviewed groups; tool pins
+and accepted stale-row exceptions are unchanged.
 
 For intentional architecture changes, generate an external review candidate:
 

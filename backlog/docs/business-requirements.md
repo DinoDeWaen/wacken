@@ -88,6 +88,14 @@ Rotation retains decisions; no shared-source import API is introduced.
 
 ### Approved release 3.0 scope — planned, not yet shipped
 
+Development increment TASK-205 adds the approved presentation-only appearance
+foundation: System/Dark/Light device-local preference, shared semantic palette
+bindings and non-rebuilding theme updates. The latest published release remains
+2.35.1. Remaining3.0 navigation/layout/accessibility and screen-specific recovery
+tasks are not implied complete; TASK-212 still owns integrated native validation.
+ADR0024 records explicit standard-approach approval. No rating, ownership,
+provider, authentication or backend data contract changes.
+
 The user validated the paired Ironline dark / Field Notes light proposal on
 17 October2026. [The design and flow contract](release-3.0-design-contract.md)
 defines the palettes, shared layout, state wording and complete screen/dialog

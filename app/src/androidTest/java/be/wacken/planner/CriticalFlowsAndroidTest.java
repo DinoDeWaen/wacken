@@ -142,7 +142,7 @@ public final class CriticalFlowsAndroidTest {
             onUi(()->{
                 AppearanceController.choose(activity,AppearancePreference.SYSTEM);
                 assertTrue(((android.widget.RadioButton)findText(root(),"System")).isChecked());
-                assertTrue(findText(root(),"Field Notes light").performClick());
+                findText(root(),"Field Notes light").performClick();
                 assertEquals(AppearancePreference.LIGHT,AppearanceController.preference(activity));
                 assertTrue(findText(root(),"Switch to dark").performClick());
                 assertTrue(((android.widget.RadioButton)findText(root(),"Ironline dark")).isChecked());
