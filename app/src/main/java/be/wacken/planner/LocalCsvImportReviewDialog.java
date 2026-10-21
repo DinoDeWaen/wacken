@@ -125,6 +125,6 @@ final class LocalCsvImportReviewDialog {
         List<String> values=new ArrayList<>();fields.forEach((name,value)->{if(!value.isBlank())values.add(name+"="+value);});
         return String.join("; ",values);
     }
-    private TextView label(String text,int color){TextView view=new TextView(activity);view.setText(text);view.setTextColor(color);view.setPadding(0,dp(4),0,dp(4));return view;}
+    private TextView label(String text,int color){TextView view=new TextView(activity);view.setText(text);WackenTheme.textColor(view,color);view.setPadding(0,dp(4),0,dp(4));return view;}
     private int dp(int value){return (int)(value*activity.getResources().getDisplayMetrics().density);}
 }

@@ -140,7 +140,7 @@ public final class ArchivedFestivalActivity extends Activity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setBackgroundColor(color);
+        WackenTheme.backgroundColor(row,color);
         row.setPadding(dp(4), 0, dp(4), 0);
         row.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,

@@ -541,11 +541,11 @@ public final class MainActivity extends Activity {
         panel.setOrientation(LinearLayout.HORIZONTAL);
         panel.setGravity(Gravity.CENTER);
         panel.setPadding(dp(18), dp(16), dp(18), dp(16));
-        panel.setBackgroundColor(Color.argb(188, 6, 8, 9));
+        WackenTheme.backgroundColor(panel,WackenTheme.PANEL);
 
         TextView title = new TextView(this);
         title.setText("SYNC");
-        title.setTextColor(Color.WHITE);
+        WackenTheme.textColor(title,WackenTheme.TEXT);
         title.setTextSize(16);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER);
