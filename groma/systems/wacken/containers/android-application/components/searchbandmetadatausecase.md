@@ -46,3 +46,9 @@ description: Find and apply reviewed metadata
 ---
 
 Finds missing band fields, proposes own-catalog and provider values, and applies only accepted values without overwriting populated metadata.
+
+## Relationships
+
+| Source | Target | Description | Technology |
+| --- | --- | --- | --- |
+| [application/src/main/java/be/wacken/planner/application/ApplyBandMetadataProposalsUseCase.java](../../../../../../application/src/main/java/be/wacken/planner/application/ApplyBandMetadataProposalsUseCase.java) | [domain/src/main/java/be/wacken/planner/domain/BandRepository.java](../../../../../../domain/src/main/java/be/wacken/planner/domain/BandRepository.java) | Saves canonical missing fields | Java call |

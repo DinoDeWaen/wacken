@@ -229,6 +229,12 @@ traces selected-festival planning/after-state, owner-scoped sync, archive promot
 reviewed correction, pending recovery and separate CSV contracts. The reviewed
 rating records have runtime callers; their isolation was missing map knowledge.
 
+The [music discovery island review](backlog/docs/groma-music-islands-evidence-2026-10-21.md)
+connects both entry points, identity/source evidence, bounded official-site retrieval,
+explicit approval and canonical missing-link save. TASK-229/230 reduce disconnected
+components from47 to zero while retaining294 source files under95 responsibilities.
+This does not resolve the separately documented stale deleted-source arrows.
+
 ### Module Map
 
 ```mermaid

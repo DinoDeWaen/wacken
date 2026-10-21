@@ -44,3 +44,9 @@ description: Storage contracts for festival planning data
 ---
 
 Defines the domain-facing access contracts for bands, festivals, lineups, ratings, performances, stages, distances, food, and personal history. Implementations are supplied by Room, Supabase, or file adapters.
+
+## Relationships
+
+| Source | Target | Description | Technology |
+| --- | --- | --- | --- |
+| [domain/src/main/java/be/wacken/planner/domain/BandRepository.java](../../../../../../domain/src/main/java/be/wacken/planner/domain/BandRepository.java) | [infrastructure/src/main/java/be/wacken/planner/infrastructure/SyncedBandRepository.java](../../../../../../infrastructure/src/main/java/be/wacken/planner/infrastructure/SyncedBandRepository.java) | Uses shared source-first writer | Composed Java port dispatch |
