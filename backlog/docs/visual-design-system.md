@@ -1,5 +1,11 @@
 # Wacken Visual Design System
 
+Release3.0 update: [the approved paired design contract](release-3.0-design-contract.md)
+supersedes conflicting dark-only/icon-only, smaller-target and essential-text
+truncation guidance below for TASK-205–213. The remainder records the earlier
+implemented design. The paired contract is planned until native implementation;
+it does not claim that the current2.35.1 release already uses these changes.
+
 ## Purpose
 
 This document is the visual source of truth for Wacken Planner 2026. It

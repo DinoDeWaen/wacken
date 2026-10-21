@@ -4,6 +4,13 @@
 
 Validated direction: [paired Ironline dark / Field Notes light flow](design/release-2.34/themes.html), with a header toggle and System / Dark / Light preference in Settings. The user approved this flow; implementation is planned in the release 3.0 milestone (TASK-204–213), separately from 2.34.
 
+The [3.0 native design contract](backlog/docs/release-3.0-design-contract.md)
+specifies exact paired tokens, shared layout/navigation/state retention and the
+screen/dialog coverage assigned to TASK-205–212. It preserves the implemented
+ADR0016 rating lifecycle. This is planned native scope; the released2.35.1 app
+does not yet implement it. TASK-212 owns actual Android accessibility/device
+evidence before publication; qualitative prototype approval is not a native pass.
+
 Five interactive HTML design directions are available in the [design study](design/release-2.34/README.md): [open the prototype](design/release-2.34/index.html), [compare the styles](design/release-2.34/compare.html), and follow the [review exercise](design/release-2.34/review-guide.md). They use simulated data and do not change the released Android app. The [validation record](design/release-2.34/validation-review.md) distinguishes user approval from the native accessibility/device checks still needed for 3.0. Run `python3 -m http.server 8234 --bind 127.0.0.1 --directory design/release-2.34` and visit `http://127.0.0.1:8234/index.html` for a local browser preview.
 
 ## Context

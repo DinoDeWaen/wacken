@@ -1,15 +1,21 @@
 ---
 id: TASK-204
 title: 'DOC: Define the validated 3.0 paired appearance and flow contract'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-17 13:21'
+updated_date: '2026-10-21 16:39'
 labels:
   - ux
   - release-3.0
 milestone: m-2
 dependencies: []
+modified_files:
+  - backlog/docs/release-3.0-design-contract.md
+  - backlog/docs/business-requirements.md
+  - README.md
+  - backlog/docs/visual-design-system.md
 priority: medium
 type: docs
 ---
@@ -30,6 +36,12 @@ Validated baseline: TASK-201, design/release-2.34/themes.html; user approved 202
 - [ ] #4 README and business requirements impacts use canonical delivery-governance wording; approved behavior is documented, diagrams updated only where affected, and the full validation package is recorded before merge.
 - [ ] #5 The flow contract explicitly distinguishes the established personal band rating, selected-festival planning and after-rating under ADR-0016, and specifies one-time carry-over, archive promotion and source-aware correction states.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Reconcile approved paired HTML and qualitative review with current Android screen/dialog inventory and ADR0016 lifecycle. 2. Write a single3.0 design contract with exact paired palettes/type/spacing/target/navigation/state semantics and screen/state coverage owners TASK205-212; distinguish planned from shipped. 3. Align planned BR047/061 scope and README handover without claiming implementation or measured usability. 4. Validate source/inventory links and prototype preference/contrast checks, inspect retained rating policy, build fresh signed APK from clean completed doc source, record canonical validation impacts and commit before TASK205. Architecture impact: documentation of existing approved design only; Android Views/runtime/module/database decisions unchanged, no new ADR needed. No product code or rule changes.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
