@@ -1,11 +1,11 @@
 ---
 id: TASK-227
 title: 'DOC: Restore truthful runtime and data boundaries in the architecture map'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-10-20 06:25'
-updated_date: '2026-10-21 10:09'
+updated_date: '2026-10-21 10:13'
 labels:
   - groma-audit
   - release-2.35
@@ -478,6 +478,7 @@ modified_files:
   - groma/externals/supabase.md
   - groma/scanners.json
   - groma/config.json
+  - .gitattributes
 priority: high
 type: docs
 ---
@@ -504,36 +505,76 @@ README and diagram impacts are assessed for the affected workflow. ADR impact: n
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Given the rendered map, a reader can identify the internal software system, Android runtime boundary and local/shared storage ownership without interpreting groups as containers.
+- [x] #1 Given the rendered map, a reader can identify the internal software system, Android runtime boundary and local/shared storage ownership without interpreting groups as containers.
 - [x] #2 Every existing component has truthful containment or an explicitly documented tool limitation; IDs, file ownership and useful authored meaning are preserved and no fake source file or boundary is invented.
 - [x] #3 Groma CLI constraints on described-component moves are investigated safely; blocked operations are documented with a supported remedy or explicit unresolved decision, without stripping meaning or directly editing Groma Markdown.
-- [ ] #4 Two rescans and a fresh-checkout comparison preserve the approved structure, source links and existing flows; README and the affected architecture diagrams explain the boundaries.
+- [x] #4 Two rescans and a fresh-checkout comparison preserve the approved structure, source links and existing flows; README and the affected architecture diagrams explain the boundaries.
 - [x] #5 Architecture impact is assessed before implementation; significant boundary, dependency, persistence or test-strategy changes receive explicit human approval before coding and an ADR is recorded when required.
-- [ ] #6 README, business requirements, diagram and ADR impacts use canonical delivery-governance wording; test evidence, manual verification, finalized plan and remaining risks are recorded before merge.
+- [x] #6 README, business requirements, diagram and ADR impacts use canonical delivery-governance wording; test evidence, manual verification, finalized plan and remaining risks are recorded before merge.
 <!-- AC:END -->
 
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Human approved standard tooling remedy on2026-10-21: explicit verified-container declaration and preservation-safe described-component relocation in a disposable pinned upstream checkout.
-2. Add failing focused tests, implement the smallest fix and run upstream checks; retain negative validations and authored meaning/links.
-3. Pin source/patch/artifact identity, document approved tooling ADR and reproducibility; verify the real map in a disposable checkout with two scans and semantic/clean-checkout comparisons before migration.
-4. Migrate only through the validated CLI, record each changed map path/reference, inspect rendered map/source links, complete validation and fresh signed build before Done.
-Tooling architecture change explicitly approved by user. No app/domain/schema changes or scanner upgrades. TASK-233 test-strategy approval remains separate.
+1. Reproduced both published0.7.2 restrictions and obtained explicit standard-tooling approval.
+2. Added red/green declaration/relocation regressions; reused rename link rewriting, retained validation and container/combine limits; updated tool contract/guides. Full upstream checks passed using supported environment controls.
+3. Pinned upstream source, patch, Bun and unchanged Java scanner; added reproducible build/verified wrapper and accepted ADR0021. Fresh source build and disposable map migration preserved all semantics.
+4. Declared three true containers; moved111 Java components through CLI; preserved295 sources,54 prior connections and3 flows; added one hosted-database connection. Config migration preserves scanner and disables updates.
+5. Passed two real scans, clean clone2769bfe with129 exact files after two scans, browser source/container inspection and fresh established-key signed Android build.
+Deviation: local SDK lacks SwiftParser, so upstream tests use supported matching prebuilt Swift-package hook; Node22 type-stripping flag required. Internal source-free storage arrows remain a documented CLI limitation; no fake source/edge added. Tooling approval and ADR complete; no application architecture or task233 CI implementation.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Confirmed in disposable baseline checkout: groma accept android-application exits 1 (no scan match); moving apprepositories exits 1 because it has authored meaning. Experiment left the release map untouched. See backlog/docs/groma-container-limitations-2026-10-20.md for source-supported runtime/storage boundaries and unresolved supported-tooling remedy. Container acceptance/relocation is not complete; do not waive dependent release criteria.
+## Implementation summary
+Restored truthful Groma containment using the explicitly approved local tool fix. Three stable containers represent Android runtime, owned Room cache and owned shared planner database. All111 Java components moved under Android through the CLI. Added a source-supported Supabase platform to owned database relationship. Preserved every original ID, meaning, group, source owner, connection and flow.
 
-README now documents existing runtime/storage boundaries with C4 Mermaid and explicitly states Groma containment remains unresolved. README impact: updated current runtime/storage explanation and tool limits. Business requirements impact: none, because only existing architecture is described. Diagram impact: updated README C4 container view; Groma unchanged. ADR impact: none, because deployed architecture and existing decisions are unchanged. AC1/4/6 remain open pending supported Groma containment remedy and final validation.
+## Acceptance criteria validation
+1. Rendered hierarchy and details show three truthful containers; storage descriptions distinguish ownership from adapters/framework execution.
+2–3.295 unique sources retain original owners;54 original connections and3 flows survive. Tool limitations reproduced on published0.7.2, then repaired with reviewed pinned patch without clearing meaning, fake sources or manual map edits.
+4. Disposable migration passed first. Main map passed two scans. Clean clone of2769bfe passed two scans with all129 map/config files byte-identical; rendered composition source link opens actual AppRepositories.java.
+5. Human explicitly approved standard tooling proposal in this chat; ADR0021 records the change.
+6. Finalized plan, evidence, impacts and risks below. Workflow curation remains separate tasks228–230.
 
-2026-10-21 recheck: found repository-local Groma 0.7.2, while plain groma still resolves global 0.6.6. Earlier global checks missed the local installation. Explicitly invoked local binary in disposable baseline worktree: accept android-application still exits 1 (no scan match), and edit apprepositories --parent android-application still exits 1 (authored meaning). Local structure guide retains restrictions and now refers to config.json. Evidence report updated; no release-map/package/config migration performed. Same containment blockers remain.
+## How to test
+### Automated tests
+Pinned upstream base b8b325fd44f9e78107d271ac794a6e40321dcf53; Bun1.4.3; patch SHA2560ff82c8eec4af88396c169d0f807f7550d06ef230d65602959ebabec1345862d.
+Two new regressions failed on unmodified source and passed after fix. Existing negative parent/kind/collision/loadability validation retained.
+Full upstream bun run check PASS:24 Node,903 Bun passed,62 optional-runtime skips,0failures; typecheck/lint pass with one existing warning. NODE_OPTIONS=--experimental-strip-types for Node22; GROMA_TEST_SWIFT_PACKAGE uses matching published0.2.2 via supported hook because local SDK lacks SwiftParser. Initial SDK/sandbox failures are recorded in report.
+Fresh upstream checkout independently reproduced build; executable SHA256540abf35bc1c2052f24375ead74f9ad892d55a911823e60d4a5dbbace69a2b2d. Wrapper validates source pin, patch and local executable digest.
+sh scripts/groma.sh scan twice: created0/refreshed111/findings88. Clean clone2769bfe:129 map/config files byte-identical after two scans and no Groma diff.
+Semantic comparison:295 unique existing source paths; all111 original components unchanged except parent;54 original connections and3 flows retained; one database-hosting connection added.
+Scanner configuration exact Java0.2.2 source/patterns preserved; automatic updates disabled.
+sh -n scripts/groma.sh scripts/setup-groma.sh and git diff HEAD^ --check PASS. Scoped .gitattributes permits space-prefixed blank unified-patch context lines; upstream source lint still runs.
+Deleted previous APK; ./gradlew assembleRelease --rerun-tasks PASS. apksigner v1/v2 established certificate ede2ae97735a305900e87bc0fdc021c03382db4e30435f2349a96a3fdcc7545f verifies.
+APK SHA256d4eaab3aede97b5dde294b212ffa227c7b04ead1c6c5ad6757d6e079026c56bb; intermediate2.34/code42, not published2.35.
+No Android behavior source changed; previous application/domain/BDD/native71 regression evidence remains applicable. Final milestone gates remain241.
 
-Unblock attempt 2026-10-21: npm registry confirms latest published Groma remains0.7.2; local0.7.2 still rejects container acceptance and described-component relocation in the disposable baseline. Open upstream issue170 independently documents both restrictions: https://github.com/MrLesk/groma.md/issues/170 . Evidence report now includes minimal/standard/maximum remedies and a concrete recommended source-fix design with preservation/negative tests and clean-checkout controls. No tool source or release map changed. Explicit tooling-change approval is required before implementing the recommended option; dependent release criteria remain open.
+### Manual validation
+Reviewed source-supported runtime/storage boundaries and upstream patch. Browser exported map shows three containers and Android111 components; inspected Room ownership prose and opened relocated composition source through How it is built. No device or production backend manual testing claimed.
 
-Human approval received in this chat: i approve, for the standard tooling fix described in groma-container-limitations-2026-10-20.md. Proceeding in a disposable checkout before any release-map migration.
+## TDD / BDD / approval-test evidence
+Focused red/green fixes, preservation tests with concept/file links and flow endpoints, existing negative validations, disposable map characterization then main-map comparison and repeated clean-checkout scans. No new application behavior.
 
-Approved fix implemented and verified: two new regressions red on upstream0.7.2, then green; full check Node24/24, Bun903 passed/62 optional skips/0 failures using supported prebuilt Swift test package and Node type-stripping flag. Fresh upstream checkout reproduced the pinned build. Main map now declares Android, Room and shared planner database; all111 components moved through CLI with295 unique source files, exact original meaning/groups/ownership,54 original connections and3 flows retained. One source-supported Supabase-to-owned-database connection added. Scanner remainsJava0.2.2; config migration preserves patterns and disables automatic updates. Two scans and rendered container/source-link inspection passed. Preparing clean-checkout and final signed-build closure.
+## Architecture impact
+Architecture-significant change: tooling curation capability and pinned build.
+Approval received: user i approve,21October2026, for standard proposal.
+ADR impact: created ADR0021 for reviewed declaration, safe component moves and reproducible local tool ownership. TASK233 test-strategy approval remains separate.
+
+## README impact
+README impact: updated current tool build/launcher, config pin, runtime containment, historical baseline commands and remaining coverage limits.
+
+## Business requirements impact
+Business requirements impact: none, because existing runtime/storage and behavior are documented without changing product scope, policy, persistence or workflow.
+
+## Diagram impact
+Diagram impact: updated Groma container hierarchy, relocated component paths/links and shared-database hosting relationship; existing README C4 remains accurate.
+
+## Commits / logical change list
+2769bfe: pinned tool patch, build/verified launcher, ADR0021, README and CLI-only container migration.
+Final evidence commit: clean-checkout/signed-build report, task closure and patch-context whitespace attributes.
+
+## Risks and follow-up
+Local patch maintenance until upstream equivalent release; binary reports upstream0.7.2 so use wrapper/pin/digest. No promise of cross-host identical binary bytes. Internal software edges still require exact source endpoints: no fabricated Room-storage arrow; README C4/prose explains interaction. Java-only SQL/generated/manifest gaps and88 duplicate candidates remain explicit. Tasks228–230 own workflow curation;233 requires separate approval;241/242 still gate2.35 publication. Unrelated user changes preserved.
 <!-- SECTION:NOTES:END -->

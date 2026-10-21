@@ -1,0 +1,2 @@
+# Unified patches contain space-prefixed empty context lines.
+tools/groma/container-fix.patch whitespace=-blank-at-eol

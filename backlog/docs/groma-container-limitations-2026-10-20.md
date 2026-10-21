@@ -3,6 +3,9 @@
 TASK-227, 20 October 2026. Baseline: `4630970`; evidence closure: `c5f73cb`.
 This describes existing architecture, not a proposed deployment change.
 
+**Current status:** resolved with the explicitly approved, repository-pinned
+tooling fix described below. Earlier failures are retained as historical evidence.
+
 ## Existing boundaries
 
 - **Wacken Planner** is the owned software system. The installed Android
@@ -149,3 +152,69 @@ Explicit human approval is required before implementing this tooling change,
 under AGENTS.md's architecture decision and approval rule. No upstream message,
 issue, PR, package publication, tool source modification or release-map
 migration was performed during this investigation.
+
+## Approved remedy and verified migration — 21 October 2026
+
+The user approved the standard option: “i approve”.
+[ADR0021](../decisions/0021-pinned-groma-container-curation-fix.md) records the
+decision and maintenance boundary. The patch and pin live in `tools/groma/`;
+use `sh scripts/setup-groma.sh` with Bun1.4.3, then `sh scripts/groma.sh`.
+The wrapper leaves the global0.6.6 and npm0.7.2 installations unchanged.
+
+The patch adds `accept <container-id> --declared` for reviewed existing
+containers and preservation-safe component moves through existing rename
+link rewriting. Component acceptance still requires source evidence; container
+moves and combines retain their prior restrictions. No Groma Markdown was
+edited directly, no descriptions were cleared and no Java entry point was
+invented.
+
+Tooling evidence:
+
+- Base upstream commit: `b8b325fd44f9e78107d271ac794a6e40321dcf53`.
+- Patch SHA256: `0ff82c8eec4af88396c169d0f807f7550d06ef230d65602959ebabec1345862d`.
+- Fresh-build executable SHA256: `540abf35bc1c2052f24375ead74f9ad892d55a911823e60d4a5dbbace69a2b2d`.
+  Build hosts/paths may produce different executable bytes; the source and patch
+  are pinned and each local build records/checks its own digest.
+- Two new focused regressions failed on unmodified0.7.2 and passed after the
+  fix. Tests preserve prose, metadata, groups, IDs, code, concept/file
+  relationships and flow endpoints across component moves and rescans; existing
+  invalid-kind, parent, collision and unresolved-result checks remain active.
+- Full upstream `bun run check`: Node24/24, Bun903 passed,62 optional-runtime
+  skips,0 failures; typecheck and lint passed with one existing lint warning.
+  Node22 required `NODE_OPTIONS=--experimental-strip-types`. The local SDK lacks
+  SwiftParser; tests used the matching prebuilt scanner0.2.2 through the existing
+  `GROMA_TEST_SWIFT_PACKAGE` hook. This does not enable Swift in Wacken.
+- Full-check command, from the patched upstream checkout, with Bun1.4.3 on PATH:
+  `GROMA_TEST_SWIFT_PACKAGE=/private/tmp/wacken-227-swift-test/node_modules/@groma/scanner-swift NODE_OPTIONS=--experimental-strip-types bun run check`.
+  The package was installed only in a temporary test directory. Initial SDK and
+  sandbox failures were diagnosed rather than represented as passing tests.
+
+The disposable map migration passed before the real one. The release map now
+declares `android-application`, `on-device-cache` and `shared-planner-database`
+under `wacken`. All111 Java components belong to the Android runtime. The295
+unique source references, original component IDs/prose/metadata/groups, all54
+prior connections and all3 flows were preserved semantically. A55th connection
+from external Supabase to the owned planner database records hosted authorized
+data access. Config migration retained the exact Java0.2.2 scanner patterns;
+automatic updates are explicitly disabled.
+
+Two scans created0/refreshed111/findings88 and preserved the curated structure.
+A clean clone of migration commit `2769bfe` ran two scans and reproduced all129
+map/config files byte for byte. Repeat with the pinned wrapper and
+`git diff --exit-code -- groma`; use the historical126-file manifest only for
+the historical TASK-226 commit.
+
+Browser inspection of the exported working-tree map confirmed all three
+containers, the Android111-component hierarchy, owned Room storage explanation,
+and the composition root's exact AppRepositories.java link opening its source.
+The Groma CLI still requires source endpoints for internal software edges, so
+an app-to-source-free storage arrow is not fabricated. README C4 explains that
+interaction; SQL/generated coverage gaps remain explicit. Workflow curation
+continues in TASK-228–230, rather than claiming all islands are repaired.
+
+The previous APK was deleted and a fresh stable-key signed release built with
+`./gradlew assembleRelease --rerun-tasks`. Signature v1/v2 and established signer
+SHA256 `ede2ae97735a305900e87bc0fdc021c03382db4e30435f2349a96a3fdcc7545f`
+verify. APK SHA256:
+`d4eaab3aede97b5dde294b212ffa227c7b04ead1c6c5ad6757d6e079026c56bb`.
+This intermediate APK remains2.34/code42; milestone2.35 is not published.
