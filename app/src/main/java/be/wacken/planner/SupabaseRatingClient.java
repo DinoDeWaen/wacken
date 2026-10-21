@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,9 +36,9 @@ final class SupabaseRatingClient implements SupabaseRatingRemote {
         if (!freshSession.userId().equals(rating.userName())) {
             throw new IOException("Cannot sync a rating for another user.");
         }
-        String bandId = bandIdFor(rating.band());
+        String bandId = bandLookup(rating.userName()).idFor(rating.band());
         if (rating.rating().value() == 0) {
-            request(
+            request(rating.userName(),
                     "DELETE",
                     "/rest/v1/ratings?group_id=eq." + encode(freshSession.groupId())
                             + "&user_id=eq." + encode(freshSession.userId())
@@ -55,7 +54,7 @@ final class SupabaseRatingClient implements SupabaseRatingRemote {
                     .put("user_id", freshSession.userId())
                     .put("band_id", bandId)
                     .put("rating", rating.rating().value());
-            request(
+            request(rating.userName(),
                     "POST",
                     "/rest/v1/ratings?on_conflict=group_id,user_id,band_id",
                     body.toString(),
@@ -69,8 +68,8 @@ final class SupabaseRatingClient implements SupabaseRatingRemote {
     @Override
     public List<SavedRating> pullGroupRatings(AuthSession session) throws IOException {
         AuthSession freshSession = authenticatedSession();
-        Map<String, String> bandNamesById = bandNamesById();
-        String response = request(
+        Map<String, String> bandNamesById = bandLookup(session.userId()).namesById();
+        String response = request(session.userId(),
                 "GET",
                 "/rest/v1/ratings?select=user_id,band_id,rating&group_id=eq." + encode(freshSession.groupId()),
                 null,
@@ -96,41 +95,12 @@ final class SupabaseRatingClient implements SupabaseRatingRemote {
         }
     }
 
-    private String bandIdFor(Band band) throws IOException {
-        String response = request(
-                "GET",
-                "/rest/v1/bands?select=id&name=eq." + encode(band.name()) + "&limit=1",
-                null,
-                false
-        );
-        try {
-            JSONArray rows = new JSONArray(response);
-            if (rows.length() == 0) {
-                throw new IOException("Band is not available in Supabase: " + band.name());
-            }
-            return rows.getJSONObject(0).getString("id");
-        } catch (JSONException error) {
-            throw new IOException("Supabase band lookup response could not be read.", error);
-        }
+    private SupabaseCanonicalBandLookup bandLookup(String user) {
+        return new SupabaseCanonicalBandLookup(endpoint -> request(user, "GET", endpoint, null, false));
     }
 
-    private Map<String, String> bandNamesById() throws IOException {
-        String response = request("GET", "/rest/v1/bands?select=id,name", null, false);
-        try {
-            JSONArray rows = new JSONArray(response);
-            Map<String, String> bandNamesById = new HashMap<>();
-            for (int index = 0; index < rows.length(); index++) {
-                JSONObject row = rows.getJSONObject(index);
-                bandNamesById.put(row.getString("id"), row.getString("name"));
-            }
-            return bandNamesById;
-        } catch (JSONException error) {
-            throw new IOException("Supabase band lookup response could not be read.", error);
-        }
-    }
-
-    private String request(String method, String endpoint, String body, boolean upsert) throws IOException {
-        return authenticatedRequest.execute(freshSession -> transport.send(method, endpoint, body, freshSession, upsert));
+    private String request(String expectedUser, String method, String endpoint, String body, boolean upsert) throws IOException {
+        return authenticatedRequest.executeForUser(expectedUser, freshSession -> transport.send(method, endpoint, body, freshSession, upsert));
     }
 
 

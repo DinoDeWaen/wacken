@@ -27,6 +27,8 @@ groma:
     - scanner: java
       file: app/src/main/java/be/wacken/planner/SupabaseScheduleLockClient.java
       symbol: SupabaseScheduleLockClient
+    - scanner: java
+      file: app/src/main/java/be/wacken/planner/SupabaseCanonicalBandLookup.java
   group: Storage and synchronization
 description: Sync ratings and schedule choices
 ---

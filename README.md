@@ -846,6 +846,12 @@ response are not bounded by an overall deadline here. If sync fails, retain loca
 data and retry when connectivity improves; clearing app storage can lose pending
 work. No new timeout policy is introduced for login or metadata/image providers.
 
+Remote legacy/planning/history rating lookups share exact canonical-name
+addressing; case and URL escaping are preserved, with no alias guessing or band
+creation. If the signed-in member changes between lookup and write, the existing
+member-binding guard rejects the request. Reopen the screen with the intended
+account and retry retained pending work.
+
 ### Supported Android Java APIs
 
 The app keeps minimum Android API23 support. Its existing Java compatibility
