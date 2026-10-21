@@ -42,3 +42,11 @@ description: Read active and archived festival views
 ---
 
 Builds band list and detail projections, including archived festival history and per-person rating details, from repository data.
+
+## Relationships
+
+| Source | Target | Description | Technology |
+| --- | --- | --- | --- |
+| [application/src/main/java/be/wacken/planner/application/ListBandsUseCase.java](../../../../application/src/main/java/be/wacken/planner/application/ListBandsUseCase.java) | [application/src/main/java/be/wacken/planner/application/MemberRatingProjection.java](../../../../application/src/main/java/be/wacken/planner/application/MemberRatingProjection.java) | Projects member planning stars | Java call |
+| [application/src/main/java/be/wacken/planner/application/ShowBandDetailUseCase.java](../../../../application/src/main/java/be/wacken/planner/application/ShowBandDetailUseCase.java) | [application/src/main/java/be/wacken/planner/application/MemberRatingProjection.java](../../../../application/src/main/java/be/wacken/planner/application/MemberRatingProjection.java) | Projects member planning stars | Java call |
+| [application/src/main/java/be/wacken/planner/application/ListArchivedFestivalBandsUseCase.java](../../../../application/src/main/java/be/wacken/planner/application/ListArchivedFestivalBandsUseCase.java) | [application/src/main/java/be/wacken/planner/application/MemberRatingProjection.java](../../../../application/src/main/java/be/wacken/planner/application/MemberRatingProjection.java) | Projects member planning stars | Java call |

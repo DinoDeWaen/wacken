@@ -109,12 +109,6 @@ public final class ListArchivedFestivalBandsUseCase {
     }
 
     private List<PersonRatingStars> personRatingsFor(String festivalId, Band band) {
-        return planningRatings.findByFestival(festivalId)
-                .stream()
-                .filter(rating -> rating.band().name().equals(band.name()))
-                .filter(rating -> rating.rating().value() > 0)
-                .sorted(Comparator.comparing(SavedFestivalPlanningRating::userName, String.CASE_INSENSITIVE_ORDER))
-                .map(rating -> new PersonRatingStars(rating.userName(), rating.rating().value()))
-                .collect(Collectors.toList());
+        return MemberRatingProjection.forFestivalBand(planningRatings.findByFestival(festivalId), band);
     }
 }

@@ -14,3 +14,9 @@ description: Export cached rating history
 ---
 
 Collects local planning ratings, post-show ratings, group rating details, and available schedule metadata into a CSV payload for Android sharing.
+
+## Relationships
+
+| Source | Target | Description | Technology |
+| --- | --- | --- | --- |
+| [application/src/main/java/be/wacken/planner/application/ExportRatingsCsvUseCase.java](../../../../application/src/main/java/be/wacken/planner/application/ExportRatingsCsvUseCase.java) | [application/src/main/java/be/wacken/planner/application/MemberRatingProjection.java](../../../../application/src/main/java/be/wacken/planner/application/MemberRatingProjection.java) | Projects member planning stars | Java call |
