@@ -14,6 +14,13 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 
 ### Current Implemented Capabilities
 
+Release2.35 is maintenance of the implemented2.34 lifecycle: bounded rating/schedule
+and image networking, consistent errors, canonical identity/scoped projection
+reuse and reviewed detail presentation. It removes an unused full CSV importer
+while preserving the active reviewed workflow. Versioned architecture evidence
+and its development gate add no product capability or rating-policy change.
+The paired appearance/navigation redesign remains3.0.
+
 Release2.34 implements TASK-216–220 and aligned TASK-156/169/172: shared canonical band metadata plus each member's established
 band rating; independent festival planning and after-ratings; copy established
 ratings once on creation and promote nonempty after-ratings only on archive.

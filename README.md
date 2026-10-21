@@ -138,6 +138,7 @@ hashes over new meaning. See [baseline verification evidence](backlog/docs/groma
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
 - V2.31 UAT overview: [`v2.31-user-acceptance-test-overview.md`](backlog/docs/v2.31-user-acceptance-test-overview.md).
+- V2.35 reliability and reviewed architecture maintenance: [`releases/v2.35.md`](releases/v2.35.md).
 - V2.34 canonical ratings, verified music links and reviewed festival imports: [`releases/v2.34.md`](releases/v2.34.md).
 - V2.33.5 missing music links hotfix: [`releases/v2.33.5.md`](releases/v2.33.5.md).
 - V2.33.4 festival creation hotfix: [`releases/v2.33.4.md`](releases/v2.33.4.md).
@@ -238,7 +239,8 @@ This does not resolve the separately documented stale deleted-source arrows.
 The [2.35 integrated validation](backlog/docs/release-2.35-validation.md) maps
 all ten audit findings to repairs/tests, retains all99 helper dispositions and
 records successful API23/API36 native, database and signed migration gates. Final
-2.35 version/publication and latest-stable upgrade evidence remain TASK-242.
+2.35 signed APK, latest-stable upgrade and published-asset evidence accompany
+[the release notes](releases/v2.35.md).
 
 ### Architecture validation
 
