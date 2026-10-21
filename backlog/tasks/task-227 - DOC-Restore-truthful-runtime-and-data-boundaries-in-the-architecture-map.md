@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@codex'
 created_date: '2026-10-20 06:25'
-updated_date: '2026-10-21 10:13'
+updated_date: '2026-10-21 10:16'
 labels:
   - groma-audit
   - release-2.35
@@ -38,7 +38,6 @@ references:
   - bandratingcontext
   - bandrepository
   - canonicalband
-  - confirmedbandalias
   - deletefestivaldialog
   - deletefestivalusecase
   - exportratingcorrectionscsvusecase
@@ -84,19 +83,15 @@ references:
   - ratingstatesyncstore
   - recordfestivalafterratingusecase
   - recoverpendingplanningratingusecase
-  - reviewedfestivalband
   - reviewfestivalbandsusecase
   - reviewfestivalcsvusecase
   - reviewimportedbandlinksusecase
   - roomarchivedratingcorrectioncache
-  - roombandalias
-  - roombandaliasdao
   - roombandaliasrepository
   - roomfestivalafterrating
   - roomfestivalafterratingrepository
   - roomfestivalarchivecache
   - roomfestivalcachemarker
-  - roomfestivalcachemarkerdao
   - roomfestivalcreationcache
   - roomfestivaldeletion
   - roompersonalbandrating

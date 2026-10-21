@@ -121,3 +121,9 @@ description: Store lineup and user state on device
 ---
 
 Room database, DAOs, entities, and repository adapters keep festival and group data available offline and track pending mutable operations.
+
+## Relationships
+
+| Source | Target | Description | Technology |
+| --- | --- | --- | --- |
+| [app/src/main/java/be/wacken/planner/persistence/RoomFestivalRepository.java](../../../../../../app/src/main/java/be/wacken/planner/persistence/RoomFestivalRepository.java) | [app/src/main/java/be/wacken/planner/persistence/RoomFestivalCacheMarkerDao.java](../../../../../../app/src/main/java/be/wacken/planner/persistence/RoomFestivalCacheMarkerDao.java) | Guards initial festival seeding | Java call |

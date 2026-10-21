@@ -19,3 +19,4 @@ Displays an archived festival lineup and opens read-only band details.
 | Source | Target | Description | Technology |
 | --- | --- | --- | --- |
 | [app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java](../../../../../../app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java) | [application/src/main/java/be/wacken/planner/application/ListArchivedFestivalBandsUseCase.java](../../../../../../application/src/main/java/be/wacken/planner/application/ListArchivedFestivalBandsUseCase.java) | Loads archived lineup | Java call |
+| [app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java](../../../../../../app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java) | [app/src/main/java/be/wacken/planner/DeleteFestivalDialog.java](../../../../../../app/src/main/java/be/wacken/planner/DeleteFestivalDialog.java) | Confirms archived festival deletion | Java call |

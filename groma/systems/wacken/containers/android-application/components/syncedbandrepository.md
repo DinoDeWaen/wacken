@@ -29,3 +29,10 @@ description: Refresh Room from selected sources
 ---
 
 Wraps band, stage, performance, distance, food, and rating repositories to expose cached reads with source refresh or write-through behavior.
+
+## Relationships
+
+| Source | Target | Description | Technology |
+| --- | --- | --- | --- |
+| [infrastructure/src/main/java/be/wacken/planner/infrastructure/SyncedBandRepository.java](../../../../../../infrastructure/src/main/java/be/wacken/planner/infrastructure/SyncedBandRepository.java) | [infrastructure/src/main/java/be/wacken/planner/infrastructure/FileBackedBandRepository.java](../../../../../../infrastructure/src/main/java/be/wacken/planner/infrastructure/FileBackedBandRepository.java) | Writes selected TSV source | Java call |
+| [infrastructure/src/main/java/be/wacken/planner/infrastructure/SyncedBandRepository.java](../../../../../../infrastructure/src/main/java/be/wacken/planner/infrastructure/SyncedBandRepository.java) | [app/src/main/java/be/wacken/planner/persistence/RoomBandRepository.java](../../../../../../app/src/main/java/be/wacken/planner/persistence/RoomBandRepository.java) | Publishes local cached bands | Java call |

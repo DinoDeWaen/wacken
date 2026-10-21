@@ -1,6 +1,6 @@
 ---
 type: C4 Component
-title: Festival CSV import
+title: Legacy CSV import workflows
 status: stable
 groma:
   id: importfestivalcsvusecase
@@ -21,10 +21,10 @@ groma:
       file: application/src/main/java/be/wacken/planner/application/FestivalCsvFiles.java
       symbol: FestivalCsvFiles
   group: Application workflows
-description: Validate and import festival data
+description: Retains direct CSV import APIs
 ---
 
-Accepts selected CSV files for bands, stages, performances, distances, and food; validates the records and stores them through repository ports.
+Contains the legacy application CSV import and initial-band-list APIs plus their result/input values. These validate CSV and publish through repository ports for direct callers. The current Android five-file workflow instead invokes ReviewFestivalCsvUseCase through LocalCsvImportReviewDialog, with explicit row acceptance and rollback protection; the old import-screen relationship is a verified stale map claim awaiting explicit safe removal support.
 
 ## Relationships
 

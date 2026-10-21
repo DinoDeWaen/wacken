@@ -216,6 +216,11 @@ internal software relationships, so the C4 view above also explains the
 higher-level app-to-storage interaction. Remaining workflow curation is tracked
 separately in TASK-228–230.
 
+The [festival administration evidence](backlog/docs/groma-festival-administration-evidence-2026-10-21.md)
+traces reviewed group creation, local five-file acceptance/rollback and selected
+festival deletion. Its scope table explains combined identity/cache records and
+the remaining stale-relationship correction required before TASK-228 closes.
+
 ### Module Map
 
 ```mermaid
