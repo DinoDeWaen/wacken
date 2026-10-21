@@ -96,6 +96,14 @@ tasks are not implied complete; TASK-212 still owns integrated native validation
 ADR0024 records explicit standard-approach approval. No rating, ownership,
 provider, authentication or backend data contract changes.
 
+Development increment TASK-206 implements the planned BR-061 navigation override
+on the three main destinations: visible Bands, Schedule and Settings in fixed
+order with current-state semantics. Selecting the current destination does
+nothing; an existing destination is brought forward. Detail/review Back keeps
+the initiating context; sync/close and festival actions remain reachable.
+Recreation/launcher-return and offline navigation are covered by native tests.
+This is development-branch behavior, not a claim that3.0 is already published.
+
 The user validated the paired Ironline dark / Field Notes light proposal on
 17 October2026. [The design and flow contract](release-3.0-design-contract.md)
 defines the palettes, shared layout, state wording and complete screen/dialog

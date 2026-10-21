@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-21 20:01'
+updated_date: '2026-10-21 20:23'
 labels:
   - ux
   - release-3.0
@@ -30,6 +30,10 @@ modified_files:
     groma/systems/wacken/containers/android-application/components/scheduleactivity.md
   - >-
     groma/systems/wacken/containers/android-application/components/settingsactivity.md
+  - backlog/docs/groma-navigation-review-2026-10-21.md
+  - tools/groma/architecture-baseline.json
+  - README.md
+  - backlog/docs/business-requirements.md
 priority: medium
 type: enhancement
 ---
@@ -63,4 +67,6 @@ Validated baseline: TASK-201, design/release-2.34/themes.html; user approved 202
 Cross-cutting architecture approved2026-10-17: follow ADR-0016 and the implemented2.34 lifecycle from TASK-216–220. The3.0 appearance/navigation redesign must preserve canonical band metadata, member-specific current band ratings, separate festival planning/after-ratings, one-time creation snapshots, archive-only promotion and source-aware corrections. No theme/layout change may reintroduce latest-event-as-band-rating or cross-festival fallback.
 
 Added the shared Bands/Schedule/Settings bar with visible/accessibility current state, no-op current destination and REORDER_TO_FRONT Activity reuse. Preserved existing detail/review Back and made Back to bands actually select Bands from either primary screen. Added stable root/list IDs for hierarchy restoration and changed detail Home wording to Back to match its initiating-context behavior. Red native scenario failed before implementation; after implementation the destination reuse scenario passed and app unit suite passed. Critical native run15/16 passed; launcher-return scenario is being rerun from a real launcher intent to distinguish task setup from production behavior. Groma CLI created/described an independent stateless primary-navigation responsibility and authored its three caller, three destination and theme-helper collaborations; source/role/baseline review remains pending.
+
+Final local full native suite passed80/80 on API36 with no failures/skips. The launcher-return failure was traced to the test initial root using an explicit non-launcher intent; using the real package launcher intent passes Settings Back/recreation/scroll/Home-return without a production task workaround. Shared destination reuse, actual Back to original row and reachable sync/festival controls pass. Added bounded wait for the restored ScrollView layout to avoid asserting before the framework layout phase on older APIs. Reviewed rendered new navigation component, exact source/seven collaborations and baseline:96 components/297 sources/13 flows, same88 identities/reviews/pins/exceptions; only expected Android missing-type/unresolved-call facts and added source coverage changed. Updated README/requirements development status. Final clean signed build, normal Groma gate and CI remain before Done.
 <!-- SECTION:NOTES:END -->

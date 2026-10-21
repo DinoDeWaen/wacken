@@ -385,6 +385,7 @@ public final class CriticalFlowsAndroidTest {
                 return false;
             });
             settings.set(activity);
+            await(()->findScroll(root()).getScrollY()==scrollPosition.get());
             onUi(()->{
                 assertNavigation("Settings");
                 assertEquals(scrollPosition.get().intValue(),findScroll(root()).getScrollY());

@@ -29,6 +29,15 @@ and, on an isolated booted emulator,
 `sh scripts/verify-android-smoke.sh emulator-5554 be.wacken.planner.AppearanceAndroidTest,be.wacken.planner.CriticalFlowsAndroidTest`.
 Use the full native suite and TASK-212 matrix before release.
 
+TASK-206 adds the shared, always-labeled **Bands · Schedule · Settings** bar to
+the three primary destinations. The selected destination is visible and exposed
+to accessibility services; selecting it again is a no-op. Existing Activities
+are brought forward to retain context. Detail/review Back returns to the caller,
+and Back to bands selects Bands even when opened through another destination.
+Sync/close and festival management remain reachable. Stable content/list IDs
+support Android hierarchy restoration; tests include real launcher return,
+Settings recreation and original-band-row return while offline.
+
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.
@@ -300,6 +309,12 @@ updates only the visual-theme ownership/prose, seven duplicate identities and
 reviewed scanner diagnostics for the approved controller. It retains95 components,
 now296 owned Java sources,13 flows and88 individually reviewed groups; tool pins
 and accepted stale-row exceptions are unchanged.
+
+The [TASK206 navigation review](backlog/docs/groma-navigation-review-2026-10-21.md)
+adds the independently meaningful primary-navigation responsibility and its seven
+reviewed UI collaborations. The current baseline has96 components,297 owned
+Java sources,13 flows and the same88 reviewed duplicate identities. Scanner
+evidence growth is reviewed explicitly; no new exception or pin change.
 
 For intentional architecture changes, generate an external review candidate:
 
