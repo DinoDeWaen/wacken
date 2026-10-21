@@ -1,11 +1,11 @@
 ---
 id: TASK-205
 title: 'US: Choose System, Ironline dark or Field Notes light appearance'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-21 18:38'
+updated_date: '2026-10-21 19:05'
 labels:
   - ux
   - release-3.0
@@ -64,28 +64,72 @@ Validated baseline: TASK-201, design/release-2.34/themes.html; user approved 202
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Given no saved preference, when the app starts or the device theme changes, then System follows the device; an explicit Dark or Light choice overrides device changes.
-- [ ] #2 Given a header toggle, when it is used, then it selects the opposite explicit appearance, labels the next action, and Settings reflects the same preference.
-- [ ] #3 Given an in-progress form or rating, when appearance changes or an Activity is recreated, then input, selected context and pending work are retained without duplicate writes.
-- [ ] #4 Given a restart, when the app reopens, then the saved preference is restored with a safe System fallback for missing/invalid values.
-- [ ] #5 Unit and native tests cover System changes, overrides, persistence, recreation and state retention; both palettes meet contrast requirements in enabled states.
-- [ ] #6 README and business requirements impacts use canonical delivery-governance wording; approved behavior is documented, diagrams updated only where affected, and the full validation package is recorded before merge.
+- [x] #1 Given no saved preference, when the app starts or the device theme changes, then System follows the device; an explicit Dark or Light choice overrides device changes.
+- [x] #2 Given a header toggle, when it is used, then it selects the opposite explicit appearance, labels the next action, and Settings reflects the same preference.
+- [x] #3 Given an in-progress form or rating, when appearance changes or an Activity is recreated, then input, selected context and pending work are retained without duplicate writes.
+- [x] #4 Given a restart, when the app reopens, then the saved preference is restored with a safe System fallback for missing/invalid values.
+- [x] #5 Unit and native tests cover System changes, overrides, persistence, recreation and state retention; both palettes meet contrast requirements in enabled states.
+- [x] #6 README and business requirements impacts use canonical delivery-governance wording; approved behavior is documented, diagrams updated only where affected, and the full validation package is recorded before merge.
 <!-- AC:END -->
 
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Inspect hardcoded presentation tokens, Activity lifecycle/state, dialogs and existing private SharedPreferences usage. 2. Prepare concrete architecture options for shared Android presentation lifecycle/theme ownership; request explicit approval under AGENTS and task205 before implementing the recommended shared controller. Keep Android Views, current layers and Room/backend schema unchanged. 3. After approval, add failing pure preference/palette/import/contrast and native state-retention fixtures; implement device-local System/Dark/Light, contextual palette and header/Settings controls with semantic bindings and in-place restyling. 4. Preserve Activity Bundle/retained-session state without replaying writes; run native device/config/recreation/input/scroll/pending tests and ordinary ArchUnit/Groma gates with intentional source-ownership review. 5. Record accepted ADR if approved, docs/requirements implemented scope, required fresh signed build and validation package before Done. Standard presentation scope; minimal duplicated per-screen alternative and maximum framework migration considered in proposal. All production coding waits for explicit architecture approval because the proposed controller establishes shared lifecycle/state integration used by all11 Activities/dialogs.
+1. Recorded explicit Standard approval and accepted ADR0024. 2. Established red/green pure preference/contrast policy; added composable private local controller and semantic view/panel/window bindings with lifecycle cleanup and uiMode handling in11 Activities. 3. Added shared Header/Settings controls, Login saved/retained input safety and native preference/configuration/recreation/pending/history/Settings tests; corrected two test-harness assumptions. 4. Curated new sources into existing Groma theme owner via CLI, reviewed rendered source links, seven replacement duplicate identities and exact diagnostic deltas, accepted reviewed baseline with pins/exceptions unchanged. 5. Passed clean full JVM/QA/lint/fresh signed build, local Groma gate and final-source CI including77 native cases on bothAPI23/36 and real database/API gates. Finalized docs and task evidence before completion. No new framework, base Activity, backend schema or business policy. Optional local visual capture blocked by System UI ANR; full native visual/accessibility remains TASK212. Other3.0 layout/navigation/per-screen recovery belongs to TASK206-211.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Cross-cutting architecture approved2026-10-17: follow ADR-0016 and the implemented2.34 lifecycle from TASK-216–220. The3.0 appearance/navigation redesign must preserve canonical band metadata, member-specific current band ratings, separate festival planning/after-ratings, one-time creation snapshots, archive-only promotion and source-aware corrections. No theme/layout change may reintroduce latest-event-as-band-rating or cross-festival fallback.
+## Implementation summary
 
-Inspection found static color copies across Activities and uneven saved-state support; music and local CSV reviews already retain sessions. Prepared a concrete architecture request in backlog/docs/release-3.0-appearance-architecture-proposal.md. Recommended standard option: composable presentation-only controller, context-resolved semantic palette helpers and private device-local SharedPreferences; no new framework/base-Activity hierarchy/backend schema. Shared lifecycle/persistent-UI-state ownership requires explicit approval under AGENTS/task205; earlier design approval does not cover this mechanism. No production implementation written. TASK206-213 remain queued behind205; TASK204 completed and committed.
+Implemented the explicitly approved standard appearance foundation (ADR0024) using existing Android Views and direct Activities. A pure System/Dark/Light preference/palette policy and private SharedPreferences controller update explicit semantic view/panel bindings and system bars in place. All11 Activities attach by composition and handle uiMode without theme-triggered recreation; listeners detach on destruction. Header and Settings share one local preference, default/fallback System, opposite explicit toggle and next-action labels. Login has stable input IDs and a configuration-only password draft in memory, not serialized saved state. No business operation is invoked by palette refresh.
 
-Explicit human architecture approval received21October2026: Standard, in response to the concrete shared appearance lifecycle proposal. Proceed with composable Android presentation controller, private device-local preference and semantic in-place bindings, retaining existing Activity/Views and domain/application boundaries. Record accepted ADR0024; no repeat approval required for the described scope.
+## Acceptance criteria validation
 
-Implemented approved pure preference/palette policy, private SharedPreferences controller and explicit view/panel bindings; no business operations in refresh. All11 Activities attach through composition and handle uiMode without theme-triggered recreation. Header/Settings share one preference; login has stable input IDs and password draft retained only in memory. Pure4-case preference/contrast suite and full app unit regressions passed (268 total,16 existing environment-gated skips). Initial native15-case run:14 passed,1 second-Activity harness timeout; corrected with explicit separate task launch, current16-case run progressing without failures. Added pending planning/history-count retention and Settings/radio/toggle native coverage; these need final full native run. Groma new sources combined through CLI into existing wackentheme responsibility and role overview updated; baseline review remains pending, no automatic acceptance.
+AC1/2/4: Four pure preference/contrast tests cover missing/invalid values, device resolution, overrides, stored round-trip and toggle semantics. Native tests exercise actual controller configuration callbacks, explicit overrides, malformed stored types, new Activity persistence, open-screen propagation and Settings selected-radio/header agreement. AC3: Native tests preserve existing input/view identity, email/password on independent recreation, selected rating context and pending planning value/status with unchanged history count; existing review/session and critical-flow characterizations remain green. AC5: Both approved palettes pass enabled text/control contrast combinations and actual native color assertions. Final-source full77-case native suite passes on API23 and36. AC6: Docs, approved ADR, CLI-curated ownership and complete validation package below. Remaining navigation/layout/accessibility and screen-specific recovery scope stays assigned to TASK206-212; no full3.0 completion is claimed.
+
+## How to test
+
+### Automated tests
+
+Clean checkout source e1358b979d85a9c5eda5f71e81ff0871ca230a2c: ./gradlew test qaTest :app:lintDebug assembleRelease --rerun-tasks passed. Domain63/application163/QA3/infrastructure29 including ArchUnit5, zero failures/skips. Android debug/release unit variants each268 with16 pre-existing environment-gated integration skips, not counted as passes. Required real database/API gates are green separately.
+
+CI https://github.com/DinoDeWaen/wacken/actions/runs/39656193154 passed all4 jobs on final implementation source: JVM/ArchUnit/QA/coverage/lint,27 Groma fixtures plus two-scan gate, disposable PostgreSQL/PostgREST creation/lifecycle/correction/replay/isolation, API23 and36 each77 native tests with no failures/skips. Local accepted Groma gate also passed95 components/296 sources/13 flows/88 reviewed groups, with zero unexplained islands. Pins/exceptions unchanged.
+
+Native local progression: initial15-case run had14 passes and a second-Activity test-launch timeout; fixed explicit separate-task test launch and16-case run passed. Full77-case local run had76 passes and a RadioButton performClick-return assertion; corrected the harness assertion, retained actual preference/checked-state assertions, and focused Settings test passed. Final CI reran all77 cases successfully on both APIs. No earlier failed mandatory run is represented as a pass.
+
+### Manual validation
+
+Reviewed semantic bindings, callback cleanup, pure policy, retained Login draft and independent rating/pending/history assertions. Exported/rendered Groma map and inspected theme responsibility, collaboration and all three exact source links. Seven changed duplicate identities and exact scanner diagnostic growth reviewed individually in groma-appearance-review-2026-10-21.md before accepting baseline. Optional post-suite native screen capture was blocked by System UI ANR on the disposable local emulator; no native visual/accessibility pass is inferred from it. TASK212 owns actual full-screen visual/device/TalkBack/200%/physical target evidence.
+
+Fresh signed APK: /private/tmp/wacken-205-build-checkout/app/build/outputs/apk/release/app-release.apk, SHA256 3b352595e424c682c15c6dbe2b1b90938b0cdd192f9e64f8eb5f80d20bae79ac. Built from clean e1358b9 with no prior APK, verifies v1/v2 and stable certificate ede2ae97735a305900e87bc0fdc021c03382db4e30435f2349a96a3fdcc7545f. Validation build only; published2.35.1 assets unchanged.
+
+## TDD / BDD / approval-test evidence
+
+Pure preference/contrast suite failed before the policy existed, then4/4 passed. Native Given/When/Then scenarios cover stored preference/configuration/toggle/recreation and unchanged pending/history state. Existing critical UI, lifecycle, review and database characterization remains green; no business-rule refactoring. Source-text initialization regression updated to recognize the new semantic binding setter.
+
+## Architecture impact
+
+Architecture-significant change: shared presentation lifecycle/preference integration. Approval received: explicit Standard response21October2026 to the concrete proposal, before coding. Android Views, direct Activities, JVM boundaries, Room/backend contracts and ADR0016 remain unchanged. ADR impact: created accepted ADR0024. No new runtime library, framework/base-Activity hierarchy or backend preference synchronization.
+
+## README impact
+
+README impact: updated implemented development-branch appearance scope, commands, ownership review and remaining3.0 work, distinct from published2.35.1.
+
+## Business requirements impact
+
+Business requirements impact: updated3.0 development increment status while preserving all business/rating/source policies and planned-versus-published distinction.
+
+## Diagram impact
+
+Diagram impact: updated visual-theme role/ownership through Groma CLI, combining the two new source files into the existing responsibility and reviewing rendered details. Runtime C4 boundaries/collaborations unchanged; reviewed baseline records296 owned sources and seven replacement duplicate identities, not a count allowance.
+
+## Commits / logical change list
+
+62bc7c1: approved controller/policy, semantic bindings, controls, native/unit tests and ADR. db7dfda: remaining row/label/sync bindings. e1358b9: final native harness correction, documentation and reviewed architecture baseline. Task closure commit contains evidence only. PR https://github.com/DinoDeWaen/wacken/pull/8.
+
+## Risks and follow-up
+
+TASK206-211 retain ownership of labeled navigation, full layouts/reflow/accessibility, schedule-specific rendering, broader per-screen recreation/recovery and support flows. TASK212 still requires integrated native/device/manual evidence; current automated configuration callback tests are not a human TalkBack or daylight-usability claim. Known Java scanner limitations and the two accepted stale importer arrows remain explicit. Invalid preference types fall back safely to System. Unrelated user worktree files were preserved and excluded from commits and signed build.
 <!-- SECTION:NOTES:END -->
