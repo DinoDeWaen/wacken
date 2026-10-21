@@ -1,11 +1,11 @@
 ---
 id: TASK-242
 title: 'REL: Publish the validated signed Android 2.35 release'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-10-20 06:26'
-updated_date: '2026-10-21 14:02'
+updated_date: '2026-10-21 14:40'
 labels:
   - groma-audit
   - release-2.35
@@ -51,24 +51,74 @@ README and diagram impacts are assessed for the affected workflow. ADR impact: n
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The final APK has versionName 2.35 and a versionCode greater than the last published version, is built fresh from the release commit and verifies with the stable release certificate.
-- [ ] #2 Installing over the latest supported published stable APK retains login/cache, pending ratings, member-specific established ratings, festival planning/after values, history and corrections; upgrade evidence is tied to the exact candidate.
-- [ ] #3 Required unit/QA/Android compatibility/architecture and applicable database gates pass for the final source; no failed or skipped mandatory gate is represented as a pass.
-- [ ] #4 GitHub tag/release contain the verified signed APK, checksum, release notes, installation instructions, audit remediation summary and exact validation evidence.
-- [ ] #5 Published asset digest/signature/version and tag source are verified after upload; Backlog acceptance checks, notes and Done status are completed after publication.
-- [ ] #6 README and release documentation describe implemented changes, retained limits and rollback/upgrade risks without claiming all lint similarities are defects.
+- [x] #1 The final APK has versionName 2.35 and a versionCode greater than the last published version, is built fresh from the release commit and verifies with the stable release certificate.
+- [x] #2 Installing over the latest supported published stable APK retains login/cache, pending ratings, member-specific established ratings, festival planning/after values, history and corrections; upgrade evidence is tied to the exact candidate.
+- [x] #3 Required unit/QA/Android compatibility/architecture and applicable database gates pass for the final source; no failed or skipped mandatory gate is represented as a pass.
+- [x] #4 GitHub tag/release contain the verified signed APK, checksum, release notes, installation instructions, audit remediation summary and exact validation evidence.
+- [x] #5 Published asset digest/signature/version and tag source are verified after upload; Backlog acceptance checks, notes and Done status are completed after publication.
+- [x] #6 README and release documentation describe implemented changes, retained limits and rollback/upgrade risks without claiming all lint similarities are defects.
 - [x] #7 Architecture impact is assessed before implementation; significant boundary, dependency, persistence or test-strategy changes receive explicit human approval before coding and an ADR is recorded when required.
-- [ ] #8 README, business requirements, diagram and ADR impacts use canonical delivery-governance wording; test evidence, manual verification, finalized plan and remaining risks are recorded before merge.
+- [x] #8 README, business requirements, diagram and ADR impacts use canonical delivery-governance wording; test evidence, manual verification, finalized plan and remaining risks are recorded before merge.
 <!-- AC:END -->
 
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Confirm latest published stable v2.34/code42, stable certificate and completed TASK241 package. Use a clean disposable release checkout so unrelated user working-tree changes are preserved and excluded. 2. Bump2.35/code43; update notes/README/current implemented release context. Extend the existing opt-in signed upgrade fixture/runner to seed Room12 latest-stable state, including own/other established and after ratings plus immutable corrections, with strict higher-code and before-update negative control. This is existing validation-contract coverage, not a new test strategy, runtime boundary, schema or dependency; no additional architecture approval required. 3. Run runner safety red/green, normal native/API23/API36/architecture/BDD/coverage/lint and disposable SQL gates on final source. Build fresh signed release and signed opt-in test probe in clean checkout using existing stable key. Verify exact latest-stable to candidate install-r preservation and normal offline startup on a separate fresh emulator. 4. Finalize evidence and draft PR, merge only after complete required validation, tag exact release source, publish APK/checksum/notes and download to verify digest/signature/version/tag. Complete Backlog only after publication. Existing approved GitHub APK distribution and ADR0016/0020/0021/0022 remain unchanged.
+1. Confirmed published2.34/code42 and stable certificate. 2. Extended existing opt-in current-schema upgrade fixture with red/green runner tests; prepared2.35/code43 and release docs. 3. Built exact974ccd2 in clean checkout, passed all4 CI jobs and exact signed latest-stable install-r retained-data check. 4. Tagged exact source, published five assets, downloaded and verified all digests/signature/version/tag. 5. Finalized evidence and task closure before PR merge. Deviation: publication preceded final documentation-only closure so acceptance checks are verifiable before merge; no new architecture decision.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Latest stable confirmed v2.34/code42 with downloaded APK digest e03c6e956af13fd6155537d84e74e6368ae902bc2da90263f28652448b112c4a matching published SHA256SUMS. Prepared2.35/code43 and notes. Extended existing opt-in signed upgrade fixture for Room12 own/other established/after state and correction audit; current-baseline runner requires strict higher code and rejects old package version before install-r. New runner cases failed before implementation, then8 safety/integration fixture tests pass; Android test source compilation passes. Using a clean disposable checkout for final release build to preserve/exclude unrelated shared-worktree changes. No new runtime schema/boundary/dependency or validation platform.
+## Implementation summary
+
+Published signed Android2.35/code43 at https://github.com/DinoDeWaen/wacken/releases/tag/v2.35 with APK, SHA256SUMS, release-validation.json, upgrade-evidence.zip and Groma report. Exact tagged/build source974ccd2eeaecd315d626e0a92880f0a09a5f48ea; clean checkout excludes unrelated user changes. APK SHA256 b8a7230ac6831945b7ee8d81b07084c6b914267ff3cc0c6ea6848d0daffdff34. Stable certificate ede2ae97735a305900e87bc0fdc021c03382db4e30435f2349a96a3fdcc7545f.
+
+## Acceptance criteria validation
+
+AC1-2: Fresh assembleRelease --rerun-tasks and opt-in signed probe. Actual published2.34/code42 digest e03c6e956af13fd6155537d84e74e6368ae902bc2da90263f28652448b112c4a installed on isolated API36 emulator. seed-current PASS, pre-update negative control rejected old version, install-r43 succeeded, verify-current PASS. Retained synthetic auth/cache, festival metadata/identity, own/other established and after ratings, pending planning/schedule work, dated history, immutable correction fields/dates and normal offline startup.
+
+AC3: https://github.com/DinoDeWaen/wacken/actions/runs/39613436121 all4 jobs green on head974ccd2, tested merge b0574933d20fbaa5833b1282c8c617a263d7bdd0 over84cafb6. JVM/coverage/BDD/lint, API23 and API36 each71 native tests, real disposable PostgreSQL/PostgREST creation/rating/archive/correction/replay gates,27 architecture fixtures and semantic repeatability,8 upgrade-runner safety tests,3 smoke-runner and6 image-acquisition tests passed. Existing16 environment-gated unit integration cases are not counted as passes; dedicated real gates provide applicable evidence.
+
+AC4-6: Published and independently downloaded all assets. SHA256SUMS verifies every asset. Downloaded APK v1/v2 signature and stable certificate verified; aapt confirms package/version/min23/target36; remote tag points exactly974ccd2. Notes include maintenance scope, install/update/rollback and retained limits.
+
+## How to test
+
+### Automated tests
+
+Use CI run above, README commands and releases/v2.35.md. Exact latest-stable retained-data phases and signatures are in published upgrade-evidence.zip; release-validation.json binds artifacts and source. Earlier integrated legacy Room9 upgrade and matrix: backlog/docs/release-2.35-validation.md.
+
+### Manual validation
+
+Reviewed published release and downloaded assets, checksums/signature/version/tag, opt-in fixture phases and offline MainActivity launch. Emulator setup attempts stopped before app testing are infrastructure failures, not passing tests; final successful run used a newly created separate data directory. No production user installation was wiped.
+
+## TDD / BDD / approval-test evidence
+
+Two new current-baseline runner tests failed before implementation then all8 passed. Existing legacy safeguards and characterization/native/BDD suites remain green. Fixture checks dated immutable corrections and separate members. No product behavior changed in this release-packaging task.
+
+## Architecture impact
+
+- Architecture-significant change: no new runtime boundary, persistence schema, dependency or test strategy; extended existing opt-in signed-upgrade protocol for latest supported Room12 baseline.
+- Approval received: existing milestone/release authorization and signed GitHub distribution approval; ADR0016/0020/0021/0022 retained.
+- ADR impact: none, because packaging and existing validation-contract coverage introduce no new significant decision.
+
+## README impact
+
+README impact: updated current2.35 release link and validation context.
+
+## Business requirements impact
+
+Business requirements impact: updated Read Me First implemented maintenance-release context; rating lifecycle/product scope unchanged.
+
+## Diagram impact
+
+Diagram impact: none, because final packaging changes no runtime collaboration; existing curated map and gate passed with95 components,294 owned sources,13 flows and0 unexplained islands.
+
+## Commits / logical change list
+
+974ccd2: code43/2.35 notes/docs and current-baseline retained-data fixture/runner; final closure commit is task evidence only. PR https://github.com/DinoDeWaen/wacken/pull/5. Tag remains exact pre-closure built source.
+
+## Risks and follow-up
+
+Two user-accepted stale Groma importer arrows and scanner limitations remain explicit.88 reviewed duplicate groups are not88 confirmed defects. ArchUnit assessment recommends complementary Java dependency rules, no new library installed. HTTP timeouts bound connect/inactive read, not total wall time. Lost historical signing key compatibility and Android downgrade limits retained. No3.0 UI or fresh production security audit claimed. Deviation: publish exact validated tag before task-evidence closure/PR merge so publication AC can be verified before Done and merge; tag never moves to a different APK source.
 <!-- SECTION:NOTES:END -->
