@@ -5,15 +5,16 @@ const hash = value => createHash("sha256").update(JSON.stringify(value)).digest(
 export const duplicateIdentity = group => hash(sorted(group.members.map(m=>({
   file:m.file,name:m.name,body:hash(m.tokens??m.body)
 }))));
-export function semantic(snapshot) {
+export function semantic(snapshot, includeDerived=false) {
   return {
     elements:sorted(snapshot.elements.map(e=>({
       id:e.id,kind:e.kind,parent:e.parent,title:e.title,description:e.description??"",
       overview:e.overview,group:e.group??"",technology:e.technology??"",
       code:sorted(e.code.map(c=>c.file))
     }))),
-    rows:sorted(snapshot.rows.filter(r=>r.authored).map(r=>({
-      source:r.source,target:r.target,status:r.status,description:r.description,technology:r.technology
+    rows:sorted(snapshot.rows.filter(r=>includeDerived||r.authored).map(r=>({
+      source:r.source,target:r.target,status:r.status,description:r.description,technology:r.technology,
+      ...(includeDerived?{authored:r.authored}:{})
     }))),
     flows:sorted(snapshot.flows.map(f=>({id:f.id,title:f.title,overview:f.overview,
       steps:f.steps.map(({source,target,action})=>({source,target,action}))})))

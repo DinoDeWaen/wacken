@@ -39,6 +39,11 @@ describe("reviewed architecture gate",()=>{
     expect(semantic(x)).toEqual(semantic(y));
     expect(duplicateIdentity(x.duplicates[0])).toEqual(duplicateIdentity(y.duplicates[0]));
   });
+  test("repeatability also detects disappearing inferred relationships",()=>{
+    const x=fixture(),y=structuredClone(x);y.rows.push({source:"src/b.java",target:"src/a.java",authored:false,status:"stable",description:"Bound callback",technology:"Java"});
+    expect(semantic(x)).toEqual(semantic(y));
+    expect(semantic(x,true)).not.toEqual(semantic(y,true));
+  });
   test("rejects a disconnected responsibility with its ID",()=>{
     expect(checked(x=>{x.rows.pop();x.flows=[];}).errors.join("\n")).toContain("island: b");
   });

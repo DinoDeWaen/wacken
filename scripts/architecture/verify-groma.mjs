@@ -111,7 +111,7 @@ async function main() {
       if(summary.created||summary.matched||summary.evidenceConflicts?.length||summary.scannerFailures?.length)
         throw new Error(name+" scan changed component evidence or conflicted: "+JSON.stringify(summary));
     }
-    if(JSON.stringify(semantic(before))!==JSON.stringify(semantic(after))||JSON.stringify(semantic(after))!==JSON.stringify(semantic(repeated)))
+    if(JSON.stringify(semantic(before,true))!==JSON.stringify(semantic(after,true))||JSON.stringify(semantic(after,true))!==JSON.stringify(semantic(repeated,true)))
       throw new Error("Scan repeatability failed: ownership, authored meaning or flows changed");
     if(proposed) {
       const candidate=baselineFor(repeated,{rationale:"REVIEW REQUIRED: classify against original audit and helper dispositions",evidence:"backlog/docs/groma-helper-dispositions-2026-10-21.md"});
