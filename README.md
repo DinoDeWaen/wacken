@@ -219,7 +219,10 @@ separately in TASK-228–230.
 The [festival administration evidence](backlog/docs/groma-festival-administration-evidence-2026-10-21.md)
 traces reviewed group creation, local five-file acceptance/rollback and selected
 festival deletion. Its scope table explains combined identity/cache records and
-the remaining stale-relationship correction required before TASK-228 closes.
+the removed unused full CSV importer and the remaining stale authored arrows.
+Rescanning retains those arrows even after the deleted source ownership is
+detached through the CLI; safe relationship removal is still required before
+TASK-228 closes.
 
 ### Module Map
 

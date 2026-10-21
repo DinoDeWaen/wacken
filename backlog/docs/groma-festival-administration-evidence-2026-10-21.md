@@ -164,9 +164,22 @@ remain. TSV backups accompany the Room transaction; failure restores files,
 and failed restoration retains recovery evidence. No shared-source CSV import
 API is implied; later sync may refresh local master data.
 
-The legacy ImportFestivalCsvUseCase remains a separate direct application API
-with its existing code ownership, rather than being presented as the current
-Android screen flow.
+User-authorized cleanup removed the unused ImportFestivalCsvUseCase, its obsolete
+8-test suite and the screen import. Shared FestivalCsvFiles/ImportFestivalCsvResult
+and the separate initial-band-list API remain. Quoted-name/normalized metadata
+coverage now exercises ReviewFestivalCsvUseCase; the partial-write negative control
+in TsvImportTransactionTest also exercises the reviewed workflow. Existing reviewed
+validation/preservation tests and actual file rollback tests remain.
+
+The first post-deletion scan retained the deleted Code reference and authored
+relationships. CLI detach removed only the deleted file ownership, and CLI editing
+updated the remaining component responsibility. Later scans retain106 components
+and294 unique owned source files; the deleted file is an unknown target. Authored
+arrows to/from it remain stored, including the screen-to-importer and importer-to-band
+claims. Source deletion therefore does not automatically repair Groma relationships.
+Application/infrastructure tests pass before and after cleanup; domain tests, BDD,
+Android unit tests, coverage gates and Android lint also pass. No runtime behavior,
+transaction boundary or shared CSV value contract changed.
 
 ## Deletion and cache scope
 
@@ -192,6 +205,6 @@ A verified stale authored edge from ImportCsvActivity to the legacy
 ImportFestivalCsvUseCase remains pending the narrow tooling extension in
 [the approval proposal](task-228-stale-relationship-approval.md).
 After correcting the local flow, the CLI still reports
-`only draft relationships can be removed`. An unused Java import is not proof
-of an active collaboration. TASK-228 remains incomplete until that correction
+`only draft relationships can be removed`. The unused Java import and implementation have now been removed; neither scan nor
+CLI detach removes these stale authored rows. TASK-228 remains incomplete until that correction
 can be made through an approved CLI operation.

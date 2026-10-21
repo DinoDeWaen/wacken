@@ -1,13 +1,11 @@
 ---
 type: C4 Component
-title: Legacy CSV import workflows
+title: CSV import values and initial band import
 status: stable
 groma:
   id: importfestivalcsvusecase
   parent: android-application
   code:
-    - scanner: java
-      file: application/src/main/java/be/wacken/planner/application/ImportFestivalCsvUseCase.java
     - scanner: java
       file: application/src/main/java/be/wacken/planner/application/ImportFestivalCsvResult.java
       symbol: ImportFestivalCsvResult
@@ -21,10 +19,10 @@ groma:
       file: application/src/main/java/be/wacken/planner/application/FestivalCsvFiles.java
       symbol: FestivalCsvFiles
   group: Application workflows
-description: Retains direct CSV import APIs
+description: Shares reviewed CSV input/result values and retains the initial band-list API
 ---
 
-Contains the legacy application CSV import and initial-band-list APIs plus their result/input values. These validate CSV and publish through repository ports for direct callers. The current Android five-file workflow instead invokes ReviewFestivalCsvUseCase through LocalCsvImportReviewDialog, with explicit row acceptance and rollback protection; the old import-screen relationship is a verified stale map claim awaiting explicit safe removal support.
+Owns FestivalCsvFiles and ImportFestivalCsvResult, which the active ReviewFestivalCsvUseCase uses, alongside the separate ImportInitialBandListUseCase and its result. The unused full ImportFestivalCsvUseCase was removed in TASK-228. Its deleted source reference was detached through the CLI after scanning retained it. Groma still stores authored relationships to that deleted file; these are known stale claims, pending safe relationship-removal tooling support. Current Android five-file imports use explicit row review and the TSV/Room transaction.
 
 ## Relationships
 

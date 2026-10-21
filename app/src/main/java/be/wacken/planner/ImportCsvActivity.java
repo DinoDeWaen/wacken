@@ -28,7 +28,6 @@ import be.wacken.planner.application.FestivalCreationGateway;
 import be.wacken.planner.application.FestivalCsvFiles;
 import be.wacken.planner.application.FestivalCsvReader;
 import be.wacken.planner.application.ImportFestivalCsvResult;
-import be.wacken.planner.application.ImportFestivalCsvUseCase;
 
 import be.wacken.planner.domain.Band;
 
