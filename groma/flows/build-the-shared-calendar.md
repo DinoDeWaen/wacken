@@ -11,6 +11,6 @@ An attendee opens the calendar; schedule generation reads performances and appli
 
 | From | To | Action |
 | --- | --- | --- |
-| [From](../actors/festival-attendee.md) | [To](../systems/wacken/components/scheduleactivity.md) | Open the group schedule |
-| [From](../systems/wacken/components/scheduleactivity.md) | [To](../systems/wacken/components/generatesharedscheduleusecase.md) | Generate day slots |
-| [From](../systems/wacken/components/generatesharedscheduleusecase.md) | [To](../systems/wacken/components/performanceconflictresolver.md) | Resolve overlaps and preferences |
+| [From](../actors/festival-attendee.md) | [To](../systems/wacken/containers/android-application/components/scheduleactivity.md) | Open the group schedule |
+| [From](../systems/wacken/containers/android-application/components/scheduleactivity.md) | [To](../systems/wacken/containers/android-application/components/generatesharedscheduleusecase.md) | Generate day slots |
+| [From](../systems/wacken/containers/android-application/components/generatesharedscheduleusecase.md) | [To](../systems/wacken/containers/android-application/components/performanceconflictresolver.md) | Resolve overlaps and preferences |

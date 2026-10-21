@@ -11,5 +11,5 @@ The administrator selects validated festival data; the import screen invokes the
 
 | From | To | Action |
 | --- | --- | --- |
-| [From](../actors/festival-data-admin.md) | [To](../systems/wacken/components/importcsvactivity.md) | Select festival CSV files |
-| [From](../systems/wacken/components/importcsvactivity.md) | [To](../systems/wacken/components/importfestivalcsvusecase.md) | Import selected records |
+| [From](../actors/festival-data-admin.md) | [To](../systems/wacken/containers/android-application/components/importcsvactivity.md) | Select festival CSV files |
+| [From](../systems/wacken/containers/android-application/components/importcsvactivity.md) | [To](../systems/wacken/containers/android-application/components/importfestivalcsvusecase.md) | Import selected records |

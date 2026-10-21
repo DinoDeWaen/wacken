@@ -53,17 +53,26 @@ gaps: no container records, 72 disconnected records and 99 duplicate candidate
 groups. TASK-226 preserves that baseline; TASK-227–233 repair and validate it.
 Preservation does not establish architecture completeness.
 
-Use **Groma CLI 0.6.6**, with **@groma/scanner-java@0.2.2** pinned in
-[`groma/scanners.json`](groma/scanners.json). Verify the locally installed tools
-before scanning; do not silently substitute a newer version:
+Use the repository-pinned **Groma 0.7.2 container-curation patch**, with
+**@groma/scanner-java@0.2.2** pinned in [`groma/config.json`](groma/config.json).
+Automatic updates are disabled. Provide Bun **1.4.3** on PATH (or set BUN to its
+absolute executable path), then build the tool from the exact upstream commit
+and checked patch. This leaves global/npm installations unchanged:
 
 ```bash
-groma --version
-groma scanner list
-groma view --plain
-groma scan
-groma lint --max-count 200
+sh scripts/setup-groma.sh
+sh scripts/groma.sh --version
+sh scripts/groma.sh scanner list
+sh scripts/groma.sh view --plain
+sh scripts/groma.sh scan
+sh scripts/groma.sh lint --max-count 200
 ```
+
+The launcher verifies the [tool pin](tools/groma/pin.json), patch checksum and
+locally built executable digest. Rebuild if the cache is missing or the pin
+changes. See [ADR 0021](backlog/decisions/0021-pinned-groma-container-curation-fix.md)
+for the approved change, test evidence and maintenance limits. The binary still
+reports its upstream version; its recorded digest identifies the patched build.
 
 Scanning refreshes Java evidence and ownership; curation interprets the evidence
 and authors responsibilities and collaborations through the Groma CLI. A scan
@@ -85,7 +94,8 @@ Grouped diagnostic lines can show representative per-input counts, rather than
 repository totals. Use source evidence and the relevant native/backend checks
 before authoring runtime relationships or treating an absent edge as unused code.
 
-For a clean checkout of the TASK-226 baseline commit, verify all 126 stored files
+For a clean checkout of the historical TASK-226 baseline commit, use its pinned
+unmodified Groma 0.6.6 and verify all 126 stored files
 before and after two scans using the [SHA-256 inventory](backlog/docs/groma-baseline-2026-10-20.sha256):
 
 ```bash
@@ -196,11 +206,15 @@ C4Container
 
 TSV fallback files also live in app-private storage; the local CSV workflow can
 publish to the Room cache. SQL and platform rules need separate source evidence
-because the Groma scanner covers Java only. Groma 0.6.6 cannot currently complete
-the preservation-safe container migration tested in TASK-227; its map still
-places components directly under the system. See the [exact CLI limitations and
-unresolved remedy](backlog/docs/groma-container-limitations-2026-10-20.md).
-The C4 view above documents current boundaries while that map repair remains open.
+because the Groma scanner covers Java only. The Groma map now explicitly declares
+the Android application, owned Room cache and owned shared planner database;
+all Java components remain inside the Android runtime. The [approved tooling
+remedy and evidence](backlog/docs/groma-container-limitations-2026-10-20.md)
+explain the preservation-safe migration. Storage declarations do not imply SQL
+analysis or generated-code ownership. Groma requires source endpoints for
+internal software relationships, so the C4 view above also explains the
+higher-level app-to-storage interaction. Remaining workflow curation is tracked
+separately in TASK-228–230.
 
 ### Module Map
 

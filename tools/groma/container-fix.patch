@@ -1,0 +1,348 @@
+diff --git a/docs/agent-instructions/structure.md b/docs/agent-instructions/structure.md
+index e14874c1..05e12c26 100644
+--- a/docs/agent-instructions/structure.md
++++ b/docs/agent-instructions/structure.md
+@@ -1,15 +1,16 @@
+ # Curating structure
+ 
+ Structure decides which elements exist, where each belongs, and which source
+-files each component owns. Combines and component moves require empty meaning;
+-moving a container preserves its meaning and its components.
++files each component owns. Combines require empty meaning. Component moves preserve meaning and repoint
++incoming/outgoing links; container moves retain their existing link restrictions.
+ 
+ The first scan with source files creates one project-named system when none is
+ declared. Scans preserve existing systems and containers; source groups cannot
+ create additional systems or application boundaries. A component with a known
+ system but no identifiable container appears in an Unidentified container group.
+ Hand-proposed software stays a ghost draft until a scan matches it
+-and it is accepted. Actors and external systems are stable declarations of what
++and it is accepted, except an existing container explicitly accepted with
++`--declared` after reviewing runtime or storage evidence. Actors and external systems are stable declarations of what
+ the scanner cannot see.
+ 
+ ## Order of work
+@@ -41,6 +42,7 @@ the scanner cannot see.
+ | `groma add external <name> --overview <markdown>` | the name of a new outside system; `--technology` is optional |
+ | `groma draft <system\|container\|component> <name> --overview <markdown>` | a new name; containers and components also require `--parent <id>`, which a system refuses |
+ | `groma accept <id>` | a ghost element ID; scans first when no scan has matched it yet |
++| `groma accept <id> --declared` | explicitly declare a reviewed existing container that a scanner cannot identify; never waives component source evidence |
+ | `groma remove <id>` | an actor, external system, ghost, unused draft, component without Code references, or empty system/container |
+ 
+ A group address is `<container-id>/<group-kebab>`; it is not an element ID. A
+@@ -100,10 +102,11 @@ Combined records must have the same kind and parent. Absorbed records cannot
+ have body content, concept-addressed relationships, a group, or technology.
+ The children a combine absorbs directly cannot have body content either, so a
+ system combine refuses a described container while a described component two
+-levels down relocates with it. A component move requires an empty body; a
+-container move preserves its body and children. No record anywhere under a moved or absorbed record
+-may hold a concept-addressed relationship, because its document changes path and
+-these operations do not repoint links; a rename does.
++levels down relocates with it. A component move preserves its body and repoints relationship and flow links,
++using the same link rewriting as a rename. Unsupported link forms still fail
++validation before writing. A container move preserves its body and children.
++Container moves and combines retain their restrictions on concept-addressed
++relationships because they do not repoint incoming links.
+ File connections follow their current owners and do not block these operations.
+ The survivor may already have authored meaning.
+ 
+diff --git a/docs/component-markdown.md b/docs/component-markdown.md
+index 880dbdeb..632c6d73 100644
+--- a/docs/component-markdown.md
++++ b/docs/component-markdown.md
+@@ -181,8 +181,11 @@ A group is a narrative overlay on one hierarchy level. It never becomes a
+ parent and owns no relationships. Scanners never derive groups. `groma edit
+ --group` and `--ungroup` are the supported writers. `groma edit --combine`
+ folds unique Code references from empty scan records into one component, and
+-`groma edit --parent` moves an empty scanned component without changing its
+-identity. Scanning can also complete a component's unidentified placement: positive
++`groma edit --parent` moves a scanned component while preserving its
++identity, authored meaning, source ownership and relationship/flow links.
++`groma accept <container-id> --declared` explicitly accepts an existing runtime
++or storage container from reviewed evidence when scanners cannot identify it;
++this does not waive source evidence for a component. Scanning can also complete a component's unidentified placement: positive
+ execution evidence can move it from its system into an application container.
+ This preserves its ID, source ownership and authored meaning, and rebases incoming
+ and outgoing Markdown links. An existing container assignment is never replaced.
+diff --git a/docs/index.md b/docs/index.md
+index 658ba053..8ebbb625 100644
+--- a/docs/index.md
++++ b/docs/index.md
+@@ -55,7 +55,8 @@ Change the architecture through groma.md. New parts are drafted as ghosts at
+ the path they will keep. Explanations stay on the element. `groma draft`,
+ `groma edit`, and `groma add relation` author ghosts, meaning, draft tags, scan
+ curation, and collaborations. `groma accept <id>` applies a ghost only after
+-a scan has matched it.
++a scan has matched it. Use `--declared` only to explicitly declare a reviewed
++existing container without a scan match.
+ 
+ - [Product model](product-model.md)
+ - [Component Markdown contract](component-markdown.md)
+diff --git a/docs/product-model.md b/docs/product-model.md
+index 90419307..06168971 100644
+--- a/docs/product-model.md
++++ b/docs/product-model.md
+@@ -177,7 +177,7 @@ operation before opening a map.
+      --title <text> --description <text> --overview <markdown>` merges the
+      given fields into `groma/project.md`. The web map's project pencil posts
+      the same input.
+-5. `groma accept <id>`: accept that ghost, only if a scan has matched it.
++5. `groma accept <id>`: accept a scan-matched ghost; `--declared` explicitly accepts a reviewed existing container without a scan match.
+    groma.md may scan first if needed. No match: the command fails and the
+    ghost stays a draft. A scan never accepts a ghost on its own. The file
+    stays where it is; only its status changes.
+@@ -285,7 +285,10 @@ container as `parent`.
+ 
+ `groma accept <id>` succeeds only when a scan has matched that ID: either
+ a scan you already ran, or a scan groma.md runs as part of accept. No match:
+-accept fails and the ghost stays a ghost.
++accept fails and the ghost stays a ghost. The explicit exception is
++`groma accept <container-id> --declared`: a human declares a verified existing
++runtime or data store that scanners cannot identify. Components still require
++source evidence; declaration does not imply scanner verification.
+ 
+ On success, groma.md changes the document's `status` to `stable` in the same
+ file and keeps its tag. Implementation still happens in source. Accept does
+diff --git a/src/accept.ts b/src/accept.ts
+index 97dd6d15..34ded666 100644
+--- a/src/accept.ts
++++ b/src/accept.ts
+@@ -4,15 +4,17 @@ import { readDocument, withStatus, writeDocument } from './markdown-emitter.ts'
+ 
+ export type AcceptResult = 'accepted' | 'unmatched' | 'not-draft'
+ 
+-/** Flips a scan-matched ghost to stable in place; the file and its draft tag stay where they are. */
++/** Accepts scanned component evidence or an explicitly declared existing container in place. */
+ export async function acceptGhost(
+   repositoryRoot: string,
+   id: string,
++  declared = false,
+ ): Promise<AcceptResult> {
+   const model = buildArchitectureModel((await loadArchitecture(repositoryRoot)).documents)
+   const element = model.elements.find(candidate => candidate.id === id)
+   if (element === undefined || element.status !== 'draft') return 'not-draft'
+-  if (element.code.length === 0) return 'unmatched'
++  if (declared && element.kind !== 'container') throw new Error('--declared accepts only containers')
++  if (!declared && element.code.length === 0) return 'unmatched'
+   const source = await readDocument(repositoryRoot, element.sourceFilename)
+   await writeDocument(repositoryRoot, element.sourceFilename, withStatus(source, 'stable'))
+   return 'accepted'
+diff --git a/src/authoring.ts b/src/authoring.ts
+index 11587909..ab85c622 100644
+--- a/src/authoring.ts
++++ b/src/authoring.ts
+@@ -12,6 +12,7 @@ import { GromaFileSystem } from './groma-filesystem.ts'
+ 
+ export interface AcceptInput {
+   id: string
++  declared?: boolean
+   relation?: string
+ }
+ 
+@@ -35,8 +36,9 @@ async function draftThing(repositoryRoot: string, input: DraftInput): Promise<st
+ }
+ 
+ async function acceptThing(repositoryRoot: string, input: AcceptInput): Promise<string> {
++  if (input.declared && input.relation !== undefined) throw new Error('--declared accepts only containers')
+   if (input.relation !== undefined) return acceptRelation(repositoryRoot, { source: input.id, target: input.relation })
+-  const result = await acceptGhost(repositoryRoot, input.id)
++  const result = await acceptGhost(repositoryRoot, input.id, input.declared)
+   if (result === 'not-draft') throw new Error('not a draft')
+   if (result === 'unmatched') throw new Error('no scan match')
+   return input.id
+diff --git a/src/curate.ts b/src/curate.ts
+index f2c18440..c89f9c5c 100644
+--- a/src/curate.ts
++++ b/src/curate.ts
+@@ -378,8 +378,8 @@ export async function curateElement(
+     ...combined.rewrites,
+     ...await movedDescendants(context, target, renamed.destination, renamed.id),
+   ]
+-  // Only a rename repoints links; requireLoadableResult refuses a move or combine that would break one.
+-  const writes: DocumentWrite[] = input.newId === undefined
++  // Renames and component moves repoint links; validation refuses any unsupported link form.
++  const writes: DocumentWrite[] = input.newId === undefined && !(input.parent !== undefined && target.kind === 'component')
+     ? rewrites.map(rewrite => ({ ...rewrite, source: withMovedLinks(rewrite.source,
+       rewrite.sourceFilename, new Map(), rewrite.destinationFilename) }))
+     : await linkWrites(context, rewrites)
+diff --git a/src/instructions.ts b/src/instructions.ts
+index f7cc2a26..48bf54dd 100644
+--- a/src/instructions.ts
++++ b/src/instructions.ts
+@@ -22,10 +22,10 @@ source code ──scan──▶ groma|.groma/*.md ──view──▶ maps
+ 4. Change the architecture through Groma, not by editing its files.
+    - groma add — declare a person, an external system, a draft, a relation, or a group; the scanner never sees those.
+    - groma draft — a new system, container or component becomes a ghost at the path it will keep.
+-   - groma edit — retitle, rename an id, update meaning or technology, tag a part with a draft, group scan evidence, move an empty scanned component or a container with its meaning, combine empty scan records including systems, detach files from a component, or change the project record.
++   - groma edit — retitle, rename an id, update meaning or technology, tag a part with a draft, group scan evidence, move a scanned component with its meaning and links or a container with its meaning, combine empty scan records including systems, detach files from a component, or change the project record.
+    - groma add relation, groma edit relation, groma remove relation — author or reword a file interaction, or remove a draft interaction. Current relationships cannot be removed.
+    - groma remove — take away a person, an external, a ghost, a code-free component or empty boundary, a draft nothing belongs to, a draft relation, or a group.
+-5. groma accept <id> — accept a ghost only if a scan has matched it. The file stays where it is; only its status changes.
++5. groma accept <id> — accept a ghost only if a scan has matched it, or use --declared for a reviewed existing container. The file stays where it is; only its status changes.
+ 6. groma lint — report architecture issues from current scanner evidence. The first rule checks for possible duplicate logic. Saved architecture stays unchanged. Exit code 1 means findings or a scanner failure; 0 means no findings in the available evidence.
+ 
+ ## Rules of engagement
+@@ -53,7 +53,7 @@ Say what must be true, not how to build it. Do not specify frameworks, file layo
+ - Current long overview: groma edit <id> --overview <markdown>. Pass an empty value to clear it.
+ - Optional concise description: groma edit <id> --description <text>. Pass an empty value to remove it.
+ - Group sibling components: groma add group <name> <ids...>. A group is addressed as <container-id>/<group-kebab>: groma edit group <address> --title <text> renames it, groma remove group <address> [ids...] takes the named members out or dissolves it. One component: groma edit <id> --group <name> or --ungroup.
+-- Move an empty scanned component to another container, or a container with its components to another system: groma edit <id> --parent <container-id|system-id>
++- Move a scanned component with its meaning and links to another container, or a container with its components to another system: groma edit <id> --parent <container-id|system-id>
+ - Combine empty scanned systems, containers, or components into one: groma edit <target-id> --combine <source-id...>
+ - Current collaboration: groma add relation <source-file> <target-file> --description <prose> --technology <text>. One authored row per ordered file pair, stored in the source element document. Actor and external-system declarations may use concept IDs.
+ - Planned collaboration: groma draft relation <source-file> <target-file> --description <prose> --technology <text>. Its dashed identity is independent of both endpoints.
+@@ -64,7 +64,7 @@ Say what must be true, not how to build it. Do not specify frameworks, file layo
+ - Project record: groma edit project [--title <text>] [--description <text>] [--overview <markdown>]
+ - Remove a person, an external, a ghost, a component without Code references, an empty system/container, or a draft no ghost belongs to: groma remove <id>. For scanned components, delete the source files and run their scanner first to clear the Code references. Removal still refuses while flows use the element, other parts relate to it, it contains parts, or ghosts carry the draft's tag.
+ 
+-Containers need a system parent. A component's parent can be its known system when its container is unidentified. An external system has no containers. Container moves preserve authored meaning and children; component moves and combines retain their restrictions on authored prose. Combines transfer outgoing rows and document moves rebase their links. Detached source rows wait in the old document until the next scan assigns an owner. Structural edits preserve file interactions and refuse changes that break concept-addressed relationships or flows. Scans refresh the Derived relationships section from supported operation evidence and preserve authored sections. Raw dependency graphs are not persisted. Current authored text takes precedence for the same file pair; editing a derived row takes authorship. Scans never verify authored text or accept drafts.
++Containers need a system parent. A component's parent can be its known system when its container is unidentified. An external system has no containers. Container moves preserve authored meaning and children; component moves preserve meaning and repoint relationship/flow links, while combines retain their restrictions on authored prose. Combines transfer outgoing rows and document moves rebase their links. Detached source rows wait in the old document until the next scan assigns an owner. Structural edits preserve file interactions and refuse changes that break concept-addressed relationships or flows. Scans refresh the Derived relationships section from supported operation evidence and preserve authored sections. Raw dependency graphs are not persisted. Current authored text takes precedence for the same file pair; editing a derived row takes authorship. Scans never verify authored text or accept drafts.
+ 
+ ${instructionDirectory}`
+ 
+diff --git a/src/movable.ts b/src/movable.ts
+index bba35505..83bb4631 100644
+--- a/src/movable.ts
++++ b/src/movable.ts
+@@ -1,4 +1,3 @@
+-import { withoutRelationshipSections } from './relationship-storage.ts'
+ import type { ArchitectureElement, ArchitectureFlow, ArchitectureRelationship } from './types.ts'
+ 
+ /**
+@@ -8,11 +7,12 @@ import type { ArchitectureElement, ArchitectureFlow, ArchitectureRelationship }
+  */
+ export function moveBlocker(
+   element: Pick<ArchitectureElement, 'id' | 'kind'>,
+-  body: string,
++  _body: string,
+   relationships: readonly ArchitectureRelationship[],
+   flows: readonly ArchitectureFlow[],
+ ): string | undefined {
+-  if (element.kind === 'component' && withoutRelationshipSections(body).trim() !== '') return `cannot move "${element.id}" because it has authored meaning`
++  // Component moves repoint incoming links and rebase outgoing links before validation.
++  if (element.kind === 'component') return undefined
+   const flow = flows.find(item => item.steps.some(step => step.source === element.id || step.target === element.id))
+   if (flow !== undefined) return `cannot move "${element.id}" while flow ${flow.id} names it`
+   const named = relationships.some(relationship => relationship.connections.some(connection => connection.authored
+diff --git a/src/write-commands.ts b/src/write-commands.ts
+index 6cf5ba80..e8141dda 100644
+--- a/src/write-commands.ts
++++ b/src/write-commands.ts
+@@ -140,7 +140,7 @@ export function registerWriteCommands(program: Command): void {
+     .option('--draft <draft-id>', 'tag this element with the draft that touches it')
+     .option('--group <name>', 'assign this component to a sibling group')
+     .option('--ungroup', 'remove this component from its group')
+-    .option('--parent <id>', 'move an empty scanned component to this container, or a container to this system')
++    .option('--parent <id>', 'move a scanned component with its meaning and links to this container, or a container to this system')
+     .option('--combine <ids...>', 'combine empty sibling systems, containers or components into this one; their containers, components or files move to it')
+     .option('--detach <files...>', 'detach these source files from the component')
+     .option('--id <new-id>', 'rename this element; its document and the documents under it move with it')
+@@ -173,13 +173,14 @@ export function registerWriteCommands(program: Command): void {
+ 
+   program
+     .command('accept')
+-    .description('Accept a matched draft element or explicitly accept a draft relationship')
++    .description('Accept a matched draft, declare an existing container, or accept a draft relationship')
+     .argument('<id>', 'draft element id, or relation')
+     .argument('[ids...]', 'source and target files or concept IDs when accepting a relation')
+-    .action(async (id: string, ids: string[]) => {
++    .option('--declared', 'explicitly declare an existing container from reviewed evidence without a scan match')
++    .action(async (id: string, ids: string[], options) => {
+       try {
+         try {
+-          await writes.accept(process.cwd(), addressed(id, ids))
++          await writes.accept(process.cwd(), { ...addressed(id, ids), declared: options.declared })
+         } catch (error) {
+           if (!(error instanceof Error) || error.message !== 'no scan match') throw error
+           await scanRepository(process.cwd())
+diff --git a/test-bun/container-declaration.test.ts b/test-bun/container-declaration.test.ts
+new file mode 100644
+index 00000000..173f4d46
+--- /dev/null
++++ b/test-bun/container-declaration.test.ts
+@@ -0,0 +1,21 @@
++import { expect, test } from 'bun:test'
++import { cp, mkdtemp, rm } from 'node:fs/promises'
++import os from 'node:os'
++import path from 'node:path'
++import { writes } from '../src/authoring.ts'
++import { loadAnnotatedArchitecture } from '../src/core.ts'
++
++test.concurrent('explicit declaration accepts an unscannable container but cannot waive component evidence', async () => {
++  const root = await mkdtemp(path.join(os.tmpdir(), 'groma-declare-'))
++  try {
++    await cp(path.resolve(import.meta.dir, '../test/fixtures/edit'), root, { recursive: true })
++    const container = await writes.draft(root, { kind: 'container', name: 'Database', parent: 'shop', overview: 'Stores orders.', technology: 'SQL' })
++    const component = await writes.draft(root, { kind: 'component', name: 'Future', parent: 'api', overview: 'Not implemented.' })
++    await expect(writes.accept(root, { id: container })).rejects.toThrow('no scan match')
++    await writes.accept(root, { id: container, declared: true })
++    const accepted = (await loadAnnotatedArchitecture(root)).elements.find(item => item.id === container)!
++    expect(accepted).toMatchObject({ origin: 'observed', parent: 'shop', overview: 'Stores orders.', technology: 'SQL', code: [] })
++    await expect(writes.accept(root, { id: component, declared: true })).rejects.toThrow()
++    expect((await loadAnnotatedArchitecture(root)).elements.find(item => item.id === component)?.origin).toBe('draft')
++  } finally { await rm(root, { recursive: true, force: true }) }
++})
+diff --git a/test-bun/system-curation.test.ts b/test-bun/system-curation.test.ts
+index 638bedcb..1572d74e 100644
+--- a/test-bun/system-curation.test.ts
++++ b/test-bun/system-curation.test.ts
+@@ -161,12 +161,36 @@ test.concurrent('a move that would leave a flow step unresolvable is refused and
+     const before = await loadAnnotatedArchitecture(root)
+     const container = parentOf(before, 'a')!
+     const destination = ids(before, 'system').find(id => id !== parentOf(before, container))!
+-    // The web pane offers no new parent for a flow endpoint, whose move the write refuses.
++    // Components can repoint flow links; container relocation retains its existing restriction.
+     const movable = (id: string) => before.elements.find(element => element.id === id)?.movable
+-    expect([movable('a'), movable('b')]).toEqual([false, true])
+-    await expect(editArchitecture(root, { id: 'a', parent: parentOf(before, 'c')! })).rejects.toThrow()
++    expect([movable('a'), movable('b')]).toEqual([true, true])
++    await expect(editArchitecture(root, { id: 'a', parent: destination })).rejects.toThrow('requires a container parent')
+ 
+     await expect(editArchitecture(root, { id: container, parent: destination })).rejects.toThrow('would not resolve')
+     expect((await loadAnnotatedArchitecture(root)).elements).toEqual(before.elements)
+   } finally { await rm(root, { recursive: true, force: true }) }
+ })
++
++test.concurrent('a described component moves with incoming concept links, file interactions and flow endpoints intact', async () => {
++  const root = await repository()
++  try {
++    await editArchitecture(root, { id: 'a', description: 'Request handler', overview: 'Handles orders.', technology: 'Java', group: 'Orders' })
++    const actor = await addThing(root, { thing: 'actor', name: 'Clerk', overview: 'Places orders.' }) as string
++    await addRelation(root, { source: actor, target: 'a', description: 'Orders', technology: 'UI' })
++    await addRelation(root, { source: 'one/a.ts', target: 'two/c.ts', description: 'Requests stock', technology: 'HTTPS' })
++    const link = async (id: string) => path.posix.relative('groma/flows', await documentOf(root, id))
++    await addFlow(root, 'Order stock', { overview: 'Requests stock.', steps: `| From | To | Action |\n| --- | --- | --- |\n| [A](${await link('a')}) | [C](${await link('c')}) | Request stock |` })
++    const before = await loadAnnotatedArchitecture(root)
++    const destination = parentOf(before, 'c')!
++    await editArchitecture(root, { id: 'a', parent: destination })
++    const after = await loadAnnotatedArchitecture(root)
++    expect(after.elements.find(item => item.id === 'a')).toEqual({ ...before.elements.find(item => item.id === 'a')!, parent: destination })
++    expect(owners(after)).toEqual(owners(before))
++    expect(after.flows).toEqual(before.flows)
++    const connections = (model: AnnotatedArchitectureModel) => model.relationships.flatMap(item => item.connections ?? []).toSorted((a, b) => a.source.localeCompare(b.source))
++    expect(connections(after)).toEqual(connections(before))
++    expect((await reconcileScanObservations(root, [observation()])).created).toBe(0)
++    expect((await reconcileScanObservations(root, [observation()])).created).toBe(0)
++    expect(parentOf(await loadAnnotatedArchitecture(root), 'a')).toBe(destination)
++  } finally { await rm(root, { recursive: true, force: true }) }
++})
+diff --git a/test/core.test.ts b/test/core.test.ts
+index 41531864..98c5cbc9 100644
+--- a/test/core.test.ts
++++ b/test/core.test.ts
+@@ -26,7 +26,7 @@ test('reconstructs observed elements, ghosts, and drafts from the OKF profile',
+   assert.equal(model.elements.find(element => element.id === 'git')?.external, true)
+ })
+ 
+-test('move eligibility uses the complete Markdown body', { concurrency: true }, () => {
++test('component move eligibility preserves the complete Markdown body', { concurrency: true }, () => {
+   const system = elementDocument({
+     id: 'shop',
+     kind: 'system',
+@@ -61,5 +61,5 @@ test('move eligibility uses the complete Markdown body', { concurrency: true },
+   const model = annotateArchitecture({ documents: [system, container, empty, sectioned], drafts: [], flows: [] })
+ 
+   assert.equal(model.elements.find(element => element.id === 'empty')?.movable, true)
+-  assert.equal(model.elements.find(element => element.id === 'sectioned')?.movable, false)
++  assert.equal(model.elements.find(element => element.id === 'sectioned')?.movable, true)
+ })

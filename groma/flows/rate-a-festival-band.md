@@ -11,5 +11,5 @@ An attendee changes a planning rating from the active lineup; the use case saves
 
 | From | To | Action |
 | --- | --- | --- |
-| [From](../actors/festival-attendee.md) | [To](../systems/wacken/components/mainactivity.md) | Choose a band rating |
-| [From](../systems/wacken/components/mainactivity.md) | [To](../systems/wacken/components/ratebandusecase.md) | Save the planning rating |
+| [From](../actors/festival-attendee.md) | [To](../systems/wacken/containers/android-application/components/mainactivity.md) | Choose a band rating |
+| [From](../systems/wacken/containers/android-application/components/mainactivity.md) | [To](../systems/wacken/containers/android-application/components/ratebandusecase.md) | Save the planning rating |

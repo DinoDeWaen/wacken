@@ -91,3 +91,61 @@ that is a tooling/configuration change to assess separately, not an instruction
 to rewrite architecture records. No local package/config upgrade was committed
 or applied to the release map. TASK-227 remains incomplete with the same two
 reproduced blockers under the actual local update.
+
+## Published release and upstream confirmation — 21 October 2026
+
+On the next attempt to unblock TASK-227, `npm view groma.md version dist-tags
+--json` confirmed that 0.7.2 remains the latest published release. Explicit local
+0.7.2 calls in the disposable baseline checkout still returned `no scan match`
+on acceptance and `cannot move "apprepositories" because it has authored meaning`
+on relocation. The release map remains unchanged.
+
+Upstream [issue 170](https://github.com/MrLesk/groma.md/issues/170), inspected
+through the GitHub API, is open and describes both failures. Its analysis
+identifies acceptance requiring code on the container itself while only
+components can declare code. It also records the described-component move
+restriction. No fix for this issue appeared among the open pull requests at
+the time of this check. These are upstream implementation findings reported by
+the issue, consistent with our independently reproduced CLI failures; no patched
+binary has been validated here.
+
+### Concrete tooling change proposed for approval
+
+Task: TASK-227. This changes architecture tooling, not the deployed Android app.
+
+1. Minimal option: retain the accurate README diagram and wait for an upstream
+   release fixing both restrictions. TASK-227 and its dependent tasks remain
+   incomplete.
+2. Standard option (recommended if work should continue now): prepare a small
+   Groma source fix in a disposable checkout of upstream commit
+   `b8b325fd44f9e78107d271ac794a6e40321dcf53` (0.7.2). Add an explicit declaration
+   path for an evidence-backed existing container, including data stores that
+   the Java scanner cannot see. Add preservation-safe component relocation that
+   keeps IDs, descriptions, technologies, source ownership, relationships and
+   flow endpoints. Existing validation must still reject wrong kinds, invalid
+   parents, duplicate ownership, collisions and dangling endpoints. No automatic
+   acceptance based solely on a directory or import. Review and test the patch
+   before pinning the exact patched tool artifact and using its CLI on this map.
+3. Maximum option: evaluate another architecture tool or broader scanner changes.
+   This creates migration and maintenance work beyond this milestone and is not
+   recommended for this blocker.
+
+The standard option requires focused failing tests for the two reproduced
+restrictions, positive preservation tests, negative validation tests, and the
+tool's existing suite. Then test a disposable copy of this map: move described
+components through the patched CLI, compare semantic IDs/meaning/ownership and
+all relationships/flows, run two scans, and reproduce from a clean checkout.
+Do not migrate the release map until those controls pass. Pinning details must
+identify the upstream commit, patch and executable digest rather than silently
+replacing the installed 0.7.2 package.
+
+Impact: no domain/application/port/persistence/runtime change. The tool fix adds
+an explicit human declaration and preservation-safe curation capability;
+README tooling instructions, a tooling ADR and reproducibility evidence would
+be required before using it for delivery. Authored Groma Markdown remains
+CLI-only. TASK-233's CI/test-strategy design still needs its own approval.
+
+Explicit human approval is required before implementing this tooling change,
+under AGENTS.md's architecture decision and approval rule. No upstream message,
+issue, PR, package publication, tool source modification or release-map
+migration was performed during this investigation.
