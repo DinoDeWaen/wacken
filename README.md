@@ -1005,6 +1005,25 @@ The CI workflow:
 - Publishes `app/build/outputs/apk/debug/app-debug.apk` as a versioned artifact named `wacken-planner-0.1.<run-number>-debug-apk`.
 
 ## Development Notes
+
+JVM dependency boundaries are executable tests using test-only **ArchUnit
+1.5.1** ([ADR0023](backlog/decisions/0023-archunit-jvm-boundary-tests.md)).
+They run in the existing required CI test/build job through `./gradlew test`
+and `./gradlew check`. For a focused run:
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :infrastructure:test --tests '*HexagonalArchitectureTest'
+```
+
+The suite imports complete compiled main outputs from `domain`, `application`
+and `infrastructure`; missing/empty outputs fail. It rejects outward/framework
+dependencies from inner layers, Android/UI dependencies from JVM infrastructure,
+and cycles between layers. Compiled positive/negative fixtures exercise the same
+rules. Existing URI values and IOException port failures remain allowed in
+application. ArchUnit adds no production dependency. It does not prove code is
+unused, import Android adapter bytecode, check within-layer class cycles or
+replace Groma's map-integrity gate and behavioral/native/database tests.
+
 - Follow TDD: write failing tests, implement, refactor.
 - Keep commits small and focused; push incrementally for review visibility.
 - Ways of working: [`development-ways-of-working.md`](backlog/docs/development-ways-of-working.md).

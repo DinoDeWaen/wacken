@@ -5,6 +5,12 @@ better alternative could help. **Use the Groma semantic gate for map integrity;
 ArchUnit is the recommended complement for executable Java dependency rules.**
 No additional Java test dependency is introduced by this assessment.
 
+Subsequent adoption: the user explicitly requested ArchUnit. TASK-243 and
+[ADR0023](../decisions/0023-archunit-jvm-boundary-tests.md) implement the JVM
+complement with pinned core1.5.1 under the existing JUnit5 runner. See README
+for commands and scope. The assessment below records the decision context;
+the library is now present in infrastructure test scope only.
+
 | Tool | Useful here | Limits and decision |
 | --- | --- | --- |
 | Existing pinned Groma plus semantic validator | Source ownership, container placement, role documentation, authored collaborators, task links, scenario resolution and rescan drift | Best fit for the approved TASK-233 scope. Meaning still needs source and browser review. |
@@ -44,4 +50,3 @@ Primary sources checked on21 October2026:
   package/class dependency analysis and reporting.
 - [jQAssistant manual](https://jqassistant.github.io/jqassistant/current/):
   scanning, graph-backed concepts/constraints and build integration.
-
