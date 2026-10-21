@@ -235,6 +235,11 @@ explicit approval and canonical missing-link save. TASK-229/230 reduce disconnec
 components from47 to zero while retaining294 source files under95 responsibilities.
 This does not resolve the separately documented stale deleted-source arrows.
 
+The [2.35 integrated validation](backlog/docs/release-2.35-validation.md) maps
+all ten audit findings to repairs/tests, retains all99 helper dispositions and
+records successful API23/API36 native, database and signed migration gates. Final
+2.35 version/publication and latest-stable upgrade evidence remain TASK-242.
+
 ### Architecture validation
 
 The approved [ADR0022](backlog/decisions/0022-reviewed-groma-architecture-validation-gate.md)
