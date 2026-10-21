@@ -135,4 +135,14 @@ final class ReviewFestivalCsvUseCaseTest {
         assertTrue(useCase.apply(review,validKeys(review)).success());
         verify(distances).replaceAll(argThat(rows->rows.size()==2&&rows.containsAll(List.of(first,second))));
     }
+
+    @Test void acceptedNewBandRetainsQuotedNameAndNormalizedMusicMetadata() {
+        var review=useCase.review(files("band_id,name,biography,image_url,youtube_url,spotify_artist_id\n"
+            +"new,\"AC, DC\",\"<p>A \"\"loud\"\" &amp; heavy band.</p>\",https://images.test/new,https://youtube.test/new,artist-new\n"));
+        assertTrue(useCase.apply(review,validKeys(review)).success());
+        var expected=new Band("AC, DC",Optional.of("A \"loud\" & heavy band."),
+            Optional.of("https://images.test/new"),Optional.of("https://youtube.test/new"),
+            Optional.of("https://open.spotify.com/artist/artist-new"));
+        verify(bands).replaceAll(argThat(rows->rows.contains(expected)&&rows.contains(known)));
+    }
 }

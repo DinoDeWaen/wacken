@@ -2,7 +2,11 @@ package be.wacken.planner.infrastructure;
 
 import be.wacken.planner.application.FestivalCsvFiles;
 import be.wacken.planner.application.ImportFestivalCsvResult;
-import be.wacken.planner.application.ImportFestivalCsvUseCase;
+import be.wacken.planner.application.ReviewFestivalCsvUseCase;
+import be.wacken.planner.domain.Festival;
+import be.wacken.planner.domain.FestivalRepository;
+import be.wacken.planner.domain.FestivalLineupEntry;
+import be.wacken.planner.domain.FestivalLineupRepository;
 import be.wacken.planner.domain.Band;
 import be.wacken.planner.domain.Stage;
 import be.wacken.planner.domain.StageRepository;
@@ -37,16 +41,28 @@ class TsvImportTransactionTest {
             @Override public Optional<Stage> findByName(String name) { return Optional.empty(); }
             @Override public List<Stage> findAll() { return List.of(); }
         };
-        ImportFestivalCsvUseCase uncoordinated = new ImportFestivalCsvUseCase(
+        ReviewFestivalCsvUseCase uncoordinated = new ReviewFestivalCsvUseCase(
                 new SyncedBandRepository(new InMemoryBandRepository(), bandSource),
                 new SyncedStageRepository(failingCache, stageSource),
                 new InMemoryPerformanceRepository(), new InMemoryStageDistanceRepository(),
-                new InMemoryFoodOptionRepository(), Runnable::run);
+                new InMemoryFoodOptionRepository(), new FestivalRepository() {
+                    @Override public List<Festival> findAll() { return List.of(Festival.active("active", "Active")); }
+                    @Override public void save(Festival festival) { throw new AssertionError("No festival write expected"); }
+                }, new FestivalLineupRepository() {
+                    @Override public List<FestivalLineupEntry> findByFestival(String id) { return List.of(); }
+                    @Override public void saveAllForFestival(String id, List<FestivalLineupEntry> entries) {
+                        throw new AssertionError("Stage failure must occur before lineup writes");
+                    }
+                }, Runnable::run);
 
-        ImportFestivalCsvResult result = uncoordinated.importCsv(new FestivalCsvFiles(
+        var review = uncoordinated.review(new FestivalCsvFiles(
                 "band_id,name\nnew,New Band\n", "stage_id,name\nnew,New Stage\n",
                 "performance_id,band_id,stage_id,start_at,end_at\n",
                 "from_stage_id,to_stage_id,walking_minutes\n", "food_id,name,near_stage_id\n"));
+
+        ImportFestivalCsvResult result = uncoordinated.apply(review, review.changes().stream()
+                .filter(ReviewFestivalCsvUseCase.Change::valid)
+                .map(ReviewFestivalCsvUseCase.Change::key).collect(java.util.stream.Collectors.toSet()));
 
         assertFalse(result.success());
         assertEquals(List.of(new Band("New Band")), bandSource.findAll());

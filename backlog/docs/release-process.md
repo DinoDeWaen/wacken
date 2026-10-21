@@ -311,6 +311,37 @@ The existing `bash scripts/verify-rating-state.sh` now also checks one continuou
 authenticated band4→planning4→planning5/after3→archive band3→next planning3 flow,
 current/older source corrections, reset retention, replay and separate members.
 
+## Latest stable Room12 upgrade probe (TASK242)
+
+For2.35, latest published stable2.34 already uses Room12. Keep the Room9 migration
+mode above for older supported upgrade coverage. Use the same opt-in signed test
+APK and fresh isolated emulator safeguards with the explicit current-baseline mode:
+
+```bash
+sh scripts/verify-signed-upgrade.sh emulator-5554 \
+  /path/to/published-2.34.apk /path/to/final-2.35.apk \
+  /private/tmp/wacken-upgrade-probe.apk /private/tmp/wacken-current-upgrade-evidence \
+  --current-baseline
+```
+
+The new mode seeds actual Room12 fixture state in the published baseline:
+authentication, private metadata, festivals/lineup, own and other member opinions,
+planning/after values, original history, pending operations and correction audit.
+It passes the exact candidate versionCode to the probe: verification must reject
+the old version before install-r and pass only on the higher-code candidate with
+retained state and normal offline startup. Same-version validation is not allowed
+in this mode. The runner still refuses physical devices, existing installations,
+wrong packages/signers, incomplete boot and non-increasing codes before install.
+It never uninstalls/wipes a user installation. Eight runner safety/integration
+fixture tests cover the added mode; opt-in instrumentation is not packaged in
+the production APK and the normal native suite retains AndroidJUnitRunner.
+
+Build/publish from a clean checkout when the shared working directory contains
+unrelated user changes. Preserve those files and provide Android SDK/signing
+configuration securely rather than copying unrelated work into the release.
+Attach exact source/CI/upgrade provenance and SHA256SUMS alongside the APK, then
+download published assets and verify digest/signature/version and tag target.
+
 ## Signing Failure Recovery
 
 If signing credentials are unavailable:

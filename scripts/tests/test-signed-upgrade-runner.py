@@ -9,7 +9,8 @@ RUNNER = Path(__file__).resolve().parents[1] / "verify-signed-upgrade.sh"
 
 
 class SignedUpgradeRunnerSafetyTest(unittest.TestCase):
-    def run_gate(self, serial="emulator-5554", existing=False, candidate_cert="stable", candidate_code=42, booted=True):
+    def run_gate(self, serial="emulator-5554", existing=False, candidate_cert="stable", candidate_code=42, booted=True,
+                 option=None, complete=False):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             log = root / "actions"
@@ -19,7 +20,19 @@ case "$*" in
   devices) printf 'List of devices attached\\nemulator-5554\\tdevice\\n';;
   *'getprop ro.kernel.qemu') echo 1;;
   *'getprop sys.boot_completed') echo "$TEST_BOOTED";;
+  *'getprop ro.build.version.sdk') echo 36;;
   *'pm path be.wacken.planner') if [ "$TEST_EXISTING" = 1 ]; then echo package:existing.apk; fi;;
+  *'settings get global wifi_on') echo 0;;
+  *'settings get global airplane_mode_on') echo 1;;
+  *'am instrument'*)
+    printf 'PROBE %s\\n' "$*" >>"$TEST_LOG"
+    case "$*" in
+      *'upgradePhase seed-current'*) echo upgrade_result=PASS;;
+      *'upgradePhase verify-current'*)
+        if [ -f "$TEST_LOG.verified" ]; then echo upgrade_result=PASS;
+        else touch "$TEST_LOG.verified"; echo upgrade_result=FAIL; echo 'Candidate versionCode must match expected update'; fi;;
+    esac
+    echo 'INSTRUMENTATION_CODE: -1';;
   *install*) echo INSTALL >>"$TEST_LOG";;
 esac
 """)
@@ -43,8 +56,20 @@ echo "package: name='be.wacken.planner' versionCode='$code' versionName='fixture
             environment = dict(os.environ, ANDROID_ADB=str(adb), ANDROID_BUILD_TOOLS=str(tools),
                 TEST_EXISTING="1" if existing else "0", TEST_BOOTED="1" if booted else "0", TEST_LOG=str(log),
                 TEST_CANDIDATE_CERT=candidate_cert, TEST_CANDIDATE_CODE=str(candidate_code))
-            result = subprocess.run(["sh", str(RUNNER), serial, *map(str, apks), str(root / "report")],
+            arguments = ["sh", str(RUNNER), serial, *map(str, apks), str(root / "report")]
+            if option:
+                arguments.append(option)
+            result = subprocess.run(arguments,
                 env=environment, capture_output=True, text=True, timeout=10)
+            if complete:
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                actions = log.read_text()
+                self.assertEqual(3, actions.count("INSTALL"))
+                self.assertEqual(1, actions.count("upgradePhase seed-current"))
+                self.assertEqual(2, actions.count("upgradePhase verify-current"))
+                self.assertIn("upgradeExpectedCode 42", actions)
+                self.assertIn("PASS: signed upgrade retained", result.stdout)
+                return result.stdout
             self.assertNotEqual(0, result.returncode, result.stdout + result.stderr)
             self.assertFalse(log.exists(), "Safety gate allowed an install")
             return result.stderr
@@ -66,6 +91,12 @@ echo "package: name='be.wacken.planner' versionCode='$code' versionName='fixture
 
     def test_same_version_requires_explicit_intermediate_validation_option(self):
         self.assertIn("higher versionCode", self.run_gate(candidate_code=41))
+
+    def test_current_baseline_still_requires_strictly_higher_code(self):
+        self.assertIn("higher versionCode", self.run_gate(candidate_code=41, option="--current-baseline"))
+
+    def test_current_baseline_uses_matching_seed_and_before_after_version_control(self):
+        self.run_gate(option="--current-baseline", complete=True)
 
 
 if __name__ == "__main__":

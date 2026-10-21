@@ -151,15 +151,7 @@ final class SupabaseAuthClient implements SupabaseAuthGateway {
     }
 
     private String errorMessage(String response, int status) {
-        if (response == null || response.isBlank()) {
-            return "Supabase request failed with status " + status;
-        }
-        try {
-            JSONObject json = new JSONObject(response);
-            return json.optString("msg", json.optString("message", response));
-        } catch (Exception ignored) {
-            return response;
-        }
+        return SupabaseErrorMessages.select(response, status, "Supabase request failed");
     }
 
     private record Membership(String groupId, String role) {

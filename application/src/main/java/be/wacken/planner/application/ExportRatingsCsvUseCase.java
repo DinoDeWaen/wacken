@@ -7,7 +7,6 @@ import be.wacken.planner.domain.PerformanceRepository;
 import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.RatingRepository;
 import be.wacken.planner.domain.RealRatingRepository;
-import be.wacken.planner.domain.SavedRating;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -87,12 +86,8 @@ public final class ExportRatingsCsvUseCase {
     }
 
     private String groupRatings(Band band) {
-        return planningRatings.findAll()
-                .stream()
-                .filter(rating -> rating.band().name().equals(band.name()))
-                .filter(rating -> rating.rating().value() > 0)
-                .sorted(Comparator.comparing(SavedRating::userName, String.CASE_INSENSITIVE_ORDER))
-                .map(rating -> rating.userName() + "=" + rating.rating().value())
+        return MemberRatingProjection.forBand(planningRatings.findAll(), band).stream()
+                .map(rating -> rating.personName() + "=" + rating.rating())
                 .collect(Collectors.joining(";"));
     }
 

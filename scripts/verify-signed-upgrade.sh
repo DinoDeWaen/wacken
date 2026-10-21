@@ -2,7 +2,7 @@
 # Explicit fixture-only signed upgrade, never an existing user installation.
 set -eu
 if [ "$#" -lt 5 ] || [ "$#" -gt 6 ]; then
-  echo "Usage: $0 emulator-serial baseline.apk candidate.apk signed-probe.apk report-directory [--allow-same-version]" >&2
+  echo "Usage: $0 emulator-serial baseline.apk candidate.apk signed-probe.apk report-directory [--allow-same-version|--current-baseline]" >&2
   exit 2
 fi
 UPGRADE_SERIAL=$1
@@ -14,7 +14,16 @@ UPGRADE_SDK=${ANDROID_SDK_ROOT:-"$HOME/Library/Android/sdk"}
 UPGRADE_ADB=${ANDROID_ADB:-"$UPGRADE_SDK/platform-tools/adb"}
 UPGRADE_BUILD_TOOLS=${ANDROID_BUILD_TOOLS:-"$UPGRADE_SDK/build-tools/36.0.0"}
 case "$UPGRADE_SERIAL" in emulator-*) ;; *) echo "Only a fresh isolated emulator is supported." >&2; exit 2;; esac
-if [ "$#" = 6 ] && [ "$6" != --allow-same-version ]; then echo "Unknown option." >&2; exit 2; fi
+UPGRADE_MODE=${6:-legacy}
+case "$UPGRADE_MODE" in legacy|--allow-same-version|--current-baseline) ;; *) echo "Unknown option." >&2; exit 2;; esac
+UPGRADE_SEED=seed
+UPGRADE_VERIFY=verify
+UPGRADE_RED_MESSAGE='Candidate migrated to Room12'
+if [ "$UPGRADE_MODE" = --current-baseline ]; then
+  UPGRADE_SEED=seed-current
+  UPGRADE_VERIFY=verify-current
+  UPGRADE_RED_MESSAGE='Candidate versionCode must match expected update'
+fi
 for apk in "$UPGRADE_BASELINE" "$UPGRADE_CANDIDATE" "$UPGRADE_PROBE"; do
   test -f "$apk" || { echo "Missing APK: $apk" >&2; exit 2; }
 done
@@ -43,7 +52,7 @@ for entry in baseline candidate; do
 done
 UPGRADE_OLD_CODE=$(sed -n "s/^package:.*versionCode='\([0-9]*\)'.*/\1/p" "$UPGRADE_REPORT/baseline-metadata.txt")
 UPGRADE_NEW_CODE=$(sed -n "s/^package:.*versionCode='\([0-9]*\)'.*/\1/p" "$UPGRADE_REPORT/candidate-metadata.txt")
-if [ "$#" = 6 ]; then
+if [ "$UPGRADE_MODE" = --allow-same-version ]; then
   test "$UPGRADE_NEW_CODE" -ge "$UPGRADE_OLD_CODE" || exit 2
 else
   test "$UPGRADE_NEW_CODE" -gt "$UPGRADE_OLD_CODE" || { echo "Final candidate must have a higher versionCode." >&2; exit 2; }
@@ -76,20 +85,20 @@ test "$("$UPGRADE_ADB" -s "$UPGRADE_SERIAL" shell settings get global airplane_m
 "$UPGRADE_ADB" -s "$UPGRADE_SERIAL" install "$UPGRADE_BASELINE" >"$UPGRADE_REPORT/install-baseline.txt"
 "$UPGRADE_ADB" -s "$UPGRADE_SERIAL" install "$UPGRADE_PROBE" >"$UPGRADE_REPORT/install-probe.txt"
 probe_phase() {
-  "$UPGRADE_ADB" -s "$UPGRADE_SERIAL" shell am instrument -w -e upgradePhase "$1" \
+  "$UPGRADE_ADB" -s "$UPGRADE_SERIAL" shell am instrument -w -e upgradePhase "$1" -e upgradeExpectedCode "$UPGRADE_NEW_CODE" \
     be.wacken.planner.test/be.wacken.planner.SignedUpgradeInstrumentation >"$UPGRADE_REPORT/$1.txt"
   grep -q 'upgrade_result=PASS' "$UPGRADE_REPORT/$1.txt" &&
     grep -q 'INSTRUMENTATION_CODE: -1' "$UPGRADE_REPORT/$1.txt" ||
     { cat "$UPGRADE_REPORT/$1.txt" >&2; exit 1; }
 }
-probe_phase seed
-# Red control: the same assertions must reject the old Room9 installation.
-"$UPGRADE_ADB" -s "$UPGRADE_SERIAL" shell am instrument -w -e upgradePhase verify \
+probe_phase "$UPGRADE_SEED"
+# Red control rejects the old schema, or the old version for a current-schema baseline.
+"$UPGRADE_ADB" -s "$UPGRADE_SERIAL" shell am instrument -w -e upgradePhase "$UPGRADE_VERIFY" -e upgradeExpectedCode "$UPGRADE_NEW_CODE" \
   be.wacken.planner.test/be.wacken.planner.SignedUpgradeInstrumentation >"$UPGRADE_REPORT/before-update-rejected.txt"
 grep -q 'upgrade_result=FAIL' "$UPGRADE_REPORT/before-update-rejected.txt" &&
-  grep -q 'Candidate migrated to Room12' "$UPGRADE_REPORT/before-update-rejected.txt" ||
+  grep -q "$UPGRADE_RED_MESSAGE" "$UPGRADE_REPORT/before-update-rejected.txt" ||
   { cat "$UPGRADE_REPORT/before-update-rejected.txt" >&2; exit 1; }
 "$UPGRADE_ADB" -s "$UPGRADE_SERIAL" shell am force-stop be.wacken.planner
 "$UPGRADE_ADB" -s "$UPGRADE_SERIAL" install -r "$UPGRADE_CANDIDATE" >"$UPGRADE_REPORT/install-update.txt"
-probe_phase verify
+probe_phase "$UPGRADE_VERIFY"
 printf 'PASS: signed upgrade retained auth, metadata, festival identity, history, pending work and safe established provenance. versionCode %s -> %s.\n' "$UPGRADE_OLD_CODE" "$UPGRADE_NEW_CODE" | tee "$UPGRADE_REPORT/result.txt"

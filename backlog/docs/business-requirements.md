@@ -14,6 +14,13 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 
 ### Current Implemented Capabilities
 
+Release2.35 is maintenance of the implemented2.34 lifecycle: bounded rating/schedule
+and image networking, consistent errors, canonical identity/scoped projection
+reuse and reviewed detail presentation. It removes an unused full CSV importer
+while preserving the active reviewed workflow. Versioned architecture evidence
+and its development gate add no product capability or rating-policy change.
+The paired appearance/navigation redesign remains3.0.
+
 Release2.34 implements TASK-216–220 and aligned TASK-156/169/172: shared canonical band metadata plus each member's established
 band rating; independent festival planning and after-ratings; copy established
 ratings once on creation and promote nonempty after-ratings only on archive.
@@ -598,12 +605,15 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-050 | The band overview must sort bands alphabetically by band name unless the user explicitly chooses another sort later. | 5th Avenue appears before Airbourne regardless of import order or performance time. | Must |
 | BR-050a | Generic Metal Battle placeholder acts must be hidden from rating lists. | Imported entries whose names are generic Metal Battle placeholders, such as `Metal Battle` or `Metal Battle tba.`, are preserved in master data but are not shown in the band overview or counted in rating allocation summaries. Real named bands that only mention Metal Battle are not hidden by this rule. | Must |
 | BR-051 | Band detail biography should prefer English source text when available and render it as readable text. | If `biography` and `biographyDe` both exist in imported source data, the detail screen shows the English text without raw HTML tags or entities. | Must |
-| BR-052 | Band detail should show available band image metadata and must not show broken image placeholders. | If a band has an image URL, it is shown; if not, no broken image is displayed. | Must |
+| BR-052 | Band detail should show available band image metadata and must not show broken image placeholders. | If a band has a usable image URL, it is shown; missing, failed or undecodable images are hidden. Active and archived details retain their rating/festival context when image retrieval fails. Replaced or destroyed screens must ignore stale image results. | Must |
 | BR-053 | Band detail layout should place the image and primary band controls together, with the explanation below, while remaining usable on phone screens. | Image is left and rating/stage/time/actions are right when space allows; narrow screens stack cleanly. | Must |
 | BR-054 | Returning to the app must restore the user’s last Wacken Planner screen instead of showing an unrelated browser or new-tab state. | Returning from another app brings the user back to the same overview or detail screen. | Must |
 | BR-054a | Returning from band detail must keep the selected overview band row visible after refresh. | A user opens Skyline, changes or reviews the rating, goes back, and sees the Skyline row instead of being moved to the top of the band list. | Must |
 | BR-055 | External music links must not destroy or replace the app’s internal navigation state. | Opening YouTube or Spotify and returning restores the previous Wacken Planner context. | Must |
 | BR-056 | Authenticated Supabase calls must renew expired access tokens when the refresh token is still valid. | Master-data sync and rating sync continue after normal JWT expiry; if refresh token renewal is explicitly rejected because the session is invalid, the local session is cleared and the user returns to login. If renewal cannot reach Supabase because the device is offline or the network fails, the local session is preserved so cached data remains usable. | Must |
+| BR-056a | Login and authenticated sync failures must show consistent, privacy-preserving backend messages. | Prefer a nonblank string `message`, then `msg`; otherwise show the operation and HTTP status. Do not display raw malformed or unsupported payloads. Apply existing credential/token redaction to selected text. Display selection does not change authentication, session or retry decisions. | Must |
+| BR-056b | Stalled rating/history/planning/schedule HTTP connections and inactive reads must report failure without losing pending edits or cached data. | Apply explicit connect/read timeouts and retain failed changes for retry. These per-I/O limits do not promise an overall sync deadline; multiple requests and the existing expired-JWT retry can extend the operation. Do not clear a valid cached session merely because transport failed. | Must |
+| BR-056c | Rating lookup and its subsequent write must stay bound to the intended member. | If the signed-in member changes during legacy/planning/history rating lookup, reject the following request before writing under replacement credentials; retain pending work and ask the user to reopen the screen. Exact canonical-name addressing must not create bands or guess aliases. | Must |
 | BR-057 | The signed-in app must sync Supabase master data, group ratings, and group schedule locks when the app starts or is reactivated without blocking cached app usage. | A user opening the app on a second Android device sees locally cached data immediately while Supabase refreshes in the background; when sync succeeds, shared festivals, lineups, group ratings, and manual schedule locks refresh without needing to force-close the first device. | Must |
 | BR-058 | The app must provide a close action that attempts Supabase sync before closing. | Tapping close pushes local pending ratings and pulls group ratings before the app exits; if sync fails, local ratings remain available and the app stays open with a clear failure message. | Must |
 | BR-059 | Sync operations must show clear Wacken/metal-themed feedback and prevent conflicting sync/close actions while in progress. | Startup, reactivation, manual sync, and close sync show visible progress instead of a blank or frozen screen. | Must |

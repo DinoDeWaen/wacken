@@ -4,20 +4,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,8 +22,14 @@ import be.wacken.planner.domain.Rating;
 
 final class SupabasePersonalBandRatingClient implements SupabasePersonalBandRatingRemote {
     private final SupabaseAuthenticatedRequest authenticatedRequest;
+    private final SupabaseHttpTransport transport;
 
     SupabasePersonalBandRatingClient(SupabaseSessionManager sessionManager) {
+        this(sessionManager, new SupabaseHttpTransport());
+    }
+
+    SupabasePersonalBandRatingClient(SupabaseSessionManager sessionManager, SupabaseHttpTransport transport) {
+        this.transport = transport;
         this.authenticatedRequest = new SupabaseAuthenticatedRequest(sessionManager, "Supabase personal rating sync failed");
     }
 
@@ -43,7 +42,7 @@ final class SupabasePersonalBandRatingClient implements SupabasePersonalBandRati
             JSONObject body = new JSONObject()
                     .put("id", remoteEventId(event))
                     .put("user_id", event.userName())
-                    .put("band_id", bandIdFor(event.band()))
+                    .put("band_id", bandLookup(event.userName()).idFor(event.band()))
                     .put("rating", event.rating().value())
                     .put("created_at", event.createdAt().toString());
             if (event.festivalId().isPresent()) {
@@ -52,7 +51,7 @@ final class SupabasePersonalBandRatingClient implements SupabasePersonalBandRati
             if (event.festivalNameSnapshot().isPresent()) {
                 body.put("festival_name_snapshot", event.festivalNameSnapshot().orElseThrow());
             }
-            request("POST", "/rest/v1/personal_band_rating_events?on_conflict=id", body.toString(), true);
+            request(event.userName(), "POST", "/rest/v1/personal_band_rating_events?on_conflict=id", body.toString(), true);
         } catch (JSONException error) {
             throw new IOException("Supabase personal rating request could not be created.", error);
         }
@@ -68,8 +67,8 @@ final class SupabasePersonalBandRatingClient implements SupabasePersonalBandRati
 
     @Override
     public List<PersonalBandRatingEvent> pullUserEvents(AuthSession session) throws IOException {
-        Map<String, String> bandNamesById = bandNamesById();
-        String response = request(
+        Map<String, String> bandNamesById = bandLookup(session.userId()).namesById();
+        String response = request(session.userId(),
                 "GET",
                 "/rest/v1/personal_band_rating_events?select=id,user_id,band_id,festival_id,festival_name_snapshot,rating,created_at&user_id=eq." + encode(session.userId()),
                 null,
@@ -111,71 +110,14 @@ final class SupabasePersonalBandRatingClient implements SupabasePersonalBandRati
         }
     }
 
-    private String bandIdFor(Band band) throws IOException {
-        String response = request("GET", "/rest/v1/bands?select=id&name=eq." + encode(band.name()) + "&limit=1", null, false);
-        try {
-            JSONArray rows = new JSONArray(response);
-            if (rows.length() == 0) {
-                throw new IOException("Band is not available in Supabase: " + band.name());
-            }
-            return rows.getJSONObject(0).getString("id");
-        } catch (JSONException error) {
-            throw new IOException("Supabase band lookup response could not be read.", error);
-        }
+    private SupabaseCanonicalBandLookup bandLookup(String user) {
+        return new SupabaseCanonicalBandLookup(endpoint -> request(user, "GET", endpoint, null, false));
     }
 
-    private Map<String, String> bandNamesById() throws IOException {
-        String response = request("GET", "/rest/v1/bands?select=id,name", null, false);
-        try {
-            JSONArray rows = new JSONArray(response);
-            Map<String, String> names = new HashMap<>();
-            for (int index = 0; index < rows.length(); index++) {
-                JSONObject row = rows.getJSONObject(index);
-                names.put(row.getString("id"), row.getString("name"));
-            }
-            return names;
-        } catch (JSONException error) {
-            throw new IOException("Supabase band lookup response could not be read.", error);
-        }
+    private String request(String expectedUser, String method, String endpoint, String body, boolean upsert) throws IOException {
+        return authenticatedRequest.executeForUser(expectedUser, session -> transport.send(method, endpoint, body, session, upsert));
     }
 
-    private String request(String method, String endpoint, String body, boolean upsert) throws IOException {
-        return authenticatedRequest.execute(session -> send(method, endpoint, body, session, upsert));
-    }
-
-    private SupabaseAuthenticatedRequest.Response send(String method, String endpoint, String body, AuthSession session, boolean upsert) throws IOException {
-        HttpURLConnection connection = (HttpURLConnection) new URL(SupabaseConfig.url() + endpoint).openConnection();
-        connection.setRequestMethod(method);
-        connection.setRequestProperty("apikey", SupabaseConfig.anonKey());
-        connection.setRequestProperty("Authorization", "Bearer " + session.accessToken());
-        connection.setRequestProperty("Content-Type", "application/json");
-        if (upsert) {
-            connection.setRequestProperty("Prefer", "resolution=merge-duplicates");
-        }
-        if (body != null) {
-            connection.setDoOutput(true);
-            try (OutputStream stream = connection.getOutputStream()) {
-                stream.write(body.getBytes(StandardCharsets.UTF_8));
-            }
-        }
-        int status = connection.getResponseCode();
-        String response = read(status >= 400 ? connection.getErrorStream() : connection.getInputStream());
-        return new SupabaseAuthenticatedRequest.Response(status, response);
-    }
-
-    private String read(InputStream input) throws IOException {
-        if (input == null) {
-            return "";
-        }
-        StringBuilder text = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                text.append(line);
-            }
-        }
-        return text.toString();
-    }
 
     private static Optional<String> optional(String value) {
         if (value == null || value.isBlank()) {

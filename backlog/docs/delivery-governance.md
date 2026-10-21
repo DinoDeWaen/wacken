@@ -164,3 +164,29 @@ Do not merge unless:
 - ADR impact uses the canonical wording.
 - Architecture approval is present when required.
 - Risks and follow-up are documented.
+
+
+## Reviewed architecture gate (ADR0022)
+
+For architecture/source-ownership changes, run the pinned Groma semantic gate
+and its positive/negative fixtures before merge. Use the local commands in
+README; CI stores `build/groma-validation.json` as the architecture diagnostic
+artifact. The check scans only a disposable clean checkout and never accepts a
+new baseline during ordinary validation.
+
+PR evidence must include the gate result and source/composition plus rendered-map
+review of changed responsibilities, collaboration claims and scenarios. An
+intentional baseline update must explain changed identities/ownership/containment,
+removed authored relationships, legitimate moves/combines and every new duplicate
+or isolated implementation-detail exception. Exceptions require exact identities,
+rationale and review evidence; finding totals and blanket lint-exit suppression
+are not acceptable. Propose candidates outside the repository, inspect their
+semantic differences, then explicitly record the reviewed baseline.
+
+TASK228 user acceptance covers exactly its two historical authored arrows to/from
+the deleted full CSV importer. They remain labelled stale; the exception does not
+permit deleted-source ownership, flow usage or other dangling endpoints. Known
+scanner diagnostic categories are distinct from compiler errors. Missing evidence,
+coverage decreases and new/increased diagnostics require investigation rather
+than automatic baseline refresh. Human meaning review and existing runtime,
+Android, database and upgrade gates remain required.

@@ -1,0 +1,7 @@
+{
+  "upstream": "https://github.com/MrLesk/groma.md.git",
+  "commit": "b8b325fd44f9e78107d271ac794a6e40321dcf53",
+  "patchSha256": "0ff82c8eec4af88396c169d0f807f7550d06ef230d65602959ebabec1345862d",
+  "bunVersion": "1.4.3",
+  "javaScanner": "@groma/scanner-java@0.2.2"
+}

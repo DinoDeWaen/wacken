@@ -45,6 +45,73 @@ Five interactive HTML design directions are available in the [design study](desi
 - Generate and view an MVP2 day-filtered calendar schedule with fixed stage labels on the left and horizontally scrollable time columns across the top, using shared ratings, middle-30-minute conflict rules, optional decisions, winner stars, and lost-alternative stars; the view can locally hide barred overlapping acts or acts at/below a selected star threshold; tapping a performance block opens the chosen act and alternatives, and alternatives can be selected as Supabase-synced locked group winners.
 
 ## Architecture
+
+The versioned [Groma map](groma/project.md) preserves source ownership, stable
+element IDs, groups, descriptions, authored relationships and scenario flows.
+The [20 October audit](backlog/docs/groma-audit-2026-10-20.md) records its known
+gaps: no container records, 72 disconnected records and 99 duplicate candidate
+groups. TASK-226 preserves that baseline; TASK-227–233 repair and validate it.
+Preservation does not establish architecture completeness.
+
+Use the repository-pinned **Groma 0.7.2 container-curation patch**, with
+**@groma/scanner-java@0.2.2** pinned in [`groma/config.json`](groma/config.json).
+Automatic updates are disabled. Provide Bun **1.4.3** on PATH (or set BUN to its
+absolute executable path), then build the tool from the exact upstream commit
+and checked patch. This leaves global/npm installations unchanged:
+
+```bash
+sh scripts/setup-groma.sh
+sh scripts/groma.sh --version
+sh scripts/groma.sh scanner list
+sh scripts/groma.sh view --plain
+sh scripts/groma.sh scan
+sh scripts/groma.sh lint --max-count 200
+```
+
+The launcher verifies the [tool pin](tools/groma/pin.json), patch checksum and
+locally built executable digest. Rebuild if the cache is missing or the pin
+changes. See [ADR 0021](backlog/decisions/0021-pinned-groma-container-curation-fix.md)
+for the approved change, test evidence and maintenance limits. The binary still
+reports its upstream version; its recorded digest identifies the patched build.
+
+Scanning refreshes Java evidence and ownership; curation interprets the evidence
+and authors responsibilities and collaborations through the Groma CLI. A scan
+does not finish the map. The scanner covers main Java sources only, excluding
+`InMemory*Repository.java`; it does not establish SQL/RLS/RPC behavior, Android
+resources/manifest wiring, Gradle deployment or verification scripts. Its
+unresolved framework/cross-module symbols are analysis limitations, not compiler
+results. Groma lint reports review candidates and exits 1 when candidates remain;
+its group counts and ordering change as code changes. The [helper dispositions](backlog/docs/groma-helper-dispositions-2026-10-21.md)
+classify all 99 original audit groups, including intentional repetition and work
+owned by existing 3.0 tasks. This is separate from Android lint and the application
+test suite.
+
+The [scanner confidence report](backlog/docs/groma-scanner-confidence-2026-10-21.md)
+reproduces ordinary calls, deferred callbacks, cross-module and Room/generated
+limitations. Scanner readiness is separate from Gradle compilation; running a
+build does not load its dependencies or generated sources into this scanner.
+Grouped diagnostic lines can show representative per-input counts, rather than
+repository totals. Use source evidence and the relevant native/backend checks
+before authoring runtime relationships or treating an absent edge as unused code.
+
+For a clean checkout of the historical TASK-226 baseline commit, use its pinned
+unmodified Groma 0.6.6 and verify all 126 stored files
+before and after two scans using the [SHA-256 inventory](backlog/docs/groma-baseline-2026-10-20.sha256):
+
+```bash
+shasum -a 256 -c backlog/docs/groma-baseline-2026-10-20.sha256
+groma scan
+shasum -a 256 -c backlog/docs/groma-baseline-2026-10-20.sha256
+groma scan
+shasum -a 256 -c backlog/docs/groma-baseline-2026-10-20.sha256
+git status --short -- groma
+```
+
+Every checksum must pass and scans must add no files. Missing records fail this
+verification. The inventory characterizes the historical baseline byte for byte;
+later intentional curation requires reviewing its differences, not restoring old
+hashes over new meaning. See [baseline verification evidence](backlog/docs/groma-baseline-verification-2026-10-20.md).
+
 - Clean Architecture with DDD boundaries: domain, application, infrastructure, and Android UI modules.
 - Business rules live in the domain; application orchestrates use cases; infrastructure provides adapters (e.g., CSV, persistence); Android module handles presentation only.
 - Dependencies point inward only; UI never contains business logic.
@@ -56,6 +123,7 @@ Five interactive HTML design directions are available in the [design study](desi
 - ADR: [`0008-supabase-postgres-flyway-migrations.md`](backlog/decisions/0008-supabase-postgres-flyway-migrations.md).
 - ADR: [`0009-supabase-group-schedule-winner-locks.md`](backlog/decisions/0009-supabase-group-schedule-winner-locks.md).
 - ADR: [`0010-offline-first-sync-boundary.md`](backlog/decisions/0010-offline-first-sync-boundary.md).
+- ADR: [`0020-bounded-supabase-adapter-transport.md`](backlog/decisions/0020-bounded-supabase-adapter-transport.md) defines bounded rating/history/planning/schedule HTTP mechanics while preserving auth and pending-write ownership.
 - ADR: [`0013-festival-deletion-and-schedule-ownership.md`](backlog/decisions/0013-festival-deletion-and-schedule-ownership.md).
 - ADR: [`0011-post-wacken-festival-rating-model.md`](backlog/decisions/0011-post-wacken-festival-rating-model.md) defines the accepted post-MVP3 festival archive, reusable band, planning rating, and personal rating history direction.
 - ADR: [`0012-reviewed-band-metadata-search-framework.md`](backlog/decisions/0012-reviewed-band-metadata-search-framework.md) defines the reviewed metadata proposal boundary for own-catalog and external provider enrichment.
@@ -70,6 +138,7 @@ Five interactive HTML design directions are available in the [design study](desi
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
 - V2.31 UAT overview: [`v2.31-user-acceptance-test-overview.md`](backlog/docs/v2.31-user-acceptance-test-overview.md).
+- V2.35 reliability and reviewed architecture maintenance: [`releases/v2.35.md`](releases/v2.35.md).
 - V2.34 canonical ratings, verified music links and reviewed festival imports: [`releases/v2.34.md`](releases/v2.34.md).
 - V2.33.5 missing music links hotfix: [`releases/v2.33.5.md`](releases/v2.33.5.md).
 - V2.33.4 festival creation hotfix: [`releases/v2.33.4.md`](releases/v2.33.4.md).
@@ -112,6 +181,114 @@ Five interactive HTML design directions are available in the [design study](desi
 - V2.0 release notes: [`releases/v2.0.md`](releases/v2.0.md).
 - V1.1 release notes: [`releases/v1.1.md`](releases/v1.1.md).
 - V1.0 release notes: [`releases/v1.0.md`](releases/v1.0.md).
+
+### Runtime and storage boundaries
+
+The installed Android app runs the UI, application workflows, domain rules and
+adapters in one process. Room is owned on-device storage. The shared planner
+database is owned application data hosted by the external Supabase platform;
+Auth and API hosting belong to that platform. Gradle modules describe code
+dependencies rather than independently deployed applications.
+
+```mermaid
+C4Container
+    Person(attendee, "Festival attendee", "Rates bands and plans with the group")
+    System_Boundary(planner, "Wacken Planner") {
+        Container(android, "Installed Android application", "Android / Java", "UI, workflows, domain rules, repository and network adapters")
+        ContainerDb(room, "On-device cache", "Room / SQLite", "Cached festival data and pending rating/schedule changes")
+        ContainerDb(shared, "Shared planner database", "PostgreSQL on Supabase", "Owned schema, canonical catalog, member-scoped ratings, RPCs and RLS")
+    }
+    System_Ext(supabase, "Supabase platform", "Authentication and hosted PostgREST API")
+    Rel(attendee, android, "Uses")
+    Rel(android, room, "Reads cached data and queues writes", "Room")
+    Rel(android, supabase, "Authenticates and synchronizes", "HTTPS")
+    Rel(supabase, shared, "Serves authorized data and RPCs", "PostgREST / PostgreSQL")
+```
+
+TSV fallback files also live in app-private storage; the local CSV workflow can
+publish to the Room cache. SQL and platform rules need separate source evidence
+because the Groma scanner covers Java only. The Groma map now explicitly declares
+the Android application, owned Room cache and owned shared planner database;
+all Java components remain inside the Android runtime. The [approved tooling
+remedy and evidence](backlog/docs/groma-container-limitations-2026-10-20.md)
+explain the preservation-safe migration. Storage declarations do not imply SQL
+analysis or generated-code ownership. Groma requires source endpoints for
+internal software relationships, so the C4 view above also explains the
+higher-level app-to-storage interaction. Workflow curation is recorded in completed TASK-228–230.
+
+The [festival administration evidence](backlog/docs/groma-festival-administration-evidence-2026-10-21.md)
+traces reviewed group creation, local five-file acceptance/rollback and selected
+festival deletion. Its scope table explains combined identity/cache records and
+the removed unused full CSV importer and the remaining stale authored arrows.
+Rescanning retains those arrows even after the deleted source ownership is
+detached through the CLI. The user accepted these two documented stale arrows
+on21 October2026 and authorized TASK-228 closure; safe removal remains a tooling
+limitation.
+
+The [rating island review](backlog/docs/groma-rating-islands-evidence-2026-10-21.md)
+traces selected-festival planning/after-state, owner-scoped sync, archive promotion,
+reviewed correction, pending recovery and separate CSV contracts. The reviewed
+rating records have runtime callers; their isolation was missing map knowledge.
+
+The [music discovery island review](backlog/docs/groma-music-islands-evidence-2026-10-21.md)
+connects both entry points, identity/source evidence, bounded official-site retrieval,
+explicit approval and canonical missing-link save. TASK-229/230 reduce disconnected
+components from47 to zero while retaining294 source files under95 responsibilities.
+This does not resolve the separately documented stale deleted-source arrows.
+
+The [2.35 integrated validation](backlog/docs/release-2.35-validation.md) maps
+all ten audit findings to repairs/tests, retains all99 helper dispositions and
+records successful API23/API36 native, database and signed migration gates. Final
+2.35 signed APK, latest-stable upgrade and published-asset evidence accompany
+[the release notes](releases/v2.35.md).
+
+### Architecture validation
+
+The approved [ADR0022](backlog/decisions/0022-reviewed-groma-architecture-validation-gate.md)
+adds a development-only semantic gate. With the pinned Groma build and configured
+plugins restored, use Bun1.4.3 and Backlog1.53.0:
+
+```bash
+sh scripts/groma.sh plugin install
+bun test scripts/tests/groma-gate.test.ts
+bun scripts/architecture/verify-groma.mjs
+```
+
+The validator scans a disposable clean Git checkout twice, preserving the working
+tree. Commit reviewed product/map changes before running it. It checks unique
+source ownership, fresh scanner coverage, containment and role documentation,
+current architecture task references, authored collaborations, flows, unexplained
+islands and reviewed duplicate identities. The JSON report is written to
+`build/groma-validation.json`; CI retains it as `groma-validation`. Missing tools,
+failed/partial scans and diagnostic degradation fail with context. Known Java
+framework/generated-reference warnings are scanner limitations, not compiler
+errors. Existing Android lint/compiler/test gates remain separate.
+
+The [reviewed baseline](tools/groma/architecture-baseline.json) and
+[per-group dispositions](backlog/docs/groma-gate-review-2026-10-21.md) retain88
+reviewed duplicate identities rather than allowing a total finding count or
+ignoring lint exit1. Two exact TASK228 stale rows are reported as accepted stale
+claims; no other dangling endpoints, deleted-file ownership or flow use are
+accepted. There are no accepted component islands.
+
+For intentional architecture changes, generate an external review candidate:
+
+```bash
+bun scripts/architecture/verify-groma.mjs --propose-baseline /tmp/wacken-groma-candidate.json
+```
+
+This writes a candidate and its evidence snapshot outside the repository; it
+never updates the accepted baseline. Unchanged duplicate reviews and exact
+exceptions carry forward; new identities say REVIEW REQUIRED. Review source,
+rendered map, semantic differences and every new exception/finding, then update
+the versioned baseline with rationale and PR evidence. New legitimate file moves
+or combines require that review; line shifts and ordering do not change identity.
+See [delivery governance](backlog/docs/delivery-governance.md).
+
+[ArchUnit and alternatives assessment](backlog/docs/architecture-tool-assessment-2026-10-21.md)
+recommends ArchUnit as a future complement for Java bytecode dependency rules.
+It cannot replace Groma ownership/prose/flow validation; this gate adds no Java
+runtime or test-library dependency.
 
 ### Module Map
 
@@ -742,6 +919,47 @@ Coverage gates:
 - `application`: 70% minimum instruction coverage.
 
 ## Troubleshooting
+
+### Backend error messages
+
+Login and authenticated sync use the same display rule: the first nonblank
+string `message`, then `msg`, with surrounding whitespace removed. Missing,
+non-string or malformed messages fall back to the operation and HTTP status
+(for example, `Supabase request failed with status 401` or
+`Supabase rating sync failed with status 503`). Raw JSON/proxy payloads are not
+displayed. Selected text uses the existing credential/token redaction used by
+diagnostics. This changes error presentation only; session refresh, one retry
+after rejected JWTs and offline session retention keep their existing behavior.
+
+### Rating and schedule network timeouts
+
+Rating, festival planning, personal history and schedule-lock HTTP calls use a
+15-second connection timeout and a 30-second inactive-read timeout. On timeout,
+the operation reports failure; pending edits and cached data remain available
+for retry. These settings match the existing master-data client. An expired JWT
+can still trigger one refresh/retry through the existing authenticated wrapper.
+
+These are per-connection/read limits, not a total sync deadline: one sync may
+make multiple requests, and DNS, blocked uploads or a continuously trickling
+response are not bounded by an overall deadline here. If sync fails, retain local
+data and retry when connectivity improves; clearing app storage can lose pending
+work. No new timeout policy is introduced for login or metadata/image providers.
+
+Remote legacy/planning/history rating lookups share exact canonical-name
+addressing; case and URL escaping are preserved, with no alias guessing or band
+creation. If the signed-in member changes between lookup and write, the existing
+member-binding guard rejects the request. Reopen the screen with the intended
+account and retry retained pending work.
+
+### Band image loading
+
+Active and archived detail screens share a single image request owner per screen.
+Requests use 5-second connection/inactive-read timeouts, close streams and
+disconnect HTTP connections. Re-rendering replaces the old request; destroying
+the screen cancels it and suppresses queued callbacks, so late results cannot
+update a replaced or destroyed view. Failed retrieval or decoding hides the
+image without changing ratings or metadata. These per-I/O limits do not promise
+a total download or bitmap-decoding deadline.
 
 ### Supported Android Java APIs
 

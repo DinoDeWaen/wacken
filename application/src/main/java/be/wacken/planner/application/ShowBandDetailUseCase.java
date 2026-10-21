@@ -5,7 +5,6 @@ import be.wacken.planner.domain.BandRepository;
 import be.wacken.planner.domain.Rating;
 import be.wacken.planner.domain.RatingRepository;
 import be.wacken.planner.domain.RealRatingRepository;
-import be.wacken.planner.domain.SavedRating;
 import be.wacken.planner.domain.FestivalRepository;
 import be.wacken.planner.domain.PersonalBandRatingHistoryRepository;
 
@@ -86,14 +85,8 @@ public final class ShowBandDetailUseCase {
                 .collect(Collectors.toList());
     }
 
-    private List<PersonRatingStars> personRatingsFor(be.wacken.planner.domain.Band band) {
-        return ratingRepository.findAll()
-                .stream()
-                .filter(rating -> rating.band().name().equals(band.name()))
-                .filter(rating -> rating.rating().value() > 0)
-                .sorted(Comparator.comparing(SavedRating::userName, String.CASE_INSENSITIVE_ORDER))
-                .map(rating -> new PersonRatingStars(rating.userName(), rating.rating().value()))
-                .collect(Collectors.toList());
+    private List<PersonRatingStars> personRatingsFor(Band band) {
+        return MemberRatingProjection.forBand(ratingRepository.findAll(), band);
     }
 
     private static final class EmptyRealRatingRepository implements RealRatingRepository {

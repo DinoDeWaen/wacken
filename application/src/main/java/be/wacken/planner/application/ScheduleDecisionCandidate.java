@@ -52,9 +52,6 @@ public record ScheduleDecisionCandidate(
     }
 
     public String personRatingSummary() {
-        return personRatings.stream()
-                .map(PersonRatingStars::displayText)
-                .reduce((left, right) -> left + "  " + right)
-                .orElse("");
+        return PersonRatingStars.summary(personRatings);
     }
 }

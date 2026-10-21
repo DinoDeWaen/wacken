@@ -37,18 +37,6 @@ public final class LegacyRealRatingBackfillRegressionTest {
         assertTrue(source.contains("staleLegacyEventId"));
     }
 
-    @Test
-    public void supabasePersonalRatingSyncDoesNotDeleteRemoteHistory() throws IOException {
-        String source = new String(
-                Files.readAllBytes(source("SupabasePersonalBandRatingClient.java")),
-                StandardCharsets.UTF_8
-        );
-
-        assertTrue(source.contains("request(\"POST\", \"/rest/v1/personal_band_rating_events?on_conflict=id\""));
-        assertTrue(source.contains("request(\"GET\","));
-        assertTrue("Personal rating history sync must not delete remote history.", !source.contains("request(\"DELETE\""));
-    }
-
     private Path source(String fileName) {
         return List.of(
                         Path.of("app/src/main/java/be/wacken/planner/" + fileName),

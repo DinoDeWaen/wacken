@@ -4,13 +4,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
@@ -18,6 +12,7 @@ import java.util.Map;
 
 final class SupabaseScheduleLockClient implements ScheduleLockStore {
     private final SupabaseAuthenticatedRequest authenticatedRequest;
+    private final SupabaseHttpTransport transport;
     private final String festivalId;
 
     SupabaseScheduleLockClient(SupabaseSessionManager sessionManager) {
@@ -25,6 +20,11 @@ final class SupabaseScheduleLockClient implements ScheduleLockStore {
     }
 
     SupabaseScheduleLockClient(SupabaseSessionManager sessionManager, String festivalId) {
+        this(sessionManager, festivalId, new SupabaseHttpTransport());
+    }
+
+    SupabaseScheduleLockClient(SupabaseSessionManager sessionManager, String festivalId, SupabaseHttpTransport transport) {
+        this.transport = transport;
         this.authenticatedRequest = new SupabaseAuthenticatedRequest(sessionManager, "Supabase schedule lock sync failed");
         this.festivalId = festivalId;
     }
@@ -100,42 +100,9 @@ final class SupabaseScheduleLockClient implements ScheduleLockStore {
     }
 
     private String request(String method, String endpoint, String body, boolean upsert) throws IOException {
-        return authenticatedRequest.execute(session -> send(method, endpoint, body, session, upsert));
+        return authenticatedRequest.execute(session -> transport.send(method, endpoint, body, session, upsert));
     }
 
-    private SupabaseAuthenticatedRequest.Response send(String method, String endpoint, String body, AuthSession session, boolean upsert) throws IOException {
-        HttpURLConnection connection = (HttpURLConnection) new URL(SupabaseConfig.url() + endpoint).openConnection();
-        connection.setRequestMethod(method);
-        connection.setRequestProperty("apikey", SupabaseConfig.anonKey());
-        connection.setRequestProperty("Authorization", "Bearer " + session.accessToken());
-        connection.setRequestProperty("Content-Type", "application/json");
-        if (upsert) {
-            connection.setRequestProperty("Prefer", "resolution=merge-duplicates");
-        }
-        if (body != null) {
-            connection.setDoOutput(true);
-            try (OutputStream stream = connection.getOutputStream()) {
-                stream.write(body.getBytes(StandardCharsets.UTF_8));
-            }
-        }
-        int status = connection.getResponseCode();
-        String response = read(status >= 400 ? connection.getErrorStream() : connection.getInputStream());
-        return new SupabaseAuthenticatedRequest.Response(status, response);
-    }
-
-    private String read(InputStream input) throws IOException {
-        if (input == null) {
-            return "";
-        }
-        StringBuilder text = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                text.append(line);
-            }
-        }
-        return text.toString();
-    }
 
     private String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
