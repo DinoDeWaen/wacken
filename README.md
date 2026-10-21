@@ -77,6 +77,14 @@ classify all 99 original audit groups, including intentional repetition and work
 owned by existing 3.0 tasks. This is separate from Android lint and the application
 test suite.
 
+The [scanner confidence report](backlog/docs/groma-scanner-confidence-2026-10-21.md)
+reproduces ordinary calls, deferred callbacks, cross-module and Room/generated
+limitations. Scanner readiness is separate from Gradle compilation; running a
+build does not load its dependencies or generated sources into this scanner.
+Grouped diagnostic lines can show representative per-input counts, rather than
+repository totals. Use source evidence and the relevant native/backend checks
+before authoring runtime relationships or treating an absent edge as unused code.
+
 For a clean checkout of the TASK-226 baseline commit, verify all 126 stored files
 before and after two scans using the [SHA-256 inventory](backlog/docs/groma-baseline-2026-10-20.sha256):
 
