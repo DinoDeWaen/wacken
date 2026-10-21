@@ -1,5 +1,12 @@
 # TASK-228: Remove a verified stale authored relationship
 
+## Status
+
+Deferred, not approved for implementation. On21 October2026 the user explicitly
+authorized TASK-228 closure with the documented stale-arrow limitation and asked
+to continue. The two known authored rows remain accepted exceptions for that
+closure; the proposed tooling extension below is historical and optional.
+
 ## Architecture approval request
 
 Task: TASK-228 — connect festival creation, CSV review and canonical identity.

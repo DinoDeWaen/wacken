@@ -206,5 +206,17 @@ ImportFestivalCsvUseCase remains pending the narrow tooling extension in
 [the approval proposal](task-228-stale-relationship-approval.md).
 After correcting the local flow, the CLI still reports
 `only draft relationships can be removed`. The unused Java import and implementation have now been removed; neither scan nor
-CLI detach removes these stale authored rows. TASK-228 remains incomplete until that correction
-can be made through an approved CLI operation.
+CLI detach removes these stale authored rows.
+
+On21 October2026 the user reviewed the corrected map, then explicitly instructed
+that TASK-228 may close and work should continue. This accepts the documented
+limitation for closure; it does not approve the proposed CLI extension or claim
+these rows are correct. The exact accepted stale endpoints are:
+
+- ImportCsvActivity.java → application/ImportFestivalCsvUseCase.java (deleted).
+- application/ImportFestivalCsvUseCase.java (deleted) → domain/Band.java.
+
+These are historical authored rows, used by no current flow, and must not be
+interpreted as live collaborations. No other stale endpoints are accepted by
+this decision. Current post-TASK229/230 map contains95 components,294 existing
+unique owned sources and13 resolvable flows with zero disconnected components.

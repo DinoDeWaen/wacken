@@ -213,16 +213,16 @@ remedy and evidence](backlog/docs/groma-container-limitations-2026-10-20.md)
 explain the preservation-safe migration. Storage declarations do not imply SQL
 analysis or generated-code ownership. Groma requires source endpoints for
 internal software relationships, so the C4 view above also explains the
-higher-level app-to-storage interaction. Remaining workflow curation is tracked
-separately in TASK-228–230.
+higher-level app-to-storage interaction. Workflow curation is recorded in completed TASK-228–230.
 
 The [festival administration evidence](backlog/docs/groma-festival-administration-evidence-2026-10-21.md)
 traces reviewed group creation, local five-file acceptance/rollback and selected
 festival deletion. Its scope table explains combined identity/cache records and
 the removed unused full CSV importer and the remaining stale authored arrows.
 Rescanning retains those arrows even after the deleted source ownership is
-detached through the CLI; safe relationship removal is still required before
-TASK-228 closes.
+detached through the CLI. The user accepted these two documented stale arrows
+on21 October2026 and authorized TASK-228 closure; safe removal remains a tooling
+limitation.
 
 The [rating island review](backlog/docs/groma-rating-islands-evidence-2026-10-21.md)
 traces selected-festival planning/after-state, owner-scoped sync, archive promotion,
