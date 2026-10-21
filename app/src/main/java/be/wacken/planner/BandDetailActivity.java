@@ -17,7 +17,6 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.time.Clock;
-import java.net.URL;
 import java.util.Optional;
 
 import be.wacken.planner.application.BandDetailItem;
@@ -34,6 +33,8 @@ import be.wacken.planner.domain.RatingRepository;
 import be.wacken.planner.domain.RealRatingRepository;
 
 public final class BandDetailActivity extends Activity {
+    private final BandImageLoader<Bitmap> imageLoader =
+            new BandImageLoader<>(BitmapFactory::decodeStream, this::runOnUiThread);
     public static final String EXTRA_BAND_NAME = "be.wacken.planner.BAND_NAME";
     public static final String EXTRA_YOUTUBE_URL = "be.wacken.planner.YOUTUBE_URL";
     public static final String EXTRA_SPOTIFY_URL = "be.wacken.planner.SPOTIFY_URL";
@@ -388,14 +389,17 @@ public final class BandDetailActivity extends Activity {
     }
 
     private void loadImage(String url, ImageView image) {
-        new Thread(() -> {
-            try {
-                Bitmap bitmap = BitmapFactory.decodeStream(new URL(url).openStream());
-                runOnUiThread(() -> image.setImageBitmap(bitmap));
-            } catch (Exception ignored) {
-                runOnUiThread(() -> image.setVisibility(View.GONE));
-            }
-        }).start();
+        imageLoader.load(url, bitmap -> {
+            if (!isFinishing() && !isDestroyed()) image.setImageBitmap(bitmap);
+        }, () -> {
+            if (!isFinishing() && !isDestroyed()) image.setVisibility(View.GONE);
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        imageLoader.close();
+        super.onDestroy();
     }
 
     private LinearLayout detailSection() {

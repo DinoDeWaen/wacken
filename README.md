@@ -852,6 +852,16 @@ creation. If the signed-in member changes between lookup and write, the existing
 member-binding guard rejects the request. Reopen the screen with the intended
 account and retry retained pending work.
 
+### Band image loading
+
+Active and archived detail screens share a single image request owner per screen.
+Requests use 5-second connection/inactive-read timeouts, close streams and
+disconnect HTTP connections. Re-rendering replaces the old request; destroying
+the screen cancels it and suppresses queued callbacks, so late results cannot
+update a replaced or destroyed view. Failed retrieval or decoding hides the
+image without changing ratings or metadata. These per-I/O limits do not promise
+a total download or bitmap-decoding deadline.
+
 ### Supported Android Java APIs
 
 The app keeps minimum Android API23 support. Its existing Java compatibility

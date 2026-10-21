@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.view.MotionEvent;
@@ -12,10 +13,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.ImageView;
 import androidx.test.platform.app.InstrumentationRegistry;
 import be.wacken.planner.domain.Band;
 import be.wacken.planner.persistence.*;
 import java.io.FileInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
@@ -97,6 +101,50 @@ public final class CriticalFlowsAndroidTest {
         await(()->!booleanField(activity,"syncInProgress"));
         assertEquals(1,database.festivalPlanningRatings().findPending(GROUP,USER).size());
         assertNotNull(new RoomBandRepository(database).findByName(BAND).orElse(null));
+    }
+
+    @Test public void localBandImageSurvivesRecreationAndArchiveWithoutChangingPlanning() throws Exception {
+        File image=File.createTempFile("band-image-", ".png", instrumentation.getTargetContext().getCacheDir());
+        try {
+            Bitmap bitmap=Bitmap.createBitmap(2,2,Bitmap.Config.ARGB_8888);
+            try(FileOutputStream output=new FileOutputStream(image)){assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,output));}
+            finally{bitmap.recycle();}
+            new RoomBandRepository(database).save(new Band(BAND,Optional.empty(),Optional.of(image.toURI().toString()),Optional.empty(),Optional.empty()));
+            open(BandDetailActivity.class);
+            await(()->findBandImage(root())!=null&&findBandImage(root()).getDrawable()!=null);
+            Activity previous=activity;
+            onUi(previous::recreate);
+            await(()->{
+                for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                        .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED)){
+                    if(candidate instanceof BandDetailActivity&&candidate!=previous){activity=candidate;return true;}
+                }
+                return false;
+            });
+            await(()->findBandImage(root())!=null&&findBandImage(root()).getDrawable()!=null);
+            onUi(activity::finish);instrumentation.waitForIdleSync();
+            new RoomFestivalRepository(database).save(be.wacken.planner.domain.Festival.archived(FESTIVAL,"Native smoke festival"));
+            open(ArchivedBandDetailActivity.class);
+            await(()->findBandImage(root())!=null&&findBandImage(root()).getDrawable()!=null);
+            assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+            assertEquals("PENDING",database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).syncStatus);
+        } finally {assertTrue(image.delete());}
+    }
+
+    @Test public void undecodableImagesHideInBothDetailsWithoutChangingPlanning() throws Exception {
+        File image=File.createTempFile("invalid-band-image-", ".png", instrumentation.getTargetContext().getCacheDir());
+        try {
+            try(FileOutputStream output=new FileOutputStream(image)){output.write("not an image".getBytes(StandardCharsets.UTF_8));}
+            new RoomBandRepository(database).save(new Band(BAND,Optional.empty(),Optional.of(image.toURI().toString()),Optional.empty(),Optional.empty()));
+            open(BandDetailActivity.class);
+            await(()->findBandImage(root())!=null&&findBandImage(root()).getVisibility()==View.GONE);
+            onUi(activity::finish);instrumentation.waitForIdleSync();
+            new RoomFestivalRepository(database).save(be.wacken.planner.domain.Festival.archived(FESTIVAL,"Native smoke festival"));
+            open(ArchivedBandDetailActivity.class);
+            await(()->findBandImage(root())!=null&&findBandImage(root()).getVisibility()==View.GONE);
+            assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+            assertEquals("PENDING",database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).syncStatus);
+        } finally {assertTrue(image.delete());}
     }
 
     @Test public void detailTouchSavesPlanningRatingLocallyAndResetKeepsZero() throws Exception {
@@ -257,10 +305,19 @@ public final class CriticalFlowsAndroidTest {
     private void open(Class<? extends Activity> type) {
         Intent intent=new Intent(instrumentation.getTargetContext(),type).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         if(type==BandDetailActivity.class)intent.putExtra(BandDetailActivity.EXTRA_BAND_NAME,BAND);
+        if(type==ArchivedBandDetailActivity.class)intent.putExtra(ArchivedBandDetailActivity.EXTRA_BAND_NAME,BAND)
+                .putExtra(ArchivedBandDetailActivity.EXTRA_FESTIVAL_ID,FESTIVAL);
         activity=instrumentation.startActivitySync(intent);
         instrumentation.waitForIdleSync();
     }
     private View root(){return activity.getWindow().getDecorView();}
+    private static ImageView findBandImage(View view){
+        if(view instanceof ImageView image&&"Band image".equals(view.getContentDescription()))return image;
+        if(view instanceof ViewGroup group)for(int i=0;i<group.getChildCount();i++){
+            ImageView image=findBandImage(group.getChildAt(i));if(image!=null)return image;
+        }
+        return null;
+    }
     private void onUi(Runnable action){instrumentation.runOnMainSync(action);}
     private void await(BooleanSupplier condition) throws Exception {
         long deadline=SystemClock.elapsedRealtime()+15000;

@@ -15,7 +15,6 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,6 +27,8 @@ import be.wacken.planner.application.ViewArchivedFestivalHistoryUseCase;
 import be.wacken.planner.domain.Band;
 
 public final class ArchivedBandDetailActivity extends Activity {
+    private final BandImageLoader<Bitmap> imageLoader =
+            new BandImageLoader<>(BitmapFactory::decodeStream, this::runOnUiThread);
     public static final String EXTRA_FESTIVAL_ID = "be.wacken.planner.ARCHIVED_FESTIVAL_ID";
     public static final String EXTRA_BAND_NAME = "be.wacken.planner.ARCHIVED_BAND_NAME";
     public static final String EXTRA_STAGE = "be.wacken.planner.ARCHIVED_STAGE";
@@ -200,6 +201,7 @@ public final class ArchivedBandDetailActivity extends Activity {
     }
 
     @Override protected void onDestroy(){
+        imageLoader.close();
         if(correctionDialog!=null)correctionDialog.dismiss();
         super.onDestroy();
     }
@@ -297,14 +299,11 @@ public final class ArchivedBandDetailActivity extends Activity {
     }
 
     private void loadImage(String url, ImageView image) {
-        new Thread(() -> {
-            try {
-                Bitmap bitmap = BitmapFactory.decodeStream(new URL(url).openStream());
-                runOnUiThread(() -> image.setImageBitmap(bitmap));
-            } catch (Exception ignored) {
-                runOnUiThread(() -> image.setVisibility(View.GONE));
-            }
-        }).start();
+        imageLoader.load(url, bitmap -> {
+            if (!isFinishing() && !isDestroyed()) image.setImageBitmap(bitmap);
+        }, () -> {
+            if (!isFinishing() && !isDestroyed()) image.setVisibility(View.GONE);
+        });
     }
 
     private LinearLayout detailSection() {
