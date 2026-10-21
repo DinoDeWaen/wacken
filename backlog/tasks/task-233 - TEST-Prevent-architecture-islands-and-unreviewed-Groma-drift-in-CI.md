@@ -1,11 +1,11 @@
 ---
 id: TASK-233
 title: 'TEST: Prevent architecture islands and unreviewed Groma drift in CI'
-status: In Progress
+status: Done
 assignee:
   - '@codex'
 created_date: '2026-10-20 06:25'
-updated_date: '2026-10-21 13:03'
+updated_date: '2026-10-21 13:07'
 labels:
   - groma-audit
   - release-2.35
@@ -63,34 +63,72 @@ README and diagram impacts are assessed for the affected workflow. ADR impact: n
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Given the curated baseline, two scans and clean-checkout validation pass without duplicate ownership, missing sources, dangling IDs/endpoints/flows or unexplained containment changes.
-- [ ] #2 Given deliberately disconnected responsibility, removed owned source, lost authored relationship, broken task reference or recreated component fixtures, the gate fails with actionable diagnostics.
-- [ ] #3 Known intentional duplicates and explicitly justified isolated implementation details are reviewable exceptions; new findings or unexplained islands fail without requiring fake arrows or merged domain responsibilities.
-- [ ] #4 Scanner/tool versions are reproducible and diagnostic degradation is surfaced; scanner output warnings are not represented as application compiler errors.
-- [ ] #5 Positive and negative tests cover semantic identity, legitimate file moves/combines and fixture restoration; manual/browser review remains required for meaning.
-- [ ] #6 README and delivery guidance document local/CI commands, exception approval and PR evidence. Architecture/test-strategy approval is obtained before implementing this gate.
+- [x] #1 Given the curated baseline, two scans and clean-checkout validation pass without duplicate ownership, missing sources, dangling IDs/endpoints/flows or unexplained containment changes.
+- [x] #2 Given deliberately disconnected responsibility, removed owned source, lost authored relationship, broken task reference or recreated component fixtures, the gate fails with actionable diagnostics.
+- [x] #3 Known intentional duplicates and explicitly justified isolated implementation details are reviewable exceptions; new findings or unexplained islands fail without requiring fake arrows or merged domain responsibilities.
+- [x] #4 Scanner/tool versions are reproducible and diagnostic degradation is surfaced; scanner output warnings are not represented as application compiler errors.
+- [x] #5 Positive and negative tests cover semantic identity, legitimate file moves/combines and fixture restoration; manual/browser review remains required for meaning.
+- [x] #6 README and delivery guidance document local/CI commands, exception approval and PR evidence. Architecture/test-strategy approval is obtained before implementing this gate.
 - [x] #7 Architecture impact is assessed before implementation; significant boundary, dependency, persistence or test-strategy changes receive explicit human approval before coding and an ADR is recorded when required.
-- [ ] #8 README, business requirements, diagram and ADR impacts use canonical delivery-governance wording; test evidence, manual verification, finalized plan and remaining risks are recorded before merge.
+- [x] #8 README, business requirements, diagram and ADR impacts use canonical delivery-governance wording; test evidence, manual verification, finalized plan and remaining risks are recorded before merge.
 <!-- AC:END -->
 
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Inspect current CI, exact Groma/scanner pin, curated map, duplicate dispositions and accepted TASK228 exception; prepare concrete minimal/standard/maximum architecture gate options. 2. Obtain explicit architecture/test-strategy approval required by AC6/7 before implementing executable gate or CI changes. Proposed standard: standalone pinned semantic validator, reviewed stable duplicate identities and exact scoped exceptions, positive/negative fixture tests, clean-checkout/two-scan repeatability and diagnostics. 3. After approval, implement through red/green tests; preserve human/browser semantic review, document local/CI usage and ADR, validate fresh signed APK and finalize evidence. No application runtime or production dependency change planned.
-
-Implementation details after approval: pure semantic validator with Bun fixture tests; adapter reuses exact pinned Groma architecture reader/raw relationship parser/model and fresh scanner registry evidence. Persist verified reader-source receipt during existing tool setup; scan only a disposable Git checkout, compare before/after/two scans and report stale-row exceptions separately. ArchUnit assessment recommends a later narrow Java bytecode boundary supplement; no ArchUnit/jQAssistant installation is needed to satisfy this map gate.
+1. Inspected CI, exact tool/scanner/work-source pins, curated raw/resolved map, duplicate audit and accepted TASK228 limitation; user explicitly approved standard proposal before code. Created ADR0022 and assessed ArchUnit/jdeps/jQAssistant using primary documentation and current module boundaries. 2. Implemented pure semantic validation plus pinned-reader/fresh-scanner adapter, disposable clean checkout and two-scan comparison including inferred relationships; retained exact two stale-row exceptions and required all294 owned sources to appear in scanner evidence. 3. Added27 positive/negative TDD fixtures covering identity, missing/duplicate ownership, islands, lost collaborations, invalid task references/flows, changed duplicates/pins, diagnostic/evidence degradation, legitimate reviewed moves/combines and temporary-checkout cleanup. Real gate found11 stale TASK227 references; corrected them through CLI. 4. Individually reviewed all88 current duplicate groups against the99-group audit/TASK240, recorded stable full source/member/token identities and rationales; no count/exit-code blanket suppression. 5. Added blocking CI job, external-only baseline proposals, machine diagnostics, README/local usage and delivery review policy. Real clean-checkout gate passes with95 components/294 sources/13 flows and two scans creating0/refreshed95. Existing regression/coverage/lint, JS/shell syntax, CI YAML parsing and fresh53-task stable-key APK build pass. No production code/dependency or Groma-owned map change. No ArchUnit dependency added: assessment recommends it as complementary Java-bytecode boundary enforcement, not replacement for map validation. Final source and human-reviewed map semantics remain unchanged; remote GitHub CI execution is part of integrated TASK241 validation.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Investigation started after user-authorized TASK228 closure. TASK228 accepts exactly two stale authored deleted-importer rows; this is a proposed narrow gate exception, not blanket permission for dangling links. AC6/7 explicitly require architecture/test-strategy approval before implementation. Preparing a reviewable proposal; no validator or CI code changed.
+## Implementation summary
 
-Concrete standard proposal saved at backlog/docs/task-233-architecture-gate-proposal.md. It specifies a development-only semantic CI gate using existing exact pins, raw and resolved endpoint validation, stable duplicate identities, source/ownership/containment/flow/task-reference checks, disposable clean-checkout/two-scan repeatability and actionable diagnostics. Exactly the two user-accepted TASK228 stale rows are proposed scoped exceptions, with no deleted-file ownership or flow usage allowed. Positive/negative fixtures and human/source/browser review remain required. ADR0022 and implementation await explicit approval under AC6/7; no gate code, tests or CI mutations yet.
+Implemented the user-approved standard development-only Groma validation gate and blocking CI job. ADR0022 records approval and scope. Gate uses exact pinned Groma readers/raw rows and fresh Java scanner evidence, validates curated structure/meaning identities and current task links, scans only a disposable clean Git checkout twice and emits build/groma-validation.json. All88 current duplicate groups have individual member/token-based identities and rationale; exactly two user-accepted TASK228 stale rows are explicit exceptions. Corrected11 stale TASK227 references discovered by the real gate.
 
-Approval received: user selected standard and requested assessment of ArchUnit or better alternatives. Proceed with the approved development-only semantic Groma gate. ArchUnit assessment compares Java bytecode rule enforcement with JDK jdeps and jQAssistant; do not conflate bytecode dependencies with Groma ownership/prose/flows. No new Java dependency has been added.
+ArchUnit assessment: recommended for complementary compiled Java dependency/layer/cycle rules. JDK jdeps is useful reporting; jQAssistant adds unnecessary graph machinery here. None replaces Groma ownership/prose/task/flow checks. Assessment: backlog/docs/architecture-tool-assessment-2026-10-21.md. No Java dependency added.
 
-Real clean-checkout probe detected11 stale TASK227 references to component IDs combined in TASK229/230. Corrected them through Backlog CLI to surviving responsibilities. This is an actual negative gate finding, not an ignored historical-reference category.
+## Acceptance criteria validation
 
-Implementation checkpoint:26 positive/negative Bun tests pass after red/green coverage additions. The real disposable-checkout probe loads the pinned readers/raw rows, finds88 current duplicate groups and preserves95 components/294 sources/13 flows across two scans. Reviewed all88 groups individually against the original99-group audit/TASK240 dispositions and stored member/token identities with rationale. Added ADR0022, exact TASK228 exceptions, CI job, local commands and delivery review policy. ArchUnit assessment recommends it for complementary bytecode boundary rules; jdeps is diagnostic-only and jQAssistant adds unnecessary graph machinery here. No new Java dependency. Final real gate run from committed checkpoint, regression checks, browser/report inspection and fresh signed APK remain.
+All eight criteria met. Missing sources/coverage, duplicate ownership/IDs, undocumented roles, containment drift, lost authored rows, new islands, invalid references/flows, recreated components and unreviewed duplicate identities fail with actionable messages. Exact exceptions cannot legitimize derived rows, regained deleted ownership or other endpoints. Tool/scanner/work-source pins, operation/token/invocation evidence and diagnostic categories/fact counts expose degradation. Before/after and repeated scans also compare inferred rows. Legitimate moves/combines require explicit reviewed baseline updates; ordering/line shifts preserve identity. Source/browser review remains required for meaning.
+
+## How to test
+
+### Automated tests
+
+bun test scripts/tests/groma-gate.test.ts:27 passed,0 failed,40 assertions. Real bun scripts/architecture/verify-groma.mjs passes in disposable clean checkout:95 components,294 unique owned existing sources,13 resolvable flows,88 reviewed duplicate identities; first and second scans create0/refreshed95 with no conflicts. Exactly two stale rows and eight known diagnostic categories are reported, not hidden. Reader source rebuilt from approved exact commit/patch; source receipt/pin compatibility verified.
+
+Existing Gradle domain63/application163/infrastructure24/BDD3 pass; Android264 tests have248 passed and16 pre-existing disposable-API skips. Application/domain coverage gates and Android lint pass. JS syntax, shell syntax, CI YAML parsing and git diff --check pass. Fresh assembleRelease --rerun-tasks rebuilt53 tasks after deleting previous APK; apksigner verifies v1/v2 with stable certificate ede2ae97735a305900e87bc0fdc021c03382db4e30435f2349a96a3fdcc7545f. APK SHA256 24fef4103c6d64e2eaff5a859c78277b540684520abacd0777e032525c691875. Existing version retained; no release publication.
+
+### Manual validation
+
+Inspected raw and resolved endpoints, model/flow preservation, per-group duplicate review table and JSON diagnostics. The actual negative probe found11 broken task references, then the corrected committed state passed. Fixture cleanup test injects failure in a cloned temporary Git repo, checks original file remains unchanged and temporary checkout is removed. No Groma architecture meaning changed; the previously rendered/user-accepted95-component map and13 scenarios are semantically identical. ArchUnit/tool comparison checked primary documentation and actual module/test configuration. Remote GitHub workflow is configured; no remote Linux/native success is claimed here.
+
+## TDD / BDD / approval-test evidence
+
+Started with failing fixture import; added red/green cases for silently lost scanner coverage, dropped operation evidence/increased unresolved facts and disappearing inferred rows. Final27 tests pass. Existing BDD/regression contracts remain unchanged. No app behavior or legacy production structure changed.
+
+## Architecture impact
+
+Architecture-significant change: development validation/test strategy only. Approval received: user selected standard before implementation. ADR impact: created ADR0022 for the reviewed semantic gate, explicit exceptions and human review boundary. Existing ADR0016 application/domain/persistence contracts remain unchanged.
+
+## README impact
+
+README impact: updated pinned local/CI commands, source receipt, diagnostic meaning, reviewed baseline/exception process and ArchUnit assessment link.
+
+## Business requirements impact
+
+Business requirements impact: none, because this development gate changes no product scope, rating lifecycle, public behavior or data contract.
+
+## Diagram impact
+
+Diagram impact: none, because the gate validates the unchanged CLI-authored architecture and adds no application boundary or workflow; existing rendered map review remains valid.
+
+## Commits / logical change list
+
+4580a7b adds the semantic gate, fixtures, reviewed baseline, task-reference repairs, CI and documentation. d7215cb covers inferred-row repeatability with red/green regression evidence. Closure notes finalize validation and approval evidence.
+
+## Risks and follow-up
+
+Human source/composition/browser review remains essential; prose truth and runtime reachability are not proven by structural checks. Known Java diagnostic categories and two TASK228 stale rows remain explicit limits. Intentional source moves, duplicate-body changes or scanner-evidence decreases require reviewed baseline updates. GitHub/Linux/native/database/upgrade integration is TASK241, not an inferred local success. No merge or publication. ArchUnit remains an assessed complementary option rather than an unrequested added dependency.
 <!-- SECTION:NOTES:END -->
