@@ -14,3 +14,6 @@ Rates bands, reviews a shared conflict-aware schedule, records personal post-sho
 | --- | --- | --- | --- |
 | [festival-attendee](festival-attendee.md) | [app/src/main/java/be/wacken/planner/MainActivity.java](../../app/src/main/java/be/wacken/planner/MainActivity.java) | Views active lineup | Android UI |
 | [festival-attendee](festival-attendee.md) | [app/src/main/java/be/wacken/planner/ScheduleActivity.java](../../app/src/main/java/be/wacken/planner/ScheduleActivity.java) | Reviews group schedule | Android UI |
+| [festival-attendee](festival-attendee.md) | [app/src/main/java/be/wacken/planner/BandDetailActivity.java](../../app/src/main/java/be/wacken/planner/BandDetailActivity.java) | Reviews selected band | Android UI |
+| [festival-attendee](festival-attendee.md) | [app/src/main/java/be/wacken/planner/ArchivedBandDetailActivity.java](../../app/src/main/java/be/wacken/planner/ArchivedBandDetailActivity.java) | Reviews archived assessment | Android UI |
+| [festival-attendee](festival-attendee.md) | [app/src/main/java/be/wacken/planner/SettingsActivity.java](../../app/src/main/java/be/wacken/planner/SettingsActivity.java) | Exports own ratings | Android UI |

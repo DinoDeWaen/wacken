@@ -127,3 +127,4 @@ Room database, DAOs, entities, and repository adapters keep festival and group d
 | Source | Target | Description | Technology |
 | --- | --- | --- | --- |
 | [app/src/main/java/be/wacken/planner/persistence/RoomFestivalRepository.java](../../../../../../app/src/main/java/be/wacken/planner/persistence/RoomFestivalRepository.java) | [app/src/main/java/be/wacken/planner/persistence/RoomFestivalCacheMarkerDao.java](../../../../../../app/src/main/java/be/wacken/planner/persistence/RoomFestivalCacheMarkerDao.java) | Guards initial festival seeding | Java call |
+| [app/src/main/java/be/wacken/planner/persistence/WackenDatabase.java](../../../../../../app/src/main/java/be/wacken/planner/persistence/WackenDatabase.java) | [app/src/main/java/be/wacken/planner/persistence/RoomRatingStateDao.java](../../../../../../app/src/main/java/be/wacken/planner/persistence/RoomRatingStateDao.java) | Exposes generated queries | Room generated implementation |

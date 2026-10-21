@@ -41,3 +41,9 @@ description: Queue and replay mutable changes
 ---
 
 Coordinates local pending ratings, festival changes, personal history, and schedule locks with remote writes when a session is available.
+
+## Relationships
+
+| Source | Target | Description | Technology |
+| --- | --- | --- | --- |
+| [app/src/main/java/be/wacken/planner/SyncingFestivalPlanningRatingRepository.java](../../../../../../app/src/main/java/be/wacken/planner/SyncingFestivalPlanningRatingRepository.java) | [app/src/main/java/be/wacken/planner/MissingFestivalPlanningRatingException.java](../../../../../../app/src/main/java/be/wacken/planner/MissingFestivalPlanningRatingException.java) | Reports retained orphan rating | Java call |

@@ -38,3 +38,4 @@ Orchestrates planning rating changes, effective group rating lookup, and separat
 | Source | Target | Description | Technology |
 | --- | --- | --- | --- |
 | [application/src/main/java/be/wacken/planner/application/RateBandUseCase.java](../../../../../../application/src/main/java/be/wacken/planner/application/RateBandUseCase.java) | [domain/src/main/java/be/wacken/planner/domain/Rating.java](../../../../../../domain/src/main/java/be/wacken/planner/domain/Rating.java) | Validates rating value | Java call |
+| [application/src/main/java/be/wacken/planner/application/RateBandUseCase.java](../../../../../../application/src/main/java/be/wacken/planner/application/RateBandUseCase.java) | [application/src/main/java/be/wacken/planner/application/FestivalPlanningRatingView.java](../../../../../../application/src/main/java/be/wacken/planner/application/FestivalPlanningRatingView.java) | Saves through selected view | Composed Java port dispatch |

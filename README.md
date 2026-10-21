@@ -224,6 +224,11 @@ Rescanning retains those arrows even after the deleted source ownership is
 detached through the CLI; safe relationship removal is still required before
 TASK-228 closes.
 
+The [rating island review](backlog/docs/groma-rating-islands-evidence-2026-10-21.md)
+traces selected-festival planning/after-state, owner-scoped sync, archive promotion,
+reviewed correction, pending recovery and separate CSV contracts. The reviewed
+rating records have runtime callers; their isolation was missing map knowledge.
+
 ### Module Map
 
 ```mermaid
