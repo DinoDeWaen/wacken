@@ -71,8 +71,11 @@ does not finish the map. The scanner covers main Java sources only, excluding
 `InMemory*Repository.java`; it does not establish SQL/RLS/RPC behavior, Android
 resources/manifest wiring, Gradle deployment or verification scripts. Its
 unresolved framework/cross-module symbols are analysis limitations, not compiler
-results. Groma lint reports review candidates and currently exits 1 for the 99
-known groups; this is separate from Android lint and the application test suite.
+results. Groma lint reports review candidates and exits 1 when candidates remain;
+its group counts and ordering change as code changes. The [helper dispositions](backlog/docs/groma-helper-dispositions-2026-10-21.md)
+classify all 99 original audit groups, including intentional repetition and work
+owned by existing 3.0 tasks. This is separate from Android lint and the application
+test suite.
 
 For a clean checkout of the TASK-226 baseline commit, verify all 126 stored files
 before and after two scans using the [SHA-256 inventory](backlog/docs/groma-baseline-2026-10-20.sha256):

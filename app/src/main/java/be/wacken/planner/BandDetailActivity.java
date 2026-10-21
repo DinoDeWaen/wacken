@@ -89,7 +89,7 @@ public final class BandDetailActivity extends Activity {
 
         ShowBandDetailUseCase showBand = new ShowBandDetailUseCase(bands, ratings, realRatings, festivals, personalRatings);
         Optional<BandDetailItem> loaded = showBand.showBand(
-                currentUser(), getIntent().getStringExtra(EXTRA_BAND_NAME), musicLinksFromIntent());
+                currentUser(), getIntent().getStringExtra(EXTRA_BAND_NAME), MusicLinks.none());
         if (loaded.isEmpty()) {
             setContentView(renderMissingBand());
             return;
@@ -124,7 +124,7 @@ public final class BandDetailActivity extends Activity {
                 || !(musicLinksSection.getParent() instanceof android.view.ViewGroup parent)) return;
         // Refresh values and links in place, retaining the selected festival and scroll.
         new ShowBandDetailUseCase(bands, ratings, realRatings, festivals, personalRatings)
-                .showBand(currentUser(), selectedBand.name(), musicLinksFromIntent()).ifPresent(detail -> {
+                .showBand(currentUser(), selectedBand.name(), MusicLinks.none()).ifPresent(detail -> {
                     ratingStars.applySavedRating(detail.rating());
                     realRatingStars.applySavedRating(detail.realRating());
                     refreshContext();
@@ -348,18 +348,8 @@ public final class BandDetailActivity extends Activity {
         return value;
     }
 
-    private MusicLinks musicLinksFromIntent() {
-        return new MusicLinks(
-                Optional.empty(),
-                Optional.empty()
-        );
-    }
-
     private int dp(int value) {
-        return (int) (value * getResources().getDisplayMetrics().density);
+        return WackenTheme.dp(this, value);
     }
 
-    private boolean narrowScreen() {
-        return BandDetailLayoutPolicy.stacksSections(getResources().getConfiguration().screenWidthDp);
-    }
 }

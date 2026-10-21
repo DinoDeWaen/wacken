@@ -250,10 +250,7 @@ public final class ArchivedBandDetailActivity extends Activity {
     }
 
     private int dp(int value) {
-        return (int) (value * getResources().getDisplayMetrics().density);
+        return WackenTheme.dp(this, value);
     }
 
-    private boolean narrowScreen() {
-        return BandDetailLayoutPolicy.stacksSections(getResources().getConfiguration().screenWidthDp);
-    }
 }

@@ -44,10 +44,7 @@ public record BandListItem(
     }
 
     public String personRatingSummary() {
-        return personRatings.stream()
-                .map(PersonRatingStars::displayText)
-                .reduce((left, right) -> left + "  " + right)
-                .orElse("");
+        return PersonRatingStars.summary(personRatings);
     }
 
     private String clockTime(String dateTime) {

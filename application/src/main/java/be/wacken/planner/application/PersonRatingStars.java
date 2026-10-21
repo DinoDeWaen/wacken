@@ -1,5 +1,7 @@
 package be.wacken.planner.application;
 
+import java.util.List;
+
 public record PersonRatingStars(String personName, int rating) {
     private static final String DINO_USER_ID_PREFIX = "21dad490-3b20-4377-b880-44fb4a93221c";
     private static final String SOFIE_USER_ID_PREFIX = "f4dbc343-5c61-476d-8352-024528ff";
@@ -18,6 +20,13 @@ public record PersonRatingStars(String personName, int rating) {
 
     public String displayText() {
         return displayName() + " " + "★".repeat(rating);
+    }
+
+    static String summary(List<PersonRatingStars> ratings) {
+        return ratings.stream()
+                .map(PersonRatingStars::displayText)
+                .reduce((left, right) -> left + "  " + right)
+                .orElse("");
     }
 
     private String displayName() {

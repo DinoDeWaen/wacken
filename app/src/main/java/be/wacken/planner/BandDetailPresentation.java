@@ -180,7 +180,7 @@ final class BandDetailPresentation {
     }
 
     private int dp(int value) {
-        return (int) (value * activity.getResources().getDisplayMetrics().density);
+        return WackenTheme.dp(activity, value);
     }
 
     private boolean narrowScreen() {
