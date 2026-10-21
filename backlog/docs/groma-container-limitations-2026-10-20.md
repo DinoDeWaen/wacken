@@ -66,3 +66,28 @@ release validation must not claim this containment issue fixed.
 
 The README C4 view documents the actual boundaries in the meantime. It is
 separate from the Groma map and does not repair Groma containment.
+
+## Local 0.7.2 recheck — 21 October 2026
+
+The user installed Groma 0.7.2 in repository-local `node_modules/.bin/groma`.
+Plain `groma` still resolves to global 0.6.6; the earlier rechecks of the global
+command did not examine the local update. The local executable was subsequently
+invoked explicitly against the same disposable baseline worktree:
+
+```text
+/Users/dino/Documents/backlog/wacken/node_modules/.bin/groma --version
+=> 0.7.2
+
+/Users/dino/Documents/backlog/wacken/node_modules/.bin/groma accept android-application
+=> exit 1; no scan match
+
+/Users/dino/Documents/backlog/wacken/node_modules/.bin/groma edit apprepositories --parent android-application
+=> exit 1; cannot move "apprepositories" because it has authored meaning
+```
+
+The local structure guide retains the same preservation restrictions. Its
+configuration guidance now refers to `config.json` rather than `scanners.json`;
+that is a tooling/configuration change to assess separately, not an instruction
+to rewrite architecture records. No local package/config upgrade was committed
+or applied to the release map. TASK-227 remains incomplete with the same two
+reproduced blockers under the actual local update.

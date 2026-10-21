@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-20 06:25'
-updated_date: '2026-10-20 19:31'
+updated_date: '2026-10-21 05:56'
 labels:
   - groma-audit
   - release-2.35
@@ -71,4 +71,6 @@ Architecture assessment: documentation of existing deployed boundaries only, no 
 Confirmed in disposable baseline checkout: groma accept android-application exits 1 (no scan match); moving apprepositories exits 1 because it has authored meaning. Experiment left the release map untouched. See backlog/docs/groma-container-limitations-2026-10-20.md for source-supported runtime/storage boundaries and unresolved supported-tooling remedy. Container acceptance/relocation is not complete; do not waive dependent release criteria.
 
 README now documents existing runtime/storage boundaries with C4 Mermaid and explicitly states Groma containment remains unresolved. README impact: updated current runtime/storage explanation and tool limits. Business requirements impact: none, because only existing architecture is described. Diagram impact: updated README C4 container view; Groma unchanged. ADR impact: none, because deployed architecture and existing decisions are unchanged. AC1/4/6 remain open pending supported Groma containment remedy and final validation.
+
+2026-10-21 recheck: found repository-local Groma 0.7.2, while plain groma still resolves global 0.6.6. Earlier global checks missed the local installation. Explicitly invoked local binary in disposable baseline worktree: accept android-application still exits 1 (no scan match), and edit apprepositories --parent android-application still exits 1 (authored meaning). Local structure guide retains restrictions and now refers to config.json. Evidence report updated; no release-map/package/config migration performed. Same containment blockers remain.
 <!-- SECTION:NOTES:END -->
