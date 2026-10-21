@@ -4,15 +4,12 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.util.List;
@@ -27,6 +24,7 @@ import be.wacken.planner.application.ViewArchivedFestivalHistoryUseCase;
 import be.wacken.planner.domain.Band;
 
 public final class ArchivedBandDetailActivity extends Activity {
+    private final BandDetailPresentation presentation = new BandDetailPresentation(this);
     private final BandImageLoader<Bitmap> imageLoader =
             new BandImageLoader<>(BitmapFactory::decodeStream, this::runOnUiThread);
     public static final String EXTRA_FESTIVAL_ID = "be.wacken.planner.ARCHIVED_FESTIVAL_ID";
@@ -114,67 +112,18 @@ public final class ArchivedBandDetailActivity extends Activity {
     }
 
     private View render(BandDetailItem detail) {
-        ScrollView scroll = new ScrollView(this);
-        scroll.setBackgroundColor(WackenTheme.BACKGROUND);
-
-        LinearLayout screen = new LinearLayout(this);
-        screen.setOrientation(LinearLayout.VERTICAL);
-        screen.setGravity(Gravity.CENTER_HORIZONTAL);
-        screen.setBackgroundColor(WackenTheme.BACKGROUND);
-        screen.setPadding(dp(16), dp(16), dp(16), dp(16));
-        scroll.addView(screen, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT,
-                ScrollView.LayoutParams.WRAP_CONTENT
-        ));
-
-        TextView title = new TextView(this);
-        title.setText(detail.bandName());
-        title.setTextColor(WackenTheme.AMBER);
-        title.setTextSize(26);
-        title.setTypeface(Typeface.DEFAULT_BOLD);
-        title.setGravity(Gravity.CENTER_HORIZONTAL);
-        title.setPadding(0, dp(8), 0, dp(10));
-        screen.addView(title);
-
-        LinearLayout main = new LinearLayout(this);
-        main.setOrientation(narrowScreen() ? LinearLayout.VERTICAL : LinearLayout.HORIZONTAL);
-        main.setGravity(Gravity.CENTER);
-        main.setPadding(dp(8), dp(8), dp(8), dp(8));
-        screen.addView(main, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        ));
-
-        detail.imageUrl().ifPresent(url -> main.addView(imagePanel(url)));
-
-        LinearLayout detailSections = new LinearLayout(this);
-        detailSections.setOrientation(LinearLayout.VERTICAL);
-        detailSections.setGravity(Gravity.CENTER_HORIZONTAL);
-        detailSections.setPadding(narrowScreen() ? 0 : dp(10), 0, 0, 0);
-        detailSections.setLayoutParams(new LinearLayout.LayoutParams(
-                narrowScreen() ? LinearLayout.LayoutParams.MATCH_PARENT : 0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                narrowScreen() ? 0 : 1
-        ));
-        main.addView(detailSections);
-
-        TextView context = new TextView(this);
-        context.setTextColor(WackenTheme.TEXT);
-        context.setContentDescription("Rating context");
+        TextView context = presentation.context();
         repositories.ratingContext().show(session.userId(), festivalId, bandName)
                 .ifPresent(value -> context.setText(String.join("\n", value.lines())));
-        detailSections.addView(context);
-        detailSections.addView(ratingSection(detail));
-        detailSections.addView(realRatingSection(detail));
-        detailSections.addView(correctionSection());
-        if (detail.hasPersonalRatingHistory()) {
-            detailSections.addView(personalRatingHistorySection(detail));
-        }
-        detailSections.addView(runningOrderSection());
-        detailSections.addView(linksSection(detail));
-
-        detail.biography().ifPresent(biography -> screen.addView(paragraphPanel(biography)));
-        return scroll;
+        java.util.List<View> sections = new java.util.ArrayList<>();
+        sections.add(context);
+        sections.add(ratingSection(detail));
+        sections.add(realRatingSection(detail));
+        sections.add(correctionSection());
+        if (detail.hasPersonalRatingHistory()) sections.add(personalRatingHistorySection(detail));
+        sections.add(runningOrderSection());
+        sections.add(linksSection(detail));
+        return presentation.render(detail, this::loadImage, sections);
     }
 
     private LinearLayout correctionSection() {
@@ -249,54 +198,17 @@ public final class ArchivedBandDetailActivity extends Activity {
     }
 
     private LinearLayout personalRatingHistorySection(BandDetailItem detail) {
-        LinearLayout section = detailSection();
-        section.addView(sectionTitle("Personal History"));
-        for (PersonalRatingHistoryItem item : detail.personalRatingHistory()) {
-            TextView line = new TextView(this);
-            line.setText(item.displayText());
-            line.setTextColor(WackenTheme.TEXT);
-            line.setTextSize(14);
-            line.setGravity(Gravity.CENTER_HORIZONTAL);
-            line.setPadding(0, dp(3), 0, dp(3));
-            section.addView(line);
-        }
-        return section;
+        return presentation.history(detail);
     }
 
     private LinearLayout runningOrderSection() {
-        LinearLayout section = detailSection();
-        section.addView(sectionTitle("Running Order"));
-        section.addView(infoLine("Stage", valueExtra(EXTRA_STAGE)));
-        section.addView(infoLine("Day", valueExtra(EXTRA_DATE)));
-        section.addView(infoLine("Time", valueExtra(EXTRA_TIME)));
-        return section;
+        return presentation.runningOrder(valueExtra(EXTRA_STAGE), valueExtra(EXTRA_DATE), valueExtra(EXTRA_TIME));
     }
 
     private LinearLayout linksSection(BandDetailItem detail) {
-        LinearLayout section = detailSection();
-        section.addView(sectionTitle("Band Links"));
-        LinearLayout links = new LinearLayout(this);
-        links.setOrientation(LinearLayout.HORIZONTAL);
-        links.setGravity(Gravity.CENTER);
-        links.addView(homeButton());
-        detail.youtubeUrl().ifPresent(url -> links.addView(iconButton("▶", "Open YouTube", WackenTheme.RED, url)));
-        detail.spotifyUrl().ifPresent(url -> links.addView(iconButton("♬", "Open Spotify", WackenTheme.SUCCESS_GREEN, url)));
-        section.addView(links);
-        return section;
+        return presentation.links(detail, homeButton());
     }
 
-    private ImageView imagePanel(String url) {
-        ImageView image = new ImageView(this);
-        image.setAdjustViewBounds(true);
-        image.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        image.setContentDescription("Band image");
-        image.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 5));
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(dp(140), dp(140));
-        layout.setMargins(0, 0, narrowScreen() ? 0 : dp(10), narrowScreen() ? dp(12) : 0);
-        image.setLayoutParams(layout);
-        loadImage(url, image);
-        return image;
-    }
 
     private void loadImage(String url, ImageView image) {
         imageLoader.load(url, bitmap -> {
@@ -307,72 +219,20 @@ public final class ArchivedBandDetailActivity extends Activity {
     }
 
     private LinearLayout detailSection() {
-        LinearLayout section = new LinearLayout(this);
-        section.setOrientation(LinearLayout.VERTICAL);
-        section.setGravity(Gravity.CENTER_HORIZONTAL);
-        section.setPadding(dp(12), dp(8), dp(12), dp(10));
-        section.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        layout.setMargins(0, 0, 0, dp(10));
-        section.setLayoutParams(layout);
-        return section;
+        return presentation.section();
     }
 
     private TextView sectionTitle(String text) {
-        TextView title = new TextView(this);
-        title.setText(text);
-        title.setTextColor(WackenTheme.AMBER);
-        title.setTextSize(18);
-        title.setTypeface(Typeface.DEFAULT_BOLD);
-        title.setGravity(Gravity.CENTER_HORIZONTAL);
-        title.setPadding(0, 0, 0, dp(6));
-        return title;
+        return presentation.sectionTitle(text, false);
     }
 
-    private View paragraphPanel(String text) {
-        FrameLayout panel = new FrameLayout(this);
-        panel.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        layout.setMargins(0, dp(14), 0, 0);
-        panel.setLayoutParams(layout);
-
-        TextView paragraph = new TextView(this);
-        paragraph.setText(text);
-        paragraph.setTextColor(WackenTheme.TEXT);
-        paragraph.setTextSize(15);
-        paragraph.setGravity(Gravity.START);
-        paragraph.setLineSpacing(dp(2), 1.0f);
-        paragraph.setPadding(dp(14), dp(12), dp(14), dp(12));
-        panel.addView(paragraph);
-        return panel;
-    }
 
     private TextView infoLine(String label, String value) {
-        TextView line = new TextView(this);
-        line.setText(label + ": " + value);
-        line.setTextColor(WackenTheme.TEXT);
-        line.setTextSize(15);
-        line.setGravity(Gravity.CENTER_HORIZONTAL);
-        line.setPadding(0, dp(3), 0, dp(3));
-        return line;
+        return presentation.infoLine(label, value);
     }
 
     private TextView groupRatingsView(BandDetailItem detail) {
-        TextView ratings = new TextView(this);
-        ratings.setText(detail.hasPersonRatings()
-                ? "Group: " + detail.personRatingSummary()
-                : "Group ratings: not synced yet");
-        ratings.setTextColor(WackenTheme.TEXT);
-        ratings.setTextSize(13);
-        ratings.setGravity(Gravity.CENTER_HORIZONTAL);
-        ratings.setPadding(0, dp(6), 0, dp(2));
-        return ratings;
+        return presentation.groupRatings(detail);
     }
 
     private Button homeButton() {
@@ -380,9 +240,6 @@ public final class ArchivedBandDetailActivity extends Activity {
         return button;
     }
 
-    private Button iconButton(String icon, String description, int accentColor, String url) {
-        return WackenTheme.iconButton(this, icon, description, accentColor, 44, view -> ExternalLinks.open(this, url));
-    }
 
     private String valueExtra(String key) {
         String value = getIntent().getStringExtra(key);

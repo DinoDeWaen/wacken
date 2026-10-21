@@ -103,6 +103,46 @@ public final class CriticalFlowsAndroidTest {
         assertNotNull(new RoomBandRepository(database).findByName(BAND).orElse(null));
     }
 
+    @Test public void activeAndArchivedMissingMetadataKeepTheirDistinctAvailableActions() throws Exception {
+        open(BandDetailActivity.class);
+        onUi(()->{
+            assertNotNull(findText(root(),BAND));
+            assertNotNull(findText(root(),"Festival planning rating"));
+            assertNotNull(findText(root(),"Festival after-rating"));
+            assertNotNull(findText(root(),"Running Order"));
+            assertNotNull(findText(root(),"Band Links"));
+            assertNotNull(findDescription(root(),"Rating context"));
+            assertTrue(((TextView)findDescription(root(),"Rating context")).getText().toString().contains("\n"));
+            assertFalse(((TextView)findDescription(root(),"Rating context")).getText().toString().contains("\\n"));
+            assertNull(findBandImage(root()));
+            assertNull(findDescription(root(),"Open YouTube"));
+            assertNull(findDescription(root(),"Open Spotify"));
+            assertNotNull(findDescription(root(),"Home"));
+            assertTrue(findText(root(),"Reset").isEnabled());
+            assertTrue(findText(root(),"Find music links").isEnabled());
+        });
+        onUi(activity::finish);instrumentation.waitForIdleSync();
+        new RoomFestivalRepository(database).save(be.wacken.planner.domain.Festival.archived(FESTIVAL,"Native smoke festival"));
+        open(ArchivedBandDetailActivity.class);
+        onUi(()->{
+            assertNotNull(findText(root(),BAND));
+            assertNotNull(findText(root(),"Festival planning rating"));
+            assertNotNull(findText(root(),"Festival after-rating"));
+            assertNotNull(findText(root(),"Correction history"));
+            assertNotNull(findDescription(root(),"Rating context"));
+            assertTrue(((TextView)findDescription(root(),"Rating context")).getText().toString().contains("\n"));
+            assertFalse(((TextView)findDescription(root(),"Rating context")).getText().toString().contains("\\n"));
+            assertNull(findBandImage(root()));
+            assertNull(findDescription(root(),"Open YouTube"));
+            assertNull(findDescription(root(),"Open Spotify"));
+            assertNotNull(findDescription(root(),"Back"));
+            assertFalse(findText(root(),"Reset").isEnabled());
+            assertNull(findText(root(),"Find music links"));
+        });
+        assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+        assertEquals("PENDING",database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).syncStatus);
+    }
+
     @Test public void localBandImageSurvivesRecreationAndArchiveWithoutChangingPlanning() throws Exception {
         File image=File.createTempFile("band-image-", ".png", instrumentation.getTargetContext().getCacheDir());
         try {
@@ -311,6 +351,13 @@ public final class CriticalFlowsAndroidTest {
         instrumentation.waitForIdleSync();
     }
     private View root(){return activity.getWindow().getDecorView();}
+    private static View findDescription(View view,String description){
+        if(description.equals(view.getContentDescription()))return view;
+        if(view instanceof ViewGroup group)for(int i=0;i<group.getChildCount();i++){
+            View found=findDescription(group.getChildAt(i),description);if(found!=null)return found;
+        }
+        return null;
+    }
     private static ImageView findBandImage(View view){
         if(view instanceof ImageView image&&"Band image".equals(view.getContentDescription()))return image;
         if(view instanceof ViewGroup group)for(int i=0;i<group.getChildCount();i++){

@@ -26,19 +26,6 @@ public final class ArchivedFestivalLayoutRegressionTest {
         assertTrue(source.contains("rating.setEnabled(false);"));
     }
 
-    @Test
-    public void archivedBandDetailUsesActiveDetailSectionsReadOnly() throws IOException {
-        String source = new String(Files.readAllBytes(source("ArchivedBandDetailActivity.java")), StandardCharsets.UTF_8);
-
-        assertTrue(source.contains("sectionTitle(\"Festival planning rating\")"));
-        assertTrue(source.contains("sectionTitle(\"Festival after-rating\")"));
-        assertTrue(source.contains("sectionTitle(\"Running Order\")"));
-        assertTrue(source.contains("sectionTitle(\"Band Links\")"));
-        assertTrue(source.contains("imagePanel(url)"));
-        assertTrue(source.contains("disabledStars(detail.realRating()"));
-        assertTrue(source.contains("reset.setEnabled(false);"));
-    }
-
     private Path source(String fileName) {
         return List.of(
                         Path.of("app/src/main/java/be/wacken/planner/" + fileName),

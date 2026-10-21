@@ -20,6 +20,9 @@ groma:
       symbol: ExternalLinks
     - scanner: java
       file: app/src/main/java/be/wacken/planner/RatingStarsView.java
+    - scanner: java
+      file: app/src/main/java/be/wacken/planner/BandDetailPresentation.java
+      symbol: BandDetailPresentation
   group: Android screens
 description: Present band information and personal ratings
 ---
