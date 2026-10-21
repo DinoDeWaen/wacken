@@ -2,7 +2,9 @@
 
 ## Status
 
-Proposed; no validator or CI implementation has started. TASK-228 is closed with
+Standard option approved by the user on21 October2026; implementation proceeds
+under ADR0022. The user also requested assessment of ArchUnit or alternatives.
+TASK-228 is closed with
 the two exact stale authored relationships explicitly accepted by the user on
 21 October 2026. The user also reviewed the corrected map after TASK-229/230.
 
@@ -124,7 +126,7 @@ evidence, not architecture approval.
 
 ### Approval needed
 
-Approve the standard option before validator, tests or CI implementation.
+Approval received: the user selected the standard option before implementation.
 TASK-233 AC6 explicitly requires "Architecture/test-strategy approval is obtained
 before implementing this gate." AC7 and delivery-governance.md impose the same
 approval gate for changes to future test strategy. This proposal requests that

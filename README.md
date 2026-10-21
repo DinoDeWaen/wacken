@@ -235,6 +235,54 @@ explicit approval and canonical missing-link save. TASK-229/230 reduce disconnec
 components from47 to zero while retaining294 source files under95 responsibilities.
 This does not resolve the separately documented stale deleted-source arrows.
 
+### Architecture validation
+
+The approved [ADR0022](backlog/decisions/0022-reviewed-groma-architecture-validation-gate.md)
+adds a development-only semantic gate. With the pinned Groma build and configured
+plugins restored, use Bun1.4.3 and Backlog1.53.0:
+
+```bash
+sh scripts/groma.sh plugin install
+bun test scripts/tests/groma-gate.test.ts
+bun scripts/architecture/verify-groma.mjs
+```
+
+The validator scans a disposable clean Git checkout twice, preserving the working
+tree. Commit reviewed product/map changes before running it. It checks unique
+source ownership, fresh scanner coverage, containment and role documentation,
+current architecture task references, authored collaborations, flows, unexplained
+islands and reviewed duplicate identities. The JSON report is written to
+`build/groma-validation.json`; CI retains it as `groma-validation`. Missing tools,
+failed/partial scans and diagnostic degradation fail with context. Known Java
+framework/generated-reference warnings are scanner limitations, not compiler
+errors. Existing Android lint/compiler/test gates remain separate.
+
+The [reviewed baseline](tools/groma/architecture-baseline.json) and
+[per-group dispositions](backlog/docs/groma-gate-review-2026-10-21.md) retain88
+reviewed duplicate identities rather than allowing a total finding count or
+ignoring lint exit1. Two exact TASK228 stale rows are reported as accepted stale
+claims; no other dangling endpoints, deleted-file ownership or flow use are
+accepted. There are no accepted component islands.
+
+For intentional architecture changes, generate an external review candidate:
+
+```bash
+bun scripts/architecture/verify-groma.mjs --propose-baseline /tmp/wacken-groma-candidate.json
+```
+
+This writes a candidate and its evidence snapshot outside the repository; it
+never updates the accepted baseline. Unchanged duplicate reviews and exact
+exceptions carry forward; new identities say REVIEW REQUIRED. Review source,
+rendered map, semantic differences and every new exception/finding, then update
+the versioned baseline with rationale and PR evidence. New legitimate file moves
+or combines require that review; line shifts and ordering do not change identity.
+See [delivery governance](backlog/docs/delivery-governance.md).
+
+[ArchUnit and alternatives assessment](backlog/docs/architecture-tool-assessment-2026-10-21.md)
+recommends ArchUnit as a future complement for Java bytecode dependency rules.
+It cannot replace Groma ownership/prose/flow validation; this gate adds no Java
+runtime or test-library dependency.
+
 ### Module Map
 
 ```mermaid

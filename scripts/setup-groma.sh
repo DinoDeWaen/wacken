@@ -18,6 +18,7 @@ git -C "$build/source" apply "$patch"
 (cd "$build/source" && "$bun_bin" install --frozen-lockfile && "$bun_bin" scripts/build.ts "$cache/groma.next")
 mv "$cache/groma.next" "$cache/groma"
 cp "$pin" "$cache/pin.json"
+printf '%s\n' "$build/source" > "$cache/source.path"
 (cd "$cache" && shasum -a 256 groma > binary.sha256)
 echo "Built pinned Groma at $cache/groma"
 echo "Source checkout: $build/source"

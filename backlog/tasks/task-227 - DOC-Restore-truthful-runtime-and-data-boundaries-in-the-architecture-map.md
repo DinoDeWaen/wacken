@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@codex'
 created_date: '2026-10-20 06:25'
-updated_date: '2026-10-21 10:16'
+updated_date: '2026-10-21 12:55'
 labels:
   - groma-audit
   - release-2.35
@@ -26,8 +26,6 @@ references:
   - archivedratingcorrectiondialog
   - archivedratingcorrectiongateway
   - archivedratingcorrectionusecase
-  - archivedratingkind
-  - archivedratingreview
   - archivefestivalaction
   - authsessionstore
   - band
@@ -35,7 +33,6 @@ references:
   - bandimageloader
   - bandlinkreviewactivity
   - bandmetadatareviewactivity
-  - bandratingcontext
   - bandrepository
   - canonicalband
   - deletefestivaldialog
@@ -44,7 +41,6 @@ references:
   - exportratinglifecyclecsvusecase
   - exportratingscsvusecase
   - festival
-  - festivalafterrating
   - festivalafterratingrepository
   - festivalafterratingview
   - festivalarchivegateway
@@ -67,17 +63,14 @@ references:
   - missingfestivalplanningratingexception
   - missingfestivalratingdialog
   - musicbrainzmetadataprovider
-  - musiclinkevidence
   - musiclinklookupprovider
   - musiclinksreviewactivity
   - officialmusicpageclient
   - performance
   - performanceconflictresolver
-  - personalbandrating
   - personalbandratingrepository
   - ratebandusecase
   - rating
-  - ratingcorrection
   - ratingcorrectionrepository
   - ratingstatesync
   - ratingstatesyncstore
@@ -88,16 +81,12 @@ references:
   - reviewimportedbandlinksusecase
   - roomarchivedratingcorrectioncache
   - roombandaliasrepository
-  - roomfestivalafterrating
   - roomfestivalafterratingrepository
   - roomfestivalarchivecache
   - roomfestivalcachemarker
   - roomfestivalcreationcache
   - roomfestivaldeletion
-  - roompersonalbandrating
   - roompersonalbandratingrepository
-  - roomratingcorrection
-  - roomratingcorrectiondao
   - roomratingcorrectionrepository
   - roomratingstatedao
   - scheduleactivity
@@ -572,4 +561,6 @@ Final evidence commit: clean-checkout/signed-build report, task closure and patc
 
 ## Risks and follow-up
 Local patch maintenance until upstream equivalent release; binary reports upstream0.7.2 so use wrapper/pin/digest. No promise of cross-host identical binary bytes. Internal software edges still require exact source endpoints: no fabricated Room-storage arrow; README C4/prose explains interaction. Java-only SQL/generated/manifest gaps and88 duplicate candidates remain explicit. Tasks228–230 own workflow curation;233 requires separate approval;241/242 still gate2.35 publication. Unrelated user changes preserved.
+
+TASK233 gate detected11 historical references to IDs absorbed during TASK229/230 map consolidation. Repointed those references through CLI to the current surviving owners; no architecture meaning or source ownership changed.
 <!-- SECTION:NOTES:END -->
