@@ -1,16 +1,19 @@
 ---
 id: TASK-205
 title: 'US: Choose System, Ironline dark or Field Notes light appearance'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-17 13:21'
+updated_date: '2026-10-21 17:10'
 labels:
   - ux
   - release-3.0
 milestone: m-2
 dependencies:
   - TASK-204
+modified_files:
+  - backlog/docs/release-3.0-appearance-architecture-proposal.md
 priority: medium
 type: enhancement
 ---
@@ -33,8 +36,16 @@ Validated baseline: TASK-201, design/release-2.34/themes.html; user approved 202
 - [ ] #6 README and business requirements impacts use canonical delivery-governance wording; approved behavior is documented, diagrams updated only where affected, and the full validation package is recorded before merge.
 <!-- AC:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Inspect hardcoded presentation tokens, Activity lifecycle/state, dialogs and existing private SharedPreferences usage. 2. Prepare concrete architecture options for shared Android presentation lifecycle/theme ownership; request explicit approval under AGENTS and task205 before implementing the recommended shared controller. Keep Android Views, current layers and Room/backend schema unchanged. 3. After approval, add failing pure preference/palette/import/contrast and native state-retention fixtures; implement device-local System/Dark/Light, contextual palette and header/Settings controls with semantic bindings and in-place restyling. 4. Preserve Activity Bundle/retained-session state without replaying writes; run native device/config/recreation/input/scroll/pending tests and ordinary ArchUnit/Groma gates with intentional source-ownership review. 5. Record accepted ADR if approved, docs/requirements implemented scope, required fresh signed build and validation package before Done. Standard presentation scope; minimal duplicated per-screen alternative and maximum framework migration considered in proposal. All production coding waits for explicit architecture approval because the proposed controller establishes shared lifecycle/state integration used by all11 Activities/dialogs.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 Cross-cutting architecture approved2026-10-17: follow ADR-0016 and the implemented2.34 lifecycle from TASK-216–220. The3.0 appearance/navigation redesign must preserve canonical band metadata, member-specific current band ratings, separate festival planning/after-ratings, one-time creation snapshots, archive-only promotion and source-aware corrections. No theme/layout change may reintroduce latest-event-as-band-rating or cross-festival fallback.
+
+Inspection found static color copies across Activities and uneven saved-state support; music and local CSV reviews already retain sessions. Prepared a concrete architecture request in backlog/docs/release-3.0-appearance-architecture-proposal.md. Recommended standard option: composable presentation-only controller, context-resolved semantic palette helpers and private device-local SharedPreferences; no new framework/base-Activity hierarchy/backend schema. Shared lifecycle/persistent-UI-state ownership requires explicit approval under AGENTS/task205; earlier design approval does not cover this mechanism. No production implementation written. TASK206-213 remain queued behind205; TASK204 completed and committed.
 <!-- SECTION:NOTES:END -->
