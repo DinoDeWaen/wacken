@@ -33,6 +33,7 @@ public final class BandMetadataReviewActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppearanceController.attach(this);
         AppRepositories repositories = new AppRepositories(this);
         searchMetadata = new SearchBandMetadataUseCase(repositories.bands(), metadataProviders());
         applyMetadata = new ApplyBandMetadataProposalsUseCase(repositories.bands());
@@ -52,7 +53,7 @@ public final class BandMetadataReviewActivity extends Activity {
 
     private ScrollView content() {
         ScrollView scroll = new ScrollView(this);
-        scroll.setBackgroundColor(WackenTheme.BACKGROUND);
+        WackenTheme.backgroundColor(scroll, WackenTheme.BACKGROUND);
 
         LinearLayout screen = new LinearLayout(this);
         screen.setOrientation(LinearLayout.VERTICAL);
@@ -61,14 +62,14 @@ public final class BandMetadataReviewActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText("Fetch Band Metadata");
-        title.setTextColor(WackenTheme.AMBER);
+        WackenTheme.textColor(title, WackenTheme.AMBER);
         title.setTextSize(26);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
         screen.addView(title);
 
         status = new TextView(this);
         status.setText("Review missing-field proposals before saving.");
-        status.setTextColor(WackenTheme.MUTED);
+        WackenTheme.textColor(status, WackenTheme.MUTED);
         status.setPadding(0, dp(8), 0, dp(12));
         screen.addView(status);
 
@@ -86,7 +87,7 @@ public final class BandMetadataReviewActivity extends Activity {
     }
 
     private void renderRows() {
-        status.setTextColor(WackenTheme.MUTED);
+        WackenTheme.textColor(status, WackenTheme.MUTED);
         status.setText("Searching metadata sources...");
         showSearchingTaskStatus();
         rows.removeAllViews();
@@ -101,12 +102,12 @@ public final class BandMetadataReviewActivity extends Activity {
         showTaskStatus(run);
         rows.removeAllViews();
         if (run.results().isEmpty()) {
-            status.setTextColor(WackenTheme.MUTED);
+            WackenTheme.textColor(status, WackenTheme.MUTED);
             status.setText("No metadata proposals found. Check the task status above.");
             rows.addView(messageRow("No metadata proposals found. See Metadata enrichment tasks for completed bands, missing metadata, and provider status."));
             return;
         }
-        status.setTextColor(WackenTheme.MUTED);
+        WackenTheme.textColor(status, WackenTheme.MUTED);
         status.setText(run.proposalCount() == 0
                 ? "No metadata proposals found. Check the task status above."
                 : "Review missing-field proposals before saving.");
@@ -129,7 +130,7 @@ public final class BandMetadataReviewActivity extends Activity {
 
         TextView band = new TextView(this);
         band.setText(result.bandName());
-        band.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(band, WackenTheme.TEXT);
         band.setTextSize(16);
         row.addView(band);
 
@@ -137,7 +138,7 @@ public final class BandMetadataReviewActivity extends Activity {
         for (BandMetadataProposal proposal : result.proposals()) {
             CheckBox choice = new CheckBox(this);
             choice.setText(proposalText(proposal));
-            choice.setTextColor(WackenTheme.TEXT);
+            WackenTheme.textColor(choice, WackenTheme.TEXT);
             choice.setButtonTintList(android.content.res.ColorStateList.valueOf(WackenTheme.AMBER));
             row.addView(choice);
             choices.add(new ProposalChoice(proposal, choice));
@@ -146,14 +147,14 @@ public final class BandMetadataReviewActivity extends Activity {
         for (String unavailableProvider : result.unavailableProviders()) {
             TextView unavailable = new TextView(this);
             unavailable.setText(unavailableProvider);
-            unavailable.setTextColor(WackenTheme.MUTED);
+            WackenTheme.textColor(unavailable, WackenTheme.MUTED);
             row.addView(unavailable);
         }
 
         if (choices.isEmpty()) {
             TextView noProposals = new TextView(this);
             noProposals.setText("No proposals for this band yet.");
-            noProposals.setTextColor(WackenTheme.MUTED);
+            WackenTheme.textColor(noProposals, WackenTheme.MUTED);
             row.addView(noProposals);
         } else {
             row.addView(actionButton("Save accepted metadata", view -> saveAccepted(result.bandName(), choices)));
@@ -190,7 +191,7 @@ public final class BandMetadataReviewActivity extends Activity {
     private TextView taskPanelTitle(String title) {
         TextView label = new TextView(this);
         label.setText(title);
-        label.setTextColor(WackenTheme.AMBER);
+        WackenTheme.textColor(label, WackenTheme.AMBER);
         label.setTextSize(16);
         label.setPadding(dp(12), dp(10), dp(12), dp(4));
         label.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
@@ -200,9 +201,9 @@ public final class BandMetadataReviewActivity extends Activity {
     private TextView taskLine(String message) {
         TextView line = new TextView(this);
         line.setText(message);
-        line.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(line, WackenTheme.TEXT);
         line.setPadding(dp(12), dp(2), dp(12), dp(2));
-        line.setBackgroundColor(WackenTheme.PANEL);
+        WackenTheme.backgroundColor(line, WackenTheme.PANEL);
         return line;
     }
 
@@ -218,7 +219,7 @@ public final class BandMetadataReviewActivity extends Activity {
     private TextView messageRow(String message) {
         TextView empty = new TextView(this);
         empty.setText(message);
-        empty.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(empty, WackenTheme.TEXT);
         empty.setPadding(dp(12), dp(10), dp(12), dp(10));
         empty.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
         return empty;

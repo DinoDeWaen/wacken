@@ -2,8 +2,9 @@
 
 Task: TASK-205 — Choose System, Ironline dark or Field Notes light appearance
 
-Status: proposed, awaiting explicit approval. No native implementation for this
-proposal has been written. TASK-204 design contract is completed separately.
+Status: standard option explicitly approved by the user on21 October2026
+(“Standard”). [ADR0024](../decisions/0024-shared-native-appearance-controller.md)
+records the accepted decision. TASK-204 design contract is completed separately.
 
 ## Proposed architectural change
 
@@ -92,9 +93,9 @@ Choose standard, with these implementation constraints:
 
 ## Approval needed
 
-Approve the standard option, choose minimal, or reject/request changes before
-production coding for this shared mechanism begins. TASK-206–213 depend on the
-appearance foundation and remain queued; they are not marked In Progress together.
+The user approved the standard option before production coding. TASK-206–213
+depend on the appearance foundation and are handled sequentially, not marked
+In Progress together.
 
 This approval requirement comes from [AGENTS.md](../../AGENTS.md),
 [architecture decision rules](architecture-decision-rules.md) and

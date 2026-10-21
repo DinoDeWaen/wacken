@@ -16,7 +16,7 @@ public final class SettingsActivityRegressionTest {
         String source = new String(Files.readAllBytes(settingsActivitySource()), StandardCharsets.UTF_8);
 
         int initialization = source.indexOf("ratingAllocation = new TextView(this);");
-        int firstStyleUse = source.indexOf("ratingAllocation.setTextColor");
+        int firstStyleUse = source.indexOf("WackenTheme.textColor(ratingAllocation,");
         int addedToSection = source.indexOf("ratingSection.addView(ratingAllocation)");
 
         assertTrue("SettingsActivity must initialize ratingAllocation before styling it.", initialization >= 0);

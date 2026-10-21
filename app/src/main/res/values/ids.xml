@@ -1,0 +1,4 @@
+<resources>
+    <item name="login_email" type="id" />
+    <item name="login_password" type="id" />
+</resources>

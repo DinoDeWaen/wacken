@@ -42,6 +42,7 @@ public final class ArchivedFestivalActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppearanceController.attach(this);
         AuthSession session = new AuthSessionStore(this).load();
         if (!session.isPresent()) {
             startActivity(new Intent(this, LoginActivity.class));
@@ -73,12 +74,12 @@ public final class ArchivedFestivalActivity extends Activity {
     private LinearLayout render() {
         LinearLayout screen = new LinearLayout(this);
         screen.setOrientation(LinearLayout.VERTICAL);
-        screen.setBackgroundColor(WackenTheme.BACKGROUND);
+        WackenTheme.backgroundColor(screen, WackenTheme.BACKGROUND);
         screen.setPadding(dp(14), dp(14), dp(14), dp(14));
 
         TextView title = new TextView(this);
         title.setText("Bands");
-        title.setTextColor(WackenTheme.AMBER);
+        WackenTheme.textColor(title, WackenTheme.AMBER);
         title.setTextSize(28);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.START);
@@ -86,7 +87,7 @@ public final class ArchivedFestivalActivity extends Activity {
 
         TextView subtitle = new TextView(this);
         subtitle.setText("Line-up ratings for " + email + " - " + festivalName + " archive");
-        subtitle.setTextColor(WackenTheme.MUTED);
+        WackenTheme.textColor(subtitle, WackenTheme.MUTED);
         subtitle.setPadding(0, 0, 0, dp(12));
         screen.addView(subtitle);
 
@@ -98,14 +99,14 @@ public final class ArchivedFestivalActivity extends Activity {
         delete.setContentDescription("Delete archived festival and schedule");
         screen.addView(delete);
         deletionStatus = new TextView(this);
-        deletionStatus.setTextColor(WackenTheme.AMBER);
+        WackenTheme.textColor(deletionStatus, WackenTheme.AMBER);
         screen.addView(deletionStatus);
 
         screen.addView(headerRow());
         if (bands.isEmpty()) {
             TextView empty = new TextView(this);
             empty.setText("No archived bands or ratings available.");
-            empty.setTextColor(WackenTheme.MUTED);
+            WackenTheme.textColor(empty, WackenTheme.MUTED);
             empty.setGravity(Gravity.CENTER_HORIZONTAL);
             empty.setPadding(0, dp(20), 0, dp(20));
             screen.addView(empty);
@@ -113,7 +114,7 @@ public final class ArchivedFestivalActivity extends Activity {
             ListView list = new ListView(this);
             list.setDivider(null);
             list.setCacheColorHint(WackenTheme.BACKGROUND);
-            list.setBackgroundColor(WackenTheme.BACKGROUND);
+            WackenTheme.backgroundColor(list, WackenTheme.BACKGROUND);
             list.setAdapter(new ArchivedBandAdapter());
             screen.addView(list, new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -151,7 +152,7 @@ public final class ArchivedFestivalActivity extends Activity {
     private TextView cell(String text, float weight, Typeface typeface) {
         TextView cell = new TextView(this);
         cell.setText(text);
-        cell.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(cell, WackenTheme.TEXT);
         cell.setTextSize(12);
         cell.setTypeface(typeface);
         cell.setGravity(Gravity.CENTER_VERTICAL);
@@ -178,7 +179,7 @@ public final class ArchivedFestivalActivity extends Activity {
 
         name.setSingleLine(true);
         name.setEllipsize(TextUtils.TruncateAt.END);
-        name.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(name, WackenTheme.TEXT);
         name.setTextSize(12);
         name.setTypeface(Typeface.DEFAULT_BOLD);
         cell.addView(name, new LinearLayout.LayoutParams(

@@ -46,6 +46,7 @@ public final class ArchivedBandDetailActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppearanceController.attach(this);
         session = new AuthSessionStore(this).load();
         if (!session.isPresent()) {
             startActivity(new Intent(this, LoginActivity.class));

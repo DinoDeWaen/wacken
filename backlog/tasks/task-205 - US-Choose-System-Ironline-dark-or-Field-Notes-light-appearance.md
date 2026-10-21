@@ -5,15 +5,47 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-21 17:10'
+updated_date: '2026-10-21 17:59'
 labels:
   - ux
   - release-3.0
 milestone: m-2
 dependencies:
   - TASK-204
+references:
+  - wackentheme
 modified_files:
   - backlog/docs/release-3.0-appearance-architecture-proposal.md
+  - backlog/decisions/0024-shared-native-appearance-controller.md
+  - app/src/test/java/be/wacken/planner/AppearancePreferenceTest.java
+  - app/src/main/java/be/wacken/planner/AppearancePreference.java
+  - app/src/main/java/be/wacken/planner/AppearanceController.java
+  - app/src/main/java/be/wacken/planner/WackenTheme.java
+  - app/src/main/res/values/styles.xml
+  - app/src/main/java/be/wacken/planner/ArchivedBandDetailActivity.java
+  - app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java
+  - app/src/main/java/be/wacken/planner/BandDetailActivity.java
+  - app/src/main/java/be/wacken/planner/BandDetailPresentation.java
+  - app/src/main/java/be/wacken/planner/BandLinkReviewActivity.java
+  - app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java
+  - app/src/main/java/be/wacken/planner/ImportCsvActivity.java
+  - app/src/main/java/be/wacken/planner/LocalCsvImportReviewDialog.java
+  - app/src/main/java/be/wacken/planner/LoginActivity.java
+  - app/src/main/java/be/wacken/planner/MainActivity.java
+  - app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java
+  - app/src/main/java/be/wacken/planner/ScheduleActivity.java
+  - app/src/main/java/be/wacken/planner/SettingsActivity.java
+  - app/src/main/res/values/ids.xml
+  - app/src/main/AndroidManifest.xml
+  - app/src/androidTest/java/be/wacken/planner/AppearanceAndroidTest.java
+  - app/src/test/java/be/wacken/planner/SettingsActivityRegressionTest.java
+  - >-
+    groma/systems/wacken/containers/android-application/components/appearancecontroller.md
+  - >-
+    groma/systems/wacken/containers/android-application/components/appearancepreference.md
+  - >-
+    groma/systems/wacken/containers/android-application/components/wackentheme.md
+  - app/src/androidTest/java/be/wacken/planner/CriticalFlowsAndroidTest.java
 priority: medium
 type: enhancement
 ---
@@ -48,4 +80,8 @@ Validated baseline: TASK-201, design/release-2.34/themes.html; user approved 202
 Cross-cutting architecture approved2026-10-17: follow ADR-0016 and the implemented2.34 lifecycle from TASK-216–220. The3.0 appearance/navigation redesign must preserve canonical band metadata, member-specific current band ratings, separate festival planning/after-ratings, one-time creation snapshots, archive-only promotion and source-aware corrections. No theme/layout change may reintroduce latest-event-as-band-rating or cross-festival fallback.
 
 Inspection found static color copies across Activities and uneven saved-state support; music and local CSV reviews already retain sessions. Prepared a concrete architecture request in backlog/docs/release-3.0-appearance-architecture-proposal.md. Recommended standard option: composable presentation-only controller, context-resolved semantic palette helpers and private device-local SharedPreferences; no new framework/base-Activity hierarchy/backend schema. Shared lifecycle/persistent-UI-state ownership requires explicit approval under AGENTS/task205; earlier design approval does not cover this mechanism. No production implementation written. TASK206-213 remain queued behind205; TASK204 completed and committed.
+
+Explicit human architecture approval received21October2026: Standard, in response to the concrete shared appearance lifecycle proposal. Proceed with composable Android presentation controller, private device-local preference and semantic in-place bindings, retaining existing Activity/Views and domain/application boundaries. Record accepted ADR0024; no repeat approval required for the described scope.
+
+Implemented approved pure preference/palette policy, private SharedPreferences controller and explicit view/panel bindings; no business operations in refresh. All11 Activities attach through composition and handle uiMode without theme-triggered recreation. Header/Settings share one preference; login has stable input IDs and password draft retained only in memory. Pure4-case preference/contrast suite and full app unit regressions passed (268 total,16 existing environment-gated skips). Initial native15-case run:14 passed,1 second-Activity harness timeout; corrected with explicit separate task launch, current16-case run progressing without failures. Added pending planning/history-count retention and Settings/radio/toggle native coverage; these need final full native run. Groma new sources combined through CLI into existing wackentheme responsibility and role overview updated; baseline review remains pending, no automatic acceptance.
 <!-- SECTION:NOTES:END -->

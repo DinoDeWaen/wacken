@@ -6,6 +6,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 final class WackenTheme {
     static final int VOID = 0xFF0B0F10;
@@ -30,8 +31,15 @@ final class WackenTheme {
 
     static Button actionButton(Context context, String text, ButtonStyle style, View.OnClickListener listener) {
         Button button = baseButton(context, text);
-        button.setTextColor(style.textColor());
-        button.setBackground(panelBackground(context, style.fillColor(), style.borderColor(), 6));
+        AppearanceController.bind(button,"buttonStyle",(view,palette)->{
+            Button target=(Button)view;
+            boolean primary=style==ButtonStyle.PRIMARY||style==ButtonStyle.PREMIUM;
+            target.setTextColor(primary?palette.onAccent():style==ButtonStyle.DANGER?palette.error():palette.text());
+            GradientDrawable background=new GradientDrawable();
+            background.setColor(primary?palette.accent():palette.panel());
+            background.setStroke(dp(context,1),style==ButtonStyle.DANGER?palette.error():palette.line());
+            background.setCornerRadius(dp(context,6));target.setBackground(background);
+        });
         button.setOnClickListener(listener);
         return button;
     }
@@ -46,12 +54,12 @@ final class WackenTheme {
     ) {
         Button button = baseButton(context, icon);
         button.setTextSize(22);
-        button.setTextColor(WHITE);
+        textColor(button,TEXT);
         button.setContentDescription(description);
         button.setPadding(0, 0, 0, 0);
         button.setBackground(panelBackground(context, PANEL, accentColor == WHITE ? GRID : accentColor, 5));
         button.setOnClickListener(listener);
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(dp(context, sizeDp), dp(context, sizeDp));
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(dp(context, Math.max(48,sizeDp)), dp(context, Math.max(48,sizeDp)));
         layout.setMargins(dp(context, 4), 0, dp(context, 4), 0);
         button.setLayoutParams(layout);
         return button;
@@ -59,10 +67,75 @@ final class WackenTheme {
 
     static GradientDrawable panelBackground(Context context, int fillColor, int borderColor, int cornerDp) {
         GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(fillColor);
-        drawable.setStroke(dp(context, 1), borderColor);
-        drawable.setCornerRadius(dp(context, cornerDp));
+        AppearanceController.bindPanel(context,drawable,fillColor,borderColor,cornerDp);
         return drawable;
+    }
+
+    // These are explicit legacy semantic token arguments, never inferred view colors.
+    static int resolve(int token,AppearancePreference.Palette palette) {
+        return switch(token) {
+            case VOID,BACKGROUND -> palette.background();
+            case PANEL -> palette.panel();
+            case ELEVATED_PANEL,BLOOD_RED -> palette.raised();
+            case TEXT,WHITE -> palette.text();
+            case MUTED,FAINT,STEEL_GREY -> palette.muted();
+            case RED,GOLD,AMBER,SUCCESS_GREEN -> palette.accent();
+            case GRID -> palette.line();
+            case BLACK -> palette.onAccent();
+            default -> token;
+        };
+    }
+
+    static void textColor(TextView view,int token) {
+        AppearanceController.bind(view,"textColor",(target,palette)->((TextView)target).setTextColor(resolve(token,palette)));
+    }
+
+    static void backgroundColor(View view,int token) {
+        AppearanceController.bind(view,"backgroundColor",(target,palette)->target.setBackgroundColor(resolve(token,palette)));
+    }
+
+    static void heading(TextView view) {
+        textColor(view,AMBER);
+        AppearanceController.bind(view,"headingTypeface",(target,palette)->((TextView)target).setTypeface(
+                palette.dark()?Typeface.DEFAULT_BOLD:Typeface.create("serif",Typeface.BOLD)));
+    }
+
+    static Button appearanceToggle(Context context) {
+        Button toggle=actionButton(context,AppearanceController.toggleLabel(context),ButtonStyle.SECONDARY,
+                view->AppearanceController.toggle(view.getContext()));
+        AppearanceController.bind(toggle,"toggleLabel",(view,palette)->{
+            String label=palette.dark()?"Switch to light":"Switch to dark";
+            ((Button)view).setText(label);view.setContentDescription(label);
+        });
+        return toggle;
+    }
+
+    static View appearanceChoices(Context context) {
+        android.widget.RadioGroup group=new android.widget.RadioGroup(context);
+        group.setOrientation(LinearLayout.VERTICAL);
+        group.setSaveEnabled(false); // The persisted preference, not stale hierarchy state, is authoritative.
+        String[] labels={"System","Ironline dark","Field Notes light"};
+        for(String label:labels) {
+            android.widget.RadioButton choice=new android.widget.RadioButton(context);
+            choice.setId(View.generateViewId());choice.setText(label);choice.setTextSize(16);
+            choice.setMinHeight(dp(context,48));choice.setSaveEnabled(false);
+            textColor(choice,TEXT);
+            AppearanceController.bind(choice,"radioTint",(view,palette)->
+                    ((android.widget.RadioButton)view).setButtonTintList(android.content.res.ColorStateList.valueOf(palette.accent())));
+            group.addView(choice);
+        }
+        group.setOnCheckedChangeListener((parent,id)->{
+            if(Boolean.TRUE.equals(parent.getTag()))return;
+            for(int i=0;i<parent.getChildCount();i++)if(parent.getChildAt(i).getId()==id)
+                AppearanceController.choose(parent.getContext(),AppearancePreference.values()[i]);
+        });
+        AppearanceController.bind(group,"selectedPreference",(view,palette)->{
+            android.widget.RadioGroup target=(android.widget.RadioGroup)view;
+            target.setTag(Boolean.TRUE);
+            target.check(target.getChildAt(AppearanceController.preference(target.getContext()).ordinal()).getId());
+            target.setTag(Boolean.FALSE);
+        });
+        return group;
     }
 
     static int dp(Context context, int value) {
@@ -75,7 +148,7 @@ final class WackenTheme {
         button.setText(text);
         button.setTypeface(Typeface.DEFAULT_BOLD);
         button.setMinWidth(0);
-        button.setMinHeight(0);
+        button.setMinHeight(dp(context,48));
         return button;
     }
 

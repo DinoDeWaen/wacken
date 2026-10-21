@@ -61,17 +61,18 @@ public final class ImportCsvActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppearanceController.attach(this);
         addFestivalMode = getIntent().getBooleanExtra(EXTRA_ADD_FESTIVAL_MODE, false);
 
         LinearLayout form = new LinearLayout(this);
         form.setOrientation(LinearLayout.VERTICAL);
-        form.setBackgroundColor(WackenTheme.BACKGROUND);
+        WackenTheme.backgroundColor(form, WackenTheme.BACKGROUND);
         int padding = dp(18);
         form.setPadding(padding, padding, padding, padding);
 
         TextView title = new TextView(this);
         title.setText(addFestivalMode ? "Add Festival" : "Wacken CSV Import");
-        title.setTextColor(WackenTheme.AMBER);
+        WackenTheme.textColor(title, WackenTheme.AMBER);
         title.setTextSize(28);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
         form.addView(title);
@@ -80,14 +81,14 @@ public final class ImportCsvActivity extends Activity {
         subtitle.setText(addFestivalMode
                 ? "Name the next festival and select bands.csv. Review similar names and aliases before creating the lineup."
                 : "Select CSV files, review each proposed change, then apply only accepted rows. This import updates local data; ratings stay untouched.");
-        subtitle.setTextColor(WackenTheme.MUTED);
+        WackenTheme.textColor(subtitle, WackenTheme.MUTED);
         subtitle.setPadding(0, dp(8), 0, dp(16));
         form.addView(subtitle);
 
         if (addFestivalMode) {
             festivalName = new EditText(this);
             festivalName.setHint("Festival name");
-            festivalName.setTextColor(WackenTheme.TEXT);
+            WackenTheme.textColor(festivalName, WackenTheme.TEXT);
             festivalName.setHintTextColor(WackenTheme.MUTED);
             festivalName.setSingleLine(true);
             form.addView(festivalName);
@@ -110,7 +111,7 @@ public final class ImportCsvActivity extends Activity {
         form.addView(backButton);
 
         resultMessage = new TextView(this);
-        resultMessage.setTextColor(WackenTheme.TEXT);
+        WackenTheme.textColor(resultMessage, WackenTheme.TEXT);
         resultMessage.setPadding(dp(12), dp(10), dp(12), dp(10));
         resultMessage.setText(addFestivalMode ? "Select bands.csv to add the next festival." : "Select files to import festival data.");
         resultMessage.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
@@ -122,7 +123,7 @@ public final class ImportCsvActivity extends Activity {
         form.addView(resultMessage, resultLayout);
 
         ScrollView scrollView = new ScrollView(this);
-        scrollView.setBackgroundColor(WackenTheme.BACKGROUND);
+        WackenTheme.backgroundColor(scrollView, WackenTheme.BACKGROUND);
         scrollView.addView(form);
         setContentView(scrollView);
         if(getLastNonConfigurationInstance() instanceof RetainedImport retained) {
@@ -156,16 +157,16 @@ public final class ImportCsvActivity extends Activity {
             selection.contents = readText(uri);
             selection.fileName = displayName(uri);
             selection.label.setText(selection.fileName);
-            selection.label.setTextColor(Color.WHITE);
+            WackenTheme.textColor(selection.label,WackenTheme.TEXT);
         } catch (IOException error) {
-            resultMessage.setTextColor(WackenTheme.RED);
+            WackenTheme.textColor(resultMessage, WackenTheme.RED);
             resultMessage.setText("Could not read " + selection.expectedName + ": " + error.getMessage());
         }
     }
 
     private void importCsv() {
         if (bandsCsv.contents.isBlank()) {
-            resultMessage.setTextColor(WackenTheme.RED);
+            WackenTheme.textColor(resultMessage, WackenTheme.RED);
             resultMessage.setText("Select at least bands.csv before importing.");
             return;
         }
@@ -191,7 +192,7 @@ public final class ImportCsvActivity extends Activity {
             importButton.setEnabled(true);localReview=null;
             if(result==null) {resultMessage.setText("Review cancelled. No import changes were saved.");return;}
             if (result.success()) {
-            resultMessage.setTextColor(WackenTheme.AMBER);
+            WackenTheme.textColor(resultMessage, WackenTheme.AMBER);
             String feedback = "Accepted local CSV changes saved. Ratings and archived data were kept. Sync may refresh local master data.";
             resultMessage.setText(feedback);
             Intent resultIntent = new Intent();
@@ -205,7 +206,7 @@ public final class ImportCsvActivity extends Activity {
     private void addFestivalFromBandsCsv() {
         AuthSession session = new AuthSessionStore(this).load();
         if (!session.isPresent()) {
-            resultMessage.setTextColor(WackenTheme.RED);
+            WackenTheme.textColor(resultMessage, WackenTheme.RED);
             resultMessage.setText("Sign in before adding a group-wide festival.");
             setResult(RESULT_CANCELED);
             return;
@@ -213,19 +214,19 @@ public final class ImportCsvActivity extends Activity {
         String name = festivalName.getText().toString().trim();
         try { be.wacken.planner.domain.Festival.active(festivalId(name),name); }
         catch(be.wacken.planner.domain.DomainValidationException error) {
-            resultMessage.setTextColor(WackenTheme.RED);resultMessage.setText(error.getMessage());return;
+            WackenTheme.textColor(resultMessage, WackenTheme.RED);resultMessage.setText(error.getMessage());return;
         }
         List<Band> bands;
         try {
             bands = FestivalCsvReader.bandNames(bandsCsv.contents).stream().map(Band::new).collect(Collectors.toList());
         } catch (FestivalCsvReader.FormatException error) {
-            resultMessage.setTextColor(WackenTheme.RED);
+            WackenTheme.textColor(resultMessage, WackenTheme.RED);
             resultMessage.setText("Festival was not added. " + error.getMessage());
             setResult(RESULT_CANCELED);
             return;
         }
         importButton.setEnabled(false);
-        resultMessage.setTextColor(WackenTheme.AMBER);
+        WackenTheme.textColor(resultMessage, WackenTheme.AMBER);
         resultMessage.setText("Loading bands for review...");
         new Thread(() -> {
             try {
@@ -246,7 +247,7 @@ public final class ImportCsvActivity extends Activity {
             } catch(RuntimeException error) {
                 runOnUiThread(() -> {
                     if(isFinishing()||isDestroyed())return;
-                    importButton.setEnabled(true);resultMessage.setTextColor(WackenTheme.RED);
+                    importButton.setEnabled(true);WackenTheme.textColor(resultMessage, WackenTheme.RED);
                     resultMessage.setText("Could not review festival bands. "+error.getMessage());
                 });
             }
@@ -269,7 +270,7 @@ public final class ImportCsvActivity extends Activity {
         }, message -> {
             if(isFinishing()||isDestroyed())return;
             importButton.setEnabled(true);
-            resultMessage.setTextColor(WackenTheme.RED);
+            WackenTheme.textColor(resultMessage, WackenTheme.RED);
             resultMessage.setText("Festival creation could not be confirmed. Retry the same name and CSV.\n"
                     + message);
             setResult(RESULT_CANCELED);
@@ -295,7 +296,7 @@ public final class ImportCsvActivity extends Activity {
 
     private void showAddFestivalResult(String name, AddFestivalResult result) {
         if (result.success()) {
-            resultMessage.setTextColor(WackenTheme.AMBER);
+            WackenTheme.textColor(resultMessage, WackenTheme.AMBER);
             String feedback = "Added " + name + ": " + result.reusedBands()
                     + " reused, " + result.createdBands()
                     + " new, " + result.prefilledRatings() + " prefilled.";
@@ -304,7 +305,7 @@ public final class ImportCsvActivity extends Activity {
             resultIntent.putExtra(EXTRA_IMPORT_FEEDBACK, feedback);
             setResult(RESULT_OK, resultIntent);
         } else {
-            resultMessage.setTextColor(WackenTheme.RED);
+            WackenTheme.textColor(resultMessage, WackenTheme.RED);
             resultMessage.setText(result.message());
             setResult(RESULT_CANCELED);
         }
@@ -335,7 +336,7 @@ public final class ImportCsvActivity extends Activity {
 
         selection.label = new TextView(this);
         selection.label.setText("No file selected (" + selection.expectedName + ")");
-        selection.label.setTextColor(WackenTheme.MUTED);
+        WackenTheme.textColor(selection.label, WackenTheme.MUTED);
         selection.label.setPadding(dp(8), dp(6), dp(8), 0);
         row.addView(selection.label);
 

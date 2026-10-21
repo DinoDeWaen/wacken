@@ -67,19 +67,20 @@ public final class ScheduleActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppearanceController.attach(this);
         setContentView(render());
     }
 
     private ScrollView render() {
         LinearLayout screen = new LinearLayout(this);
         screen.setOrientation(LinearLayout.VERTICAL);
-        screen.setBackgroundColor(COLOR_BACKGROUND);
+        WackenTheme.backgroundColor(screen, COLOR_BACKGROUND);
         int padding = dp(16);
         screen.setPadding(padding, padding, padding, padding);
 
         TextView title = new TextView(this);
         title.setText("Group Schedule");
-        title.setTextColor(COLOR_AMBER);
+        WackenTheme.textColor(title, COLOR_AMBER);
         title.setTextSize(28);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -87,7 +88,7 @@ public final class ScheduleActivity extends Activity {
 
         TextView subtitle = new TextView(this);
         subtitle.setText("MVP2 timeline from shared ratings and conflict rules");
-        subtitle.setTextColor(COLOR_MUTED);
+        WackenTheme.textColor(subtitle, COLOR_MUTED);
         subtitle.setGravity(Gravity.CENTER_HORIZONTAL);
         subtitle.setPadding(0, dp(4), 0, dp(16));
         screen.addView(subtitle);
@@ -116,7 +117,7 @@ public final class ScheduleActivity extends Activity {
         }
 
         ScrollView scrollView = new ScrollView(this);
-        scrollView.setBackgroundColor(COLOR_BACKGROUND);
+        WackenTheme.backgroundColor(scrollView, COLOR_BACKGROUND);
         scrollView.addView(screen);
         return scrollView;
     }
@@ -208,7 +209,6 @@ public final class ScheduleActivity extends Activity {
                         setContentView(render());
                     }
             );
-            button.setTextColor(Color.WHITE);
             button.setTextSize(12);
             button.setPadding(dp(10), 0, dp(10), 0);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
@@ -233,7 +233,7 @@ public final class ScheduleActivity extends Activity {
 
         CheckBox hideBarredBox = new CheckBox(this);
         hideBarredBox.setText(ScheduleLegendContent.hideBarredLabel());
-        hideBarredBox.setTextColor(COLOR_TEXT);
+        WackenTheme.textColor(hideBarredBox, COLOR_TEXT);
         hideBarredBox.setTextSize(13);
         hideBarredBox.setTypeface(Typeface.DEFAULT_BOLD);
         hideBarredBox.setChecked(hideBarred);
@@ -244,7 +244,7 @@ public final class ScheduleActivity extends Activity {
         controls.addView(hideBarredBox);
         TextView thresholdLabel = new TextView(this);
         thresholdLabel.setText(ScheduleLegendContent.ratingThresholdLabel());
-        thresholdLabel.setTextColor(COLOR_MUTED);
+        WackenTheme.textColor(thresholdLabel, COLOR_MUTED);
         thresholdLabel.setTextSize(12);
         thresholdLabel.setTypeface(Typeface.DEFAULT_BOLD);
         thresholdLabel.setPadding(dp(8), 0, 0, 0);
@@ -271,7 +271,6 @@ public final class ScheduleActivity extends Activity {
                     setContentView(render());
                 }
         );
-        button.setTextColor(Color.WHITE);
         button.setTextSize(11);
         button.setPadding(dp(8), 0, dp(8), 0);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
@@ -339,7 +338,7 @@ public final class ScheduleActivity extends Activity {
 
     private TextView legendLine(String label, String description, int accent) {
         TextView line = detailText(label + "  " + description, COLOR_TEXT, 11, false);
-        line.setTextColor(accent == COLOR_MUTED ? COLOR_MUTED : COLOR_TEXT);
+        WackenTheme.textColor(line,accent == COLOR_MUTED ? COLOR_MUTED : COLOR_TEXT);
         line.setPadding(0, dp(1), 0, dp(1));
         return line;
     }
@@ -347,7 +346,7 @@ public final class ScheduleActivity extends Activity {
     private TextView sectionTitle(String text) {
         TextView title = new TextView(this);
         title.setText(text);
-        title.setTextColor(COLOR_AMBER);
+        WackenTheme.textColor(title, COLOR_AMBER);
         title.setTextSize(18);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setPadding(0, dp(16), 0, dp(6));
@@ -386,17 +385,17 @@ public final class ScheduleActivity extends Activity {
         int timelineWidth = dp(layout.hourCount() * HOUR_WIDTH_DP);
         LinearLayout schedule = new LinearLayout(this);
         schedule.setOrientation(LinearLayout.HORIZONTAL);
-        schedule.setBackgroundColor(COLOR_BACKGROUND);
+        WackenTheme.backgroundColor(schedule, COLOR_BACKGROUND);
 
         FrameLayout stageLabels = new FrameLayout(this);
-        stageLabels.setBackgroundColor(COLOR_BACKGROUND);
+        WackenTheme.backgroundColor(stageLabels, COLOR_BACKGROUND);
         stageLabels.setLayoutParams(new LinearLayout.LayoutParams(
                 dp(STAGE_LABEL_WIDTH_DP),
                 calendarHeight
         ));
 
         FrameLayout timeline = new FrameLayout(this);
-        timeline.setBackgroundColor(COLOR_BACKGROUND);
+        WackenTheme.backgroundColor(timeline, COLOR_BACKGROUND);
         timeline.setLayoutParams(new FrameLayout.LayoutParams(
                 timelineWidth,
                 calendarHeight
@@ -429,7 +428,7 @@ public final class ScheduleActivity extends Activity {
         HorizontalScrollView horizontal = new HorizontalScrollView(this);
         horizontal.setHorizontalScrollBarEnabled(true);
         horizontal.setFillViewport(false);
-        horizontal.setBackgroundColor(COLOR_BACKGROUND);
+        WackenTheme.backgroundColor(horizontal, COLOR_BACKGROUND);
         horizontal.addView(timeline);
         schedule.addView(stageLabels);
         schedule.addView(horizontal, new LinearLayout.LayoutParams(
@@ -442,7 +441,7 @@ public final class ScheduleActivity extends Activity {
     private TextView stageHeader(String stageName) {
         TextView header = new TextView(this);
         header.setText(stageName);
-        header.setTextColor(COLOR_AMBER);
+        WackenTheme.textColor(header, COLOR_AMBER);
         header.setTextSize(13);
         header.setTypeface(Typeface.DEFAULT_BOLD);
         header.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
@@ -464,7 +463,7 @@ public final class ScheduleActivity extends Activity {
     private TextView hourLabel(ScheduleCalendarLayout layout, int hourOffset) {
         TextView label = new TextView(this);
         label.setText(layout.hourLabel(hourOffset));
-        label.setTextColor(COLOR_GRID);
+        WackenTheme.textColor(label, COLOR_GRID);
         label.setTextSize(11);
         label.setSingleLine(true);
         return label;
@@ -482,7 +481,7 @@ public final class ScheduleActivity extends Activity {
 
     private View hourGridLine() {
         View line = new View(this);
-        line.setBackgroundColor(COLOR_GRID);
+        WackenTheme.backgroundColor(line, COLOR_GRID);
         return line;
     }
 
@@ -498,7 +497,7 @@ public final class ScheduleActivity extends Activity {
 
     private View halfHourNotch() {
         View line = new View(this);
-        line.setBackgroundColor(COLOR_GRID);
+        WackenTheme.backgroundColor(line, COLOR_GRID);
         return line;
     }
 
@@ -536,7 +535,7 @@ public final class ScheduleActivity extends Activity {
 
     private View stageRowLine() {
         View line = new View(this);
-        line.setBackgroundColor(WackenTheme.GRID);
+        WackenTheme.backgroundColor(line, WackenTheme.GRID);
         return line;
     }
 
@@ -566,7 +565,7 @@ public final class ScheduleActivity extends Activity {
                 ? "Walk " + slot.walkingMinutesToNext().getAsInt() + "m"
                 : "Walk ?";
         marker.setText(text);
-        marker.setTextColor(COLOR_AMBER);
+        WackenTheme.textColor(marker, COLOR_AMBER);
         marker.setTextSize(12);
         marker.setTypeface(Typeface.DEFAULT_BOLD);
         marker.setGravity(Gravity.CENTER_VERTICAL);
@@ -609,7 +608,7 @@ public final class ScheduleActivity extends Activity {
 
         TextView timeRange = new TextView(this);
         timeRange.setText(content.timeRangeLine());
-        timeRange.setTextColor(COLOR_MUTED);
+        WackenTheme.textColor(timeRange, COLOR_MUTED);
         timeRange.setTextSize(10);
         timeRange.setTypeface(Typeface.DEFAULT_BOLD);
         timeRange.setSingleLine(true);
@@ -617,7 +616,7 @@ public final class ScheduleActivity extends Activity {
 
         TextView band = new TextView(this);
         band.setText(content.bandLine());
-        band.setTextColor(COLOR_TEXT);
+        WackenTheme.textColor(band, COLOR_TEXT);
         band.setTextSize(16);
         band.setTypeface(Typeface.DEFAULT_BOLD);
         band.setSingleLine(true);
@@ -627,7 +626,7 @@ public final class ScheduleActivity extends Activity {
         content.lostAlternativeLine().ifPresent(lost -> {
             TextView alternative = new TextView(this);
             alternative.setText(lost);
-            alternative.setTextColor(COLOR_MUTED);
+            WackenTheme.textColor(alternative, COLOR_MUTED);
             alternative.setTextSize(11);
             alternative.setSingleLine(true);
             alternative.setEllipsize(TextUtils.TruncateAt.END);
@@ -647,7 +646,7 @@ public final class ScheduleActivity extends Activity {
         detail.setBackground(detailDialogBackground());
 
         TextView title = detailText(ScheduleBandDisplayName.clean(slot.bandName()), COLOR_TEXT, 24, true);
-        title.setTextColor(COLOR_AMBER);
+        WackenTheme.textColor(title, COLOR_AMBER);
         title.setPadding(0, 0, 0, dp(14));
         detail.addView(title);
 
@@ -817,7 +816,7 @@ public final class ScheduleActivity extends Activity {
     private TextView detailText(String text, int color, int size, boolean bold) {
         TextView view = new TextView(this);
         view.setText(text);
-        view.setTextColor(color);
+        WackenTheme.textColor(view,color);
         view.setTextSize(size);
         view.setPadding(0, dp(2), 0, dp(2));
         if (bold) {
@@ -900,7 +899,7 @@ public final class ScheduleActivity extends Activity {
     private TextView message(String text, int color) {
         TextView message = new TextView(this);
         message.setText(text);
-        message.setTextColor(color);
+        WackenTheme.textColor(message,color);
         message.setGravity(Gravity.CENTER_HORIZONTAL);
         message.setPadding(0, dp(28), 0, dp(28));
         return message;
