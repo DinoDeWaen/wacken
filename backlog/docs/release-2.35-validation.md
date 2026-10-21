@@ -11,7 +11,7 @@ commits introduce no application/map changes relative to the tested source.
 **Integrated behavior/architecture checks pass.** All four GitHub jobs are green,
 including71 native tests on each of API23 and API36 with no failures or skips.
 The signed Room9-to-current retained-data regression also passes. Final task
-artifact build/signature evidence follows below; publication and latest-stable
+artifact build/signature evidence is recorded below; publication and latest-stable
 2.34-to-final2.35 upgrade remain TASK242 responsibilities.
 
 ## Audit finding → repair → evidence
@@ -64,7 +64,7 @@ closure decision rather than claiming the old arrows are correct.
 | Linux CI build/coverage/lint/runner safety/SQL/API | Pass in CI run39608937492; four jobs green. |
 | API23/API36 native suite | Pass in CI: API23 job119252378743 and API36 job119252378993 each finish71 tests,0 failed,0 skipped. The older persisted local API36 image initially stopped in smoke preflight because phone service was absent; fresh isolated emulator has the service and the required equivalent API36 gate passed in CI. No runner weakening or masked application failure. |
 | Signed retained-data upgrade probe | Pass on fresh API36 data: published2.33.5/code41/Room9 → current candidate2.34/code42/Room12, same stable key. Seed passes, old-schema negative control rejects before update, install-r candidate and verification pass; auth/cache/metadata/festival/history/pending/schedule/provenance and normal offline startup retained. Existing signed probe source is unchanged from v2.34. Final latest-stable2.34 → higher-code2.35 distribution upgrade is TASK242. |
-| Final task APK | Fresh build/signature evidence is added to task notes after the documentation checkpoint; no publication claimed. |
+| Final task APK | Pass from documentation checkpoint e9015a1:53 release tasks rerun after deleting the prior APK; stable-key v1/v2 verification succeeds. SHA2568aac5e28a2de510a671427ce0bc4ab583a49925266c6868a279c247537d33174. No publication claimed. |
 
 ## Review and coverage limits
 
@@ -96,3 +96,24 @@ Required native coverage comes from successful Linux API23/API36 runs; the fresh
 local emulator also completed the signed upgrade regression without changing the
 smoke runner. The final release must still prove latest-published stable retained
 state, including existing correction audit, against the exact2.35 APK in TASK242.
+
+## Final task artifact and exact-source limits
+
+The final TASK241 validation APK is version2.34/code42, built from documentation
+checkpoint `e9015a1` with SHA256
+`8aac5e28a2de510a671427ce0bc4ab583a49925266c6868a279c247537d33174`.
+It verifies with stable certificate SHA256
+`ede2ae97735a305900e87bc0fdc021c03382db4e30435f2349a96a3fdcc7545f`.
+This is an intermediate validation artifact, not the2.35 distribution APK.
+
+The signed migration probe used the prior TASK233 APK built from `d7215cb`, SHA256
+`24fef4103c6d64e2eaff5a859c78277b540684520abacd0777e032525c691875`.
+Application/map sources are unchanged between that commit, CI head935ca2f and
+the documentation checkpoint; the differences are validation/task documents.
+The report does not misidentify that prior candidate as the final rebuilt binary.
+TASK242 must bind latest-stable preservation evidence to its exact2.35 candidate.
+
+Runner-safety suites also pass locally: Android smoke3 tests, signed upgrade6,
+container-image acquisition6. The final release must still retain those gates
+and verify published signature/version/digest after upload. Draft PR5 remains
+unmerged until final release-source validation and publication preparation.
