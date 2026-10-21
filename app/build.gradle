@@ -32,8 +32,8 @@ android {
         applicationId "be.wacken.planner"
         minSdk 23
         targetSdk 36
-        versionCode 43
-        versionName "2.35"
+        versionCode 44
+        versionName "2.35.1"
         testInstrumentationRunner project.hasProperty("wackenUpgradeProbe")
                 ? "be.wacken.planner.SignedUpgradeInstrumentation"
                 : "androidx.test.runner.AndroidJUnitRunner"
