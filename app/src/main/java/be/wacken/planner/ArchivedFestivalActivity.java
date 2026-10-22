@@ -32,6 +32,7 @@ public final class ArchivedFestivalActivity extends Activity {
     private String festivalId;
     private String festivalName;
     private String email;
+    private String userId;
     private List<BandListItem> bands;
     private Map<String, Band> bandsByName;
     private TextView deletionStatus;
@@ -48,7 +49,7 @@ public final class ArchivedFestivalActivity extends Activity {
             finish();
             return;
         }
-        email = session.email();
+        email = session.email();userId=session.userId();
         festivalId = getIntent().getStringExtra(EXTRA_FESTIVAL_ID);
         AppRepositories repositories = new AppRepositories(this);
         ViewArchivedFestivalHistoryUseCase.ArchivedFestivalHistory history = new ViewArchivedFestivalHistoryUseCase(
@@ -73,7 +74,7 @@ public final class ArchivedFestivalActivity extends Activity {
                 repositories.personalBandRatings(),
                 new be.wacken.planner.application.FestivalAfterRatingView(repositories.afterRatings(), festivalId),
                 repositories.performancesForFestival(festivalId)
-        ).listBands(session.userId(), festivalId);
+        ).listBands(userId, festivalId);
     }
 
     @Override protected void onResume(){
