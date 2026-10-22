@@ -95,7 +95,8 @@ async function main() {
   if(proposed&&(proposed===project||proposed.startsWith(project+path.sep)))throw new Error("Baseline proposals must be outside the repository for explicit review");
   // A clean checkout must represent current product/map changes, not silently test older committed sources.
   const relevant=["groma","app/src/main","application/src/main","domain/src/main","infrastructure/src/main"];
-  if(run("git",["status","--porcelain","--",...relevant]))throw new Error("Commit reviewed product/map changes before clean-checkout validation");
+  const pending=run("git",["status","--porcelain","--",...relevant]);
+  if(pending)throw new Error("Commit reviewed product/map changes before clean-checkout validation:\n"+pending);
   const tool=await readers();
   const baselinePath=path.join(project,"tools/groma/architecture-baseline.json");
   const result=await disposable(project,async root=>{

@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-21 20:23'
+updated_date: '2026-10-22 04:18'
 labels:
   - ux
   - release-3.0
@@ -34,6 +34,7 @@ modified_files:
   - tools/groma/architecture-baseline.json
   - README.md
   - backlog/docs/business-requirements.md
+  - scripts/architecture/verify-groma.mjs
 priority: medium
 type: enhancement
 ---
