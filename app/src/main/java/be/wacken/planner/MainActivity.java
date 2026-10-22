@@ -66,7 +66,6 @@ public final class MainActivity extends Activity {
     private Button closeButton;
     private Button archiveButton;
     private Button deleteFestivalButton;
-    private Button scheduleButton;
     private Button addFestivalButton;
     private FrameLayout syncOverlay;
     private ImageView syncSplash;
@@ -122,6 +121,7 @@ public final class MainActivity extends Activity {
         screen.addView(archiveList);
 
         bandList = new ListView(this);
+        bandList.setId(R.id.band_lineup);
         bandList.setDivider(null);
         bandList.setCacheColorHint(COLOR_BACKGROUND);
         WackenTheme.backgroundColor(bandList, COLOR_BACKGROUND);
@@ -133,7 +133,7 @@ public final class MainActivity extends Activity {
 
         root.addView(screen);
         root.addView(syncOverlay());
-        setContentView(root);
+        setContentView(MainNavigation.wrap(this,root,MainNavigation.Destination.BANDS));
     }
 
     @Override
@@ -249,9 +249,6 @@ public final class MainActivity extends Activity {
         if (addFestivalButton != null) {
             addFestivalButton.setVisibility(content.showAddFestivalAction() ? View.VISIBLE : View.GONE);
         }
-        if (scheduleButton != null) {
-            scheduleButton.setEnabled(content.showBandList());
-        }
         if (tableHeader != null) {
             tableHeader.setVisibility(content.showBandList() ? View.VISIBLE : View.GONE);
         }
@@ -356,11 +353,6 @@ public final class MainActivity extends Activity {
                 });
         addFestivalButton.setVisibility(View.GONE);
         actions.addView(addFestivalButton);
-        actions.addView(topActionButton("⚙", "Settings", WackenTheme.ButtonStyle.SECONDARY,
-                view -> startActivity(new Intent(this, SettingsActivity.class))));
-        scheduleButton = topActionButton("📅", "Group schedule", WackenTheme.ButtonStyle.SECONDARY,
-                view -> startActivity(new Intent(this, ScheduleActivity.class)));
-        actions.addView(scheduleButton);
         actions.addView(topActionButton("⏻", "Sync and exit", WackenTheme.ButtonStyle.DANGER,
                 view -> syncFromSupabase(true, "Sealing scores before exit...")));
         return actions;
@@ -502,9 +494,6 @@ public final class MainActivity extends Activity {
         }
         if (deleteFestivalButton != null) {
             deleteFestivalButton.setEnabled(enabled);
-        }
-        if (scheduleButton != null && bandList != null) {
-            scheduleButton.setEnabled(enabled && bandList.getVisibility() == View.VISIBLE);
         }
     }
 

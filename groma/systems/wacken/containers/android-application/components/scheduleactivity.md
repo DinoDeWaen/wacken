@@ -46,3 +46,4 @@ Renders the day-filtered stage/time calendar, applies local visibility filters, 
 | Source | Target | Description | Technology |
 | --- | --- | --- | --- |
 | [app/src/main/java/be/wacken/planner/ScheduleActivity.java](../../../../../../app/src/main/java/be/wacken/planner/ScheduleActivity.java) | [application/src/main/java/be/wacken/planner/application/GenerateSharedScheduleUseCase.java](../../../../../../application/src/main/java/be/wacken/planner/application/GenerateSharedScheduleUseCase.java) | Generates calendar slots | Java call |
+| [app/src/main/java/be/wacken/planner/ScheduleActivity.java](../../../../../../app/src/main/java/be/wacken/planner/ScheduleActivity.java) | [app/src/main/java/be/wacken/planner/MainNavigation.java](../../../../../../app/src/main/java/be/wacken/planner/MainNavigation.java) | Renders primary destinations | Android Views |

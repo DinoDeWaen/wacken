@@ -1,4 +1,6 @@
 <resources>
     <item name="login_email" type="id" />
     <item name="login_password" type="id" />
+    <item name="destination_content" type="id" />
+    <item name="band_lineup" type="id" />
 </resources>

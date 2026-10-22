@@ -24,7 +24,7 @@ jobs:
       - name: Build exact patched Groma and restore configured scanners
         run: |
           sh scripts/setup-groma.sh
-          sh scripts/groma.sh plugin install
+          sh scripts/groma.sh plugin update java @groma/scanner-java@0.2.2
       - name: Exercise positive and negative architecture fixtures
         run: bun test scripts/tests/groma-gate.test.ts
       - name: Check clean-checkout semantic baseline and two scans

@@ -636,6 +636,19 @@
         ]
       },
       {
+        "id": "mainnavigation",
+        "kind": "component",
+        "parent": "android-application",
+        "title": "Primary destination navigation",
+        "description": "Reuses named primary screens",
+        "overview": "Builds the same labeled Bands, Schedule and Settings destination bar around each primary screen, exposing the current destination visually and to accessibility services. Selecting the current Activity is a no-op; another destination is opened with Android Intent REORDER_TO_FRONT so an existing Activity retains its screen context rather than creating duplicate navigation instances. Detail and review subflows keep their initiating Activity and normal Back behavior. Shared appearance helpers style the controls; this component owns no rating, schedule, session or persistence policy.",
+        "group": "Android screens",
+        "technology": "",
+        "code": [
+          "app/src/main/java/be/wacken/planner/MainNavigation.java"
+        ]
+      },
+      {
         "id": "memberratingprojection",
         "kind": "component",
         "parent": "android-application",
@@ -2026,6 +2039,13 @@
       },
       {
         "source": "app/src/main/java/be/wacken/planner/MainActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/MainNavigation.java",
+        "status": "stable",
+        "description": "Renders primary destinations",
+        "technology": "Android Views"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/MainActivity.java",
         "target": "app/src/main/java/be/wacken/planner/MissingFestivalRatingDialog.java",
         "status": "stable",
         "description": "Reviews blocked pending work",
@@ -2050,6 +2070,34 @@
         "target": "application/src/main/java/be/wacken/planner/application/RateBandUseCase.java",
         "status": "stable",
         "description": "Saves planning rating",
+        "technology": "Java call"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/MainNavigation.java",
+        "target": "app/src/main/java/be/wacken/planner/MainActivity.java",
+        "status": "stable",
+        "description": "Reuses band overview",
+        "technology": "Android Intent"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/MainNavigation.java",
+        "target": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
+        "status": "stable",
+        "description": "Reuses schedule view",
+        "technology": "Android Intent"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/MainNavigation.java",
+        "target": "app/src/main/java/be/wacken/planner/SettingsActivity.java",
+        "status": "stable",
+        "description": "Reuses settings view",
+        "technology": "Android Intent"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/MainNavigation.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles destination controls",
         "technology": "Java call"
       },
       {
@@ -2250,6 +2298,13 @@
       },
       {
         "source": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/MainNavigation.java",
+        "status": "stable",
+        "description": "Renders primary destinations",
+        "technology": "Android Views"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
         "target": "application/src/main/java/be/wacken/planner/application/GenerateSharedScheduleUseCase.java",
         "status": "stable",
         "description": "Generates calendar slots",
@@ -2261,6 +2316,13 @@
         "status": "stable",
         "description": "Opens link review",
         "technology": "Android Intent"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/SettingsActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/MainNavigation.java",
+        "status": "stable",
+        "description": "Renders primary destinations",
+        "technology": "Android Views"
       },
       {
         "source": "app/src/main/java/be/wacken/planner/SettingsActivity.java",
@@ -3676,7 +3738,7 @@
       "code": "JAVA_MISSING_EXTERNAL_TYPES",
       "severity": "info",
       "count": 1,
-      "facts": 4258
+      "facts": 4274
     },
     {
       "scanner": "java",
@@ -3689,13 +3751,13 @@
       "code": "JAVA_UNRESOLVED_CALLS",
       "severity": "info",
       "count": 4,
-      "facts": 9055
+      "facts": 9066
     }
   ],
   "coverage": {
-    "operations": 2345,
-    "tokenized": 1467,
-    "invocations": 11833
+    "operations": 2351,
+    "tokenized": 1470,
+    "invocations": 11862
   },
   "duplicates": [
     "02da146b79ab30eea25ec378d01ca56c0ef5ed829b8e2fce1258497f210f9842",
@@ -5367,7 +5429,7 @@
     "islands": []
   },
   "review": {
-    "task": "TASK-205",
-    "decision": "Standard appearance lifecycle explicitly approved by user; source, rendered component/code links, seven changed duplicate identities and exact scanner evidence reviewed in backlog/docs/groma-appearance-review-2026-10-21.md"
+    "task": "TASK-206",
+    "decision": "Reviewed stateless primary-navigation source, rendered component/source/relationships, unchanged88 duplicate identities and exact Android scanner evidence deltas; see backlog/docs/groma-navigation-review-2026-10-21.md. Existing approved Views/controller boundaries retained."
   }
 }
