@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-22 12:49'
+updated_date: '2026-10-22 13:56'
 labels:
   - ux
   - release-3.0
@@ -28,6 +28,10 @@ modified_files:
     groma/systems/wacken/containers/android-application/components/scheduleactivity.md
   - >-
     groma/systems/wacken/containers/android-application/components/wackentheme.md
+  - README.md
+  - backlog/docs/business-requirements.md
+  - backlog/docs/groma-schedule-review-2026-10-22.md
+  - tools/groma/architecture-baseline.json
 priority: medium
 type: enhancement
 ---

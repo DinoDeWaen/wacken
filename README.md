@@ -60,6 +60,16 @@ changes preserve state and never replay rating events.
 Native actions/geometry are automated checks; TASK-212 still owns the integrated
 human TalkBack, visual and physical-device review.
 
+TASK-209 makes schedule day/threshold selectors native and labeled, with48dp
+controls and retained filters, calendar position and decision context across
+appearance changes, empty results and recreation. Both palettes show readable
+stage/time/rating/scratch/lock/walking meaning; the timeline keeps its essential
+horizontal scroll and scales with text. The wrapping decision dialog preserves
+the actual chosen act, alternatives and explicit group-lock actions. Personal
+ratings, generated ties, cutoff and walking rules are unchanged. Native89-test
+coverage includes200% decision actions and restored filters/viewport; integrated
+accessibility and device review remains TASK-212.
+
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.

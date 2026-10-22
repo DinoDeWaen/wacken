@@ -129,6 +129,17 @@ member/festival ownership, history/correction semantics or schedule decisions.
 TASK-209–213 still own remaining screens, integrated accessibility/device review
 and actual3.0 publication.
 
+Development increment TASK-209 adds labeled native day/threshold selectors,
+wrapping48dp schedule controls and retained filters/calendar viewport across
+empty results, theme changes and recreation. Actual stage/time/rating, scratched
+overlap, lock and walking meanings remain available in both palettes and through
+native accessibility. Calendar geometry scales with text; horizontal scrolling
+stays inside the timeline. Wrapping decision details retain the chosen act and
+review context across recreation; explicit alternative/lock actions preserve
+personal ratings and original generated decision evidence. BR-063–076 scheduling,
+cutoff, walking and tie rules are unchanged. TASK-210–213 own remaining screens,
+integrated native accessibility/device validation and publication.
+
 The user validated the paired Ironline dark / Field Notes light proposal on
 17 October2026. [The design and flow contract](release-3.0-design-contract.md)
 defines the palettes, shared layout, state wording and complete screen/dialog
