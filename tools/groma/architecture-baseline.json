@@ -80,7 +80,7 @@
         "parent": "android-application",
         "title": "Archived festival screen",
         "description": "Browse read-only festival history",
-        "overview": "Displays an archived festival lineup and opens read-only band details.",
+        "overview": "Displays an archived festival lineup and opens read-only band details.\n\nUses wrapping read-only rows with full planning meaning, actual stage/date/time and known music actions; title and secondary actions scroll with the list. Restores viewport and refreshes cached corrected values on resume without changing ratings. Interrupted confirmation/request recovery asks the user to check current festival/history before repeating an action.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -93,7 +93,7 @@
         "parent": "android-application",
         "title": "Reviewed archived correction dialog",
         "description": "Confirms own reviewed edits",
-        "overview": "ArchivedBandDetailActivity opens this dialog with a supplied correction use case. Loads member/festival/band/kind and revision; stages locally then explicitly confirms planning zero-to-five or after one-to-five. Stable payload-derived operation ID supports uncertain-result retry, stale review requires reload, and lifecycle generation guards ignore obsolete UI completions.",
+        "overview": "ArchivedBandDetailActivity opens this dialog with a supplied correction use case. Loads member/festival/band/kind and revision; stages locally then explicitly confirms planning zero-to-five or after one-to-five. Stable payload-derived operation ID supports uncertain-result retry, stale review requires reload, and lifecycle generation guards ignore obsolete UI completions.\n\nThe paired dialog uses a scrollable body, labeled48dp kind/value controls and wrapping native actions. Theme changes preserve the same staged review. Recreation exposes safe kind/value or uncertain-save recovery on the owning detail screen; it does not automatically retry or create an audit event.",
         "group": "Festival archive and correction",
         "technology": "",
         "code": [
@@ -178,7 +178,7 @@
         "parent": "android-application",
         "title": "Band detail screens",
         "description": "Present band information and personal ratings",
-        "overview": "Presents active and archived band information with the captured member/festival scope, established source/history context and read-only group planning summaries. Active editing puts planning first and keeps the independent post-show value behind a retained After the show disclosure. Owns the reusable native rating choices and shared meaning vocabulary used by detail and lineup: touch, keyboard and accessibility actions use the existing callbacks/use cases, while archived children remain disabled. Restyling and recreation retain views/state without replaying rating events; actual biography, images, performance context and stored music links are preserved. Canonical-band discovery retains its existing no-festival entry but is absent in captured archive context; archived corrections keep their explicit reviewed workflow.",
+        "overview": "Presents active and archived band information with the captured member/festival scope, established source/history context and read-only group planning summaries. Active editing puts planning first and keeps the independent post-show value behind a retained After the show disclosure. Owns the reusable native rating choices and shared meaning vocabulary used by detail and lineup: touch, keyboard and accessibility actions use the existing callbacks/use cases, while archived children remain disabled. Restyling and recreation retain views/state without replaying rating events; actual biography, images, performance context and stored music links are preserved. Canonical-band discovery retains its existing no-festival entry but is absent in captured archive context; archived corrections keep their explicit reviewed workflow.\n\nArchived correction recreation reports the staged kind/value or an uncertain in-flight result and requires reloading the current rating/history before another confirmation. Restoring this screen never resubmits a correction; the existing stable operation/revision semantics remain inside the correction workflow.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -274,7 +274,7 @@
         "parent": "android-application",
         "title": "Festival deletion confirmation",
         "description": "Confirms group-scoped removal",
-        "overview": "Shown from active home or archived festival views. Requires explicit deletion confirmation, then invokes AppRepositories.deleteFestival on a worker and returns success/error on the UI thread. Explains removal of festival-scoped data and retention of canonical bands/personal history. The backend owns authorization and atomic deletion; local cleanup follows acknowledged remote success.",
+        "overview": "Shown from active home or archived festival views. Requires explicit deletion confirmation, then invokes AppRepositories.deleteFestival on a worker and returns success/error on the UI thread. Explains removal of festival-scoped data and retention of canonical bands/personal history. The backend owns authorization and atomic deletion; local cleanup follows acknowledged remote success.\n\nConfirmation/progress use shared paired native surfaces and wrapping actions; lifecycle ownership dismisses windows on Activity destruction and obsolete callbacks cannot report success on a destroyed screen. Recreated owners show explicit current-state recovery before repeating requests.",
         "group": "Festival deletion",
         "technology": "",
         "code": [
@@ -430,7 +430,7 @@
         "parent": "android-application",
         "title": "Festival identity confirmation",
         "description": "Stages explicit band choices",
-        "overview": "Presents proposals from ReviewFestivalBandsUseCase. Exact canonical names retain exact reuse; suggestions and aliases require an explicit choice to reuse a band or create a separate band. Alias remembrance is opt-in. Only the final summary confirmation invokes the callback supplied by ImportCsvActivity; cancellation creates no festival or alias.",
+        "overview": "Presents proposals from ReviewFestivalBandsUseCase. Exact canonical names retain exact reuse; suggestions and aliases require an explicit choice to reuse a band or create a separate band. Alias remembrance is opt-in. Only the final summary confirmation invokes the callback supplied by ImportCsvActivity; cancellation creates no festival or alias.\n\nIdentity choices use wrapping48dp native controls and a scrollable body/summary in both appearances. Shared native dialog styling updates open controls without invoking confirmation callbacks; staged choice and final confirmation remain separate.",
         "group": "Festival creation and identity",
         "technology": "",
         "code": [
@@ -546,7 +546,7 @@
         "parent": "android-application",
         "title": "CSV import screen",
         "description": "Select and import festival files",
-        "overview": "Receives Android document selections and invokes the CSV import workflow for lineup and related festival data.",
+        "overview": "Receives Android document selections and invokes the CSV import workflow for lineup and related festival data.\n\nReadable paired name/file/status controls retain selected CSV contents in the existing memory-only retained import and restore name/scroll. Process loss explicitly requests file reselection. Interrupted festival review/creation asks the user to check the active festival and review the same name/CSV again; restoration never submits creation. File-picker cancellation or missing target preserves prior selection and cached data; local review still reports local-only success.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -598,7 +598,7 @@
         "parent": "android-application",
         "title": "Local CSV acceptance review",
         "description": "Retains staged row choices",
-        "overview": "Displays ReviewFestivalCsvUseCase before/after/error rows with unchecked defaults and explicit valid-row acceptance. Retained state stores data/work without an Activity; fresh lifecycle callbacks render status and detach safely. Apply invokes the application use case once with selected keys, protects in-flight work and reports local success or retained-data errors. Cancel does not save. Shared sync may later refresh this local cache.",
+        "overview": "Displays ReviewFestivalCsvUseCase before/after/error rows with unchecked defaults and explicit valid-row acceptance. Retained state stores data/work without an Activity; fresh lifecycle callbacks render status and detach safely. Apply invokes the application use case once with selected keys, protects in-flight work and reports local success or retained-data errors. Cancel does not save. Shared sync may later refresh this local cache.\n\nA scrollable body and adaptive list viewport keep long before/after/error rows and wrapping48dp native actions reachable. Accepted keys, in-flight local work and list position retain their existing screen-owned state; status is announced independently of color. Shared dialog restyling never applies changes.",
         "group": "Local festival import",
         "technology": "",
         "code": [
@@ -611,7 +611,7 @@
         "parent": "android-application",
         "title": "Login screen",
         "description": "Authenticate a festival planner user",
-        "overview": "Collects credentials and starts a Supabase Auth session before the planning screens are entered.",
+        "overview": "Collects credentials and starts a Supabase Auth session before the planning screens are entered.\n\nThe form scrolls and inputs grow with text. A screen-owned retained sign-in state keeps one active request, progress/failure and memory-only password draft through recreation; only the existing acknowledged Auth client result writes the existing session store. The worker holds application context and retained data, while replaceable lifecycle observers route to the existing Main destination. Passwords are excluded from saved hierarchy/Bundle state; palette changes do not submit credentials.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -624,7 +624,7 @@
         "parent": "android-application",
         "title": "Festival home screen",
         "description": "Show active lineup and archived start state",
-        "overview": "Presents the actual alphabetically scoped active lineup with wrapping band, planning-rating meaning and performance context, local name search and an Unrated filter. Its presentation helper filters existing display items without owning rating or festival policy. Keeps query, filter and selected-row context through detail return and recreation, opens only stored music links, and exposes cached/offline retry and archive/add-next entry states. Planning saves and festival lifecycle actions use the existing application use cases; primary destinations use shared stateless navigation.",
+        "overview": "Presents the actual alphabetically scoped active lineup with wrapping band, planning-rating meaning and performance context, local name search and an Unrated filter. Its presentation helper filters existing display items without owning rating or festival policy. Keeps query, filter and selected-row context through detail return and recreation, opens only stored music links, and exposes cached/offline retry and archive/add-next entry states. Planning saves and festival lifecycle actions use the existing application use cases; primary destinations use shared stateless navigation.\n\nSecondary lifecycle actions wrap vertically and sync status uses words/live announcements. Archive explicitly identifies the festival and group-wide carry-over scope before calling the unchanged atomic archive workflow; success follows acknowledgement and failures preserve pending work. Returning from an archive reloads cached festival state. Interrupted owned dialogs/sync/archive produce explicit check-current-state recovery rather than resubmitting a lifecycle write.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -682,7 +682,7 @@
         "parent": "android-application",
         "title": "Review orphaned pending rating",
         "description": "Offers keep move or discard",
-        "overview": "Home/Settings sync failure opens this dialog only for the typed missing-festival error. Keep is default; move and separately confirmed discard call AppRepositories recovery commands on a worker. Successful recovery retries sync; failures report that pending work remains.",
+        "overview": "Home/Settings sync failure opens this dialog only for the typed missing-festival error. Keep is default; move and separately confirmed discard call AppRepositories recovery commands on a worker. Successful recovery retries sync; failures report that pending work remains.\n\nShared paired native surfaces and wrapping actions keep recovery/discard scope readable at large fonts. Owned dialogs detach with their Activity; obsolete completions do not act on a destroyed screen, while the original pending record remains under the existing recovery command semantics.",
         "group": "Pending rating recovery and export",
         "technology": "",
         "code": [
@@ -1160,7 +1160,7 @@
         "parent": "android-application",
         "title": "Settings screen",
         "description": "Launch import, review, export, and sync actions",
-        "overview": "Provides grouped appearance, account/group, festival administration, rating export/allocation and manual sync actions. Link imported bands and active-festival music discovery are adjacent in festival administration; canonical-band discovery stays on detail. Shared headings, readable wrapping body text and live status use the selected palette, and the Settings scroll position survives recreation. Import, rename, export, invite and pending-sync behavior still delegate to the existing workflows.",
+        "overview": "Provides grouped appearance, account/group, festival administration, rating export/allocation and manual sync actions. Link imported bands and active-festival music discovery are adjacent in festival administration; canonical-band discovery stays on detail. Shared headings, readable wrapping body text and live status use the selected palette, and the Settings scroll position survives recreation. Import, rename, export, invite and pending-sync behavior still delegate to the existing workflows.\n\nRename preserves its nonsecret draft and captured festival identity across recreation without submitting; changed festival context requires reopening review. Interrupted sync has explicit unconfirmed-result recovery with cached/pending work retained. Invite/export remain Android target handoffs, with app-side missing-target/cancellation wording. Owned dialogs use shared paired styling and wrapping native actions.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -1515,7 +1515,7 @@
         "parent": "android-application",
         "title": "Android visual theme",
         "description": "Apply shared native appearance without replaying work",
-        "overview": "Provides shared semantic styling for Android screens, including native focused-button outlines, selected rating-choice surfaces and focused selector panels that remain visible in both appearances. Resolves the device-local System, Ironline dark or Field Notes light preference and updates explicitly bound views, panels and system bars in place. Activity lifecycle and preference listeners refresh current appearance and detach on destruction; screen-owned drafts, retained sessions and pending business operations are not reconstructed or executed by restyling. Uses existing private Android SharedPreferences without backend synchronization. Pure palette policy and the controller implement this one presentation responsibility; ADR0024 records the approved design.",
+        "overview": "Provides shared semantic styling for Android screens, including native focused-button outlines, selected rating-choice surfaces and focused selector panels that remain visible in both appearances. Resolves the device-local System, Ironline dark or Field Notes light preference and updates explicitly bound views, panels and system bars in place. Activity lifecycle and preference listeners refresh current appearance and detach on destruction; screen-owned drafts, retained sessions and pending business operations are not reconstructed or executed by restyling. Uses existing private Android SharedPreferences without backend synchronization. Pure palette policy and the controller implement this one presentation responsibility; ADR0024 records the approved design.\n\nAlso styles owned native dialog text/surfaces and wrapping vertically arranged48dp actions without replacing business listeners or overriding explicitly styled custom content. Shared native input/choice/selector helpers use semantic palette bindings. The existing Activity controller weakly tracks owned dialogs and dismisses their windows at destruction; it exposes open-dialog presence only for screen-owned safe-recovery wording.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -1803,6 +1803,20 @@
       },
       {
         "source": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/RatingValueText.java",
+        "status": "stable",
+        "description": "Formats read-only planning meaning",
+        "technology": "Java call"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles archived rows",
+        "technology": "Android Views"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
         "target": "application/src/main/java/be/wacken/planner/application/FestivalAfterRatingView.java",
         "status": "stable",
         "description": "Reads archived after-state",
@@ -1814,6 +1828,13 @@
         "status": "stable",
         "description": "Loads archived lineup",
         "technology": "Java call"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/ArchivedRatingCorrectionDialog.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles correction dialog",
+        "technology": "Android Views"
       },
       {
         "source": "app/src/main/java/be/wacken/planner/ArchivedRatingCorrectionDialog.java",
@@ -1942,11 +1963,25 @@
         "technology": "Java call"
       },
       {
+        "source": "app/src/main/java/be/wacken/planner/DeleteFestivalDialog.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles deletion confirmation",
+        "technology": "Android Views"
+      },
+      {
         "source": "app/src/main/java/be/wacken/planner/FestivalBandReviewDialog.java",
         "target": "app/src/main/java/be/wacken/planner/ImportCsvActivity.java",
         "status": "stable",
         "description": "Returns confirmed creation choices",
         "technology": "Composed Java callback"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/FestivalBandReviewDialog.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles identity review",
+        "technology": "Android Views"
       },
       {
         "source": "app/src/main/java/be/wacken/planner/FestivalBandReviewDialog.java",
@@ -1985,6 +2020,13 @@
       },
       {
         "source": "app/src/main/java/be/wacken/planner/ImportCsvActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles import form",
+        "technology": "Android Views"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/ImportCsvActivity.java",
         "target": "application/src/main/java/be/wacken/planner/application/AddFestivalUseCase.java",
         "status": "stable",
         "description": "Adds next festival",
@@ -2020,6 +2062,13 @@
       },
       {
         "source": "app/src/main/java/be/wacken/planner/LocalCsvImportReviewDialog.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles import review",
+        "technology": "Android Views"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/LocalCsvImportReviewDialog.java",
         "target": "application/src/main/java/be/wacken/planner/application/ReviewFestivalCsvUseCase.java",
         "status": "stable",
         "description": "Reviews and applies choices",
@@ -2031,6 +2080,13 @@
         "status": "stable",
         "description": "Stores signed-in session",
         "technology": "Java call"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/LoginActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles sign-in controls",
+        "technology": "Android Views"
       },
       {
         "source": "app/src/main/java/be/wacken/planner/MainActivity.java",
@@ -2157,6 +2213,13 @@
         "status": "stable",
         "description": "Extracts pending target",
         "technology": "Java call"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/MissingFestivalRatingDialog.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles pending recovery",
+        "technology": "Android Views"
       },
       {
         "source": "app/src/main/java/be/wacken/planner/MusicBrainzMetadataProvider.java",
@@ -3784,7 +3847,13 @@
       "scanner": "java",
       "code": "compiler.err.method.does.not.override.superclass",
       "severity": "warning",
-      "count": 252
+      "count": 259
+    },
+    {
+      "scanner": "java",
+      "code": "compiler.err.non-static.cant.be.ref",
+      "severity": "warning",
+      "count": 2
     },
     {
       "scanner": "java",
@@ -3803,14 +3872,14 @@
       "code": "JAVA_METHOD_REFERENCES",
       "severity": "info",
       "count": 4,
-      "facts": 227
+      "facts": 228
     },
     {
       "scanner": "java",
       "code": "JAVA_MISSING_EXTERNAL_TYPES",
       "severity": "info",
       "count": 1,
-      "facts": 4408
+      "facts": 4458
     },
     {
       "scanner": "java",
@@ -3823,13 +3892,13 @@
       "code": "JAVA_UNRESOLVED_CALLS",
       "severity": "info",
       "count": 4,
-      "facts": 9428
+      "facts": 9609
     }
   ],
   "coverage": {
-    "operations": 2426,
-    "tokenized": 1501,
-    "invocations": 12326
+    "operations": 2456,
+    "tokenized": 1515,
+    "invocations": 12568
   },
   "duplicates": [
     "02da146b79ab30eea25ec378d01ca56c0ef5ed829b8e2fce1258497f210f9842",
@@ -3839,7 +3908,6 @@
     "0ad65a533c88e08a77a130629d4b502521971341ce9e2fe0827fdb879df07b47",
     "0c6e0da7ce49e11b1ed813dee8729571c9139aa40ae54cd0da504335ddc2dc28",
     "0d13ea3855413ecb9253d7361ea672ef583f999a08b92e3ac01ecb8153e7726d",
-    "0f609ee281e34f7dd15bcfbcb6ca1d17a31744c2ee318a693053a2d16cf0b1ed",
     "1bb99ff94d176d7a63d98dd8118ead8dc799a88f3e48546df6128c1a676cb252",
     "1d6a4da3f9158a59b09453379d70450b6df5acde01e5e6444e854b6bf9a0befa",
     "2046d311c0eaaa39850d419103ff3e6ec968f52927fdde91985204dafb4829f6",
@@ -3861,6 +3929,7 @@
     "56f2abd12e559d7cbe235c4407060e9c50561ff65c1865b2b0a5e03c837502d3",
     "57d3984a0394d8cb6b2fe0757831ff860728d4d0ffa548aa811c71ba4577b2e3",
     "5d86ea38afe408a2892b0f81be8009f3349450597dd194907fcae3ddec25ec60",
+    "5f0de89c71e17f5adf57677fbdf2d2fa16594343d881a50db186698c667e32fe",
     "5f8a97a9a25ddcd95dc7f0b911968622fb557034daae765e122ede09b0a371d7",
     "5fe11b84c65f6652afd192b25b9c87049565cc8cb3ad2d56d6d0e3d40ed01223",
     "61eef75cf750ad4e5fbce212b117d8223fc5ad193d7046669681676e7c1b1729",
@@ -3885,7 +3954,6 @@
     "8965c2b4171d043d7129178055a6f4ed893632ec90923318b51113a425d8cef0",
     "8a91d449dc951dba98ef01fc4b3a4740050d7b842d57e24cd74f24f8bfc1eaf4",
     "8d86a49cfadba485e227605fb131020676b31bbc7a124a7172f064271760c2a1",
-    "90ae4f4a8dc304463a58399e1031ac7637031da7a52271f41ea41890561f2173",
     "94903af450e8d45796fe9bd68f17a8e41db95eaf63d0b49f2f439f75a44eff62",
     "9653780fa46f26741644cdc76ae8ab25433ef8d368a0543b809ec24bab2675e1",
     "99a17d3d6a9498bea67c85c616c63801082865aac49b67385ab2268e7752a852",
@@ -3895,12 +3963,13 @@
     "a62e67e76c4cb449bf864b5bf738affa2230b3f6b87f018bdcbab8eceef7b827",
     "aafa2801b25ef3782a2f13f24db11babcbc573415c3838fbab41bb292bc68685",
     "b196546b482382d678e87de2a0e3280826907cccb45b3ee4f5610bfabe058a74",
-    "b4874b5924a054fcc9a7fa47c32d318ea2e686f799881f29b0d041e113a4bfd4",
     "b9f6b2c13d3261bb46311e270db8633fa472a9163fbb5a9ce92a457bfa6cc8a5",
+    "bbf671e002cb0553bef778a31f53fca364a53fbe6e035f77f3c3cfdab2ecf6a2",
     "bd5feb881d6b2a2775f4d1035ad2d135bf633e067d23a9e565efe95519e40f4c",
     "c20b3500ef9cf997bbfa5b7e2b68c34ac7b997813525449f0c0fd41d0e170b06",
     "c3590d507483623e8d374f7b0e8b104e001de2258efce150c57ebb23272f452f",
     "c67635217be8dd183b16f6e273d2d09be1f36286119a9d8081a28e9f3dcf05fe",
+    "cff67dd19a31e192b60220fa2fec2a9c00d971bc7b86f757e8fb11b06b0ea617",
     "d07553bcfd5eb1c1afd880ce9117ce8e883f6c2f0a8bb6c6acd5af0cdd88ab83",
     "d97066da8cf091977c17684b38db937f58b8ad47939cc87474f8c71e458b5253",
     "dd847743fd98aefad506842ea71045e23aaa488f84143c15576f655f18fe097b",
@@ -3909,6 +3978,7 @@
     "dfb144df15c9c023b81987236d584a6bce926e8efb124c0e4ff902119aed1e0d",
     "e99e04f1af04da88173eddad46bca13860ba0a02c4e0281fe33e0a4b2e8f72a1",
     "ea0e01d12ec5acff64cc5f2e496c219cafa31129b6dd65a6005c0133f0c041fd",
+    "ef8ae0b890aaee03d69b94b1045a26d8817e6fc830537e46ee3de0ee5ec9a343",
     "f4d5dd9f4eac842647f592748e3ab46906986544b687d366eae298be2740896d",
     "f8ff81537cb84c933945726e34a0cba7db0a44150eee2d3f8cb2f6ba3443ef38",
     "fba54f48d5caeacc6c78e157cd4edce73f14e2433e11c4839f0280a752b2fac4",
@@ -3983,6 +4053,74 @@
         {
           "file": "app/src/main/java/be/wacken/planner/BandDetailActivity.java",
           "name": "be.wacken.planner.BandDetailActivity#valueExtra(java.lang.String)"
+        }
+      ]
+    },
+    "bbf671e002cb0553bef778a31f53fca364a53fbe6e035f77f3c3cfdab2ecf6a2": {
+      "rationale": "Reviewed new exact pair:archived/music column() each creates one vertical LinearLayout. Trivial widget setup remains owner-local; a generic layout factory would couple distinct workflows without a meaningful abstraction.",
+      "evidence": "backlog/docs/groma-support-review-2026-10-22.md",
+      "members": [
+        {
+          "file": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
+          "name": "be.wacken.planner.ArchivedFestivalActivity#column()"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java",
+          "name": "be.wacken.planner.MusicLinksReviewActivity#column()"
+        }
+      ]
+    },
+    "5f0de89c71e17f5adf57677fbdf2d2fa16594343d881a50db186698c667e32fe": {
+      "rationale": "Reviewed coalescence of90ae4f4a8dc3/0f609ee281e3:12 role-specific label builders after16sp CSV labels, adding archived text and lineupText matches. Shared semantic text/heading/panel styling already exists; preserve explicit screen content/layout rather than a universal flagged builder.",
+      "evidence": "backlog/docs/groma-support-review-2026-10-22.md",
+      "members": [
+        {
+          "file": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
+          "name": "be.wacken.planner.ArchivedFestivalActivity#text(java.lang.String,int)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/BandDetailPresentation.java",
+          "name": "be.wacken.planner.BandDetailPresentation#infoLine(java.lang.String,java.lang.String)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/BandDetailPresentation.java",
+          "name": "be.wacken.planner.BandDetailPresentation#sectionTitle(java.lang.String,boolean)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
+          "name": "be.wacken.planner.BandMetadataReviewActivity#taskPanelTitle(java.lang.String)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
+          "name": "be.wacken.planner.BandMetadataReviewActivity#taskLine(java.lang.String)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
+          "name": "be.wacken.planner.BandMetadataReviewActivity#messageRow(java.lang.String)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/LocalCsvImportReviewDialog.java",
+          "name": "be.wacken.planner.LocalCsvImportReviewDialog#label(java.lang.String,int)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/MainActivity.java",
+          "name": "be.wacken.planner.MainActivity#lineupText(java.lang.String,int,boolean)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java",
+          "name": "be.wacken.planner.MusicLinksReviewActivity#label(java.lang.String)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
+          "name": "be.wacken.planner.ScheduleActivity#sectionTitle(java.lang.String)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
+          "name": "be.wacken.planner.ScheduleActivity#message(java.lang.String,int)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/SettingsActivity.java",
+          "name": "be.wacken.planner.SettingsActivity#infoText(java.lang.String)"
         }
       ]
     },
@@ -4068,28 +4206,6 @@
         }
       ]
     },
-    "90ae4f4a8dc304463a58399e1031ac7637031da7a52271f41ea41890561f2173": {
-      "rationale": "Reviewed split of1a81dbb768dd:four detail/CSV/schedule label builders retain distinct role content/layout. Common palette/text primitives already centralize mechanical styling; preserve small explicit assemblies.",
-      "evidence": "backlog/docs/groma-review-layouts-2026-10-22.md",
-      "members": [
-        {
-          "file": "app/src/main/java/be/wacken/planner/BandDetailPresentation.java",
-          "name": "be.wacken.planner.BandDetailPresentation#infoLine(java.lang.String,java.lang.String)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/BandDetailPresentation.java",
-          "name": "be.wacken.planner.BandDetailPresentation#sectionTitle(java.lang.String,boolean)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/LocalCsvImportReviewDialog.java",
-          "name": "be.wacken.planner.LocalCsvImportReviewDialog#label(java.lang.String,int)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
-          "name": "be.wacken.planner.ScheduleActivity#message(java.lang.String,int)"
-        }
-      ]
-    },
     "2cda0bed1950a58fe0a338e6ffa3cde3ea09d59fcd396daf21989ff76f8bd087": {
       "rationale": "Button styling differs by review/action owner and belongs to TASK210/211.",
       "evidence": "backlog/docs/groma-helper-dispositions-2026-10-21.md; backlog/docs/groma-gate-review-2026-10-21.md",
@@ -4122,39 +4238,9 @@
         }
       ]
     },
-    "0f609ee281e34f7dd15bcfbcb6ca1d17a31744c2ee318a693053a2d16cf0b1ed": {
-      "rationale": "Reviewed split of1a81dbb768dd:six metadata/music/schedule/Settings label builders now use readable14/16/18sp roles and shared contextual headings; link-review empty message drops out. Preserve role-specific text/status/section assemblies with common theme helpers.",
-      "evidence": "backlog/docs/groma-review-layouts-2026-10-22.md",
-      "members": [
-        {
-          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
-          "name": "be.wacken.planner.BandMetadataReviewActivity#taskPanelTitle(java.lang.String)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
-          "name": "be.wacken.planner.BandMetadataReviewActivity#taskLine(java.lang.String)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
-          "name": "be.wacken.planner.BandMetadataReviewActivity#messageRow(java.lang.String)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java",
-          "name": "be.wacken.planner.MusicLinksReviewActivity#label(java.lang.String)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
-          "name": "be.wacken.planner.ScheduleActivity#sectionTitle(java.lang.String)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/SettingsActivity.java",
-          "name": "be.wacken.planner.SettingsActivity#infoText(java.lang.String)"
-        }
-      ]
-    },
-    "b4874b5924a054fcc9a7fa47c32d318ea2e686f799881f29b0d041e113a4bfd4": {
-      "rationale": "Reviewed replacement of3563defa3cbc:metadata adds a third tiny notifyUi callback to CSV/music retained sessions. Each owns a detachable lifecycle observer; retain explicit owner-local notification rather than a shared event bus.",
-      "evidence": "backlog/docs/groma-review-layouts-2026-10-22.md",
+    "cff67dd19a31e192b60220fa2fec2a9c00d971bc7b86f757e8fb11b06b0ea617": {
+      "rationale": "Reviewed replacement ofb4874b5924a0:SignInState adds a fourth tiny notifyUi callback to retained metadata/CSV/music owners. Keep each detachable observer lifecycle local rather than introducing an event bus.",
+      "evidence": "backlog/docs/groma-support-review-2026-10-22.md",
       "members": [
         {
           "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
@@ -4165,8 +4251,26 @@
           "name": "be.wacken.planner.LocalCsvImportReviewDialog.State#notifyUi()"
         },
         {
+          "file": "app/src/main/java/be/wacken/planner/LoginActivity.java",
+          "name": "be.wacken.planner.LoginActivity.SignInState#notifyUi()"
+        },
+        {
           "file": "app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java",
           "name": "be.wacken.planner.MusicLinksReviewActivity.Session#notifyUi()"
+        }
+      ]
+    },
+    "ef8ae0b890aaee03d69b94b1045a26d8817e6fc830537e46ee3de0ee5ec9a343": {
+      "rationale": "Reviewed new exact pair:metadata/login onSaveInstanceState save only scrollY then delegate Activity super. Keep distinct lifecycle owners and memory-only credential handling explicit; no shared base Activity is warranted.",
+      "evidence": "backlog/docs/groma-support-review-2026-10-22.md",
+      "members": [
+        {
+          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
+          "name": "be.wacken.planner.BandMetadataReviewActivity#onSaveInstanceState(Bundle)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/LoginActivity.java",
+          "name": "be.wacken.planner.LoginActivity#onSaveInstanceState(Bundle)"
         }
       ]
     },
@@ -5395,7 +5499,7 @@
     "islands": []
   },
   "review": {
-    "task": "TASK-210",
-    "decision": "Reviewed four existing review/settings responsibilities and actual style collaborations, rendered source/entry links, three duplicate groups replaced by four exact dispositions and Android scanner deltas; see backlog/docs/groma-review-layouts-2026-10-22.md. Pins/exceptions/boundaries unchanged."
+    "task": "TASK-211",
+    "decision": "Reviewed existing lifecycle/support ownership and rendered native-dialog style calls, archived obsolete table removal, four exact duplicate dispositions replacing three, and investigated missing-Android static anonymous-adapter warning plus diagnostic deltas; see backlog/docs/groma-support-review-2026-10-22.md. Runtime/policy/pins/exceptions unchanged."
   }
 }

@@ -385,8 +385,14 @@ reviews two replacement duplicate identities plus Android scanner deltas.
 
 The [TASK210 review-layout audit](backlog/docs/groma-review-layouts-2026-10-22.md)
 keeps96 components/299sources/13flows and adds four actual shared-style calls.
-The current82 duplicate identities include four exact reviewed replacements of
+That increment had82 duplicate identities including four exact reviewed replacements of
 three earlier groups; no new exception or boundary is accepted.
+
+The [TASK211 support audit](backlog/docs/groma-support-review-2026-10-22.md)
+retains96 components/299sources/13flows, removes obsolete archived table helpers
+and records actual native-dialog style calls. The current83 exact duplicate
+dispositions and missing-Android diagnostic changes were individually reviewed;
+runtime boundaries, tool pins and existing stale-row exceptions remain unchanged.
 
 For intentional architecture changes, generate an external review candidate:
 
