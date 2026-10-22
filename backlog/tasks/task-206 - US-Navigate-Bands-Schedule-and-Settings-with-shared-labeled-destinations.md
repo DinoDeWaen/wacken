@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-22 04:19'
+updated_date: '2026-10-22 04:24'
 labels:
   - ux
   - release-3.0
@@ -73,4 +73,6 @@ Added the shared Bands/Schedule/Settings bar with visible/accessibility current 
 Final local full native suite passed80/80 on API36 with no failures/skips. The launcher-return failure was traced to the test initial root using an explicit non-launcher intent; using the real package launcher intent passes Settings Back/recreation/scroll/Home-return without a production task workaround. Shared destination reuse, actual Back to original row and reachable sync/festival controls pass. Added bounded wait for the restored ScrollView layout to avoid asserting before the framework layout phase on older APIs. Reviewed rendered new navigation component, exact source/seven collaborations and baseline:96 components/297 sources/13 flows, same88 identities/reviews/pins/exceptions; only expected Android missing-type/unresolved-call facts and added source coverage changed. Updated README/requirements development status. Final clean signed build, normal Groma gate and CI remain before Done.
 
 CI setup failure diagnosed: generic Groma plugin install restored a newer npm scanner and modified groma/config.json before the clean-checkout gate. Changed CI restoration to the exact reviewed @groma/scanner-java@0.2.2 source through Groma CLI. Pin/baseline remain unchanged; gate now reports dirty paths and all27 positive/negative fixtures pass.
+
+API23 CI exposed a real-key test synchronization race: logcat shows BandLinkReviewActivity resumed but Back was injected before its window gained input focus, leaving the review open. awaitActivity now also requires decor-window input focus before subsequent actions. Production navigation unchanged; rerun native regression gates before closure.
 <!-- SECTION:NOTES:END -->

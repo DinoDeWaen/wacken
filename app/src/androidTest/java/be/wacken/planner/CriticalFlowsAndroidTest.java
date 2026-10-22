@@ -446,7 +446,8 @@ public final class CriticalFlowsAndroidTest {
         await(()->{
             for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
                     .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
-                if(type.isInstance(candidate)&&!candidate.isFinishing()){activity=candidate;return true;}
+                    if(type.isInstance(candidate)&&!candidate.isFinishing()
+                            &&candidate.getWindow().getDecorView().hasWindowFocus()) {activity=candidate;return true;}
             return false;
         });
     }
