@@ -1114,7 +1114,7 @@
         "parent": "android-application",
         "title": "Schedule calendar screen",
         "description": "Present and adjust the group timeline",
-        "overview": "Renders the day-filtered stage/time calendar, applies local visibility filters, opens alternatives, and sends manual winner selections.",
+        "overview": "Renders the day-filtered stage/time calendar and its existing generated decisions. Labeled native day and threshold selectors, a wrapping barred-overlap control and a readable key retain local filters, focus and calendar position across rerenders, appearance changes and recreation, including empty results. Calendar geometry scales with text while essential horizontal scrolling stays inside the timeline; full date, stage, time, rank, scratch and lock meanings remain available through native accessibility and the wrapping decision dialog. Both palettes restyle the existing grid, rank outlines, scratch marks and walking context. Restored dialogs wait for cached group locks and retain the actual chosen act. Alternative selection still uses the existing local manual-selection and pending group-lock paths without changing personal ratings, generated evidence, ties, day cutoff or walking rules.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -1515,7 +1515,7 @@
         "parent": "android-application",
         "title": "Android visual theme",
         "description": "Apply shared native appearance without replaying work",
-        "overview": "Provides shared semantic styling for Android screens, including native focused-button outlines and selected rating-choice surfaces that remain visible in both appearances. Resolves the device-local System, Ironline dark or Field Notes light preference and updates explicitly bound views, panels and system bars in place. Activity lifecycle and preference listeners refresh current appearance and detach on destruction; screen-owned drafts, retained sessions and pending business operations are not reconstructed or executed by restyling. Uses existing private Android SharedPreferences without backend synchronization. Pure palette policy and the controller implement this one presentation responsibility; ADR0024 records the approved design.",
+        "overview": "Provides shared semantic styling for Android screens, including native focused-button outlines, selected rating-choice surfaces and focused selector panels that remain visible in both appearances. Resolves the device-local System, Ironline dark or Field Notes light preference and updates explicitly bound views, panels and system bars in place. Activity lifecycle and preference listeners refresh current appearance and detach on destruction; screen-owned drafts, retained sessions and pending business operations are not reconstructed or executed by restyling. Uses existing private Android SharedPreferences without backend synchronization. Pure palette policy and the controller implement this one presentation responsibility; ADR0024 records the approved design.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -2338,6 +2338,13 @@
         "target": "app/src/main/java/be/wacken/planner/MainNavigation.java",
         "status": "stable",
         "description": "Renders primary destinations",
+        "technology": "Android Views"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles calendar controls",
         "technology": "Android Views"
       },
       {
@@ -3749,7 +3756,7 @@
       "scanner": "java",
       "code": "compiler.err.method.does.not.override.superclass",
       "severity": "warning",
-      "count": 238
+      "count": 245
     },
     {
       "scanner": "java",
@@ -3775,7 +3782,7 @@
       "code": "JAVA_MISSING_EXTERNAL_TYPES",
       "severity": "info",
       "count": 1,
-      "facts": 4306
+      "facts": 4349
     },
     {
       "scanner": "java",
@@ -3788,13 +3795,13 @@
       "code": "JAVA_UNRESOLVED_CALLS",
       "severity": "info",
       "count": 4,
-      "facts": 9186
+      "facts": 9279
     }
   ],
   "coverage": {
-    "operations": 2376,
-    "tokenized": 1483,
-    "invocations": 12037
+    "operations": 2393,
+    "tokenized": 1490,
+    "invocations": 12138
   },
   "duplicates": [
     "02da146b79ab30eea25ec378d01ca56c0ef5ed829b8e2fce1258497f210f9842",
@@ -3804,6 +3811,7 @@
     "0ad65a533c88e08a77a130629d4b502521971341ce9e2fe0827fdb879df07b47",
     "0c6e0da7ce49e11b1ed813dee8729571c9139aa40ae54cd0da504335ddc2dc28",
     "0d13ea3855413ecb9253d7361ea672ef583f999a08b92e3ac01ecb8153e7726d",
+    "1a81dbb768dd3e0f765e6cd4dac2046e39ffff0170fae89a5bf34a511b482b11",
     "1bb99ff94d176d7a63d98dd8118ead8dc799a88f3e48546df6128c1a676cb252",
     "1d6a4da3f9158a59b09453379d70450b6df5acde01e5e6444e854b6bf9a0befa",
     "2046d311c0eaaa39850d419103ff3e6ec968f52927fdde91985204dafb4829f6",
@@ -3837,6 +3845,7 @@
     "6fd0e9ae2e05e45fb400d4c9a0e3a4b3b135d5065bf28b88269d4fe1a111a58d",
     "717c7b735760c01ca27beee64ee23e0594a0712bb322258c549045e0344e9bdf",
     "7262ee7902aa42399151e111a9d9a96cdb420f451ba2aeca37bdb3c313573408",
+    "727eb7e0c1ad5aba5bf525df65ce02d6a7dd2bee4e4f43013a6e46fcbff23047",
     "734079d69605a1b0ac38744a09acbbc1a04c26c8102f73a8737477de8ef8cfbf",
     "76f277daa44f34012a41a12935dd026f528371794f54e6e7acd744ba1559919c",
     "79e1581b09fe0af6775a97c95a885fb0dd8bc19eef94fae2b3539d5b29e8252d",
@@ -3847,8 +3856,6 @@
     "82ba2760961c176d477d7a56c10fbd588a79476c5831ac20e072cb80bc78d36c",
     "843140cf061025a71e64b5d6c818a78961e00b86d9b7cdf600495b21d2cab524",
     "85071f1981a70d06627ab93eebe4fb681a09dc619ed8fc93922cb9cb46498877",
-    "859e80e0e6e4001d1ba0cd3f383e76c4884bd8ee75db15d0c297c693fcd5d0a2",
-    "89412423aac9d7d64f3080629c6d5fdb9218328404f000f267f948e8633c3a60",
     "8965c2b4171d043d7129178055a6f4ed893632ec90923318b51113a425d8cef0",
     "8a91d449dc951dba98ef01fc4b3a4740050d7b842d57e24cd74f24f8bfc1eaf4",
     "8d86a49cfadba485e227605fb131020676b31bbc7a124a7172f064271760c2a1",
@@ -4032,9 +4039,9 @@
         }
       ]
     },
-    "89412423aac9d7d64f3080629c6d5fdb9218328404f000f267f948e8633c3a60": {
-      "rationale": "Reviewed replacement of b1bb15d1cf48:12 screen-specific TextView builders; groupRatings drops out with explicit read-only planning accessibility semantics, sectionTitle adopts shared contextual heading/left alignment. Shared styling already centralized; retain intentional role-specific widget construction and209-211 screen work.",
-      "evidence": "backlog/docs/groma-rating-controls-review-2026-10-22.md",
+    "1a81dbb768dd3e0f765e6cd4dac2046e39ffff0170fae89a5bf34a511b482b11": {
+      "rationale": "Reviewed replacement of89412423aac9:11 screen-specific TextView builders; schedule stageHeader drops out after adopting multiline14sp stage names and lane alignment. SectionTitle uses common contextual heading and left alignment. Preserve role-specific native label construction; shared style primitives already centralize mechanical styling.",
+      "evidence": "backlog/docs/groma-schedule-review-2026-10-22.md",
       "members": [
         {
           "file": "app/src/main/java/be/wacken/planner/BandDetailPresentation.java",
@@ -4071,10 +4078,6 @@
         {
           "file": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
           "name": "be.wacken.planner.ScheduleActivity#sectionTitle(java.lang.String)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
-          "name": "be.wacken.planner.ScheduleActivity#stageHeader(java.lang.String)"
         },
         {
           "file": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
@@ -4482,9 +4485,9 @@
         }
       ]
     },
-    "859e80e0e6e4001d1ba0cd3f383e76c4884bd8ee75db15d0c297c693fcd5d0a2": {
-      "rationale": "Line/notch layout widths and offsets represent different grid elements.",
-      "evidence": "backlog/docs/groma-helper-dispositions-2026-10-21.md; backlog/docs/groma-gate-review-2026-10-21.md",
+    "727eb7e0c1ad5aba5bf525df65ce02d6a7dd2bee4e4f43013a6e46fcbff23047": {
+      "rationale": "Reviewed replacement of859e80e0e6e4:the same hourGridLineLayout/halfHourNotchLayout/halfHourGridLineLayout methods now use font-scaled calendarDp. Distinct line/notch geometry retains explicit widths/heights/offsets; shared scale and offset helpers are reused.",
+      "evidence": "backlog/docs/groma-schedule-review-2026-10-22.md",
       "members": [
         {
           "file": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
@@ -5357,7 +5360,7 @@
     "islands": []
   },
   "review": {
-    "task": "TASK-208",
-    "decision": "Reviewed shared rating vocabulary ownership, native role/readonly/scoped callbacks, rendered7-source detail and5 collaborations, two exact replacement duplicate dispositions and Android scanner evidence deltas; see backlog/docs/groma-rating-controls-review-2026-10-22.md. Existing boundaries/pins/exceptions retained."
+    "task": "TASK-209",
+    "decision": "Reviewed existing ten-source schedule ownership, rendered map and shared-style collaboration, two exact replacement duplicate dispositions and Android scanner deltas; see backlog/docs/groma-schedule-review-2026-10-22.md. Existing boundaries/pins/exceptions retained."
   }
 }

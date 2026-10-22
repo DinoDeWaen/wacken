@@ -53,6 +53,11 @@ final class WackenTheme {
         });
     }
 
+    static void focusablePanel(View field) {
+        AppearanceController.bind(field,"focusPanel",(view,palette)->view.setBackground(focusBackground(
+                view.getContext(),palette.panel(),palette.line(),palette.raised(),palette.text())));
+    }
+
     private static StateListDrawable focusBackground(Context context,int fill,int border,int focusFill,int focusBorder) {
         StateListDrawable states=new StateListDrawable();
         states.addState(new int[]{android.R.attr.state_focused},buttonPanel(context,focusFill,focusBorder,3));

@@ -10,9 +10,9 @@ public final class ScheduleLegendContentTest {
     public void exposesEverySpecialScheduleStateInTheOnDemandKey() {
         String key = ScheduleLegendContent.description();
 
-        assertTrue(key.contains("Gold border"));
-        assertTrue(key.contains("Red border"));
-        assertTrue(key.contains("Grey border"));
+        assertTrue(key.contains("5-star must see"));
+        assertTrue(key.contains("4-star strong choice"));
+        assertTrue(key.contains("2-3-star optional"));
         assertTrue(key.contains("Scratched"));
         assertTrue(key.contains("locked group choice"));
         assertTrue(key.contains("barred overlaps"));

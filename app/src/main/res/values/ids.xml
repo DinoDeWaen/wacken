@@ -7,4 +7,8 @@
     <item name="band_detail_scroll" type="id" />
     <item name="planning_rating" type="id" />
     <item name="after_rating" type="id" />
+    <item name="schedule_day" type="id" />
+    <item name="schedule_threshold" type="id" />
+    <item name="schedule_hide_barred" type="id" />
+    <item name="schedule_key" type="id" />
 </resources>

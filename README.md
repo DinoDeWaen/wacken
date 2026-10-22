@@ -60,6 +60,16 @@ changes preserve state and never replay rating events.
 Native actions/geometry are automated checks; TASK-212 still owns the integrated
 human TalkBack, visual and physical-device review.
 
+TASK-209 makes schedule day/threshold selectors native and labeled, with48dp
+controls and retained filters, calendar position and decision context across
+appearance changes, empty results and recreation. Both palettes show readable
+stage/time/rating/scratch/lock/walking meaning; the timeline keeps its essential
+horizontal scroll and scales with text. The wrapping decision dialog preserves
+the actual chosen act, alternatives and explicit group-lock actions. Personal
+ratings, generated ties, cutoff and walking rules are unchanged. Native89-test
+coverage includes200% decision actions and restored filters/viewport; integrated
+accessibility and device review remains TASK-212.
+
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.
@@ -348,6 +358,10 @@ keeps the shared meaning/control source under band details and authors five
 actual presentation/style collaborations. The current baseline has96 components,
 299 owned sources,13 flows and81 individually reviewed duplicate identities,
 including two explicitly reviewed replacements; pins/exceptions remain unchanged.
+
+The [TASK209 schedule review](backlog/docs/groma-schedule-review-2026-10-22.md)
+retains these counts and boundaries, records the actual shared-style call and
+reviews two replacement duplicate identities plus Android scanner deltas.
 
 For intentional architecture changes, generate an external review candidate:
 
