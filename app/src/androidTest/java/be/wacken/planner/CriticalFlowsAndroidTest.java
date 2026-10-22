@@ -399,6 +399,79 @@ public final class CriticalFlowsAndroidTest {
         });
     }
 
+    @Test public void renameDraftAndNativeDialogActionsSurviveThemeAndRecreationWithoutWriting() throws Exception {
+        Object previous=AppearanceController.store(instrumentation.getTargetContext()).getAll().get(AppearanceController.MODE);
+        activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),SettingsActivity.class)
+            .putExtra(NativeUiTestRunner.FONT_SCALE,2f).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));instrumentation.waitForIdleSync();
+        try {
+            onUi(()->{
+                findText(root(),"Rename active festival").performClick();
+                var dialog=(android.app.AlertDialog)objectField(activity,"renameDialog");
+                var input=(android.widget.EditText)findDescription(dialog.getWindow().getDecorView(),"Festival name");
+                input.setText("Unsubmitted festival draft");AppearanceController.choose(activity,AppearancePreference.LIGHT);
+                assertEquals(AppearancePreference.LIGHT.palette(false).text(),input.getCurrentTextColor());
+                var save=dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE);
+                assertTrue(save.getMinHeight()>=WackenTheme.dp(activity,48));assertNull(save.getEllipsize());
+                assertEquals(android.widget.LinearLayout.VERTICAL,((android.widget.LinearLayout)save.getParent()).getOrientation());
+            });
+            Activity old=activity;onUi(old::recreate);
+            await(()->{
+                for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
+                    if(candidate instanceof SettingsActivity&&candidate!=old){activity=candidate;return objectField(activity,"renameDialog")!=null;}
+                return false;
+            });
+            onUi(()->{
+                var dialog=(android.app.AlertDialog)objectField(activity,"renameDialog");
+                assertEquals("Unsubmitted festival draft",((android.widget.EditText)findDescription(dialog.getWindow().getDecorView(),"Festival name")).getText().toString());
+                AppearanceController.choose(activity,AppearancePreference.DARK);
+                dialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).performClick();
+            });
+            assertEquals("Native smoke festival",database.festivals().findAll().stream().filter(f->f.id.equals(FESTIVAL)).findFirst().orElseThrow().name);
+            assertEquals(1,database.festivalPlanningRatings().findPending(GROUP,USER).size());
+        } finally {onUi(()->{
+            var editor=AppearanceController.store(instrumentation.getTargetContext()).edit();
+            if(previous instanceof String mode)editor.putString(AppearanceController.MODE,mode);else editor.remove(AppearanceController.MODE);editor.commit();
+        });}
+    }
+
+    @Test public void archiveRequiresScopedConfirmationAndCancelPreservesPendingWork() throws Exception {
+        open(MainActivity.class);await(()->!booleanField(activity,"syncInProgress"));
+        onUi(()->{android.widget.ListView list=root().findViewById(R.id.band_lineup);list.setSelection(list.getCount()-1);});
+        await(()->findDescription(root(),"Archive active festival")!=null);
+        onUi(()->{
+            findDescription(root(),"Archive active festival").performClick();
+            var dialog=(android.app.AlertDialog)objectField(activity,"archiveDialog");assertNotNull(dialog);
+            assertNotNull(findContaining(dialog.getWindow().getDecorView(),"everyone in the group"));
+            assertNotNull(findText(dialog.getWindow().getDecorView(),"Archive festival"));
+            dialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE).performClick();
+        });
+        assertEquals("ACTIVE",database.festivals().findAll().stream().filter(f->f.id.equals(FESTIVAL)).findFirst().orElseThrow().status);
+        assertEquals(1,database.festivalPlanningRatings().findPending(GROUP,USER).size());
+    }
+
+    @Test public void doubleFontArchivedRowsKeepReadOnlyMeaningAndFullPerformanceFacts() throws Exception {
+        database.festivals().save(new RoomFestival(FESTIVAL,"Native smoke festival","ARCHIVED"));
+        Object previous=AppearanceController.store(instrumentation.getTargetContext()).getAll().get(AppearanceController.MODE);
+        activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),ArchivedFestivalActivity.class)
+            .putExtra(ArchivedFestivalActivity.EXTRA_FESTIVAL_ID,FESTIVAL).putExtra(NativeUiTestRunner.FONT_SCALE,2f)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));instrumentation.waitForIdleSync();
+        try {
+            onUi(()->{
+                TextView name=(TextView)findText(root(),BAND);assertNotNull(name);
+                assertNull("Archived names must wrap",name.getEllipsize());
+                assertNotNull(findContaining(root(),"Archived · read-only"));
+                assertNotNull(findContaining(root(),"Planning: 4"));assertNotNull(findContaining(root(),STAGE));
+                assertNotNull(findContaining(root(),"2027-08-19"));assertNotNull(findContaining(root(),"18:00"));
+                AppearanceController.choose(activity,AppearancePreference.LIGHT);assertSame(name,findText(root(),BAND));
+                AppearanceController.choose(activity,AppearancePreference.DARK);
+            });
+            assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+        } finally {onUi(()->{
+            var editor=AppearanceController.store(instrumentation.getTargetContext()).edit();
+            if(previous instanceof String mode)editor.putString(AppearanceController.MODE,mode);else editor.remove(AppearanceController.MODE);editor.commit();
+        });}
+    }
+
     @Test public void linkReviewRetainsEditedSearchAndNoMatchAcrossBothThemesAndRecreation() throws Exception {
         String known=BAND.toLowerCase(java.util.Locale.ROOT);
         assertTrue(new RoomBandRepository(database).findByName(known).isEmpty());additionalBand=known;

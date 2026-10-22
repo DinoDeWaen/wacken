@@ -29,15 +29,15 @@ import be.wacken.planner.domain.Festival;
 public final class ArchivedFestivalActivity extends Activity {
     public static final String EXTRA_FESTIVAL_ID = "be.wacken.planner.FESTIVAL_ID";
 
-    private static final int TABLE_HEADER_HEIGHT_DP = 44;
-    private static final int ROW_HEIGHT_DP = 58;
-
     private String festivalId;
     private String festivalName;
     private String email;
+    private String userId;
     private List<BandListItem> bands;
     private Map<String, Band> bandsByName;
     private TextView deletionStatus;
+    private ListView list;
+    private String recoveryNotice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +49,7 @@ public final class ArchivedFestivalActivity extends Activity {
             finish();
             return;
         }
-        email = session.email();
+        email = session.email();userId=session.userId();
         festivalId = getIntent().getStringExtra(EXTRA_FESTIVAL_ID);
         AppRepositories repositories = new AppRepositories(this);
         ViewArchivedFestivalHistoryUseCase.ArchivedFestivalHistory history = new ViewArchivedFestivalHistoryUseCase(
@@ -60,153 +60,73 @@ public final class ArchivedFestivalActivity extends Activity {
                 new be.wacken.planner.application.FestivalAfterRatingView(repositories.afterRatings(), festivalId)
         ).show(session.userId(), festivalId);
         festivalName = history.festivalName();
-        bands = new ListArchivedFestivalBandsUseCase(
+        bands=readBands(repositories);
+        bandsByName = bandsByName(repositories);
+        if(savedInstanceState!=null)recoveryNotice=savedInstanceState.getString("recoveryNotice");
+        setContentView(render());
+        if(savedInstanceState!=null)list.post(()->list.setSelectionFromTop(savedInstanceState.getInt("position"),savedInstanceState.getInt("top")));
+    }
+
+    private List<BandListItem> readBands(AppRepositories repositories){
+        return new ListArchivedFestivalBandsUseCase(
                 repositories.festivalLineups(),
                 repositories.festivalPlanningRatings(),
                 repositories.personalBandRatings(),
                 new be.wacken.planner.application.FestivalAfterRatingView(repositories.afterRatings(), festivalId),
                 repositories.performancesForFestival(festivalId)
-        ).listBands(session.userId(), festivalId);
-        bandsByName = bandsByName(repositories);
-        setContentView(render());
+        ).listBands(userId, festivalId);
+    }
+
+    @Override protected void onResume(){
+        super.onResume();if(list==null)return;
+        AppRepositories repositories=new AppRepositories(this);
+        List<BandListItem> current=readBands(repositories);
+        if(!current.equals(bands)){
+            int position=list.getFirstVisiblePosition(),top=list.getChildCount()==0?0:list.getChildAt(0).getTop();
+            bands=current;bandsByName=bandsByName(repositories);list.setAdapter(new ArchivedBandAdapter());list.setSelectionFromTop(position,top);
+        }
+    }
+
+    @Override protected void onSaveInstanceState(Bundle state){
+        if(list!=null){state.putInt("position",list.getFirstVisiblePosition());state.putInt("top",list.getChildCount()==0?0:list.getChildAt(0).getTop());}
+        state.putString("recoveryNotice",AppearanceController.hasOpenDialogs(this)?"A previous confirmation or request closed during screen recreation. Check current festival and history before repeating an action; restoring this screen submits nothing.":recoveryNotice);
+        super.onSaveInstanceState(state);
     }
 
     private LinearLayout render() {
-        LinearLayout screen = new LinearLayout(this);
-        screen.setOrientation(LinearLayout.VERTICAL);
-        WackenTheme.backgroundColor(screen, WackenTheme.BACKGROUND);
-        screen.setPadding(dp(14), dp(14), dp(14), dp(14));
-
-        TextView title = new TextView(this);
-        title.setText("Bands");
-        WackenTheme.textColor(title, WackenTheme.AMBER);
-        title.setTextSize(28);
-        title.setTypeface(Typeface.DEFAULT_BOLD);
-        title.setGravity(Gravity.START);
-        screen.addView(title);
-
-        TextView subtitle = new TextView(this);
-        subtitle.setText("Line-up ratings for " + email + " - " + festivalName + " archive");
-        WackenTheme.textColor(subtitle, WackenTheme.MUTED);
-        subtitle.setPadding(0, 0, 0, dp(12));
-        screen.addView(subtitle);
-
-        Button delete = WackenTheme.actionButton(this, "Delete festival", WackenTheme.ButtonStyle.DANGER,
-                view -> DeleteFestivalDialog.show(this, Festival.archived(festivalId, festivalName), () -> {
-                    Toast.makeText(this, "Festival deleted for the group.", Toast.LENGTH_LONG).show();
-                    finish();
-                }, error -> deletionStatus.setText("Delete failed: " + error)));
-        delete.setContentDescription("Delete archived festival and schedule");
-        screen.addView(delete);
-        deletionStatus = new TextView(this);
-        WackenTheme.textColor(deletionStatus, WackenTheme.AMBER);
-        screen.addView(deletionStatus);
-
-        screen.addView(headerRow());
-        if (bands.isEmpty()) {
-            TextView empty = new TextView(this);
-            empty.setText("No archived bands or ratings available.");
-            WackenTheme.textColor(empty, WackenTheme.MUTED);
-            empty.setGravity(Gravity.CENTER_HORIZONTAL);
-            empty.setPadding(0, dp(20), 0, dp(20));
-            screen.addView(empty);
-        } else {
-            ListView list = new ListView(this);
-            list.setDivider(null);
-            list.setCacheColorHint(WackenTheme.BACKGROUND);
-            WackenTheme.backgroundColor(list, WackenTheme.BACKGROUND);
-            list.setAdapter(new ArchivedBandAdapter());
-            screen.addView(list, new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    0,
-                    1
-            ));
-        }
-        return screen;
+        LinearLayout screen=new LinearLayout(this);screen.setOrientation(LinearLayout.VERTICAL);
+        WackenTheme.backgroundColor(screen,WackenTheme.BACKGROUND);
+        list=new ListView(this);list.setDivider(null);WackenTheme.backgroundColor(list,WackenTheme.BACKGROUND);
+        LinearLayout header=column();header.setPadding(dp(16),dp(16),dp(16),dp(16));
+        TextView title=text("Bands",28);WackenTheme.heading(title);header.addView(title);
+        header.addView(text("Archived · read-only\n"+festivalName+"\n"+email,14));
+        if(recoveryNotice!=null)header.addView(text(recoveryNotice,16));
+        header.addView(text("Planning and after-ratings keep their festival context. Open a band for history and explicit own-rating corrections.",14));
+        if(bands.isEmpty())header.addView(text("No archived bands or ratings available.",16));
+        list.addHeaderView(header,null,false);
+        LinearLayout footer=column();footer.setPadding(dp(16),dp(12),dp(16),dp(16));
+        Button delete=WackenTheme.actionButton(this,"Delete festival",WackenTheme.ButtonStyle.DANGER,
+            view->DeleteFestivalDialog.show(this,Festival.archived(festivalId,festivalName),()->{
+                Toast.makeText(this,"Festival deleted for the group.",Toast.LENGTH_LONG).show();finish();
+            },error->deletionStatus.setText("Delete failed: "+error)));
+        delete.setContentDescription("Delete archived festival and schedule");footer.addView(delete);
+        deletionStatus=text("",14);deletionStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);footer.addView(deletionStatus);
+        footer.addView(WackenTheme.actionButton(this,"Back to bands",WackenTheme.ButtonStyle.SECONDARY,view->finish()));
+        list.addFooterView(footer,null,false);list.setAdapter(new ArchivedBandAdapter());
+        screen.addView(list,new LinearLayout.LayoutParams(-1,-1));return screen;
     }
 
-    private LinearLayout headerRow() {
-        LinearLayout row = row(WackenTheme.BACKGROUND, TABLE_HEADER_HEIGHT_DP);
-        row.addView(headerCell("Band", 2.45f));
-        row.addView(headerCell("Rating", 1.75f));
-        row.addView(headerCell("", 1.45f));
-        row.addView(headerCell("Stage", 1.25f));
-        row.addView(headerCell("Date", 0.95f));
-        row.addView(headerCell("Time", 1.15f));
-        return row;
+    private LinearLayout column(){LinearLayout column=new LinearLayout(this);column.setOrientation(LinearLayout.VERTICAL);return column;}
+    private TextView text(String value,int size){
+        TextView view=new TextView(this);view.setText(value);view.setTextSize(size);WackenTheme.textColor(view,WackenTheme.TEXT);
+        view.setPadding(0,dp(4),0,dp(4));return view;
     }
 
-    private LinearLayout row(int color, int heightDp) {
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        WackenTheme.backgroundColor(row,color);
-        row.setPadding(dp(4), 0, dp(4), 0);
-        row.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(heightDp)
-        ));
-        return row;
-    }
-
-    private TextView cell(String text, float weight, Typeface typeface) {
-        TextView cell = new TextView(this);
-        cell.setText(text);
-        WackenTheme.textColor(cell, WackenTheme.TEXT);
-        cell.setTextSize(12);
-        cell.setTypeface(typeface);
-        cell.setGravity(Gravity.CENTER_VERTICAL);
-        cell.setSingleLine(true);
-        cell.setEllipsize(TextUtils.TruncateAt.END);
-        cell.setPadding(dp(6), 0, dp(6), 0);
-        cell.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, weight));
-        return cell;
-    }
-
-    private TextView headerCell(String text, float weight) {
-        TextView cell = cell(text, weight, Typeface.DEFAULT_BOLD);
-        cell.setTextSize(13);
-        cell.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 4));
-        return cell;
-    }
-
-    private LinearLayout bandNameCell(TextView name) {
-        LinearLayout cell = new LinearLayout(this);
-        cell.setOrientation(LinearLayout.VERTICAL);
-        cell.setGravity(Gravity.CENTER_VERTICAL);
-        cell.setPadding(dp(5), 0, dp(5), 0);
-        cell.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 2.45f));
-
-        name.setSingleLine(true);
-        name.setEllipsize(TextUtils.TruncateAt.END);
-        WackenTheme.textColor(name, WackenTheme.TEXT);
-        name.setTextSize(12);
-        name.setTypeface(Typeface.DEFAULT_BOLD);
-        cell.addView(name, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        ));
-        return cell;
-    }
-
-    private LinearLayout rowActions(Optional<Band> band) {
-        LinearLayout actions = new LinearLayout(this);
-        actions.setOrientation(LinearLayout.HORIZONTAL);
-        actions.setGravity(Gravity.CENTER);
-        actions.setPadding(dp(2), 0, dp(2), 0);
-        actions.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.45f));
-        band.flatMap(Band::youtubeUrl).ifPresent(url -> actions.addView(iconButton("▶", "Open YouTube", WackenTheme.RED, url, dp(26))));
-        band.flatMap(Band::spotifyUrl).ifPresent(url -> actions.addView(iconButton("♬", "Open Spotify", WackenTheme.SUCCESS_GREEN, url, dp(26))));
+    private LinearLayout rowActions(Optional<Band> band){
+        LinearLayout actions=column();
+        band.flatMap(Band::youtubeUrl).ifPresent(url->actions.addView(WackenTheme.actionButton(this,"Open YouTube",WackenTheme.ButtonStyle.SECONDARY,view->ExternalLinks.open(this,url))));
+        band.flatMap(Band::spotifyUrl).ifPresent(url->actions.addView(WackenTheme.actionButton(this,"Open Spotify",WackenTheme.ButtonStyle.SECONDARY,view->ExternalLinks.open(this,url))));
         return actions;
-    }
-
-    private Button iconButton(String icon, String description, int accentColor, String url, int size) {
-        Button button = WackenTheme.iconButton(this, icon, description, accentColor, Math.max(26, Math.round(size / getResources().getDisplayMetrics().density)), view -> ExternalLinks.open(this, url));
-        button.setTextSize(14);
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(size, size);
-        layout.setMargins(dp(1), 0, dp(1), 0);
-        button.setLayoutParams(layout);
-        return button;
     }
 
     private void openBand(BandListItem band) {
@@ -255,26 +175,16 @@ public final class ArchivedFestivalActivity extends Activity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             BandListItem band = getItem(position);
-            LinearLayout row = row(position % 2 == 0 ? WackenTheme.PANEL : WackenTheme.ELEVATED_PANEL, ROW_HEIGHT_DP);
-            row.setClickable(true);
-            row.setFocusable(true);
-            row.setOnClickListener(view -> openBand(band));
-            TextView name = new TextView(ArchivedFestivalActivity.this);
-            name.setText(band.bandName());
-            row.addView(bandNameCell(name));
-
+            LinearLayout row=column();row.setPadding(dp(16),dp(12),dp(16),dp(16));
+            row.setBackground(WackenTheme.panelBackground(ArchivedFestivalActivity.this,WackenTheme.PANEL,WackenTheme.GRID,6));
+            Button name=WackenTheme.actionButton(ArchivedFestivalActivity.this,band.bandName(),WackenTheme.ButtonStyle.SECONDARY,view->openBand(band));
+            name.setTextSize(18);name.setContentDescription("Open archived band "+band.bandName());row.addView(name);
+            row.addView(text("Planning: "+RatingValueText.describe(band.rating())+" · read-only",16));
             RatingStarsView rating = new RatingStarsView(ArchivedFestivalActivity.this, band.rating(), band.explicitRating(), WackenTheme.RED);
-            rating.setEnabled(false);
-            rating.setClickable(false);
-            rating.setFocusable(false);
-            rating.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.75f));
-            rating.showAvailableRating();
-            row.addView(rating);
-
+            rating.setScope("Archived festival planning rating");rating.setEnabled(false);
+            rating.setClickable(false);rating.setFocusable(false);rating.showAvailableRating();row.addView(rating);
+            row.addView(text(band.stageName()+"\n"+band.displayDate()+"\n"+band.displayTime(),14));
             row.addView(rowActions(Optional.ofNullable(bandsByName.get(band.bandName()))));
-            row.addView(cell(band.stageName(), 1.25f, Typeface.DEFAULT_BOLD));
-            row.addView(cell(band.displayDate(), 0.95f, Typeface.DEFAULT));
-            row.addView(cell(band.displayTime(), 1.15f, Typeface.DEFAULT));
             return row;
         }
     }

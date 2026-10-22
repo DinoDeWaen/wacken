@@ -74,14 +74,14 @@ public final class ImportCsvActivity extends Activity {
         title.setText(addFestivalMode ? "Add Festival" : "Wacken CSV Import");
         WackenTheme.textColor(title, WackenTheme.AMBER);
         title.setTextSize(28);
-        title.setGravity(Gravity.CENTER_HORIZONTAL);
+        title.setGravity(Gravity.START);WackenTheme.heading(title);
         form.addView(title);
 
         TextView subtitle = new TextView(this);
         subtitle.setText(addFestivalMode
                 ? "Name the next festival and select bands.csv. Review similar names and aliases before creating the lineup."
                 : "Select CSV files, review each proposed change, then apply only accepted rows. This import updates local data; ratings stay untouched.");
-        WackenTheme.textColor(subtitle, WackenTheme.MUTED);
+        WackenTheme.textColor(subtitle, WackenTheme.MUTED);subtitle.setTextSize(14);
         subtitle.setPadding(0, dp(8), 0, dp(16));
         form.addView(subtitle);
 
@@ -89,7 +89,7 @@ public final class ImportCsvActivity extends Activity {
             festivalName = new EditText(this);
             festivalName.setHint("Festival name");
             WackenTheme.textColor(festivalName, WackenTheme.TEXT);
-            festivalName.setHintTextColor(WackenTheme.MUTED);
+            WackenTheme.reviewInput(festivalName);festivalName.setContentDescription("Festival name");
             festivalName.setSingleLine(true);
             form.addView(festivalName);
         }
@@ -111,6 +111,7 @@ public final class ImportCsvActivity extends Activity {
         form.addView(backButton);
 
         resultMessage = new TextView(this);
+        resultMessage.setTextSize(16);resultMessage.setAccessibilityLiveRegion(android.view.View.ACCESSIBILITY_LIVE_REGION_POLITE);
         WackenTheme.textColor(resultMessage, WackenTheme.TEXT);
         resultMessage.setPadding(dp(12), dp(10), dp(12), dp(10));
         resultMessage.setText(addFestivalMode ? "Select bands.csv to add the next festival." : "Select files to import festival data.");
@@ -123,6 +124,7 @@ public final class ImportCsvActivity extends Activity {
         form.addView(resultMessage, resultLayout);
 
         ScrollView scrollView = new ScrollView(this);
+        scrollView.setTag("import-form");
         WackenTheme.backgroundColor(scrollView, WackenTheme.BACKGROUND);
         scrollView.addView(form);
         setContentView(scrollView);
@@ -137,13 +139,20 @@ public final class ImportCsvActivity extends Activity {
         } else if(savedInstanceState!=null) {
             resultMessage.setText("Select CSV files again to start a fresh review.");
         }
-        if(savedInstanceState!=null&&festivalName!=null)festivalName.setText(savedInstanceState.getString("festivalName",""));
+        if(savedInstanceState!=null){
+            if(festivalName!=null)festivalName.setText(savedInstanceState.getString("festivalName",""));
+            scrollView.post(()->scrollView.scrollTo(0,savedInstanceState.getInt("scroll")));
+            if(savedInstanceState.getBoolean("festivalOperationUnconfirmed"))resultMessage.setText(
+                "Festival review or creation was interrupted by screen recreation. Check the active festival before retrying the same name and CSV. Review choices again; restoring this screen does not submit creation.");
+            else if(getLastNonConfigurationInstance()!=null){String feedback=savedInstanceState.getString("feedback");if(feedback!=null)resultMessage.setText(feedback);}
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+            if(selectionFor(requestCode)!=null)resultMessage.setText("File selection cancelled. Previously selected files and cached data are kept.");
             return;
         }
 
@@ -292,6 +301,9 @@ public final class ImportCsvActivity extends Activity {
     @Override protected void onSaveInstanceState(Bundle state) {
         super.onSaveInstanceState(state);
         if(festivalName!=null)state.putString("festivalName",festivalName.getText().toString());
+        state.putBoolean("festivalOperationUnconfirmed",addFestivalMode&&!importButton.isEnabled());
+        state.putString("feedback",resultMessage.getText().toString());
+        ScrollView scroll=getWindow().getDecorView().findViewWithTag("import-form");if(scroll!=null)state.putInt("scroll",scroll.getScrollY());
     }
 
     private void showAddFestivalResult(String name, AddFestivalResult result) {
@@ -335,6 +347,7 @@ public final class ImportCsvActivity extends Activity {
         row.addView(button);
 
         selection.label = new TextView(this);
+        selection.label.setTextSize(14);
         selection.label.setText("No file selected (" + selection.expectedName + ")");
         WackenTheme.textColor(selection.label, WackenTheme.MUTED);
         selection.label.setPadding(dp(8), dp(6), dp(8), 0);
@@ -353,7 +366,8 @@ public final class ImportCsvActivity extends Activity {
                 "application/csv",
                 "application/vnd.ms-excel"
         });
-        startActivityForResult(intent, requestCode);
+        try{startActivityForResult(intent,requestCode);}
+        catch(android.content.ActivityNotFoundException error){resultMessage.setText("No file picker is available. Selected files and cached data are kept.");}
     }
 
     private CsvSelection selectionFor(int requestCode) {

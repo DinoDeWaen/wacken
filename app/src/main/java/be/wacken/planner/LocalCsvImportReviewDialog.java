@@ -18,6 +18,7 @@ final class LocalCsvImportReviewDialog {
         volatile ImportFestivalCsvResult result;
         volatile List<String> messages=List.of("Reading selected files…");
         volatile boolean busy,applying,closed;
+        int firstRow,rowTop;
         volatile Runnable changed;
         State(FestivalCsvFiles files,Supplier<ReviewFestivalCsvUseCase> factory){this.files=files;this.factory=factory;}
         void notifyUi(){Runnable callback=changed;if(callback!=null)callback.run();}
@@ -58,9 +59,10 @@ final class LocalCsvImportReviewDialog {
         LinearLayout panel=new LinearLayout(activity);panel.setOrientation(LinearLayout.VERTICAL);
         panel.setPadding(dp(12),dp(8),dp(12),dp(8));WackenTheme.backgroundColor(panel, WackenTheme.BACKGROUND);
         TextView scope=label("Local CSV review. Shared data may refresh this cache on the next sync. Ratings and archived data are kept.",WackenTheme.MUTED);
-        panel.addView(scope);status=label("",WackenTheme.TEXT);panel.addView(status);
-        list=new ListView(activity);panel.addView(list,new LinearLayout.LayoutParams(-1,dp(340)));
-        dialog=new AlertDialog.Builder(activity).setTitle("Review local festival changes").setView(panel)
+        panel.addView(scope);status=label("",WackenTheme.TEXT);status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);panel.addView(status);
+        list=new ListView(activity);panel.addView(list,new LinearLayout.LayoutParams(-1,dp(Math.max(120,Math.min(340,activity.getResources().getConfiguration().screenHeightDp/3)))));
+        ScrollView body=new ScrollView(activity);body.addView(panel);
+        dialog=new AlertDialog.Builder(activity).setTitle("Review local festival changes").setView(body)
             .setPositiveButton("Apply accepted changes",null).setNeutralButton("Reload review",null)
             .setNegativeButton("Cancel",(d,w)->cancel()).setOnCancelListener(d->cancel()).create();
         dialog.setOnShowListener(d->{
@@ -69,10 +71,12 @@ final class LocalCsvImportReviewDialog {
                 state.accepted.clear();state.review=null;state.load();
             });render();
         });
-        state.changed=changed;dialog.show();
+        state.changed=changed;dialog.show();WackenTheme.dialog(dialog);
+        list.post(()->list.setSelectionFromTop(state.firstRow,state.rowTop));
         if(state.review==null&&!state.busy)state.load();else render();
     }
     void detach(boolean finishing) {
+        if(list!=null){state.firstRow=list.getFirstVisiblePosition();state.rowTop=list.getChildCount()==0?0:list.getChildAt(0).getTop();}
         if(state.changed==changed)state.changed=null;
         if(finishing&&!state.applying)state.closed=true;
         if(dialog!=null)dialog.dismiss();
@@ -107,7 +111,7 @@ final class LocalCsvImportReviewDialog {
             LinearLayout view=new LinearLayout(activity);view.setOrientation(LinearLayout.VERTICAL);
             view.setPadding(dp(8),dp(6),dp(8),dp(10));WackenTheme.backgroundColor(view, WackenTheme.PANEL);
             CheckBox accept=new CheckBox(activity);accept.setText("Accept "+row.operation()+" · "+row.kind()+" · "+row.identity());
-            WackenTheme.textColor(accept, WackenTheme.TEXT);accept.setContentDescription("Accept "+row.key());
+            WackenTheme.reviewChoice(accept);accept.setContentDescription("Accept "+row.key());
             accept.setChecked(state.accepted.contains(row.key()));accept.setEnabled(row.valid()&&!state.busy);
             accept.setOnCheckedChangeListener((button,checked)->{
                 if(state.busy||!row.valid())return;
@@ -125,6 +129,6 @@ final class LocalCsvImportReviewDialog {
         List<String> values=new ArrayList<>();fields.forEach((name,value)->{if(!value.isBlank())values.add(name+"="+value);});
         return String.join("; ",values);
     }
-    private TextView label(String text,int color){TextView view=new TextView(activity);view.setText(text);WackenTheme.textColor(view,color);view.setPadding(0,dp(4),0,dp(4));return view;}
+    private TextView label(String text,int color){TextView view=new TextView(activity);view.setText(text);view.setTextSize(16);WackenTheme.textColor(view,color);view.setPadding(0,dp(4),0,dp(4));return view;}
     private int dp(int value){return (int)(value*activity.getResources().getDisplayMetrics().density);}
 }

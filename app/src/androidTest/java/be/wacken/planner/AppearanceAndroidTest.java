@@ -126,6 +126,58 @@ public final class AppearanceAndroidTest {
         });
     }
 
+    @Test public void retainedSignInProgressBlocksASecondSubmitAndKeepsFailureRecovery() throws Exception {
+        open();Activity old=activity;AtomicReference<Object> work=new AtomicReference<>();
+        instrumentation.runOnMainSync(()->{
+            ((EditText)activity.findViewById(R.id.login_email)).setText("retained@example.invalid");
+            ((EditText)activity.findViewById(R.id.login_password)).setText("memory-only");
+            try{
+                var field=LoginActivity.class.getDeclaredField("state");field.setAccessible(true);work.set(field.get(activity));
+                var busy=work.get().getClass().getDeclaredField("busy");busy.setAccessible(true);busy.setBoolean(work.get(),true);
+                var render=LoginActivity.class.getDeclaredMethod("renderSignIn");render.setAccessible(true);render.invoke(activity);
+            }catch(Exception error){throw new AssertionError(error);}
+            assertFalse(findText(root(),"Sign in").isEnabled());activity.recreate();
+        });
+        long limit=SystemClock.uptimeMillis()+10000;
+        while(activity==old&&SystemClock.uptimeMillis()<limit){
+            instrumentation.runOnMainSync(()->{for(Activity candidate:ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED))
+                if(candidate instanceof LoginActivity&&candidate!=old)activity=candidate;});SystemClock.sleep(25);
+        }
+        assertNotSame(old,activity);
+        instrumentation.runOnMainSync(()->{
+            try{
+                var field=LoginActivity.class.getDeclaredField("state");field.setAccessible(true);assertSame(work.get(),field.get(activity));
+                assertFalse(findText(root(),"Sign in").isEnabled());assertNotNull(findText(root(),"Signing in..."));
+                var busy=work.get().getClass().getDeclaredField("busy");busy.setAccessible(true);busy.setBoolean(work.get(),false);
+                var error=work.get().getClass().getDeclaredField("error");error.setAccessible(true);error.set(work.get(),"Fixture sign-in failed. Retry when connected.");
+                var render=LoginActivity.class.getDeclaredMethod("renderSignIn");render.setAccessible(true);render.invoke(activity);
+                assertTrue(findText(root(),"Sign in").isEnabled());assertNotNull(findText(root(),"Fixture sign-in failed. Retry when connected."));
+                assertEquals("memory-only",((EditText)activity.findViewById(R.id.login_password)).getText().toString());
+            }catch(Exception error){throw new AssertionError(error);}
+        });
+    }
+
+    @Test public void doubleFontSignInScrollsWithReadableInputsAndMemoryOnlyPassword(){
+        activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),LoginActivity.class)
+                .putExtra(NativeUiTestRunner.FONT_SCALE,2f).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_MULTIPLE_TASK));
+        instrumentation.waitForIdleSync();
+        instrumentation.runOnMainSync(()->{
+            android.widget.ScrollView scroll=findScroll(root());assertNotNull("Sign-in form must scroll at large text",scroll);
+            EditText email=activity.findViewById(R.id.login_email),password=activity.findViewById(R.id.login_password);
+            email.setText("large-text@example.invalid");password.setText("memory-only-draft");
+            assertFalse("Password must never enter saved hierarchy state",password.isSaveEnabled());
+            assertTrue("Input must grow to its actual font line",email.getHeight()>=email.getLineHeight()+email.getCompoundPaddingTop()+email.getCompoundPaddingBottom());
+            AppearanceController.choose(activity,AppearancePreference.LIGHT);assertSame(email,activity.findViewById(R.id.login_email));
+            scroll.fullScroll(View.FOCUS_DOWN);assertNotNull(findText(root(),"Sign in"));
+            AppearanceController.choose(activity,AppearancePreference.DARK);assertEquals("memory-only-draft",password.getText().toString());
+        });
+    }
+    private android.widget.ScrollView findScroll(View view){
+        if(view instanceof android.widget.ScrollView scroll)return scroll;
+        if(view instanceof ViewGroup group)for(int i=0;i<group.getChildCount();i++){var found=findScroll(group.getChildAt(i));if(found!=null)return found;}
+        return null;
+    }
+
     private void open() {
         activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),LoginActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_MULTIPLE_TASK));

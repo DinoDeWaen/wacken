@@ -14,6 +14,8 @@ description: Select and import festival files
 
 Receives Android document selections and invokes the CSV import workflow for lineup and related festival data.
 
+Readable paired name/file/status controls retain selected CSV contents in the existing memory-only retained import and restore name/scroll. Process loss explicitly requests file reselection. Interrupted festival review/creation asks the user to check the active festival and review the same name/CSV again; restoration never submits creation. File-picker cancellation or missing target preserves prior selection and cached data; local review still reports local-only success.
+
 ## Relationships
 
 | Source | Target | Description | Technology |
@@ -25,3 +27,4 @@ Receives Android document selections and invokes the CSV import workflow for lin
 | [app/src/main/java/be/wacken/planner/ImportCsvActivity.java](../../../../../../app/src/main/java/be/wacken/planner/ImportCsvActivity.java) | [app/src/main/java/be/wacken/planner/AddFestivalAction.java](../../../../../../app/src/main/java/be/wacken/planner/AddFestivalAction.java) | Dispatches reviewed creation | Java call |
 | [app/src/main/java/be/wacken/planner/ImportCsvActivity.java](../../../../../../app/src/main/java/be/wacken/planner/ImportCsvActivity.java) | [app/src/main/java/be/wacken/planner/LocalCsvImportReviewDialog.java](../../../../../../app/src/main/java/be/wacken/planner/LocalCsvImportReviewDialog.java) | Opens local row review | Java call |
 | [app/src/main/java/be/wacken/planner/ImportCsvActivity.java](../../../../../../app/src/main/java/be/wacken/planner/ImportCsvActivity.java) | [application/src/main/java/be/wacken/planner/application/FestivalCsvReader.java](../../../../../../application/src/main/java/be/wacken/planner/application/FestivalCsvReader.java) | Reads uploaded lineup names | Java call |
+| [app/src/main/java/be/wacken/planner/ImportCsvActivity.java](../../../../../../app/src/main/java/be/wacken/planner/ImportCsvActivity.java) | [app/src/main/java/be/wacken/planner/WackenTheme.java](../../../../../../app/src/main/java/be/wacken/planner/WackenTheme.java) | Styles import form | Android Views |

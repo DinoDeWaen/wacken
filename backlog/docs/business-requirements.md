@@ -151,6 +151,20 @@ appearance and recreation never apply proposals: explicit existing approval gate
 and missing-field/no-overwrite rules remain unchanged. TASK-211–213 own support
 flows, integrated accessibility/device review and publication.
 
+Development increment TASK-211 applies paired readable presentation to sign-in,
+archive/history, import and owned confirmation/recovery dialogs. Active sign-in
+and its password draft retain in memory; credentials are never serialized into
+saved state. Rename captures festival identity and restores the unsent name.
+CSV contents/local review retain in memory and process loss requests reselection.
+Archive explicitly confirms the festival and group-wide scope before the existing
+atomic acknowledged operation. Interrupted lifecycle requests and corrections
+require checking current state/history and fresh review; restoration never
+resubmits a write. Archived rows retain read-only planning meaning, performance
+facts and known music links. Live status distinguishes local/pending/shared/error
+outcomes. Auth/security, atomic carry-over/promotion, source-aware corrections and
+pending-data recovery policies remain unchanged. TASK-212–213 own integrated
+accessibility/device validation and publication.
+
 The user validated the paired Ironline dark / Field Notes light proposal on
 17 October2026. [The design and flow contract](release-3.0-design-contract.md)
 defines the palettes, shared layout, state wording and complete screen/dialog

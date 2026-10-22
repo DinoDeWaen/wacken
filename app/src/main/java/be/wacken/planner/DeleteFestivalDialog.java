@@ -11,7 +11,7 @@ final class DeleteFestivalDialog {
     private DeleteFestivalDialog() { }
 
     static void show(Activity activity, Festival festival, Runnable onSuccess, Consumer<String> onFailure) {
-        new AlertDialog.Builder(activity)
+        WackenTheme.dialog(new AlertDialog.Builder(activity)
                 .setTitle("Delete " + festival.name() + "?")
                 .setMessage("This removes the festival for everyone in the group, including its lineup, "
                         + "performances, schedule decisions, and planning ratings. "
@@ -22,23 +22,25 @@ final class DeleteFestivalDialog {
                     AlertDialog progress = new AlertDialog.Builder(activity)
                             .setMessage("Deleting " + festival.name() + "...")
                             .setCancelable(false).create();
-                    progress.show();
+                    progress.show();WackenTheme.dialog(progress);
                     new Thread(() -> {
                             try {
                                 new AppRepositories(activity).deleteFestival(festival.id());
                                 activity.runOnUiThread(() -> {
                                     progress.dismiss();
+                                    if(activity.isFinishing()||activity.isDestroyed())return;
                                     onSuccess.run();
                                 });
                             } catch (Exception error) {
                                 activity.runOnUiThread(() -> {
                                     progress.dismiss();
+                                    if(activity.isFinishing()||activity.isDestroyed())return;
                                     onFailure.accept(error.getMessage() == null
                                             ? "Deletion failed. Try again." : error.getMessage());
                                 });
                             }
                         }, "delete-festival").start();
                 })
-                .show();
+                .show(),WackenTheme.ButtonStyle.DANGER);
     }
 }

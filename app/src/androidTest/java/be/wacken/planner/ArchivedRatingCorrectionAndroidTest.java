@@ -54,6 +54,31 @@ public final class ArchivedRatingCorrectionAndroidTest {
         database.ratingStates().clearCurrent(USER);
         database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM bands WHERE name=?",new Object[]{NAME});
     }
+    @Test public void recreationKeepsStagedValueInSafeRecoveryWithoutSubmittingCorrection() throws Exception {
+        Object previousMode=AppearanceController.store(activity).getAll().get(AppearanceController.MODE);
+        try {
+            onUi(()->click("Correct my archived rating"));await(()->findContaining("Current after rating: 3")!=null);
+            onUi(()->{((EditText)find("Corrected archived rating")).setText("2");AppearanceController.choose(activity,AppearancePreference.LIGHT);});
+            ArchivedBandDetailActivity old=activity;onUi(old::recreate);
+            await(()->{
+                for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
+                    if(candidate instanceof ArchivedBandDetailActivity replacement&&candidate!=old){activity=replacement;return true;}
+                return false;
+            });
+            onUi(()->{
+                assertNotNull(findContaining("Staged after value: 2"));
+                assertNotNull(findContaining("Reload the current rating before confirming again"));
+                AppearanceController.choose(activity,AppearancePreference.DARK);
+            });
+            assertEquals(3,database.ratingStates().after(USER,FESTIVAL,NAME).value);
+            assertTrue(new RoomRatingCorrectionRepository(database).findByUser(USER).isEmpty());
+        } finally {onUi(()->{
+            var editor=AppearanceController.store(instrumentation.getTargetContext()).edit();
+            if(previousMode instanceof String mode)editor.putString(AppearanceController.MODE,mode);else editor.remove(AppearanceController.MODE);editor.commit();
+        });}
+    }
+
     @Test public void archiveIsReadOnlyUntilExplicitEditAndConfirmation()throws Exception{
         onUi(()->{
             List<RatingStarsView> stars=new ArrayList<>();collectStars(activity.getWindow().getDecorView(),stars);

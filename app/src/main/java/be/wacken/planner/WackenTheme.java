@@ -32,6 +32,12 @@ final class WackenTheme {
 
     static Button actionButton(Context context, String text, ButtonStyle style, View.OnClickListener listener) {
         Button button = baseButton(context, text);
+        styleAction(button,style);
+        button.setOnClickListener(listener);
+        return button;
+    }
+
+    private static void styleAction(Button button,ButtonStyle style) {
         AppearanceController.bind(button,"buttonStyle",(view,palette)->{
             Button target=(Button)view;
             boolean primary=style==ButtonStyle.PRIMARY||style==ButtonStyle.PREMIUM;
@@ -40,8 +46,6 @@ final class WackenTheme {
                     style==ButtonStyle.DANGER?palette.error():palette.line(),
                     primary?palette.accent():palette.raised(),primary?palette.onAccent():palette.text()));
         });
-        button.setOnClickListener(listener);
-        return button;
     }
 
     static void ratingChoice(TextView choice) {
@@ -70,6 +74,57 @@ final class WackenTheme {
         input.setPadding(dp(input.getContext(),8),dp(input.getContext(),8),dp(input.getContext(),8),dp(input.getContext(),8));
         textColor(input,TEXT);focusablePanel(input);
         AppearanceController.bind(input,"inputHint",(view,palette)->((android.widget.EditText)view).setHintTextColor(palette.muted()));
+    }
+
+    static void reviewOptions(android.widget.Spinner selector,java.util.List<String> labels) {
+        selector.setMinimumHeight(dp(selector.getContext(),48));focusablePanel(selector);
+        android.widget.ArrayAdapter<String> adapter=new android.widget.ArrayAdapter<>(selector.getContext(),android.R.layout.simple_spinner_item,labels){
+            @Override public View getView(int position,View reusable,android.view.ViewGroup parent){return option(super.getView(position,reusable,parent));}
+            @Override public View getDropDownView(int position,View reusable,android.view.ViewGroup parent){return option(super.getDropDownView(position,reusable,parent));}
+            private View option(View view){
+                TextView text=(TextView)view;text.setTextSize(16);text.setSingleLine(false);text.setEllipsize(null);
+                text.setMinHeight(dp(text.getContext(),48));text.setPadding(dp(text.getContext(),8),dp(text.getContext(),8),dp(text.getContext(),8),dp(text.getContext(),8));
+                textColor(text,TEXT);backgroundColor(text,PANEL);return text;
+            }
+        };
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);selector.setAdapter(adapter);
+    }
+
+    static android.app.AlertDialog dialog(android.app.AlertDialog dialog) {return dialog(dialog,ButtonStyle.PRIMARY);}
+
+    static android.app.AlertDialog dialog(android.app.AlertDialog dialog,ButtonStyle positiveStyle) {
+        AppearanceController.ownDialog(dialog);
+        if(dialog.getWindow()==null)return dialog;
+        View decor=dialog.getWindow().getDecorView();
+        dialog.getWindow().setBackgroundDrawable(panelBackground(dialog.getContext(),PANEL,GRID,6));
+        styleDialogText(decor);
+        for(int role:new int[]{android.app.AlertDialog.BUTTON_NEGATIVE,android.app.AlertDialog.BUTTON_NEUTRAL,android.app.AlertDialog.BUTTON_POSITIVE}) {
+            Button button=dialog.getButton(role);if(button==null)continue;
+            button.setTextSize(16);button.setSingleLine(false);button.setMaxLines(Integer.MAX_VALUE);button.setEllipsize(null);
+            button.setMinHeight(dp(button.getContext(),48));button.setPadding(dp(button.getContext(),8),dp(button.getContext(),8),dp(button.getContext(),8),dp(button.getContext(),8));
+            styleAction(button,role==android.app.AlertDialog.BUTTON_POSITIVE?positiveStyle:ButtonStyle.SECONDARY);
+            if(button.getParent() instanceof LinearLayout actions){
+                actions.setOrientation(LinearLayout.VERTICAL);
+                for(int i=0;i<actions.getChildCount();i++) {
+                    View action=actions.getChildAt(i);
+                    if(action instanceof Button)action.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
+                    else action.setVisibility(View.GONE);
+                }
+            }
+        }
+        return dialog;
+    }
+
+    private static void styleDialogText(View view) {
+        if(view instanceof TextView text&&!AppearanceController.hasBinding(text,"textColor")) {
+            textColor(text,TEXT);
+            if(!(text instanceof android.widget.EditText)){text.setSingleLine(false);text.setMaxLines(Integer.MAX_VALUE);text.setEllipsize(null);}
+            float body=android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP,16,text.getResources().getDisplayMetrics());
+            if(text.getTextSize()<body)text.setTextSize(16);
+            if(text instanceof android.widget.EditText input)reviewInput(input);
+            if(text instanceof android.widget.CompoundButton choice)reviewChoice(choice);
+        }
+        if(view instanceof android.view.ViewGroup group)for(int i=0;i<group.getChildCount();i++)styleDialogText(group.getChildAt(i));
     }
 
     private static StateListDrawable focusBackground(Context context,int fill,int border,int focusFill,int focusBorder) {

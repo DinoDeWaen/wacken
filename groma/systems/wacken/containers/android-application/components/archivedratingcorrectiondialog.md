@@ -14,9 +14,12 @@ description: Confirms own reviewed edits
 
 ArchivedBandDetailActivity opens this dialog with a supplied correction use case. Loads member/festival/band/kind and revision; stages locally then explicitly confirms planning zero-to-five or after one-to-five. Stable payload-derived operation ID supports uncertain-result retry, stale review requires reload, and lifecycle generation guards ignore obsolete UI completions.
 
+The paired dialog uses a scrollable body, labeled48dp kind/value controls and wrapping native actions. Theme changes preserve the same staged review. Recreation exposes safe kind/value or uncertain-save recovery on the owning detail screen; it does not automatically retry or create an audit event.
+
 ## Relationships
 
 | Source | Target | Description | Technology |
 | --- | --- | --- | --- |
 | [app/src/main/java/be/wacken/planner/ArchivedRatingCorrectionDialog.java](../../../../../../app/src/main/java/be/wacken/planner/ArchivedRatingCorrectionDialog.java) | [application/src/main/java/be/wacken/planner/application/ArchivedRatingCorrectionUseCase.java](../../../../../../application/src/main/java/be/wacken/planner/application/ArchivedRatingCorrectionUseCase.java) | Reviews and confirms correction | Java call |
 | [app/src/main/java/be/wacken/planner/ArchivedRatingCorrectionDialog.java](../../../../../../app/src/main/java/be/wacken/planner/ArchivedRatingCorrectionDialog.java) | [domain/src/main/java/be/wacken/planner/domain/ArchivedRatingReview.java](../../../../../../domain/src/main/java/be/wacken/planner/domain/ArchivedRatingReview.java) | Uses reviewed target revision | Java call |
+| [app/src/main/java/be/wacken/planner/ArchivedRatingCorrectionDialog.java](../../../../../../app/src/main/java/be/wacken/planner/ArchivedRatingCorrectionDialog.java) | [app/src/main/java/be/wacken/planner/WackenTheme.java](../../../../../../app/src/main/java/be/wacken/planner/WackenTheme.java) | Styles correction dialog | Android Views |

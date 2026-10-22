@@ -79,6 +79,17 @@ its search/result/checked proposals across recreation and offers cancellation an
 retry without applying proposals. Explicit approval and existing missing-field,
 identity and no-overwrite rules remain authoritative.
 
+TASK-211 makes sign-in/import and archived lists readable at large fonts, with
+wrapping native confirmation actions in both appearances. Sign-in retains one
+active request and a memory-only password draft. Rename retains its captured
+festival/name draft; CSV selection and local review retain their existing memory
+state, with explicit reselection after process loss. Archive now confirms the
+festival and group-wide scope before the existing atomic save. Interrupted
+requests/correction reviews show check-current-state recovery and never resubmit
+on restoration. Archived rows remain read-only with full planning/performance
+facts and stored music actions. Local/pending/acknowledged/error feedback uses
+words and live announcements; native dialogs dismiss with their Activity.
+
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.
@@ -374,8 +385,14 @@ reviews two replacement duplicate identities plus Android scanner deltas.
 
 The [TASK210 review-layout audit](backlog/docs/groma-review-layouts-2026-10-22.md)
 keeps96 components/299sources/13flows and adds four actual shared-style calls.
-The current82 duplicate identities include four exact reviewed replacements of
+That increment had82 duplicate identities including four exact reviewed replacements of
 three earlier groups; no new exception or boundary is accepted.
+
+The [TASK211 support audit](backlog/docs/groma-support-review-2026-10-22.md)
+retains96 components/299sources/13flows, removes obsolete archived table helpers
+and records actual native-dialog style calls. The current83 exact duplicate
+dispositions and missing-Android diagnostic changes were individually reviewed;
+runtime boundaries, tool pins and existing stale-row exceptions remain unchanged.
 
 For intentional architecture changes, generate an external review candidate:
 

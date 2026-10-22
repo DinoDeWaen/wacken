@@ -21,6 +21,8 @@ description: Launch import, review, export, and sync actions
 
 Provides grouped appearance, account/group, festival administration, rating export/allocation and manual sync actions. Link imported bands and active-festival music discovery are adjacent in festival administration; canonical-band discovery stays on detail. Shared headings, readable wrapping body text and live status use the selected palette, and the Settings scroll position survives recreation. Import, rename, export, invite and pending-sync behavior still delegate to the existing workflows.
 
+Rename preserves its nonsecret draft and captured festival identity across recreation without submitting; changed festival context requires reopening review. Interrupted sync has explicit unconfirmed-result recovery with cached/pending work retained. Invite/export remain Android target handoffs, with app-side missing-target/cancellation wording. Owned dialogs use shared paired styling and wrapping native actions.
+
 ## Relationships
 
 | Source | Target | Description | Technology |

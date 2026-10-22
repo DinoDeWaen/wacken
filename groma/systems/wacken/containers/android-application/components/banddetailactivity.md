@@ -32,6 +32,8 @@ description: Present band information and personal ratings
 
 Presents active and archived band information with the captured member/festival scope, established source/history context and read-only group planning summaries. Active editing puts planning first and keeps the independent post-show value behind a retained After the show disclosure. Owns the reusable native rating choices and shared meaning vocabulary used by detail and lineup: touch, keyboard and accessibility actions use the existing callbacks/use cases, while archived children remain disabled. Restyling and recreation retain views/state without replaying rating events; actual biography, images, performance context and stored music links are preserved. Canonical-band discovery retains its existing no-festival entry but is absent in captured archive context; archived corrections keep their explicit reviewed workflow.
 
+Archived correction recreation reports the staged kind/value or an uncertain in-flight result and requires reloading the current rating/history before another confirmation. Restoring this screen never resubmits a correction; the existing stable operation/revision semantics remain inside the correction workflow.
+
 ## Relationships
 
 | Source | Target | Description | Technology |

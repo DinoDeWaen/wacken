@@ -30,6 +30,7 @@ final class AppearanceController implements Application.ActivityLifecycleCallbac
     };
     private final Map<View,Map<String,BiConsumer<View,AppearancePreference.Palette>>> bindings=new WeakHashMap<>();
     private final Map<GradientDrawable,Panel> panels=new WeakHashMap<>();
+    private final Map<android.app.Dialog,Boolean> dialogs=new WeakHashMap<>();
     private boolean closed;
     private boolean deviceDark;
 
@@ -82,6 +83,21 @@ final class AppearanceController implements Application.ActivityLifecycleCallbac
         update.accept(view,palette(view.getContext()));
     }
 
+    static void ownDialog(android.app.Dialog dialog) {
+        AppearanceController controller=find(dialog.getContext());
+        if(controller!=null)controller.dialogs.put(dialog,Boolean.TRUE);
+    }
+
+    static boolean hasOpenDialogs(Activity activity) {
+        AppearanceController controller=find(activity);
+        return controller!=null&&controller.dialogs.keySet().stream().anyMatch(android.app.Dialog::isShowing);
+    }
+
+    static boolean hasBinding(View view,String property) {
+        AppearanceController controller=find(view.getContext());
+        return controller!=null&&controller.bindings.getOrDefault(view,Map.of()).containsKey(property);
+    }
+
     static void bindPanel(Context context,GradientDrawable drawable,int fill,int border,int corner) {
         Panel panel=new Panel(fill,border,corner);
         AppearanceController controller=find(context);
@@ -101,9 +117,15 @@ final class AppearanceController implements Application.ActivityLifecycleCallbac
         if(closed)return;
         AppearancePreference.Palette palette=preference(activity).palette(deviceDark);
         activity.setTheme(palette.dark()?R.style.AppThemeDark:R.style.AppThemeLight);
-        for(var entry:new ArrayList<>(bindings.entrySet()))
-            for(var update:new ArrayList<>(entry.getValue().values()))update.accept(entry.getKey(),palette);
-        for(var entry:new ArrayList<>(panels.entrySet()))entry.getValue().apply(entry.getKey(),palette,activity);
+        // Copy keys strongly for this refresh. A copied WeakHashMap entry still
+        // has a weak key that GC can clear between snapshot and callback.
+        for(View target:new ArrayList<>(bindings.keySet())) {
+            Map<String,BiConsumer<View,AppearancePreference.Palette>> updates=bindings.get(target);
+            if(target!=null&&updates!=null)for(var update:new ArrayList<>(updates.values()))update.accept(target,palette);
+        }
+        for(GradientDrawable target:new ArrayList<>(panels.keySet())) {
+            Panel panel=panels.get(target);if(target!=null&&panel!=null)panel.apply(target,palette,activity);
+        }
         activity.getWindow().setStatusBarColor(palette.background());
         activity.getWindow().setNavigationBarColor(palette.background());
         View decor=activity.getWindow().getDecorView();
@@ -142,7 +164,8 @@ final class AppearanceController implements Application.ActivityLifecycleCallbac
         preferences.unregisterOnSharedPreferenceChangeListener(listener);
         activity.getApplication().unregisterActivityLifecycleCallbacks(this);
         activity.getApplication().unregisterComponentCallbacks(this);
-        ATTACHED.remove(activity);bindings.clear();panels.clear();
+        for(android.app.Dialog dialog:new ArrayList<>(dialogs.keySet()))if(dialog.isShowing())dialog.dismiss();
+        dialogs.clear();ATTACHED.remove(activity);bindings.clear();panels.clear();
     }
     @Override public void onActivityCreated(Activity target,Bundle state) { }
     @Override public void onActivityStarted(Activity target) { }
