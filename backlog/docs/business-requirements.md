@@ -140,6 +140,17 @@ personal ratings and original generated decision evidence. BR-063–076 scheduli
 cutoff, walking and tie rules are unchanged. TASK-210–213 own remaining screens,
 integrated native accessibility/device validation and publication.
 
+Development increment TASK-210 groups festival administration in Settings and
+keeps link-band and festival music discovery adjacent. Both review entry points
+retain existing canonical identity scope. Wrapping native evidence displays full
+source URLs, rationale and verified/unverified status in both appearances;
+changing a term immediately clears stale approval controls. Own-catalog search
+and selected match survive recreation. Metadata search/results/checked proposals
+are retained through recreation; cancellation/retry preserves saved data. Search,
+appearance and recreation never apply proposals: explicit existing approval gates
+and missing-field/no-overwrite rules remain unchanged. TASK-211–213 own support
+flows, integrated accessibility/device review and publication.
+
 The user validated the paired Ironline dark / Field Notes light proposal on
 17 October2026. [The design and flow contract](release-3.0-design-contract.md)
 defines the palettes, shared layout, state wording and complete screen/dialog

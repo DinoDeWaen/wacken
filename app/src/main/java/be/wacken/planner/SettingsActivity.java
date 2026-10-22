@@ -56,6 +56,16 @@ public final class SettingsActivity extends Activity {
             return;
         }
         setContentView(MainNavigation.wrap(this,content(),MainNavigation.Destination.SETTINGS));
+        if(savedInstanceState!=null){
+            ScrollView scroll=findViewById(R.id.destination_content);
+            scroll.post(()->scroll.scrollTo(0,savedInstanceState.getInt("settingsScroll")));
+        }
+    }
+
+    @Override protected void onSaveInstanceState(Bundle state) {
+        ScrollView scroll=findViewById(R.id.destination_content);
+        if(scroll!=null)state.putInt("settingsScroll",scroll.getScrollY());
+        super.onSaveInstanceState(state);
     }
 
     private boolean loadCurrentSession() {
@@ -82,14 +92,15 @@ public final class SettingsActivity extends Activity {
         title.setText("Settings");
         WackenTheme.textColor(title, COLOR_AMBER);
         title.setTextSize(28);
-        title.setTypeface(Typeface.DEFAULT_BOLD);
-        title.setGravity(Gravity.CENTER_HORIZONTAL);
+        WackenTheme.heading(title);
+        title.setGravity(Gravity.START);
         screen.addView(title);
 
         TextView subtitle = new TextView(this);
         subtitle.setText("Group, import, and sync");
         WackenTheme.textColor(subtitle, COLOR_MUTED);
-        subtitle.setGravity(Gravity.CENTER_HORIZONTAL);
+        subtitle.setGravity(Gravity.START);
+        subtitle.setTextSize(14);
         subtitle.setPadding(0, dp(4), 0, dp(18));
         screen.addView(subtitle);
 
@@ -104,10 +115,28 @@ public final class SettingsActivity extends Activity {
         groupSection.addView(actionButton("Share group invite", WackenTheme.ButtonStyle.SECONDARY, view -> shareGroupInvite()));
         screen.addView(groupSection);
 
+        LinearLayout adminSection = section("Festival administration");
+        adminSection.addView(infoText("Imports update shared festival data. Ratings are preserved."));
+        activeFestival().ifPresent(festival ->
+                adminSection.addView(actionButton("Rename active festival", WackenTheme.ButtonStyle.SECONDARY, view -> renameActiveFestival(festival)))
+        );
+        adminSection.addView(actionButton("Link imported bands", WackenTheme.ButtonStyle.SECONDARY, view -> {
+            startActivity(new Intent(this, BandLinkReviewActivity.class));
+        }));
+        activeFestival().ifPresent(festival -> adminSection.addView(actionButton("Find music links", WackenTheme.ButtonStyle.SECONDARY,
+                view -> startActivity(new Intent(this, MusicLinksReviewActivity.class)
+                        .putExtra(MusicLinksReviewActivity.EXTRA_FESTIVAL_ID, festival.id())))));
+        adminSection.addView(actionButton("Fetch band metadata", WackenTheme.ButtonStyle.SECONDARY, view -> fetchBandMetadata()));
+        adminSection.addView(actionButton("Import lineup CSV files", WackenTheme.ButtonStyle.PREMIUM, view -> {
+            startActivityForResult(new Intent(this, ImportCsvActivity.class), REQUEST_IMPORT);
+        }));
+        screen.addView(adminSection);
+
+
         LinearLayout ratingSection = section("Rating allocation");
         ratingAllocation = new TextView(this);
         WackenTheme.textColor(ratingAllocation, COLOR_TEXT);
-        ratingAllocation.setTextSize(15);
+        ratingAllocation.setTextSize(16);
         ratingAllocation.setTypeface(Typeface.DEFAULT_BOLD);
         ratingAllocation.setGravity(Gravity.START);
         ratingAllocation.setPadding(0, dp(4), 0, 0);
@@ -133,6 +162,8 @@ public final class SettingsActivity extends Activity {
         syncSection.addView(syncIndicator);
 
         status = new TextView(this);
+        status.setTextSize(14);
+        status.setAccessibilityLiveRegion(android.view.View.ACCESSIBILITY_LIVE_REGION_POLITE);
         WackenTheme.textColor(status, COLOR_MUTED);
         status.setGravity(Gravity.START);
         status.setPadding(0, dp(8), 0, 0);
@@ -140,22 +171,6 @@ public final class SettingsActivity extends Activity {
         syncSection.addView(status);
         screen.addView(syncSection);
 
-        LinearLayout adminSection = section("Admin");
-        adminSection.addView(infoText("Imports update shared festival data. Ratings are preserved."));
-        activeFestival().ifPresent(festival ->
-                adminSection.addView(actionButton("Rename active festival", WackenTheme.ButtonStyle.SECONDARY, view -> renameActiveFestival(festival)))
-        );
-        adminSection.addView(actionButton("Link imported bands", WackenTheme.ButtonStyle.SECONDARY, view -> {
-            startActivity(new Intent(this, BandLinkReviewActivity.class));
-        }));
-        activeFestival().ifPresent(festival -> adminSection.addView(actionButton("Find music links", WackenTheme.ButtonStyle.SECONDARY,
-                view -> startActivity(new Intent(this, MusicLinksReviewActivity.class)
-                        .putExtra(MusicLinksReviewActivity.EXTRA_FESTIVAL_ID, festival.id())))));
-        adminSection.addView(actionButton("Fetch band metadata", WackenTheme.ButtonStyle.SECONDARY, view -> fetchBandMetadata()));
-        adminSection.addView(actionButton("Import lineup CSV files", WackenTheme.ButtonStyle.PREMIUM, view -> {
-            startActivityForResult(new Intent(this, ImportCsvActivity.class), REQUEST_IMPORT);
-        }));
-        screen.addView(adminSection);
 
         screen.addView(actionButton("Back to bands", WackenTheme.ButtonStyle.SECONDARY,
                 view -> MainNavigation.open(this,MainNavigation.Destination.BANDS)));
@@ -208,8 +223,8 @@ public final class SettingsActivity extends Activity {
         TextView heading = new TextView(this);
         heading.setText(title);
         WackenTheme.textColor(heading, COLOR_AMBER);
-        heading.setTextSize(15);
-        heading.setTypeface(Typeface.DEFAULT_BOLD);
+        heading.setTextSize(18);
+        WackenTheme.heading(heading);
         heading.setPadding(0, 0, 0, dp(6));
         section.addView(heading);
         return section;
@@ -219,7 +234,7 @@ public final class SettingsActivity extends Activity {
         TextView info = new TextView(this);
         info.setText(text);
         WackenTheme.textColor(info, COLOR_MUTED);
-        info.setTextSize(13);
+        info.setTextSize(14);
         info.setPadding(0, 0, 0, dp(8));
         return info;
     }

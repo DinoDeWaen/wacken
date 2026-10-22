@@ -70,6 +70,15 @@ ratings, generated ties, cutoff and walking rules are unchanged. Native89-test
 coverage includes200% decision actions and restored filters/viewport; integrated
 accessibility and device review remains TASK-212.
 
+TASK-210 groups festival administration in Settings with adjacent band-link and
+music-discovery actions. Review screens use readable wrapping text,48dp native
+choices and paired focus/tint styling. Music evidence exposes real source URLs;
+edited terms immediately clear stale approval controls. Own-catalog linking
+retains edited search and match choices across recreation. Metadata review retains
+its search/result/checked proposals across recreation and offers cancellation and
+retry without applying proposals. Explicit approval and existing missing-field,
+identity and no-overwrite rules remain authoritative.
+
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.
@@ -355,13 +364,18 @@ The [TASK207 lineup review](backlog/docs/groma-lineup-review-2026-10-22.md)
 accounts for seven obsolete table-helper pairs removed with the wrapping lineup.
 The [TASK208 rating-control review](backlog/docs/groma-rating-controls-review-2026-10-22.md)
 keeps the shared meaning/control source under band details and authors five
-actual presentation/style collaborations. The current baseline has96 components,
+actual presentation/style collaborations. That increment had96 components,
 299 owned sources,13 flows and81 individually reviewed duplicate identities,
 including two explicitly reviewed replacements; pins/exceptions remain unchanged.
 
 The [TASK209 schedule review](backlog/docs/groma-schedule-review-2026-10-22.md)
 retains these counts and boundaries, records the actual shared-style call and
 reviews two replacement duplicate identities plus Android scanner deltas.
+
+The [TASK210 review-layout audit](backlog/docs/groma-review-layouts-2026-10-22.md)
+keeps96 components/299sources/13flows and adds four actual shared-style calls.
+The current82 duplicate identities include four exact reviewed replacements of
+three earlier groups; no new exception or boundary is accepted.
 
 For intentional architecture changes, generate an external review candidate:
 

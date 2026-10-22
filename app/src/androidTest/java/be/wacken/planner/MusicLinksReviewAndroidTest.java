@@ -48,7 +48,7 @@ public final class MusicLinksReviewAndroidTest {
         onUi(()->{((EditText)find("Search term for "+NAME)).setText("refined artist");click("Search missing music links");});
         await(()->find("Choose verified identity")!=null);
         assertEquals(List.of("refined artist"),terms);assertTrue(saved.get(NAME).youtubeUrl().isEmpty());
-        onUi(()->{assertNotNull(find(YT));assertNotNull(find("MusicBrainz identity"));assertNotNull(find("Wikidata corroboration"));click("Reject all for "+NAME);});
+        onUi(()->{assertNotNull(find(YT));assertNotNull(findContaining("MusicBrainz identity"));assertNotNull(findContaining("Wikidata corroboration"));click("Reject all for "+NAME);});
         assertTrue(saved.get(NAME).youtubeUrl().isEmpty());
     }
     @Test public void returningFromReviewRefreshesNewlySavedProfileOnBandDetail() throws Exception {
@@ -142,6 +142,123 @@ public final class MusicLinksReviewAndroidTest {
             assertEquals(1,calls.get());assertTrue(saved.get(NAME).youtubeUrl().isEmpty());
         }finally{release.set(true);}
     }
+
+    @Test public void largeTextEvidenceAndApprovalSurviveBothThemesAndRecreation() throws Exception {
+        Object previousMode=AppearanceController.store(instrumentation.getTargetContext()).getAll().get(AppearanceController.MODE);
+        activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),MusicLinksReviewActivity.class)
+            .putExtra(MusicLinksReviewActivity.EXTRA_BAND_NAME,NAME).putExtra(NativeUiTestRunner.FONT_SCALE,2f)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        instrumentation.waitForIdleSync();AtomicInteger calls=new AtomicInteger();
+        try {
+            inject(term->{calls.incrementAndGet();return new MusicLinkLookupProvider.Lookup(List.of(proof()),List.of());});
+            onUi(()->click("Search missing music links"));await(()->find("Choose verified identity")!=null);
+            onUi(()->{
+                TextView source=(TextView)findContaining("MusicBrainz identity");assertNotNull(source);
+                assertTrue("Clickable evidence must expose the real canonical source URL",source.getText().toString().contains("https://musicbrainz.org/artist/"+ID));
+                assertNull(source.getEllipsize());assertTrue(source.getMinHeight()>=WackenTheme.dp(activity,48));
+                var term=(EditText)find("Search term for "+NAME);
+                assertEquals("Search uses16sp body text",android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP,16,activity.getResources().getDisplayMetrics()),term.getTextSize(),0.5f);
+                click("Choose verified identity");click("I checked the identity evidence for "+NAME);
+                AppearanceController.choose(activity,AppearancePreference.LIGHT);
+                assertTrue(((CheckBox)find("Choose verified identity")).isChecked());
+                assertTrue(find("Save approved links for "+NAME).isEnabled());
+            });
+            Activity old=activity;Object retained=field(old,"session");onUi(old::recreate);
+            await(()->{
+                for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
+                    if(candidate instanceof MusicLinksReviewActivity&&candidate!=old){activity=candidate;return true;}
+                return false;
+            });
+            assertSame(retained,field(activity,"session"));
+            onUi(()->{
+                assertTrue(((CheckBox)find("Choose verified identity")).isChecked());
+                assertTrue(((CheckBox)find("I checked the identity evidence for "+NAME)).isChecked());
+                assertTrue(find("Save approved links for "+NAME).isEnabled());
+                AppearanceController.choose(activity,AppearancePreference.DARK);
+                assertTrue(find("Save approved links for "+NAME).isEnabled());
+                ((EditText)find("Search term for "+NAME)).setText("new identity");
+            });
+            assertEquals(1,calls.get());assertTrue(saved.get(NAME).youtubeUrl().isEmpty());
+            onUi(()->assertNull("Editing invalidates approval immediately",find("Save approved links for "+NAME)));
+        } finally {onUi(()->{
+            var editor=AppearanceController.store(instrumentation.getTargetContext()).edit();
+            if(previousMode instanceof String mode)editor.putString(AppearanceController.MODE,mode);else editor.remove(AppearanceController.MODE);
+            editor.commit();
+        });}
+    }
+
+    @Test public void metadataSearchAndCheckedProposalSurviveRecreationWithoutAnotherLookupOrSave() throws Exception {
+        Object previousMode=AppearanceController.store(instrumentation.getTargetContext()).getAll().get(AppearanceController.MODE);
+        saved.put(NAME,new Band(NAME,Optional.of(YT),Optional.empty()));
+        activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),BandMetadataReviewActivity.class)
+            .putExtra(NativeUiTestRunner.FONT_SCALE,2f).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        instrumentation.waitForIdleSync();
+        AtomicBoolean started=new AtomicBoolean(),release=new AtomicBoolean();AtomicInteger calls=new AtomicInteger();
+        BandMetadataLookupProvider provider=new BandMetadataLookupProvider(){
+            public String name(){return "Fixture evidence";}public boolean configured(){return true;}
+            public List<BandMetadataProviderCandidate> search(String band){
+                calls.incrementAndGet();started.set(true);while(!release.get())SystemClock.sleep(10);
+                return List.of(new BandMetadataProviderCandidate(NAME,Optional.of("Reviewed fixture biography"),Optional.empty(),
+                    Optional.of("https://www.youtube.com/channel/UC9999999999999999999999"),Optional.empty(),Optional.of("https://band.example/evidence"),100));
+            }
+        };
+        try {
+            onUi(()->{
+                try {
+                    Object old=field(activity,"session");setField(old,"changed",null);setField(old,"cancelled",true);
+                    Thread worker=(Thread)field(old,"worker");if(worker!=null)worker.interrupt();
+                    Class<?> type=old.getClass();var constructor=type.getDeclaredConstructor(SearchBandMetadataUseCase.class,ApplyBandMetadataProposalsUseCase.class);
+                    constructor.setAccessible(true);Object retained=constructor.newInstance(new SearchBandMetadataUseCase(repository(),List.of(provider)),new ApplyBandMetadataProposalsUseCase(repository()));
+                    setField(activity,"session",retained);
+                    setField(retained,"changed",(Runnable)()->activity.runOnUiThread(()->invoke(activity,"renderState")));
+                    invoke(activity,"renderState");click("Refresh metadata proposals");
+                }catch(Exception error){throw new AssertionError(error);}
+            });
+            await(started::get);Object retained=field(activity,"session");
+            onUi(()->AppearanceController.choose(activity,AppearancePreference.LIGHT));
+            recreate(BandMetadataReviewActivity.class);
+            assertSame(retained,field(activity,"session"));release.set(true);
+            await(()->findContaining("Reviewed fixture biography")!=null);
+            onUi(()->{
+                var choice=(CheckBox)findContaining("Biography: Reviewed fixture biography");assertNotNull(choice);
+                assertTrue(choice.getMinHeight()>=WackenTheme.dp(activity,48));choice.setChecked(true);
+                assertNotNull(findContaining("https://band.example/evidence"));
+                assertNull("Existing YouTube must never become a replacement proposal",findContaining("UC9999999999999999999999"));
+                AppearanceController.choose(activity,AppearancePreference.DARK);
+            });
+            recreate(BandMetadataReviewActivity.class);
+            onUi(()->assertTrue(((CheckBox)findContaining("Biography: Reviewed fixture biography")).isChecked()));
+            assertEquals(1,calls.get());assertTrue(saved.get(NAME).biography().isEmpty());assertEquals(Optional.of(YT),saved.get(NAME).youtubeUrl());
+            onUi(()->click("Save accepted metadata"));
+            await(()->saved.get(NAME).biography().isPresent());
+            assertEquals(Optional.of("Reviewed fixture biography"),saved.get(NAME).biography());assertEquals(Optional.of(YT),saved.get(NAME).youtubeUrl());
+        } finally {release.set(true);onUi(()->{
+            var editor=AppearanceController.store(instrumentation.getTargetContext()).edit();
+            if(previousMode instanceof String mode)editor.putString(AppearanceController.MODE,mode);else editor.remove(AppearanceController.MODE);editor.commit();
+        });}
+    }
+
+    private void recreate(Class<? extends Activity> type) throws Exception {
+        Activity old=activity;onUi(old::recreate);
+        await(()->{
+            for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
+                if(type.isInstance(candidate)&&candidate!=old){activity=candidate;return true;}
+            return false;
+        });
+    }
+    private static void setField(Object target,String name,Object value){
+        try{var f=target.getClass().getDeclaredField(name);f.setAccessible(true);f.set(target,value);}catch(Exception error){throw new AssertionError(error);}
+    }
+    private static void invoke(Object target,String name){
+        try{var method=target.getClass().getDeclaredMethod(name);method.setAccessible(true);method.invoke(target);}catch(Exception error){throw new AssertionError(error);}
+    }
+    private BandRepository repository(){return new BandRepository(){
+        public void save(Band b){saved.put(b.name(),b);}public void replaceAll(List<Band>b){throw new AssertionError();}
+        public Optional<Band> findByName(String name){return Optional.ofNullable(saved.get(name));}
+        public List<Band> findAll(){return List.copyOf(saved.values());}
+    };}
 
     private void openDirect(){
         activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),MusicLinksReviewActivity.class)

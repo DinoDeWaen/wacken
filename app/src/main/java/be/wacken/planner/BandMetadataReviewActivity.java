@@ -2,6 +2,11 @@ package be.wacken.planner;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.content.Intent;
+import android.net.Uri;
+import android.view.View;
+import java.util.HashSet;
+import java.util.Set;
 import android.view.Gravity;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -25,20 +30,44 @@ public final class BandMetadataReviewActivity extends Activity {
     private TextView status;
     private LinearLayout taskStatus;
     private LinearLayout rows;
-    private SearchBandMetadataUseCase searchMetadata;
-    private ApplyBandMetadataProposalsUseCase applyMetadata;
-    private String lastSaveMessage;
-    private boolean lastSaveSucceeded;
+    private ScrollView scroll;
+    private Button refresh,cancel;
+    private Session session;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        AppearanceController.attach(this);
-        AppRepositories repositories = new AppRepositories(this);
-        searchMetadata = new SearchBandMetadataUseCase(repositories.bands(), metadataProviders());
-        applyMetadata = new ApplyBandMetadataProposalsUseCase(repositories.bands());
+    private static final class Session {
+        final SearchBandMetadataUseCase searchMetadata;
+        final ApplyBandMetadataProposalsUseCase applyMetadata;
+        final Set<BandMetadataProposal> checked=new HashSet<>();
+        volatile BandMetadataSearchRun run;
+        volatile boolean busy,cancelled;
+        volatile String failure;
+        String lastSaveMessage;
+        boolean lastSaveSucceeded;
+        volatile Runnable changed;
+        volatile Thread worker;
+        Session(SearchBandMetadataUseCase search,ApplyBandMetadataProposalsUseCase apply){searchMetadata=search;applyMetadata=apply;}
+        void notifyUi(){Runnable callback=changed;if(callback!=null)callback.run();}
+    }
+
+    @Override protected void onCreate(Bundle state) {
+        super.onCreate(state);AppearanceController.attach(this);
+        session=(Session)getLastNonConfigurationInstance();
+        if(session==null){
+            AppRepositories repositories=new AppRepositories(getApplicationContext());
+            session=new Session(new SearchBandMetadataUseCase(repositories.bands(),metadataProviders()),
+                    new ApplyBandMetadataProposalsUseCase(repositories.bands()));
+        }
         setContentView(content());
-        renderRows();
+        session.changed=()->runOnUiThread(()->{if(!isFinishing()&&!isDestroyed())renderState();});
+        if(!session.busy&&session.run==null&&session.failure==null)renderRows();else renderState();
+        if(state!=null)scroll.post(()->scroll.scrollTo(0,state.getInt("scroll")));
+    }
+    @Override public Object onRetainNonConfigurationInstance(){return session;}
+    @Override protected void onSaveInstanceState(Bundle state){state.putInt("scroll",scroll.getScrollY());super.onSaveInstanceState(state);}
+    @Override protected void onDestroy(){
+        session.changed=null;
+        if(!isChangingConfigurations()){session.cancelled=true;Thread worker=session.worker;if(worker!=null)worker.interrupt();}
+        super.onDestroy();
     }
 
     private List<BandMetadataLookupProvider> metadataProviders() {
@@ -52,7 +81,7 @@ public final class BandMetadataReviewActivity extends Activity {
     }
 
     private ScrollView content() {
-        ScrollView scroll = new ScrollView(this);
+        scroll = new ScrollView(this);
         WackenTheme.backgroundColor(scroll, WackenTheme.BACKGROUND);
 
         LinearLayout screen = new LinearLayout(this);
@@ -64,10 +93,11 @@ public final class BandMetadataReviewActivity extends Activity {
         title.setText("Fetch Band Metadata");
         WackenTheme.textColor(title, WackenTheme.AMBER);
         title.setTextSize(26);
-        title.setGravity(Gravity.CENTER_HORIZONTAL);
+        title.setGravity(Gravity.START);WackenTheme.heading(title);
         screen.addView(title);
 
         status = new TextView(this);
+        status.setTextSize(14);status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         status.setText("Review missing-field proposals before saving.");
         WackenTheme.textColor(status, WackenTheme.MUTED);
         status.setPadding(0, dp(8), 0, dp(12));
@@ -81,21 +111,41 @@ public final class BandMetadataReviewActivity extends Activity {
         rows.setOrientation(LinearLayout.VERTICAL);
         screen.addView(rows);
 
-        screen.addView(actionButton("Refresh metadata proposals", view -> renderRows()));
+        refresh=actionButton("Refresh metadata proposals",view->renderRows());screen.addView(refresh);
+        cancel=actionButton("Cancel metadata search",view->{
+            session.cancelled=true;Thread worker=session.worker;if(worker!=null)worker.interrupt();
+            status.setText("Cancellation requested. Existing metadata is kept.");cancel.setEnabled(false);
+        });screen.addView(cancel);
         screen.addView(actionButton("Back to settings", view -> finish()));
         return scroll;
     }
 
     private void renderRows() {
-        WackenTheme.textColor(status, WackenTheme.MUTED);
-        status.setText("Searching metadata sources...");
-        showSearchingTaskStatus();
-        rows.removeAllViews();
-        rows.addView(messageRow("Searching metadata sources..."));
-        new Thread(() -> {
-            BandMetadataSearchRun run = searchMetadata.searchMissingMetadataRun();
-            runOnUiThread(() -> showResults(run));
-        }).start();
+        if(session.busy)return;
+        session.busy=true;session.cancelled=false;session.failure=null;session.run=null;session.checked.clear();
+        renderState();Session work=session;
+        work.worker=new Thread(()->{
+            try {
+                BandMetadataSearchRun result=work.searchMetadata.searchMissingMetadataRun();
+                if(!work.cancelled)work.run=result;
+            } catch(RuntimeException error){work.failure="Search could not finish. Existing metadata is kept. Retry metadata proposals.";}
+            finally {
+                if(work.cancelled)work.failure="Search cancelled. Existing metadata is kept. Retry metadata proposals.";
+                Thread.interrupted();work.worker=null;work.busy=false;work.notifyUi();
+            }
+        });work.worker.start();
+    }
+
+    private void renderState(){
+        refresh.setEnabled(!session.busy);cancel.setEnabled(session.busy&&!session.cancelled);
+        if(session.busy){
+            status.setText(session.cancelled?"Cancellation requested. Existing metadata is kept.":"Searching metadata sources...");
+            showSearchingTaskStatus();rows.removeAllViews();rows.addView(messageRow("Searching metadata sources..."));return;
+        }
+        if(session.failure!=null){
+            status.setText(session.failure);taskStatus.removeAllViews();rows.removeAllViews();rows.addView(messageRow(session.failure));return;
+        }
+        if(session.run!=null)showResults(session.run);
     }
 
     private void showResults(BandMetadataSearchRun run) {
@@ -131,7 +181,7 @@ public final class BandMetadataReviewActivity extends Activity {
         TextView band = new TextView(this);
         band.setText(result.bandName());
         WackenTheme.textColor(band, WackenTheme.TEXT);
-        band.setTextSize(16);
+        band.setTextSize(18);
         row.addView(band);
 
         List<ProposalChoice> choices = new ArrayList<>();
@@ -139,9 +189,16 @@ public final class BandMetadataReviewActivity extends Activity {
             CheckBox choice = new CheckBox(this);
             choice.setText(proposalText(proposal));
             WackenTheme.textColor(choice, WackenTheme.TEXT);
-            choice.setButtonTintList(android.content.res.ColorStateList.valueOf(WackenTheme.AMBER));
+            WackenTheme.reviewChoice(choice);
+            choice.setChecked(session.checked.contains(proposal));
+            choice.setOnCheckedChangeListener((view,checked)->{if(checked)session.checked.add(proposal);else session.checked.remove(proposal);});
             row.addView(choice);
             choices.add(new ProposalChoice(proposal, choice));
+            proposal.sourceUrl().filter(url->url.startsWith("https://")).ifPresent(url->
+                    row.addView(actionButton("Open source\n"+url,view->{
+                        try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)));}
+                        catch(android.content.ActivityNotFoundException error){status.setText("No app available to open this source. Review is kept.");}
+                    })));
         }
 
         for (String unavailableProvider : result.unavailableProviders()) {
@@ -181,9 +238,9 @@ public final class BandMetadataReviewActivity extends Activity {
         if (!run.providerMessages().isEmpty()) {
             taskStatus.addView(taskLine("Provider status: " + String.join(" ", run.providerMessages())));
         }
-        if (lastSaveMessage != null) {
-            TextView save = taskLine("Last save: " + lastSaveMessage);
-            save.setTextColor(lastSaveSucceeded ? WackenTheme.SUCCESS_GREEN : WackenTheme.RED);
+        if (session.lastSaveMessage != null) {
+            TextView save = taskLine("Last save: " + session.lastSaveMessage);
+            WackenTheme.textColor(save,session.lastSaveSucceeded ? WackenTheme.SUCCESS_GREEN : WackenTheme.RED);
             taskStatus.addView(save);
         }
     }
@@ -192,7 +249,7 @@ public final class BandMetadataReviewActivity extends Activity {
         TextView label = new TextView(this);
         label.setText(title);
         WackenTheme.textColor(label, WackenTheme.AMBER);
-        label.setTextSize(16);
+        label.setTextSize(18);WackenTheme.heading(label);
         label.setPadding(dp(12), dp(10), dp(12), dp(4));
         label.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
         return label;
@@ -200,7 +257,7 @@ public final class BandMetadataReviewActivity extends Activity {
 
     private TextView taskLine(String message) {
         TextView line = new TextView(this);
-        line.setText(message);
+        line.setText(message);line.setTextSize(14);
         WackenTheme.textColor(line, WackenTheme.TEXT);
         line.setPadding(dp(12), dp(2), dp(12), dp(2));
         WackenTheme.backgroundColor(line, WackenTheme.PANEL);
@@ -218,7 +275,7 @@ public final class BandMetadataReviewActivity extends Activity {
 
     private TextView messageRow(String message) {
         TextView empty = new TextView(this);
-        empty.setText(message);
+        empty.setText(message);empty.setTextSize(16);
         WackenTheme.textColor(empty, WackenTheme.TEXT);
         empty.setPadding(dp(12), dp(10), dp(12), dp(10));
         empty.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, WackenTheme.GRID, 6));
@@ -230,10 +287,11 @@ public final class BandMetadataReviewActivity extends Activity {
                 .filter(choice -> choice.checkBox().isChecked())
                 .map(ProposalChoice::proposal)
                 .toList();
-        ApplyBandMetadataProposalsResult result = applyMetadata.apply(bandName, accepted);
-        lastSaveMessage = result.message();
-        lastSaveSucceeded = result.success();
-        status.setTextColor(result.success() ? WackenTheme.SUCCESS_GREEN : WackenTheme.RED);
+        if(session.busy)return;
+        ApplyBandMetadataProposalsResult result = session.applyMetadata.apply(bandName, accepted);
+        session.lastSaveMessage = result.message();
+        session.lastSaveSucceeded = result.success();
+        WackenTheme.textColor(status,result.success() ? WackenTheme.SUCCESS_GREEN : WackenTheme.RED);
         status.setText(result.message());
         renderRows();
     }

@@ -58,6 +58,20 @@ final class WackenTheme {
                 view.getContext(),palette.panel(),palette.line(),palette.raised(),palette.text())));
     }
 
+    static void reviewChoice(android.widget.CompoundButton choice) {
+        choice.setTextSize(16);choice.setMinHeight(dp(choice.getContext(),48));
+        choice.setMinWidth(dp(choice.getContext(),48));textColor(choice,TEXT);focusablePanel(choice);
+        AppearanceController.bind(choice,"choiceTint",(view,palette)->
+                ((android.widget.CompoundButton)view).setButtonTintList(android.content.res.ColorStateList.valueOf(palette.accent())));
+    }
+
+    static void reviewInput(android.widget.EditText input) {
+        input.setTextSize(16);input.setMinHeight(dp(input.getContext(),48));
+        input.setPadding(dp(input.getContext(),8),dp(input.getContext(),8),dp(input.getContext(),8),dp(input.getContext(),8));
+        textColor(input,TEXT);focusablePanel(input);
+        AppearanceController.bind(input,"inputHint",(view,palette)->((android.widget.EditText)view).setHintTextColor(palette.muted()));
+    }
+
     private static StateListDrawable focusBackground(Context context,int fill,int border,int focusFill,int focusBorder) {
         StateListDrawable states=new StateListDrawable();
         states.addState(new int[]{android.R.attr.state_focused},buttonPanel(context,focusFill,focusBorder,3));
