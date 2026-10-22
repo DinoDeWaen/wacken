@@ -3,4 +3,5 @@
     <item name="login_password" type="id" />
     <item name="destination_content" type="id" />
     <item name="band_lineup" type="id" />
+    <item name="lineup_search" type="id" />
 </resources>

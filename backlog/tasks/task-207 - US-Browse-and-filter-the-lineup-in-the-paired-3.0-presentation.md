@@ -1,16 +1,29 @@
 ---
 id: TASK-207
 title: 'US: Browse and filter the lineup in the paired 3.0 presentation'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-17 13:21'
+updated_date: '2026-10-22 05:53'
 labels:
   - ux
   - release-3.0
 milestone: m-2
 dependencies:
   - TASK-206
+references:
+  - mainactivity
+modified_files:
+  - app/src/androidTest/java/be/wacken/planner/CriticalFlowsAndroidTest.java
+  - app/src/test/java/be/wacken/planner/LineupPresentationTest.java
+  - app/src/main/java/be/wacken/planner/LineupPresentation.java
+  - app/src/main/res/values/ids.xml
+  - app/src/main/java/be/wacken/planner/MainActivity.java
+  - >-
+    groma/systems/wacken/containers/android-application/components/lineuppresentation.md
+  - >-
+    groma/systems/wacken/containers/android-application/components/mainactivity.md
 priority: medium
 type: enhancement
 ---
@@ -32,6 +45,12 @@ Validated baseline: TASK-201, design/release-2.34/themes.html; user approved 202
 - [ ] #5 BDD/native regression coverage proves find/open/return, empty search, unknown links, cached use and large-font behavior.
 - [ ] #6 README and business requirements impacts use canonical delivery-governance wording; approved behavior is documented, diagrams updated only where affected, and the full validation package is recorded before merge.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Standard treatment within existing Views/ADR0024 presentation boundary. 1. Characterize actual cached lineup/rating/link/row return; add red native scenarios for find/open/return, no results and200% long names, plus pure filtering tests. 2. Replace compressed fixed-height table rows with wrapping actual band/planning meaning/stage/date/time and known-link controls; keep inline rating saves and existing placeholder/scope rules. 3. Add approved case-insensitive name search plus All bands/Unrated local presentation filter; retain query/filter/selected-row through detail Back, appearance and recreation. Put overview chrome in scrollable list header so200% controls remain reachable; minimum48dp targets. 4. Preserve cached loading/offline/error actions and distinguish no results from empty lineup, with clear search/retry. 5. Run focused red/green and full native/JVM/QA/lint/ArchUnit/Groma gates; review source/map/duplicates/diagnostic changes, update README/requirements and build fresh signed checkpoint. No new framework/module/dependency/data model or domain-policy ownership; no additional architecture approval/ADR expected. Risks: adapter positions with header/filter, rating update invalidating filter, large-font geometry and state restoration. Integrated human/TalkBack/daylight matrix stays212.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

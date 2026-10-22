@@ -11,9 +11,10 @@ import android.graphics.SweepGradient;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -23,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.EditText;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -51,8 +53,6 @@ public final class MainActivity extends Activity {
     private static final int COLOR_TEXT = WackenTheme.TEXT;
     private static final int COLOR_MUTED = WackenTheme.MUTED;
     private static final int COLOR_ACCENT = WackenTheme.RED;
-    private static final int TABLE_HEADER_HEIGHT_DP = 44;
-    private static final int BAND_ROW_HEIGHT_DP = 58;
 
     private ListView bandList;
     private TextView status;
@@ -81,6 +81,14 @@ public final class MainActivity extends Activity {
     private boolean syncAttempted;
     private boolean syncInProgress;
     private String pendingScrollBandName;
+    private String query="";
+    private boolean unratedOnly;
+    private EditText search;
+    private TextView resultsStatus;
+    private Button clearSearch;
+    private Button allFilter;
+    private Button unratedFilter;
+    private Button retrySync;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +96,8 @@ public final class MainActivity extends Activity {
         AppearanceController.attach(this);
         if (savedInstanceState != null) {
             pendingScrollBandName = savedInstanceState.getString(STATE_PENDING_SCROLL_BAND_NAME);
+            query=savedInstanceState.getString("lineup_query","");
+            unratedOnly=savedInstanceState.getBoolean("lineup_unrated");
         }
         sessionStore = new AuthSessionStore(this);
         if (!loadCurrentSession()) {
@@ -97,34 +107,42 @@ public final class MainActivity extends Activity {
 
         FrameLayout root = new FrameLayout(this);
         LinearLayout screen = contentView();
+        LinearLayout chrome=new LinearLayout(this);
+        chrome.setOrientation(LinearLayout.VERTICAL);
 
-        screen.addView(header());
-        screen.addView(actionRow());
+        chrome.addView(header());
+        chrome.addView(actionRow());
         syncStatus = new TextView(this);
         WackenTheme.textColor(syncStatus, COLOR_MUTED);
         syncStatus.setTextSize(13);
         syncStatus.setGravity(Gravity.CENTER_HORIZONTAL);
         syncStatus.setPadding(0, 0, 0, dp(10));
-        screen.addView(syncStatus);
-        tableHeader = tableHeader();
-        screen.addView(tableHeader);
+        chrome.addView(syncStatus);
+        tableHeader = lineupControls();
+        chrome.addView(tableHeader);
 
         status = new TextView(this);
         WackenTheme.textColor(status, COLOR_MUTED);
         status.setGravity(Gravity.CENTER_HORIZONTAL);
         status.setPadding(0, dp(20), 0, dp(20));
-        screen.addView(status);
+        status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+        chrome.addView(status);
+        retrySync=WackenTheme.actionButton(this,"Retry sync",WackenTheme.ButtonStyle.SECONDARY,
+                view->syncFromSupabase(false,"Refreshing cached bands...",false));
+        retrySync.setVisibility(View.GONE);
+        chrome.addView(retrySync);
 
         archiveList = new LinearLayout(this);
         archiveList.setOrientation(LinearLayout.VERTICAL);
         archiveList.setVisibility(View.GONE);
-        screen.addView(archiveList);
+        chrome.addView(archiveList);
 
         bandList = new ListView(this);
         bandList.setId(R.id.band_lineup);
         bandList.setDivider(null);
         bandList.setCacheColorHint(COLOR_BACKGROUND);
         WackenTheme.backgroundColor(bandList, COLOR_BACKGROUND);
+        bandList.addHeaderView(chrome,null,false);
         screen.addView(bandList, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0,
@@ -169,6 +187,12 @@ public final class MainActivity extends Activity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(STATE_PENDING_SCROLL_BAND_NAME, pendingScrollBandName);
+        if(pendingScrollBandName==null&&adapter!=null) {
+            int index=Math.max(0,bandList.getFirstVisiblePosition()-bandList.getHeaderViewsCount());
+            if(index<adapter.getCount())outState.putString(STATE_PENDING_SCROLL_BAND_NAME,adapter.getItem(index).bandName());
+        }
+        outState.putString("lineup_query",query);
+        outState.putBoolean("lineup_unrated",unratedOnly);
     }
 
     private boolean loadCurrentSession() {
@@ -225,8 +249,7 @@ public final class MainActivity extends Activity {
             ).listBands();
         }
         cachedBandsByName = bandsByName(repositories);
-        adapter = new BandAdapter(repositories, cachedBands, cachedBandsByName);
-        bandList.setAdapter(adapter);
+        showFilteredBands(repositories);
         restorePendingScrollTarget();
         loading = false;
         reloadNeeded = false;
@@ -251,9 +274,6 @@ public final class MainActivity extends Activity {
         }
         if (tableHeader != null) {
             tableHeader.setVisibility(content.showBandList() ? View.VISIBLE : View.GONE);
-        }
-        if (bandList != null) {
-            bandList.setVisibility(content.showBandList() ? View.VISIBLE : View.GONE);
         }
         renderArchiveList(state, content.showAddFestivalAction());
     }
@@ -315,7 +335,7 @@ public final class MainActivity extends Activity {
         title.setText("Bands");
         WackenTheme.textColor(title, WackenTheme.AMBER);
         title.setTextSize(28);
-        title.setTypeface(Typeface.DEFAULT_BOLD);
+        WackenTheme.heading(title);
         title.setGravity(Gravity.START);
         header.addView(title);
 
@@ -337,14 +357,12 @@ public final class MainActivity extends Activity {
         archiveButton = topActionButton("Archive", "Archive active festival", WackenTheme.ButtonStyle.DANGER,
                 view -> archiveActiveFestival());
         archiveButton.setTextSize(13);
-        archiveButton.setSingleLine(true);
         actions.addView(archiveButton);
         deleteFestivalButton = topActionButton("Delete", "Delete active festival and schedule", WackenTheme.ButtonStyle.DANGER,
                 view -> deleteActiveFestival());
         deleteFestivalButton.setTextSize(13);
-        deleteFestivalButton.setSingleLine(true);
         actions.addView(deleteFestivalButton);
-        addFestivalButton = topActionButton("+", "Add festival", WackenTheme.ButtonStyle.SECONDARY,
+        addFestivalButton = topActionButton("Add festival", "Add festival", WackenTheme.ButtonStyle.SECONDARY,
                 view -> {
                     reloadNeeded = true;
                     Intent intent = new Intent(this, ImportCsvActivity.class);
@@ -353,7 +371,7 @@ public final class MainActivity extends Activity {
                 });
         addFestivalButton.setVisibility(View.GONE);
         actions.addView(addFestivalButton);
-        actions.addView(topActionButton("⏻", "Sync and exit", WackenTheme.ButtonStyle.DANGER,
+        actions.addView(topActionButton("Sync and exit", "Sync and exit", WackenTheme.ButtonStyle.DANGER,
                 view -> syncFromSupabase(true, "Sealing scores before exit...")));
         return actions;
     }
@@ -400,11 +418,11 @@ public final class MainActivity extends Activity {
 
     private Button topActionButton(String icon, String description, WackenTheme.ButtonStyle style, View.OnClickListener listener) {
         Button button = WackenTheme.actionButton(this, icon, style, listener);
-        button.setTextSize(22);
+        button.setTextSize(14);
         button.setContentDescription(description);
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
                 0,
-                dp(48),
+                LinearLayout.LayoutParams.WRAP_CONTENT,
                 1
         );
         layout.setMargins(dp(3), 0, dp(3), 0);
@@ -448,6 +466,7 @@ public final class MainActivity extends Activity {
                         finishAndRemoveTask();
                     } else {
                         loadBandList();
+                        retrySync.setVisibility(View.GONE);
                         refreshSyncStatus(repositories, "Up to date", WackenTheme.SUCCESS_GREEN);
                         if (showOverlay) {
                             hideSyncOverlay();
@@ -474,18 +493,20 @@ public final class MainActivity extends Activity {
                         refreshSyncStatus(new AppRepositories(this), "Review pending rating", WackenTheme.AMBER);
                         return;
                     }
-                    status.setVisibility(View.VISIBLE);
-                    status.setText("Showing cached data. Supabase sync failed: " + error.getMessage());
                     if (reloadNeeded || adapter == null) {
                         loadBandList();
                     }
-                    refreshSyncStatus(new AppRepositories(this), "Offline - cached data", WackenTheme.AMBER);
+                    status.setVisibility(View.VISIBLE);
+                    status.setText("Couldn’t refresh. Cached data and pending changes are kept. Retry when connected.");
+                    retrySync.setVisibility(View.VISIBLE);
+                    refreshSyncStatus(new AppRepositories(this), "Offline · showing cached data", WackenTheme.AMBER);
                 });
             }
         }).start();
     }
 
     private void setSyncActionsEnabled(boolean enabled) {
+        if(retrySync!=null)retrySync.setEnabled(enabled);
         if (closeButton != null) {
             closeButton.setEnabled(enabled);
         }
@@ -619,93 +640,99 @@ public final class MainActivity extends Activity {
         }
     }
 
-    private LinearLayout tableHeader() {
-        LinearLayout header = tableRow(COLOR_BACKGROUND);
-        header.addView(headerCell("Band", 2.45f));
-        header.addView(headerCell("Rating", 1.75f));
-        header.addView(headerCell("", 1.45f));
-        header.addView(headerCell("Stage", 1.25f));
-        header.addView(headerCell("Date", 0.95f));
-        header.addView(headerCell("Time", 1.15f));
-        return header;
+    private LinearLayout lineupControls() {
+        LinearLayout controls=new LinearLayout(this);
+        controls.setOrientation(LinearLayout.VERTICAL);
+        TextView label=lineupText("Find a band",16,true);
+        controls.addView(label);
+        search=new EditText(this);
+        search.setId(R.id.lineup_search);
+        search.setSaveEnabled(false);
+        search.setContentDescription("Find a band");
+        search.setHint("Search the line-up");
+        search.setSingleLine(true);
+        search.setTextSize(16);
+        search.setMinHeight(dp(48));
+        WackenTheme.textColor(search,COLOR_TEXT);
+        AppearanceController.bind(search,"search-hint",(view,palette)->((EditText)view).setHintTextColor(palette.muted()));
+        search.setBackground(WackenTheme.panelBackground(this,WackenTheme.PANEL,COLOR_GRID,6));
+        search.setPadding(dp(12),dp(8),dp(12),dp(8));
+        search.setText(query);
+        label.setLabelFor(R.id.lineup_search);
+        controls.addView(search,new LinearLayout.LayoutParams(-1,-2));
+        LinearLayout filters=new LinearLayout(this);
+        filters.setOrientation(LinearLayout.HORIZONTAL);
+        allFilter=WackenTheme.actionButton(this,"All bands",WackenTheme.ButtonStyle.SECONDARY,v->setUnratedFilter(false));
+        unratedFilter=WackenTheme.actionButton(this,"Unrated",WackenTheme.ButtonStyle.SECONDARY,v->setUnratedFilter(true));
+        for(Button button:new Button[]{allFilter,unratedFilter}) {
+            button.setTextSize(14);
+            LinearLayout.LayoutParams layout=new LinearLayout.LayoutParams(0,-2,1);
+            layout.setMargins(dp(4),dp(8),dp(4),dp(8));
+            filters.addView(button,layout);
+        }
+        controls.addView(filters);
+        updateFilterSelection();
+        resultsStatus=lineupText("",14,false);
+        resultsStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+        controls.addView(resultsStatus);
+        clearSearch=WackenTheme.actionButton(this,"Clear search and filters",WackenTheme.ButtonStyle.SECONDARY,v->{
+            unratedOnly=false;updateFilterSelection();search.setText("");
+        });
+        clearSearch.setTextSize(14);
+        controls.addView(clearSearch);
+        search.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence value,int start,int count,int after) { }
+            @Override public void onTextChanged(CharSequence value,int start,int before,int count) {
+                query=value.toString();
+                if(cachedBands!=null)showFilteredBands(new AppRepositories(MainActivity.this));
+            }
+            @Override public void afterTextChanged(Editable value) { }
+        });
+        return controls;
     }
 
-    private TextView headerCell(String text, float weight) {
-        TextView cell = cell(text, Typeface.DEFAULT_BOLD, weight);
-        WackenTheme.textColor(cell, COLOR_TEXT);
-        cell.setTextSize(13);
-        cell.setBackground(WackenTheme.panelBackground(this, WackenTheme.PANEL, COLOR_GRID, 4));
-        return cell;
+    private void setUnratedFilter(boolean selected) {
+        unratedOnly=selected;
+        updateFilterSelection();
+        if(cachedBands!=null)showFilteredBands(new AppRepositories(this));
     }
 
-    private LinearLayout tableRow(int backgroundColor) {
-        return tableRow(backgroundColor, TABLE_HEADER_HEIGHT_DP);
+    private void updateFilterSelection() {
+        for(Button button:new Button[]{allFilter,unratedFilter}) {
+            boolean selected=(button==unratedFilter)==unratedOnly;
+            button.setSelected(selected);
+            button.setContentDescription(button.getText()+(selected?", selected":""));
+            button.setBackground(WackenTheme.panelBackground(this,selected?WackenTheme.ELEVATED_PANEL:WackenTheme.PANEL,
+                    selected?WackenTheme.AMBER:COLOR_GRID,6));
+        }
     }
 
-    private LinearLayout tableRow(int backgroundColor, int heightDp) {
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        WackenTheme.backgroundColor(row,backgroundColor);
-        row.setLayoutParams(new ListView.LayoutParams(
-                ListView.LayoutParams.MATCH_PARENT,
-                dp(heightDp)
-        ));
-        return row;
+    private void showFilteredBands(AppRepositories repositories) {
+        List<BandListItem> visible=LineupPresentation.select(cachedBands,query,unratedOnly);
+        if(adapter==null) {
+            adapter=new BandAdapter(repositories,visible,cachedBandsByName);
+            bandList.setAdapter(adapter);
+        } else adapter.update(repositories,visible,cachedBandsByName);
+        boolean filtered=!query.isEmpty()||unratedOnly;
+        resultsStatus.setText(visible.isEmpty()&&filtered?"No bands found":visible.size()+" bands");
+        clearSearch.setVisibility(filtered?View.VISIBLE:View.GONE);
     }
 
-    private TextView cell(String text, Typeface typeface, float weight) {
-        TextView cell = new TextView(this);
-        cell.setText(text);
-        cell.setSingleLine(true);
-        cell.setEllipsize(TextUtils.TruncateAt.END);
-        WackenTheme.textColor(cell, COLOR_TEXT);
-        cell.setTextSize(12);
-        cell.setTypeface(typeface);
-        cell.setGravity(Gravity.CENTER_VERTICAL);
-        cell.setPadding(dp(6), 0, dp(6), 0);
-        cell.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, weight));
-        return cell;
+    private TextView lineupText(String text,int size,boolean bold) {
+        TextView view=new TextView(this);
+        view.setText(text);
+        view.setTextSize(size);
+        WackenTheme.textColor(view,COLOR_TEXT);
+        view.setTypeface(bold?Typeface.DEFAULT_BOLD:Typeface.DEFAULT);
+        view.setPadding(0,dp(4),0,dp(4));
+        return view;
     }
 
-    private LinearLayout bandNameCell(TextView name) {
-        LinearLayout cell = new LinearLayout(this);
-        cell.setOrientation(LinearLayout.VERTICAL);
-        cell.setGravity(Gravity.CENTER_VERTICAL);
-        cell.setPadding(dp(5), 0, dp(5), 0);
-        cell.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 2.45f));
-
-        name.setSingleLine(true);
-        name.setEllipsize(TextUtils.TruncateAt.END);
-        WackenTheme.textColor(name, COLOR_TEXT);
-        name.setTextSize(12);
-        name.setTypeface(Typeface.DEFAULT_BOLD);
-
-        cell.addView(name, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        ));
-        return cell;
-    }
-
-    private LinearLayout rowActions(Optional<Band> band) {
-        LinearLayout actions = new LinearLayout(this);
-        actions.setOrientation(LinearLayout.HORIZONTAL);
-        actions.setGravity(Gravity.CENTER);
-        actions.setPadding(dp(2), 0, dp(2), 0);
-        actions.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.45f));
-        band.flatMap(Band::youtubeUrl).ifPresent(url -> actions.addView(iconButton("▶", "Open YouTube", COLOR_ACCENT, url, dp(26))));
-        band.flatMap(Band::spotifyUrl).ifPresent(url -> actions.addView(iconButton("♬", "Open Spotify", WackenTheme.SUCCESS_GREEN, url, dp(26))));
-        return actions;
-    }
-
-    private Button iconButton(String icon, String description, int accentColor, String url, int size) {
-        Button button = WackenTheme.iconButton(this, icon, description, accentColor, Math.max(26, Math.round(size / getResources().getDisplayMetrics().density)), view -> ExternalLinks.open(this, url));
+    private void addMusicAction(LinearLayout actions,String label,String url) {
+        Button button=WackenTheme.actionButton(this,label,WackenTheme.ButtonStyle.SECONDARY,v->ExternalLinks.open(this,url));
+        button.setContentDescription("Open "+label);
         button.setTextSize(14);
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(size, size);
-        layout.setMargins(dp(1), 0, dp(1), 0);
-        button.setLayoutParams(layout);
-        return button;
+        actions.addView(button,new LinearLayout.LayoutParams(-1,-2));
     }
 
     private void openBandDetail(Map<String, Band> bandsByName, BandListItem band) {
@@ -727,10 +754,10 @@ public final class MainActivity extends Activity {
     }
 
     private void restorePendingScrollTarget() {
-        OptionalInt targetIndex = SelectedBandScrollTarget.findIndex(pendingScrollBandName, cachedBands);
+        OptionalInt targetIndex = SelectedBandScrollTarget.findIndex(pendingScrollBandName, adapter.bands);
         pendingScrollBandName = null;
         if (targetIndex.isPresent()) {
-            bandList.post(() -> bandList.setSelection(targetIndex.getAsInt()));
+            bandList.post(() -> bandList.setSelection(targetIndex.getAsInt()+bandList.getHeaderViewsCount()));
         }
     }
 
@@ -802,14 +829,21 @@ public final class MainActivity extends Activity {
     }
 
     private final class BandAdapter extends BaseAdapter {
-        private final AppRepositories repositories;
+        private AppRepositories repositories;
         private final List<BandListItem> bands;
-        private final Map<String, Band> bandsByName;
+        private Map<String, Band> bandsByName;
 
         BandAdapter(AppRepositories repositories, List<BandListItem> bands, Map<String, Band> bandsByName) {
             this.repositories = repositories;
             this.bands = new ArrayList<>(bands);
             this.bandsByName = bandsByName;
+        }
+
+        private void update(AppRepositories repositories,List<BandListItem> bands,Map<String,Band> bandsByName) {
+            this.repositories=repositories;
+            this.bandsByName=bandsByName;
+            this.bands.clear();this.bands.addAll(bands);
+            notifyDataSetChanged();
         }
 
         @Override
@@ -842,92 +876,54 @@ public final class MainActivity extends Activity {
         }
 
         private RowHolder createRow() {
-            LinearLayout row = tableRow(COLOR_ROW_DARK, BAND_ROW_HEIGHT_DP);
-            row.setClickable(true);
-            row.setFocusable(true);
-
-            TextView name = new TextView(MainActivity.this);
-            LinearLayout bandName = bandNameCell(name);
-            RatingStarsView rating = new RatingStarsView(MainActivity.this, 0, false, COLOR_ACCENT);
-            rating.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.75f));
-            LinearLayout actions = new LinearLayout(MainActivity.this);
-            actions.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.45f));
-            TextView stage = cell("", Typeface.DEFAULT_BOLD, 1.25f);
-            TextView date = cell("", Typeface.DEFAULT_BOLD, 0.95f);
-            TextView time = cell("", Typeface.DEFAULT_BOLD, 1.15f);
-
-            row.addView(bandName);
-            row.addView(rating);
-            row.addView(actions);
-            row.addView(stage);
-            row.addView(date);
-            row.addView(time);
-            return new RowHolder(row, name, rating, actions, stage, date, time);
+            LinearLayout row=new LinearLayout(MainActivity.this);
+            row.setOrientation(LinearLayout.VERTICAL);
+            row.setPadding(dp(16),dp(16),dp(16),dp(16));
+            row.setLayoutParams(new ListView.LayoutParams(-1,-2));
+            row.setMinimumHeight(dp(48));
+            row.setClickable(true);row.setFocusable(true);
+            TextView name=lineupText("",18,true);
+            TextView meaning=lineupText("",14,false);
+            TextView performance=lineupText("",14,false);
+            RatingStarsView rating=new RatingStarsView(MainActivity.this,0,false,COLOR_ACCENT);
+            int height=dp(Math.max(48,(int)Math.ceil(36*getResources().getConfiguration().fontScale)));
+            rating.setLayoutParams(new LinearLayout.LayoutParams(-1,height));
+            LinearLayout actions=new LinearLayout(MainActivity.this);
+            actions.setOrientation(LinearLayout.VERTICAL);
+            row.addView(name);row.addView(meaning);row.addView(rating);row.addView(performance);row.addView(actions);
+            return new RowHolder(row,name,meaning,rating,actions,performance);
         }
 
-        private void bindRow(RowHolder holder, int position) {
-            BandListItem band = getItem(position);
-            WackenTheme.backgroundColor(holder.row,position % 2 == 0 ? COLOR_ROW_DARK : COLOR_ROW_LIGHT);
-            holder.row.setOnClickListener(view -> {
-                if (!loading) {
-                    openBandDetail(bandsByName, band);
-                }
-            });
-
+        private void bindRow(RowHolder holder,int position) {
+            BandListItem band=getItem(position);
+            holder.row.setBackground(WackenTheme.panelBackground(MainActivity.this,
+                    position%2==0?COLOR_ROW_DARK:COLOR_ROW_LIGHT,COLOR_GRID,6));
+            holder.row.setOnClickListener(view->{if(!loading)openBandDetail(bandsByName,band);});
             holder.name.setText(band.bandName());
-            holder.rating.bind(band.rating(), band.explicitRating());
-            holder.rating.setOnRatingSelected(selectedRating -> saveRating(position, band, holder.rating, selectedRating));
-            holder.row.setOnHoverListener((view, event) -> {
-                if (event.getAction() == MotionEvent.ACTION_HOVER_ENTER) {
-                    holder.rating.showAvailableRating();
-                }
-                if (event.getAction() == MotionEvent.ACTION_HOVER_EXIT && !holder.row.hasFocus()) {
-                    holder.rating.restoreRestingState();
-                }
-                return false;
-            });
-            holder.row.setOnFocusChangeListener((view, hasFocus) -> {
-                if (hasFocus) {
-                    holder.rating.showAvailableRating();
-                } else {
-                    holder.rating.restoreRestingState();
-                }
-            });
-
+            holder.meaning.setText(LineupPresentation.planningLabel(band.rating()));
+            holder.rating.bind(band.rating(),band.explicitRating());
+            holder.rating.setOnRatingSelected(value->saveRating(band,value));
+            holder.performance.setText(band.stageName()+" · "+band.displayDate()+" · "+band.displayTime());
             holder.actions.removeAllViews();
-            Optional<Band> storedBand = Optional.ofNullable(bandsByName.get(band.bandName()));
-            LinearLayout actions = rowActions(storedBand);
-            for (int index = 0; index < actions.getChildCount(); index++) {
-                View child = actions.getChildAt(index);
-                actions.removeView(child);
-                holder.actions.addView(child);
-                index--;
-            }
-            holder.actions.setOrientation(LinearLayout.HORIZONTAL);
-            holder.actions.setGravity(Gravity.CENTER);
-            holder.actions.setPadding(dp(2), 0, dp(2), 0);
-            holder.actions.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.45f));
-
-            holder.stage.setText(band.stageName());
-            holder.date.setText(band.displayDate());
-            holder.time.setText(band.displayTime());
+            Optional<Band> stored=Optional.ofNullable(bandsByName.get(band.bandName()));
+            stored.flatMap(Band::youtubeUrl).ifPresent(url->addMusicAction(holder.actions,"YouTube",url));
+            stored.flatMap(Band::spotifyUrl).ifPresent(url->addMusicAction(holder.actions,"Spotify",url));
+            if(holder.actions.getChildCount()==0)holder.actions.addView(lineupText("Music links not available",14,false));
         }
 
-        private void saveRating(int position, BandListItem band, RatingStarsView rating, int selectedRating) {
-            RateBandResult result = new RateBandUseCase(repositories.ratings())
-                    .rateBand(currentUser(), new Band(band.bandName()), selectedRating);
-            if (result.success()) {
-                rating.applySavedRating(selectedRating);
-                bands.set(position, new BandListItem(
-                        band.bandName(),
-                        band.stageName(),
-                        band.startTime(),
-                        band.endTime(),
-                        selectedRating,
-                        false,
-                        updatedPersonRatings(band, selectedRating)
-                ));
-                notifyDataSetChanged();
+        private void saveRating(BandListItem band,int selectedRating) {
+            RateBandResult result=new RateBandUseCase(repositories.ratings()).rateBand(currentUser(),new Band(band.bandName()),selectedRating);
+            if(result.success()) {
+                List<BandListItem> updated=new ArrayList<>(cachedBands);
+                for(int index=0;index<updated.size();index++)if(updated.get(index).bandName().equals(band.bandName())) {
+                    updated.set(index,new BandListItem(band.bandName(),band.stageName(),band.startTime(),band.endTime(),selectedRating,false,
+                            updatedPersonRatings(band,selectedRating)));
+                }
+                cachedBands=updated;
+                pendingScrollBandName=band.bandName();
+                showFilteredBands(repositories);
+                restorePendingScrollTarget();
+                refreshSyncStatus(repositories,"Saved on this device · pending sync",COLOR_MUTED);
             }
         }
 
@@ -946,14 +942,6 @@ public final class MainActivity extends Activity {
         }
     }
 
-    private record RowHolder(
-            LinearLayout row,
-            TextView name,
-            RatingStarsView rating,
-            LinearLayout actions,
-            TextView stage,
-            TextView date,
-            TextView time
-    ) {
-    }
+    private record RowHolder(LinearLayout row,TextView name,TextView meaning,RatingStarsView rating,
+                             LinearLayout actions,TextView performance) { }
 }
