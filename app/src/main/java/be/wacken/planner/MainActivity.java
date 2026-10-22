@@ -298,7 +298,7 @@ public final class MainActivity extends Activity {
             archive.setTextSize(13);
             LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(42)
+                    LinearLayout.LayoutParams.WRAP_CONTENT
             );
             layout.setMargins(0, 0, 0, dp(8));
             archiveList.addView(archive, layout);

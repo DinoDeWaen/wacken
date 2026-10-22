@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-22 05:53'
+updated_date: '2026-10-22 06:24'
 labels:
   - ux
   - release-3.0
@@ -24,6 +24,10 @@ modified_files:
     groma/systems/wacken/containers/android-application/components/lineuppresentation.md
   - >-
     groma/systems/wacken/containers/android-application/components/mainactivity.md
+  - backlog/docs/groma-lineup-review-2026-10-22.md
+  - tools/groma/architecture-baseline.json
+  - README.md
+  - backlog/docs/business-requirements.md
 priority: medium
 type: enhancement
 ---

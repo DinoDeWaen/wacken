@@ -38,6 +38,16 @@ Sync/close and festival management remain reachable. Stable content/list IDs
 support Android hierarchy restoration; tests include real launcher return,
 Settings recreation and original-band-row return while offline.
 
+TASK-207 replaces the development lineup’s compressed table with wrapping band
+names, explicit planning-rating meaning and actual stage/date/time context.
+Search matches names without changing canonical identity; All bands/Unrated
+filters preserve the existing alphabetic order and festival/member scope.
+Query/filter and the selected row survive detail return and recreation, while
+appearance changes retain the same views. Overview controls scroll with the
+list at large fonts. Stored music links open their existing targets; missing
+links are explained without fabricated actions. Empty search offers Clear search
+and filters; a failed refresh retains cached work and offers Retry sync.
+
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.
