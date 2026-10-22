@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-22 15:26'
+updated_date: '2026-10-22 15:34'
 labels:
   - ux
   - release-3.0
@@ -39,6 +39,8 @@ modified_files:
   - backlog/docs/business-requirements.md
   - >-
     app/src/test/java/be/wacken/planner/BandLinkReviewActivityRegressionTest.java
+  - backlog/docs/groma-review-layouts-2026-10-22.md
+  - tools/groma/architecture-baseline.json
 priority: medium
 type: enhancement
 ---

@@ -372,6 +372,11 @@ The [TASK209 schedule review](backlog/docs/groma-schedule-review-2026-10-22.md)
 retains these counts and boundaries, records the actual shared-style call and
 reviews two replacement duplicate identities plus Android scanner deltas.
 
+The [TASK210 review-layout audit](backlog/docs/groma-review-layouts-2026-10-22.md)
+keeps96 components/299sources/13flows and adds four actual shared-style calls.
+The current82 duplicate identities include four exact reviewed replacements of
+three earlier groups; no new exception or boundary is accepted.
+
 For intentional architecture changes, generate an external review candidate:
 
 ```bash

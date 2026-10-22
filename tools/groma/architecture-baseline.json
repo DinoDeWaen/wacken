@@ -210,7 +210,7 @@
         "parent": "android-application",
         "title": "Band link review screen",
         "description": "Confirm imported band matches",
-        "overview": "Presents candidate matches and commits only the band links selected by the user.",
+        "overview": "Presents own-catalog matches for imported band names in full-width vertical rows. Labeled native search and match controls retain edited terms, explicit No match or chosen canonical name and viewport through recreation; search changes require a current match choice. Both palettes use the shared focused input/selector styling. Only the existing explicit link action invokes the application linker; searching, theme changes and restoration do not rename or merge bands or change ratings.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -223,7 +223,7 @@
         "parent": "android-application",
         "title": "Metadata review screen",
         "description": "Review enrichment proposals",
-        "overview": "Displays missing fields, provider status, candidate values, and save results before applying accepted metadata.",
+        "overview": "Displays missing fields, provider status, candidate values, clickable source URLs and explicit accepted-metadata results in the paired native layout. A retained screen session owns its existing read-only search worker, result and checked proposals so recreation does not repeat in-flight lookup or discard review. Cancel interrupts unfinished search and preserves saved data; results after cancellation are discarded and retry is explicit. Shared48dp choices, live status and wrapping evidence preserve large-text reachability. Existing search/apply use cases retain missing-field and no-overwrite authority; only Save accepted metadata applies checked proposals.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -733,7 +733,7 @@
         "parent": "android-application",
         "title": "Verified music link review screen",
         "description": "Reviews missing links before explicit save",
-        "overview": "Settings supplies active festival ID or BandDetailActivity supplies one canonical band name. Retained worker/session preserves completed reviews across rotation, cancellation interrupts unfinished lookup, edited terms invalidate choices and never rename bands. Only verified selected identity plus explicit acknowledgement enables save. Search may be public, while save uses the captured account-bound shared repository; no claim is made that an account switch automatically cancels public lookup.",
+        "overview": "Settings supplies active festival ID or BandDetailActivity supplies one canonical band name. Retained worker/session preserves completed reviews, terms and approval choices across rotation; cancellation interrupts unfinished lookup. Paired48dp inputs/choices and wrapping source buttons expose canonical URLs and identity rationale. Editing terms immediately removes stale evidence/approval controls without rebuilding the input, never renames bands and requires a fresh search. Only verified selected identity plus explicit acknowledgement enables save. Search may be public, while save uses the captured account-bound shared repository; no claim is made that an account switch automatically cancels public lookup.",
         "group": "Verified music discovery",
         "technology": "",
         "code": [
@@ -1160,7 +1160,7 @@
         "parent": "android-application",
         "title": "Settings screen",
         "description": "Launch import, review, export, and sync actions",
-        "overview": "Provides entry points for group invite sharing, lineup import, festival rename, metadata and band-link review, rating export, and manual sync.",
+        "overview": "Provides grouped appearance, account/group, festival administration, rating export/allocation and manual sync actions. Link imported bands and active-festival music discovery are adjacent in festival administration; canonical-band discovery stays on detail. Shared headings, readable wrapping body text and live status use the selected palette, and the Settings scroll position survives recreation. Import, rename, export, invite and pending-sync behavior still delegate to the existing workflows.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -1901,6 +1901,13 @@
       },
       {
         "source": "app/src/main/java/be/wacken/planner/BandLinkReviewActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles native review controls",
+        "technology": "Android Views"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/BandLinkReviewActivity.java",
         "target": "application/src/main/java/be/wacken/planner/application/ReviewImportedBandLinksUseCase.java",
         "status": "stable",
         "description": "Finds band matches",
@@ -1912,6 +1919,13 @@
         "status": "stable",
         "description": "Queries artist candidates",
         "technology": "Java call"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles native review controls",
+        "technology": "Android Views"
       },
       {
         "source": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
@@ -2167,6 +2181,13 @@
       },
       {
         "source": "app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles native review controls",
+        "technology": "Android Views"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java",
         "target": "application/src/main/java/be/wacken/planner/application/FindBandMusicLinksUseCase.java",
         "status": "stable",
         "description": "Searches and approves missing links",
@@ -2381,6 +2402,13 @@
         "status": "stable",
         "description": "Opens active festival lookup",
         "technology": "Android Intent"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/SettingsActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles native review controls",
+        "technology": "Android Views"
       },
       {
         "source": "app/src/main/java/be/wacken/planner/SettingsActivity.java",
@@ -3756,7 +3784,7 @@
       "scanner": "java",
       "code": "compiler.err.method.does.not.override.superclass",
       "severity": "warning",
-      "count": 245
+      "count": 252
     },
     {
       "scanner": "java",
@@ -3775,14 +3803,14 @@
       "code": "JAVA_METHOD_REFERENCES",
       "severity": "info",
       "count": 4,
-      "facts": 225
+      "facts": 227
     },
     {
       "scanner": "java",
       "code": "JAVA_MISSING_EXTERNAL_TYPES",
       "severity": "info",
       "count": 1,
-      "facts": 4349
+      "facts": 4408
     },
     {
       "scanner": "java",
@@ -3795,13 +3823,13 @@
       "code": "JAVA_UNRESOLVED_CALLS",
       "severity": "info",
       "count": 4,
-      "facts": 9279
+      "facts": 9428
     }
   ],
   "coverage": {
-    "operations": 2393,
-    "tokenized": 1490,
-    "invocations": 12138
+    "operations": 2426,
+    "tokenized": 1501,
+    "invocations": 12326
   },
   "duplicates": [
     "02da146b79ab30eea25ec378d01ca56c0ef5ed829b8e2fce1258497f210f9842",
@@ -3811,7 +3839,7 @@
     "0ad65a533c88e08a77a130629d4b502521971341ce9e2fe0827fdb879df07b47",
     "0c6e0da7ce49e11b1ed813dee8729571c9139aa40ae54cd0da504335ddc2dc28",
     "0d13ea3855413ecb9253d7361ea672ef583f999a08b92e3ac01ecb8153e7726d",
-    "1a81dbb768dd3e0f765e6cd4dac2046e39ffff0170fae89a5bf34a511b482b11",
+    "0f609ee281e34f7dd15bcfbcb6ca1d17a31744c2ee318a693053a2d16cf0b1ed",
     "1bb99ff94d176d7a63d98dd8118ead8dc799a88f3e48546df6128c1a676cb252",
     "1d6a4da3f9158a59b09453379d70450b6df5acde01e5e6444e854b6bf9a0befa",
     "2046d311c0eaaa39850d419103ff3e6ec968f52927fdde91985204dafb4829f6",
@@ -3823,7 +3851,6 @@
     "2cda0bed1950a58fe0a338e6ffa3cde3ea09d59fcd396daf21989ff76f8bd087",
     "2da5b48aef12ee99d7d71b5a7d4bf46f1d4be73f2bf4654eca43da8328e39dab",
     "2f9bf54dfcefb766f8bc53a2443cfefc3a14f608a7480be6aa14d26744631c52",
-    "3563defa3cbc9b78ebe460c90b67ea8b7e13a1df292a6d5a992ece48d030cf89",
     "35d83e11d7c48900e0df9ace8494c2ee2a8dce78ade64db83e16bd895ba54315",
     "3a696984b34a08c2ec089b2fba0ea51c00ba9d7419c84718f3deefa13dcf0b0c",
     "3aac219f49ba44250beb28e885371bf2d1bfeaf88b14e1a8a565975920a5e44b",
@@ -3853,12 +3880,12 @@
     "820dc62ab02840eec5a56d5bcd56d145d2573e9b0b89b8974e783eddee1aa34a",
     "821d6b44d103626ac5ae31eac1d7ed56004d17f660702e2b25a2730097a1569d",
     "82a689bf8187775030adbc6c98b3a4eb680a5bc057bb0d556d545cdbffef2333",
-    "82ba2760961c176d477d7a56c10fbd588a79476c5831ac20e072cb80bc78d36c",
     "843140cf061025a71e64b5d6c818a78961e00b86d9b7cdf600495b21d2cab524",
     "85071f1981a70d06627ab93eebe4fb681a09dc619ed8fc93922cb9cb46498877",
     "8965c2b4171d043d7129178055a6f4ed893632ec90923318b51113a425d8cef0",
     "8a91d449dc951dba98ef01fc4b3a4740050d7b842d57e24cd74f24f8bfc1eaf4",
     "8d86a49cfadba485e227605fb131020676b31bbc7a124a7172f064271760c2a1",
+    "90ae4f4a8dc304463a58399e1031ac7637031da7a52271f41ea41890561f2173",
     "94903af450e8d45796fe9bd68f17a8e41db95eaf63d0b49f2f439f75a44eff62",
     "9653780fa46f26741644cdc76ae8ab25433ef8d368a0543b809ec24bab2675e1",
     "99a17d3d6a9498bea67c85c616c63801082865aac49b67385ab2268e7752a852",
@@ -3868,6 +3895,7 @@
     "a62e67e76c4cb449bf864b5bf738affa2230b3f6b87f018bdcbab8eceef7b827",
     "aafa2801b25ef3782a2f13f24db11babcbc573415c3838fbab41bb292bc68685",
     "b196546b482382d678e87de2a0e3280826907cccb45b3ee4f5610bfabe058a74",
+    "b4874b5924a054fcc9a7fa47c32d318ea2e686f799881f29b0d041e113a4bfd4",
     "b9f6b2c13d3261bb46311e270db8633fa472a9163fbb5a9ce92a457bfa6cc8a5",
     "bd5feb881d6b2a2775f4d1035ad2d135bf633e067d23a9e565efe95519e40f4c",
     "c20b3500ef9cf997bbfa5b7e2b68c34ac7b997813525449f0c0fd41d0e170b06",
@@ -3881,6 +3909,7 @@
     "dfb144df15c9c023b81987236d584a6bce926e8efb124c0e4ff902119aed1e0d",
     "e99e04f1af04da88173eddad46bca13860ba0a02c4e0281fe33e0a4b2e8f72a1",
     "ea0e01d12ec5acff64cc5f2e496c219cafa31129b6dd65a6005c0133f0c041fd",
+    "f4d5dd9f4eac842647f592748e3ab46906986544b687d366eae298be2740896d",
     "f8ff81537cb84c933945726e34a0cba7db0a44150eee2d3f8cb2f6ba3443ef38",
     "fba54f48d5caeacc6c78e157cd4edce73f14e2433e11c4839f0280a752b2fac4",
     "fd30a9337c8f62cf32ec1d34b29ca4b7648671173b835611c92207e368cbc5ca",
@@ -4039,9 +4068,9 @@
         }
       ]
     },
-    "1a81dbb768dd3e0f765e6cd4dac2046e39ffff0170fae89a5bf34a511b482b11": {
-      "rationale": "Reviewed replacement of89412423aac9:11 screen-specific TextView builders; schedule stageHeader drops out after adopting multiline14sp stage names and lane alignment. SectionTitle uses common contextual heading and left alignment. Preserve role-specific native label construction; shared style primitives already centralize mechanical styling.",
-      "evidence": "backlog/docs/groma-schedule-review-2026-10-22.md",
+    "90ae4f4a8dc304463a58399e1031ac7637031da7a52271f41ea41890561f2173": {
+      "rationale": "Reviewed split of1a81dbb768dd:four detail/CSV/schedule label builders retain distinct role content/layout. Common palette/text primitives already centralize mechanical styling; preserve small explicit assemblies.",
+      "evidence": "backlog/docs/groma-review-layouts-2026-10-22.md",
       "members": [
         {
           "file": "app/src/main/java/be/wacken/planner/BandDetailPresentation.java",
@@ -4052,40 +4081,12 @@
           "name": "be.wacken.planner.BandDetailPresentation#sectionTitle(java.lang.String,boolean)"
         },
         {
-          "file": "app/src/main/java/be/wacken/planner/BandLinkReviewActivity.java",
-          "name": "be.wacken.planner.BandLinkReviewActivity#renderRows()"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
-          "name": "be.wacken.planner.BandMetadataReviewActivity#taskPanelTitle(java.lang.String)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
-          "name": "be.wacken.planner.BandMetadataReviewActivity#taskLine(java.lang.String)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
-          "name": "be.wacken.planner.BandMetadataReviewActivity#messageRow(java.lang.String)"
-        },
-        {
           "file": "app/src/main/java/be/wacken/planner/LocalCsvImportReviewDialog.java",
           "name": "be.wacken.planner.LocalCsvImportReviewDialog#label(java.lang.String,int)"
         },
         {
-          "file": "app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java",
-          "name": "be.wacken.planner.MusicLinksReviewActivity#label(java.lang.String)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
-          "name": "be.wacken.planner.ScheduleActivity#sectionTitle(java.lang.String)"
-        },
-        {
           "file": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
           "name": "be.wacken.planner.ScheduleActivity#message(java.lang.String,int)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/SettingsActivity.java",
-          "name": "be.wacken.planner.SettingsActivity#infoText(java.lang.String)"
         }
       ]
     },
@@ -4107,9 +4108,9 @@
         }
       ]
     },
-    "82ba2760961c176d477d7a56c10fbd588a79476c5831ac20e072cb80bc78d36c": {
-      "rationale": "Shared review-screen skeleton serves distinct canonical linking and metadata approval workflows; style binding is centralized.",
-      "evidence": "backlog/docs/groma-appearance-review-2026-10-21.md",
+    "f4d5dd9f4eac842647f592748e3ab46906986544b687d366eae298be2740896d": {
+      "rationale": "Reviewed replacement of82ba2760961c:same link/metadata scroll-column skeleton adopts shared headings/live14sp status, distinct refresh/cancel actions. Identity linking and missing-field approval remain separate workflows; retain screen-owned layout with shared style primitives.",
+      "evidence": "backlog/docs/groma-review-layouts-2026-10-22.md",
       "members": [
         {
           "file": "app/src/main/java/be/wacken/planner/BandLinkReviewActivity.java",
@@ -4118,6 +4119,54 @@
         {
           "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
           "name": "be.wacken.planner.BandMetadataReviewActivity#content()"
+        }
+      ]
+    },
+    "0f609ee281e34f7dd15bcfbcb6ca1d17a31744c2ee318a693053a2d16cf0b1ed": {
+      "rationale": "Reviewed split of1a81dbb768dd:six metadata/music/schedule/Settings label builders now use readable14/16/18sp roles and shared contextual headings; link-review empty message drops out. Preserve role-specific text/status/section assemblies with common theme helpers.",
+      "evidence": "backlog/docs/groma-review-layouts-2026-10-22.md",
+      "members": [
+        {
+          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
+          "name": "be.wacken.planner.BandMetadataReviewActivity#taskPanelTitle(java.lang.String)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
+          "name": "be.wacken.planner.BandMetadataReviewActivity#taskLine(java.lang.String)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
+          "name": "be.wacken.planner.BandMetadataReviewActivity#messageRow(java.lang.String)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java",
+          "name": "be.wacken.planner.MusicLinksReviewActivity#label(java.lang.String)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/ScheduleActivity.java",
+          "name": "be.wacken.planner.ScheduleActivity#sectionTitle(java.lang.String)"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/SettingsActivity.java",
+          "name": "be.wacken.planner.SettingsActivity#infoText(java.lang.String)"
+        }
+      ]
+    },
+    "b4874b5924a054fcc9a7fa47c32d318ea2e686f799881f29b0d041e113a4bfd4": {
+      "rationale": "Reviewed replacement of3563defa3cbc:metadata adds a third tiny notifyUi callback to CSV/music retained sessions. Each owns a detachable lifecycle observer; retain explicit owner-local notification rather than a shared event bus.",
+      "evidence": "backlog/docs/groma-review-layouts-2026-10-22.md",
+      "members": [
+        {
+          "file": "app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java",
+          "name": "be.wacken.planner.BandMetadataReviewActivity.Session#notifyUi()"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/LocalCsvImportReviewDialog.java",
+          "name": "be.wacken.planner.LocalCsvImportReviewDialog.State#notifyUi()"
+        },
+        {
+          "file": "app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java",
+          "name": "be.wacken.planner.MusicLinksReviewActivity.Session#notifyUi()"
         }
       ]
     },
@@ -4154,20 +4203,6 @@
         {
           "file": "app/src/main/java/be/wacken/planner/persistence/RoomScheduleLock.java",
           "name": "be.wacken.planner.persistence.RoomScheduleLock#RoomScheduleLock(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String)"
-        }
-      ]
-    },
-    "3563defa3cbc9b78ebe460c90b67ea8b7e13a1df292a6d5a992ece48d030cf89": {
-      "rationale": "Trivial notification callbacks have distinct retained-session/lifecycle owners.",
-      "evidence": "backlog/docs/groma-helper-dispositions-2026-10-21.md; backlog/docs/groma-gate-review-2026-10-21.md",
-      "members": [
-        {
-          "file": "app/src/main/java/be/wacken/planner/LocalCsvImportReviewDialog.java",
-          "name": "be.wacken.planner.LocalCsvImportReviewDialog.State#notifyUi()"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java",
-          "name": "be.wacken.planner.MusicLinksReviewActivity.Session#notifyUi()"
         }
       ]
     },
@@ -5360,7 +5395,7 @@
     "islands": []
   },
   "review": {
-    "task": "TASK-209",
-    "decision": "Reviewed existing ten-source schedule ownership, rendered map and shared-style collaboration, two exact replacement duplicate dispositions and Android scanner deltas; see backlog/docs/groma-schedule-review-2026-10-22.md. Existing boundaries/pins/exceptions retained."
+    "task": "TASK-210",
+    "decision": "Reviewed four existing review/settings responsibilities and actual style collaborations, rendered source/entry links, three duplicate groups replaced by four exact dispositions and Android scanner deltas; see backlog/docs/groma-review-layouts-2026-10-22.md. Pins/exceptions/boundaries unchanged."
   }
 }
