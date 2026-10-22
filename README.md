@@ -282,10 +282,13 @@ adds a development-only semantic gate. With the pinned Groma build and configure
 plugins restored, use Bun1.4.3 and Backlog1.53.0:
 
 ```bash
-sh scripts/groma.sh plugin install
+sh scripts/groma.sh plugin update java @groma/scanner-java@0.2.2
 bun test scripts/tests/groma-gate.test.ts
 bun scripts/architecture/verify-groma.mjs
 ```
+
+Use the exact scanner source above: generic missing-plugin restoration can select
+a newer npm release and change the reviewed configuration.
 
 The validator scans a disposable clean Git checkout twice, preserving the working
 tree. Commit reviewed product/map changes before running it. It checks unique
