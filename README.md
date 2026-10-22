@@ -359,6 +359,10 @@ actual presentation/style collaborations. The current baseline has96 components,
 299 owned sources,13 flows and81 individually reviewed duplicate identities,
 including two explicitly reviewed replacements; pins/exceptions remain unchanged.
 
+The [TASK209 schedule review](backlog/docs/groma-schedule-review-2026-10-22.md)
+retains these counts and boundaries, records the actual shared-style call and
+reviews two replacement duplicate identities plus Android scanner deltas.
+
 For intentional architecture changes, generate an external review candidate:
 
 ```bash
