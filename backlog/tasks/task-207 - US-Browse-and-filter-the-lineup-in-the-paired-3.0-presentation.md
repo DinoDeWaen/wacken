@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-22 06:25'
+updated_date: '2026-10-22 06:35'
 labels:
   - ux
   - release-3.0
@@ -28,6 +28,8 @@ modified_files:
   - tools/groma/architecture-baseline.json
   - README.md
   - backlog/docs/business-requirements.md
+  - app/src/androidTest/java/be/wacken/planner/NativeUiTestRunner.java
+  - app/build.gradle
 priority: medium
 type: enhancement
 ---
@@ -62,4 +64,6 @@ Standard treatment within existing Views/ADR0024 presentation boundary. 1. Chara
 Cross-cutting architecture approved2026-10-17: follow ADR-0016 and the implemented2.34 lifecycle from TASK-216–220. The3.0 appearance/navigation redesign must preserve canonical band metadata, member-specific current band ratings, separate festival planning/after-ratings, one-time creation snapshots, archive-only promotion and source-aware corrections. No theme/layout change may reintroduce latest-event-as-band-rating or cross-festival fallback.
 
 Implemented wrapping actual lineup with planning meaning, known-only music buttons, retained local query/Unrated filter and scrollable header. Unit suite passed; red native scenario failed for missing search, then exposed adapter replacement detaching controls; stable adapter updates fixed it. Critical19/19 and full84/84 native suites pass locally including200% long names, query/filter recreation, intercepted known-link handoff and scoped rating/filter updates. Groma helper combined into home via CLI;81 existing duplicate identities unchanged,7 obsolete table pairs removed, exact diagnostics/coverage reviewed. Clean signed build at6b7cb13 passed; final fresh build with archive-entry wrapping-height correction and CI/gate remain before Done.
+
+API23 CI revealed small-screen header pushed actual band rows below viewport: moved secondary actions/sync status/retry/archive entries into the scrollable footer, keeping name/search/filter above real rows. Tests now scroll to footer to prove actions reachable. Android6 does not reliably apply shell font_scale live; added a thin test-only AndroidJUnitRunner subclass to apply an explicit per-intent Configuration font override before real Activity view creation (API17+, official ContextThemeWrapper contract), no production font hook or new test framework/strategy. Probe runner conditional unchanged. Revalidate native APIs and exact architecture evidence.
 <!-- SECTION:NOTES:END -->

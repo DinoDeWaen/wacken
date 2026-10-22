@@ -109,15 +109,17 @@ public final class MainActivity extends Activity {
         LinearLayout screen = contentView();
         LinearLayout chrome=new LinearLayout(this);
         chrome.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout footer=new LinearLayout(this);
+        footer.setOrientation(LinearLayout.VERTICAL);
 
         chrome.addView(header());
-        chrome.addView(actionRow());
+        footer.addView(actionRow());
         syncStatus = new TextView(this);
         WackenTheme.textColor(syncStatus, COLOR_MUTED);
         syncStatus.setTextSize(13);
         syncStatus.setGravity(Gravity.CENTER_HORIZONTAL);
         syncStatus.setPadding(0, 0, 0, dp(10));
-        chrome.addView(syncStatus);
+        footer.addView(syncStatus);
         tableHeader = lineupControls();
         chrome.addView(tableHeader);
 
@@ -126,16 +128,16 @@ public final class MainActivity extends Activity {
         status.setGravity(Gravity.CENTER_HORIZONTAL);
         status.setPadding(0, dp(20), 0, dp(20));
         status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
-        chrome.addView(status);
+        footer.addView(status);
         retrySync=WackenTheme.actionButton(this,"Retry sync",WackenTheme.ButtonStyle.SECONDARY,
                 view->syncFromSupabase(false,"Refreshing cached bands...",false));
         retrySync.setVisibility(View.GONE);
-        chrome.addView(retrySync);
+        footer.addView(retrySync);
 
         archiveList = new LinearLayout(this);
         archiveList.setOrientation(LinearLayout.VERTICAL);
         archiveList.setVisibility(View.GONE);
-        chrome.addView(archiveList);
+        footer.addView(archiveList);
 
         bandList = new ListView(this);
         bandList.setId(R.id.band_lineup);
@@ -143,6 +145,7 @@ public final class MainActivity extends Activity {
         bandList.setCacheColorHint(COLOR_BACKGROUND);
         WackenTheme.backgroundColor(bandList, COLOR_BACKGROUND);
         bandList.addHeaderView(chrome,null,false);
+        bandList.addFooterView(footer,null,false);
         screen.addView(bandList, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0,

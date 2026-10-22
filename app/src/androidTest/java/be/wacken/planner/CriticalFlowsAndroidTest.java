@@ -433,7 +433,8 @@ public final class CriticalFlowsAndroidTest {
         onUi(()->{
             assertSame(bands,activity);assertNavigation("Bands");
             assertNotNull(findText(root(),BAND));
-            ((android.widget.ListView)root().findViewById(R.id.band_lineup)).setSelection(0);
+            android.widget.ListView list=root().findViewById(R.id.band_lineup);
+            list.setSelection(list.getCount()-1);
         });
         await(()->findDescription(root(),"Sync and exit")!=null);
         onUi(()->{
@@ -516,14 +517,14 @@ public final class CriticalFlowsAndroidTest {
     }
 
     @Test public void lineupLongNameAndControlsReflowAtDoubleFontSize() throws Exception {
-        String previousScale=shell("settings get system font_scale");
         String longName="A very long canonical festival band name with a readable final word";
         assertTrue(new RoomBandRepository(database).findByName(longName).isEmpty());
         new RoomBandRepository(database).save(new Band(longName));
         database.festivalLineups().saveAll(List.of(new RoomFestivalLineupEntry(FESTIVAL,longName,longName)));
         try {
-            shell("settings put system font_scale 2.0");
-            open(MainActivity.class);
+            activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),MainActivity.class)
+                    .putExtra(NativeUiTestRunner.FONT_SCALE,2f).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            instrumentation.waitForIdleSync();
             await(()->root().findViewById(R.id.band_lineup)!=null);
             onUi(()->((android.widget.ListView)root().findViewById(R.id.band_lineup)).setSelection(1));
             await(()->findText(root(),longName)!=null);
@@ -538,9 +539,10 @@ public final class CriticalFlowsAndroidTest {
                 assertTrue(stars.getHeight()>=WackenTheme.dp(activity,48));
                 assertNotNull(findContaining(root(),"TBA"));
                 assertNavigation("Bands");
-                ((android.widget.ListView)root().findViewById(R.id.band_lineup)).setSelection(0);
+                android.widget.ListView list=root().findViewById(R.id.band_lineup);
+                list.setSelection(list.getCount()-1);
             });
-            await(()->findDescription(root(),"Find a band")!=null);
+            await(()->findDescription(root(),"Sync and exit")!=null);
             onUi(()->{
                 View sync=findDescription(root(),"Sync and exit");
                 assertTrue(sync.isShown());
@@ -550,7 +552,6 @@ public final class CriticalFlowsAndroidTest {
             await(()->!booleanField(activity,"syncInProgress"));
         } finally {
             if(activity!=null)onUi(activity::finish);
-            shell("settings put system font_scale "+previousScale);
             database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM festival_lineup_entries WHERE festivalId = ? AND bandName = ?",new Object[]{FESTIVAL,longName});
             database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM bands WHERE name = ?",new Object[]{longName});
         }
