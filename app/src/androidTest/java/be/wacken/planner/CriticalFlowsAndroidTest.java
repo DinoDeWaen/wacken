@@ -174,7 +174,7 @@ public final class CriticalFlowsAndroidTest {
             assertNull(findDescription(root(),"Open YouTube"));
             assertNull(findDescription(root(),"Open Spotify"));
             assertNotNull(findDescription(root(),"Back"));
-            assertTrue(findText(root(),"Reset").isEnabled());
+            assertTrue(findDescription(root(),"Clear planning rating").isEnabled());
             assertTrue(findText(root(),"Find music links").isEnabled());
         });
         onUi(activity::finish);instrumentation.waitForIdleSync();
@@ -193,6 +193,12 @@ public final class CriticalFlowsAndroidTest {
             assertNull(findDescription(root(),"Open Spotify"));
             assertNotNull(findDescription(root(),"Back"));
             assertFalse(findText(root(),"Reset").isEnabled());
+            RatingStarsView archivedStars=findStars(root());
+            for(int index=0;index<archivedStars.getChildCount();index++) {
+                View choice=archivedStars.getChildAt(index);
+                assertFalse(choice.isEnabled());
+                assertFalse(choice.performAccessibilityAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK,null));
+            }
             assertNull(findText(root(),"Find music links"));
         });
         assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
@@ -257,13 +263,125 @@ public final class CriticalFlowsAndroidTest {
             try {control.dispatchTouchEvent(down);control.dispatchTouchEvent(up);}
             finally {down.recycle();up.recycle();}
         });
+        await(()->database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value==5);
         assertEquals(5,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
         assertEquals("PENDING",database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).syncStatus);
         onUi(()->{
-            Button reset=(Button)findText(root(),"Reset");
+            Button reset=(Button)findDescription(root(),"Clear planning rating");
             assertNotNull("Planning reset must remain reachable",reset);reset.performClick();
         });
         assertEquals(0,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+    }
+
+    @Test public void planningChoicesSupportAccessibilityAndKeyboardWithUnratedClear() throws Exception {
+        open(BandDetailActivity.class);
+        await(()->activity.getWindow().getDecorView().hasWindowFocus());
+        onUi(()->{
+            RatingStarsView stars=findStars(root());
+            View fifth=stars.getChildAt(4);
+            var node=fifth.createAccessibilityNodeInfo();
+            assertEquals("android.widget.Button",node.getClassName().toString());
+            assertTrue(node.getContentDescription().toString().contains("5 · Must see"));
+            assertTrue(node.getContentDescription().toString().contains("planning"));
+            assertTrue(fifth.getWidth()>=WackenTheme.dp(activity,48));
+            assertTrue(fifth.getHeight()>=WackenTheme.dp(activity,48));
+            assertTrue(fifth.getBackground().isStateful());
+            assertTrue(fifth.performAccessibilityAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK,null));
+            assertTrue(fifth.isSelected());
+        });
+        assertEquals(5,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+        AtomicReference<Boolean> previousTouchMode=new AtomicReference<>();
+        onUi(()->previousTouchMode.set(root().isInTouchMode()));
+        instrumentation.setInTouchMode(false);
+        try {
+            await(()->!root().isInTouchMode());
+            onUi(()->{
+                View choice=findStars(root()).getChildAt(0);
+                assertTrue("Keyboard choice enabled="+choice.isEnabled()+", focusable="+choice.isFocusable()
+                        +", shown="+choice.isShown()+", touchMode="+choice.isInTouchMode(),choice.requestFocus());
+            });
+            instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ENTER);
+            await(()->database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value==1);
+        } finally {instrumentation.setInTouchMode(previousTouchMode.get());}
+        assertEquals(1,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+        onUi(()->{
+            assertTrue(findDescription(root(),"Clear planning rating").performAccessibilityAction(
+                    android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK,null));
+            assertNotNull(findContaining(root(),"Planning: Unrated"));
+            RatingStarsView stars=findStars(root());
+            for(int i=0;i<5;i++)assertFalse(stars.getChildAt(i).isSelected());
+        });
+        assertEquals(0,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+        assertNull(database.ratingStates().after(USER,FESTIVAL,BAND));
+    }
+
+    @Test public void afterDisclosureSurvivesThemeAndRecreationWithoutReplayingTheRating() throws Exception {
+        open(BandDetailActivity.class);
+        Object previousMode=AppearanceController.store(activity).getAll().get(AppearanceController.MODE);
+        try {
+            onUi(()->{
+                assertNotNull("After-rating must be a deliberate disclosure",findText(root(),"After the show"));
+                assertFalse(findText(root(),"Festival after-rating").isShown());
+                findText(root(),"After the show").performClick();
+            });
+            await(()->findStars((View)findText(root(),"Festival after-rating").getParent()).getWidth()>0);
+            onUi(()->{
+                RatingStarsView stars=findStars((View)findText(root(),"Festival after-rating").getParent());
+                assertTrue(stars.getChildAt(2).performAccessibilityAction(
+                        android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK,null));
+                AppearanceController.choose(activity,AppearancePreference.LIGHT);
+                assertTrue(findText(root(),"Festival after-rating").isShown());
+            });
+            var recorded=database.ratingStates().after(USER,FESTIVAL,BAND);
+            assertEquals(3,recorded.value);
+            Activity previous=activity;
+            onUi(previous::recreate);
+            await(()->{
+                for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                        .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
+                    if(candidate instanceof BandDetailActivity&&candidate!=previous){activity=candidate;return true;}
+                return false;
+            });
+            onUi(()->{
+                assertTrue(findText(root(),"Festival after-rating").isShown());
+                assertTrue(findText(root(),"After the show").isSelected());
+                AppearanceController.choose(activity,AppearancePreference.DARK);
+            });
+            var restored=database.ratingStates().after(USER,FESTIVAL,BAND);
+            assertEquals(recorded.operationId,restored.operationId);
+            assertEquals(recorded.recordedAt,restored.recordedAt);
+            assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+        } finally {
+            onUi(()->{
+                var editor=AppearanceController.store(instrumentation.getTargetContext()).edit();
+                if(previousMode instanceof String mode)editor.putString(AppearanceController.MODE,mode);
+                else editor.remove(AppearanceController.MODE);
+                editor.commit();
+            });
+        }
+    }
+
+    @Test public void doubleFontDetailStacksAccessibleChoicesWithoutClippingOrWriting() throws Exception {
+        activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),BandDetailActivity.class)
+                .putExtra(BandDetailActivity.EXTRA_BAND_NAME,BAND).putExtra(NativeUiTestRunner.FONT_SCALE,2f)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        instrumentation.waitForIdleSync();
+        onUi(()->{
+            assertTrue(activity.getResources().getConfiguration().fontScale>=1.99f);
+            RatingStarsView stars=findStars(root());
+            assertEquals(android.widget.LinearLayout.VERTICAL,stars.getOrientation());
+            for(int i=0;i<5;i++) {
+                TextView choice=(TextView)stars.getChildAt(i);
+                assertTrue(choice.getHeight()>=WackenTheme.dp(activity,48));
+                assertTrue(choice.getWidth()>=WackenTheme.dp(activity,48));
+                assertNotNull(choice.getLayout());
+                assertTrue(choice.getHeight()>=choice.getLayout().getHeight());
+                for(int line=0;line<choice.getLineCount();line++)assertEquals(0,choice.getLayout().getEllipsisCount(line));
+            }
+            assertNotNull(findDescription(root(),"Clear planning rating"));
+        });
+        assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+        assertNull(database.ratingStates().after(USER,FESTIVAL,BAND));
     }
 
     @Test public void scheduleRendersCachedPerformanceInsteadOfNullFailure() throws Exception {
@@ -281,6 +399,8 @@ public final class CriticalFlowsAndroidTest {
         database.ratingStates().saveCurrent(new RoomPersonalBandRating(USER,BAND,4,"previous","Previous festival",
                 "11111111-1111-4111-8111-111111111111","2026-08-01T12:00:00Z"));
         open(BandDetailActivity.class);
+        onUi(()->findText(root(),"After the show").performClick());
+        await(()->findStars((View)findText(root(),"Festival after-rating").getParent()).getWidth()>0);
         onUi(()->{
             ViewGroup section=(ViewGroup)findText(root(),"Festival after-rating").getParent();
             RatingStarsView control=findStars(section);assertNotNull(control);assertTrue(control.getWidth()>0);
@@ -290,12 +410,13 @@ public final class CriticalFlowsAndroidTest {
             try{control.dispatchTouchEvent(down);control.dispatchTouchEvent(up);}finally{down.recycle();up.recycle();}
         });
         var after=new RoomFestivalAfterRatingRepository(database);
+        await(()->database.ratingStates().after(USER,FESTIVAL,BAND)!=null);
         assertEquals(3,after.findByUserFestivalAndBand(USER,FESTIVAL,new be.wacken.planner.domain.Band(BAND)).orElseThrow().rating().value());
         assertEquals(4,database.ratingStates().current(USER,BAND).value);
         assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
         onUi(()->{
             ViewGroup section=(ViewGroup)findText(root(),"Festival after-rating").getParent();
-            findText(section,"Reset").performClick();
+            findDescription(section,"Clear after-rating").performClick();
         });
         assertEquals(0,after.findByUserFestivalAndBand(USER,FESTIVAL,new be.wacken.planner.domain.Band(BAND)).orElseThrow().rating().value());
         assertEquals(4,database.ratingStates().current(USER,BAND).value);
@@ -685,7 +806,8 @@ public final class CriticalFlowsAndroidTest {
         onUi(()->{
             assertNotNull(findContaining(root(),"Festival: Renamed opened festival ["+FESTIVAL+"]"));
             ViewGroup section=(ViewGroup)findText(root(),"Festival planning rating").getParent();
-            findText(section,"Reset").performClick();
+            assertFalse(findDescription(section,"Clear planning rating").isEnabled());
+            findDescription(section,"Clear planning rating").performClick();
         });
         assertEquals(5,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
     }

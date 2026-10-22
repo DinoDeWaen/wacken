@@ -24,6 +24,7 @@ final class BandDetailPresentation {
 
     View render(BandDetailItem detail, BiConsumer<String, ImageView> loadImage, List<View> sections) {
         ScrollView scroll = new ScrollView(activity);
+        scroll.setId(R.id.band_detail_scroll);
         WackenTheme.backgroundColor(scroll, WackenTheme.BACKGROUND);
         LinearLayout screen = new LinearLayout(activity);
         screen.setOrientation(LinearLayout.VERTICAL);
@@ -36,7 +37,7 @@ final class BandDetailPresentation {
         title.setText(detail.bandName());
         WackenTheme.textColor(title, WackenTheme.AMBER);
         title.setTextSize(26);
-        title.setTypeface(Typeface.DEFAULT_BOLD);
+        WackenTheme.heading(title);
         title.setGravity(Gravity.CENTER_HORIZONTAL);
         title.setPadding(0, dp(8), 0, dp(10));
         screen.addView(title);
@@ -64,6 +65,8 @@ final class BandDetailPresentation {
         TextView context = new TextView(activity);
         WackenTheme.textColor(context, WackenTheme.TEXT);
         context.setContentDescription("Rating context");
+        context.setTextSize(14);
+        context.setPadding(dp(8),dp(8),dp(8),dp(8));
         return context;
     }
 
@@ -84,8 +87,8 @@ final class BandDetailPresentation {
         title.setText(text);
         WackenTheme.textColor(title, WackenTheme.AMBER);
         title.setTextSize(18);
-        title.setTypeface(Typeface.DEFAULT_BOLD);
-        title.setGravity(Gravity.CENTER_HORIZONTAL);
+        WackenTheme.heading(title);
+        title.setGravity(Gravity.START);
         title.setPadding(0, spacious ? dp(16) : 0, 0, dp(6));
         return title;
     }
@@ -98,7 +101,7 @@ final class BandDetailPresentation {
             line.setText(item.displayText());
             WackenTheme.textColor(line, WackenTheme.TEXT);
             line.setTextSize(14);
-            line.setGravity(Gravity.CENTER_HORIZONTAL);
+            line.setGravity(Gravity.START);
             line.setPadding(0, dp(3), 0, dp(3));
             section.addView(line);
         }
@@ -118,13 +121,12 @@ final class BandDetailPresentation {
         LinearLayout section = section();
         section.addView(sectionTitle("Band Links", false));
         LinearLayout links = new LinearLayout(activity);
-        links.setOrientation(LinearLayout.HORIZONTAL);
+        links.setOrientation(LinearLayout.VERTICAL);
         links.setGravity(Gravity.CENTER);
         links.addView(home);
-        detail.youtubeUrl().ifPresent(url -> links.addView(WackenTheme.iconButton(activity, "▶", "Open YouTube", WackenTheme.RED, 44,
-                view -> ExternalLinks.open(activity, url))));
-        detail.spotifyUrl().ifPresent(url -> links.addView(WackenTheme.iconButton(activity, "♬", "Open Spotify", WackenTheme.SUCCESS_GREEN, 44,
-                view -> ExternalLinks.open(activity, url))));
+        detail.youtubeUrl().ifPresent(url -> links.addView(musicAction("YouTube",url)));
+        detail.spotifyUrl().ifPresent(url -> links.addView(musicAction("Spotify",url)));
+        if(detail.youtubeUrl().isEmpty()&&detail.spotifyUrl().isEmpty())links.addView(infoLine("Music links","Not available"));
         section.addView(links);
         return section;
     }
@@ -146,7 +148,14 @@ final class BandDetailPresentation {
         ratings.setTextSize(13);
         ratings.setGravity(Gravity.CENTER_HORIZONTAL);
         ratings.setPadding(0, dp(6), 0, dp(2));
+        ratings.setContentDescription("Read-only group planning ratings. "+ratings.getText());
         return ratings;
+    }
+
+    private Button musicAction(String platform,String url) {
+        Button button=WackenTheme.actionButton(activity,platform,WackenTheme.ButtonStyle.SECONDARY,v->ExternalLinks.open(activity,url));
+        button.setContentDescription("Open "+platform);
+        return button;
     }
 
     private ImageView imagePanel(String url, BiConsumer<String, ImageView> loadImage) {
@@ -184,6 +193,7 @@ final class BandDetailPresentation {
     }
 
     private boolean narrowScreen() {
-        return BandDetailLayoutPolicy.stacksSections(activity.getResources().getConfiguration().screenWidthDp);
+        return activity.getResources().getConfiguration().fontScale>=1.5f
+                ||BandDetailLayoutPolicy.stacksSections(activity.getResources().getConfiguration().screenWidthDp);
     }
 }

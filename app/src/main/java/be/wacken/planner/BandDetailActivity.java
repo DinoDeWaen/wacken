@@ -61,11 +61,19 @@ public final class BandDetailActivity extends Activity {
     private RecordFestivalAfterRatingUseCase afterRatingWriter;
     private be.wacken.planner.domain.FestivalAfterRatingRepository afterRatings;
     private boolean unresolvedLegacyRating;
+    private boolean afterExpanded;
+    private Button afterDisclosure;
+    private LinearLayout afterBody;
+    private TextView planningStatus;
+    private Button clearPlanning;
+    private Button clearAfter;
+    private TextView afterValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         AppearanceController.attach(this);
+        afterExpanded=savedInstanceState!=null&&savedInstanceState.getBoolean("afterExpanded");
         currentSession = new AuthSessionStore(this).load();
         if (!currentSession.isPresent()) {
             startActivity(new Intent(this, LoginActivity.class));
@@ -104,13 +112,15 @@ public final class BandDetailActivity extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle state) {
         state.putString("selectedFestivalId", selectedFestivalId);
+        state.putBoolean("afterExpanded",afterExpanded);
         super.onSaveInstanceState(state);
     }
 
     private void refreshContext() {
         if (contextText != null && selectedBand != null) {
             ratingContext.show(currentUser(), selectedFestivalId, selectedBand.name())
-                    .ifPresent(value -> contextText.setText(String.join("\n", value.lines())));
+                    .ifPresent(value -> contextText.setText(String.join("\n", value.lines())+"\nDevice sync: "
+                            +new AppRepositories(this).pendingSyncSummary().description()));
         }
     }
 
@@ -128,12 +138,15 @@ public final class BandDetailActivity extends Activity {
                 .showBand(currentUser(), selectedBand.name(), MusicLinks.none()).ifPresent(detail -> {
                     ratingStars.applySavedRating(detail.rating());
                     realRatingStars.applySavedRating(detail.realRating());
+                    afterValue.setText("After-rating: "+RatingValueText.describe(detail.realRating()));
+                    planningStatus.setText("Planning: "+RatingValueText.describe(detail.rating()));
                     refreshContext();
                     LinearLayout previous = musicLinksSection;
                     int position = parent.indexOfChild(previous);
                     LinearLayout refreshed = linksSection(detail);
                     parent.removeView(previous);
                     parent.addView(refreshed, position);
+                    refreshEditingAvailability();
                 });
     }
 
@@ -159,47 +172,90 @@ public final class BandDetailActivity extends Activity {
         contextText = presentation.context();
         refreshContext();
         java.util.List<View> sections = new java.util.ArrayList<>();
-        sections.add(contextText);
         sections.add(ratingSection(detail));
-        sections.add(realRatingSection(detail));
+        sections.add(contextText);
+        sections.add(afterDisclosureSection(detail));
         if (detail.hasPersonalRatingHistory()) sections.add(personalRatingHistorySection(detail));
         sections.add(runningOrderSection());
         sections.add(linksSection(detail));
         return presentation.render(detail, this::loadImage, sections);
     }
 
+    private LinearLayout afterDisclosureSection(BandDetailItem detail) {
+        LinearLayout disclosure=new LinearLayout(this);
+        disclosure.setOrientation(LinearLayout.VERTICAL);
+        afterDisclosure=WackenTheme.actionButton(this,"After the show",WackenTheme.ButtonStyle.SECONDARY,view->{
+            afterExpanded=!afterExpanded;updateAfterDisclosure();
+        });
+        disclosure.addView(afterDisclosure,new LinearLayout.LayoutParams(-1,-2));
+        afterBody=realRatingSection(detail);
+        disclosure.addView(afterBody);
+        updateAfterDisclosure();
+        return disclosure;
+    }
+
+    private void updateAfterDisclosure() {
+        afterBody.setVisibility(afterExpanded?View.VISIBLE:View.GONE);
+        afterDisclosure.setSelected(afterExpanded);
+        afterDisclosure.setContentDescription("After the show, "+(afterExpanded?"expanded":"collapsed"));
+    }
+
+    private String festivalName() {
+        return festivals.findAll().stream().filter(f->f.id().equals(selectedFestivalId))
+                .map(be.wacken.planner.domain.Festival::name).findFirst().orElse("No selected festival");
+    }
+
+    private boolean selectedFestivalActive() {
+        return festivals.findAll().stream().anyMatch(f->f.id().equals(selectedFestivalId)&&f.isActive());
+    }
+
+    private void refreshEditingAvailability() {
+        boolean editable=selectedFestivalActive();
+        ratingStars.setEnabled(editable);realRatingStars.setEnabled(editable);
+        clearPlanning.setEnabled(editable);clearAfter.setEnabled(editable);
+        if(!editable)planningStatus.append("\nSelected festival is not active · read-only");
+    }
+
     private LinearLayout ratingSection(BandDetailItem detail) {
         LinearLayout section = detailSection();
         section.addView(sectionTitle("Festival planning rating", false));
+        section.addView(presentation.infoLine("Festival",festivalName()));
+        planningStatus=presentation.infoLine("Planning",RatingValueText.describe(detail.rating()));
+        planningStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+        section.addView(planningStatus);
         ratingStars = new RatingStarsView(this, detail.rating(), !detail.defaultRating(), COLOR_ACCENT);
-        ratingStars.setPadding(dp(12), 0, dp(12), 0);
+        ratingStars.setId(R.id.planning_rating);
+        ratingStars.setScope("Festival planning rating for "+festivalName());
         ratingStars.showAvailableRating();
         ratingStars.setOnRatingSelected(rating -> {
             RateBandResult result = savePlanningRating(rating);
             if (result.success()) {
                 ratingStars.applySavedRating(rating);
+                planningStatus.setText("Planning: "+RatingValueText.describe(rating)+"\nSaved on this device · pending sync");
                 refreshContext();
-            }
+            } else planningStatus.setText(result.validationMessage().orElse("Planning rating was not saved."));
         });
-        LinearLayout.LayoutParams starsLayout = new LinearLayout.LayoutParams(dp(150), dp(42));
+        LinearLayout.LayoutParams starsLayout = new LinearLayout.LayoutParams(-1,-2);
         starsLayout.gravity = Gravity.CENTER_HORIZONTAL;
         section.addView(ratingStars, starsLayout);
         Button clearRating = WackenTheme.actionButton(
                 this,
-                "Reset",
+                "Clear planning rating",
                 WackenTheme.ButtonStyle.SECONDARY,
                 null
         );
-        clearRating.setContentDescription("Clear rating");
+        clearPlanning=clearRating;
+        clearRating.setContentDescription("Clear planning rating");
         clearRating.setTextSize(13);
         clearRating.setOnClickListener(view -> {
             RateBandResult result = savePlanningRating(0);
             if (result.success()) {
                 ratingStars.applySavedRating(0);
+                planningStatus.setText("Planning: Unrated\nSaved on this device · pending sync");
                 refreshContext();
             }
         });
-        LinearLayout.LayoutParams resetLayout = new LinearLayout.LayoutParams(dp(96), dp(38));
+        LinearLayout.LayoutParams resetLayout = new LinearLayout.LayoutParams(-1,-2);
         resetLayout.gravity = Gravity.CENTER_HORIZONTAL;
         resetLayout.setMargins(0, dp(2), 0, dp(4));
         section.addView(clearRating, resetLayout);
@@ -210,9 +266,13 @@ public final class BandDetailActivity extends Activity {
     private LinearLayout realRatingSection(BandDetailItem detail) {
         LinearLayout section = detailSection();
         section.addView(sectionTitle("Festival after-rating", false));
+        section.addView(presentation.infoLine("Festival",festivalName()));
+        afterValue=presentation.infoLine("After-rating",RatingValueText.describe(detail.realRating()));
+        section.addView(afterValue);
         TextView afterStatus = new TextView(this);
         WackenTheme.textColor(afterStatus, WackenTheme.MUTED);
         afterStatus.setContentDescription("Festival after-rating status");
+        afterStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         String festivalId = selectedFestivalId;
         boolean recovered = afterRatings.findByUserFestivalAndBand(currentUser(), festivalId, selectedBand)
                 .map(be.wacken.planner.domain.FestivalAfterRating::requiresReview).orElse(false);
@@ -221,40 +281,44 @@ public final class BandDetailActivity extends Activity {
                 : "After-rating for this festival. Your established band rating changes when the festival is archived.");
         section.addView(afterStatus);
         realRatingStars = new RatingStarsView(this, detail.realRating(), !detail.defaultRealRating(), WackenTheme.AMBER);
-        realRatingStars.setPadding(dp(12), 0, dp(12), 0);
+        realRatingStars.setId(R.id.after_rating);
+        realRatingStars.setScope("Festival after-rating for "+festivalName());
         realRatingStars.showAvailableRating();
         realRatingStars.setOnRatingSelected(rating -> {
             RateBandResult result = saveAfterRating(festivalId, rating);
             if (result.success()) {
                 realRatingStars.applySavedRating(rating);
+                afterValue.setText("After-rating: "+RatingValueText.describe(rating));
                 refreshContext();
                 afterStatus.setText("After-rating saved on this device; pending sync.");
             } else {
                 afterStatus.setText(result.validationMessage().orElse("After-rating was not saved."));
             }
         });
-        LinearLayout.LayoutParams starsLayout = new LinearLayout.LayoutParams(dp(150), dp(42));
+        LinearLayout.LayoutParams starsLayout = new LinearLayout.LayoutParams(-1,-2);
         starsLayout.gravity = Gravity.CENTER_HORIZONTAL;
         section.addView(realRatingStars, starsLayout);
         Button resetRealRating = WackenTheme.actionButton(
                 this,
-                "Reset",
+                "Clear after-rating",
                 WackenTheme.ButtonStyle.SECONDARY,
                 null
         );
-        resetRealRating.setContentDescription("Reset real rating");
+        clearAfter=resetRealRating;
+        resetRealRating.setContentDescription("Clear after-rating");
         resetRealRating.setTextSize(13);
         resetRealRating.setOnClickListener(view -> {
             RateBandResult result = saveAfterRating(festivalId, 0);
             if (result.success()) {
                 realRatingStars.applySavedRating(0);
+                afterValue.setText("After-rating: Unrated");
                 refreshContext();
                 afterStatus.setText("After-rating reset on this device; pending sync. Established band rating kept.");
             } else {
                 afterStatus.setText(result.validationMessage().orElse("After-rating was not saved."));
             }
         });
-        LinearLayout.LayoutParams resetLayout = new LinearLayout.LayoutParams(dp(96), dp(38));
+        LinearLayout.LayoutParams resetLayout = new LinearLayout.LayoutParams(-1,-2);
         resetLayout.gravity = Gravity.CENTER_HORIZONTAL;
         resetLayout.setMargins(0, dp(2), 0, dp(4));
         section.addView(resetRealRating, resetLayout);
@@ -292,7 +356,7 @@ public final class BandDetailActivity extends Activity {
     private LinearLayout linksSection(BandDetailItem detail) {
         LinearLayout section = presentation.links(detail, homeButton());
         musicLinksSection = section;
-        section.addView(WackenTheme.actionButton(this, "Find music links", WackenTheme.ButtonStyle.SECONDARY,
+        if(selectedFestivalActive())section.addView(WackenTheme.actionButton(this, "Find music links", WackenTheme.ButtonStyle.SECONDARY,
                 view -> startActivity(new Intent(this, MusicLinksReviewActivity.class)
                         .putExtra(MusicLinksReviewActivity.EXTRA_BAND_NAME, detail.bandName()))));
         return section;

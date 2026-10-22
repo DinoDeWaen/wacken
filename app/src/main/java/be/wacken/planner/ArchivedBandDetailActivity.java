@@ -117,6 +117,7 @@ public final class ArchivedBandDetailActivity extends Activity {
         repositories.ratingContext().show(session.userId(), festivalId, bandName)
                 .ifPresent(value -> context.setText(String.join("\n", value.lines())));
         java.util.List<View> sections = new java.util.ArrayList<>();
+        sections.add(sectionTitle("Archived · read-only"));
         sections.add(context);
         sections.add(ratingSection(detail));
         sections.add(realRatingSection(detail));
@@ -159,7 +160,7 @@ public final class ArchivedBandDetailActivity extends Activity {
     private LinearLayout ratingSection(BandDetailItem detail) {
         LinearLayout section = detailSection();
         section.addView(sectionTitle("Festival planning rating"));
-        section.addView(disabledStars(detail.rating(), !detail.defaultRating(), WackenTheme.RED));
+        section.addView(disabledStars(detail.rating(), !detail.defaultRating(), WackenTheme.RED,"Archived festival planning rating"));
         section.addView(disabledResetButton("Clear archived planning rating"));
         section.addView(groupRatingsView(detail));
         return section;
@@ -168,19 +169,19 @@ public final class ArchivedBandDetailActivity extends Activity {
     private LinearLayout realRatingSection(BandDetailItem detail) {
         LinearLayout section = detailSection();
         section.addView(sectionTitle("Festival after-rating"));
-        section.addView(disabledStars(detail.realRating(), !detail.defaultRealRating(), WackenTheme.AMBER));
+        section.addView(disabledStars(detail.realRating(), !detail.defaultRealRating(), WackenTheme.AMBER,"Archived festival after-rating"));
         section.addView(disabledResetButton("Reset archived real rating"));
         return section;
     }
 
-    private RatingStarsView disabledStars(int value, boolean explicitRating, int color) {
+    private RatingStarsView disabledStars(int value, boolean explicitRating, int color,String scope) {
         RatingStarsView stars = new RatingStarsView(this, value, explicitRating, color);
+        stars.setScope(scope);
         stars.setEnabled(false);
         stars.setClickable(false);
         stars.setFocusable(false);
-        stars.setPadding(dp(12), 0, dp(12), 0);
         stars.showAvailableRating();
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(dp(150), dp(42));
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(-1,-2);
         layout.gravity = Gravity.CENTER_HORIZONTAL;
         stars.setLayoutParams(layout);
         return stars;
@@ -191,7 +192,7 @@ public final class ArchivedBandDetailActivity extends Activity {
         reset.setEnabled(false);
         reset.setContentDescription(description);
         reset.setTextSize(13);
-        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(dp(96), dp(38));
+        LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(-1,-2);
         layout.gravity = Gravity.CENTER_HORIZONTAL;
         layout.setMargins(0, dp(2), 0, dp(4));
         reset.setLayoutParams(layout);

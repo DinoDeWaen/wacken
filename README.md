@@ -48,6 +48,17 @@ list at large fonts. Stored music links open their existing targets; missing
 links are explained without fabricated actions. Empty search offers Clear search
 and filters; a failed refresh retains cached work and offers Retry sync.
 
+TASK-208 adds native rating-choice buttons with scoped value/meaning and selected
+state, keyboard focus outlines and48dp targets. Large fonts stack the choices.
+Active detail puts selected-festival planning first; **After the show** expands
+the independent post-show editor and retains its expansion across recreation.
+Clear actions keep0 explicitly Unrated. Established/source/history context and
+read-only group planning remain separate. Archived controls reject accessibility
+clicks and show read-only context; verified music discovery stays in active
+context. Shared theme changes preserve state and never replay rating events.
+Native actions/geometry are automated checks; TASK-212 still owns the integrated
+human TalkBack, visual and physical-device review.
+
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.

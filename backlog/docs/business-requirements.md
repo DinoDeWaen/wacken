@@ -116,6 +116,18 @@ planning snapshots, after-ratings and archive promotion remain ADR0016-owned.
 Remaining detail/control, schedule, administration/support and integrated
 accessibility/release work stays TASK-208–213.
 
+Development increment TASK-208 supplies native touch/keyboard/accessibility
+rating choices with scoped meaning/selected state, explicit0/Unrated clearing,
+48dp targets and large-font stacking. Active detail presents planning first,
+separate established/source/history context and an independent After the show
+disclosure whose expansion survives recreation without replaying an event.
+Archived values and group planning summaries remain read-only; known metadata,
+images and performance context are preserved and discovery stays in active
+context. Neither appearance nor the new controls change ADR0016 rating roles,
+member/festival ownership, history/correction semantics or schedule decisions.
+TASK-209–213 still own remaining screens, integrated accessibility/device review
+and actual3.0 publication.
+
 The user validated the paired Ironline dark / Field Notes light proposal on
 17 October2026. [The design and flow contract](release-3.0-design-contract.md)
 defines the palettes, shared layout, state wording and complete screen/dialog
