@@ -55,8 +55,24 @@ an explicitly investigated scanner limitation, not an ignored compiler failure.
 All other existing warning categories/counts remain unchanged.
 
 Deferred source references227→228 add Dialog.isShowing. External-type facts
-4408→4458 and unresolved calls9428→9609 grow with native dialog/adapter/lifecycle
+4408→4461 and unresolved calls9428→9606 grow with native dialog/adapter/lifecycle
 APIs. The separate extraction error was fixed to a captured member-id field before
 acceptance; final diagnostics are from the corrected clean source. Coverage grows
-2426→2456 operations,1501→1515 tokenized bodies and12326→12568 invocations.
+2426→2456 operations,1501→1515 tokenized bodies and12326→12566 invocations.
 Two repeatable pinned clean scans remain mandatory for the normal gate.
+
+## API23 follow-up
+
+Initial required CI39845732438 passed API36/build/database/Groma but API23 exposed
+an actual weak-map refresh race: copying entrySet entries does not strongly hold
+their weak View/GradientDrawable keys. GC could clear a key between snapshot and
+callback, producing a null target. The corrected refresh copies keySet into strong
+local lists and checks current bindings before calling; long-term storage remains
+weak, with no new lifecycle/policy boundary. Source review confirms two obsolete
+Map.Entry accessor calls disappear (12568→12566 invocations), while operation and
+tokenized counts remain2456/1515 and exact ownership/duplicates are unchanged.
+Three added missing-external facts and three fewer unresolved facts match typed
+native targets instead of weak-entry projections. The second API23 failure was a
+test assuming an offscreen recycled ListView footer existed: the test now scrolls
+to actual Archive before invoking the native action. Both fixes are validated
+with a fresh full native/clean signed build and required CI before closure.

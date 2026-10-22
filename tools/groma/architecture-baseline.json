@@ -3879,7 +3879,7 @@
       "code": "JAVA_MISSING_EXTERNAL_TYPES",
       "severity": "info",
       "count": 1,
-      "facts": 4458
+      "facts": 4461
     },
     {
       "scanner": "java",
@@ -3892,13 +3892,13 @@
       "code": "JAVA_UNRESOLVED_CALLS",
       "severity": "info",
       "count": 4,
-      "facts": 9609
+      "facts": 9606
     }
   ],
   "coverage": {
     "operations": 2456,
     "tokenized": 1515,
-    "invocations": 12568
+    "invocations": 12566
   },
   "duplicates": [
     "02da146b79ab30eea25ec378d01ca56c0ef5ed829b8e2fce1258497f210f9842",
@@ -5500,6 +5500,6 @@
   },
   "review": {
     "task": "TASK-211",
-    "decision": "Reviewed existing lifecycle/support ownership and rendered native-dialog style calls, archived obsolete table removal, four exact duplicate dispositions replacing three, and investigated missing-Android static anonymous-adapter warning plus diagnostic deltas; see backlog/docs/groma-support-review-2026-10-22.md. Runtime/policy/pins/exceptions unchanged."
+    "decision": "Reviewed existing lifecycle/support ownership and rendered native-dialog style calls, archived obsolete table removal, four exact duplicate dispositions replacing three, and investigated missing-Android static anonymous-adapter warning plus diagnostic deltas; see backlog/docs/groma-support-review-2026-10-22.md. Runtime/policy/pins/exceptions unchanged. API23 weak-key refresh race corrected with strong local target snapshots; exact two accessor invocations removed with unchanged operations/ownership/duplicate identities; scanner deltas reviewed in the same audit."
   }
 }
