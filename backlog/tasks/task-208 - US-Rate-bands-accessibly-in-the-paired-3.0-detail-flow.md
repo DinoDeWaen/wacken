@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-22 08:15'
+updated_date: '2026-10-22 09:03'
 labels:
   - ux
   - release-3.0
@@ -39,6 +39,8 @@ modified_files:
     groma/systems/wacken/containers/android-application/components/archivedfestivalactivity.md
   - README.md
   - backlog/docs/business-requirements.md
+  - backlog/docs/groma-rating-controls-review-2026-10-22.md
+  - tools/groma/architecture-baseline.json
 priority: medium
 type: enhancement
 ---
