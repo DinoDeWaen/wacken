@@ -42,6 +42,7 @@ public final class ArchivedBandDetailActivity extends Activity {
     private String bandName;
     private java.util.function.Supplier<be.wacken.planner.application.ArchivedRatingCorrectionUseCase> correctionUseCase;
     private ArchivedRatingCorrectionDialog correctionDialog;
+    private String recoveryNotice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +58,9 @@ public final class ArchivedBandDetailActivity extends Activity {
         bandName = getIntent().getStringExtra(EXTRA_BAND_NAME);
         repositories = new AppRepositories(this);
         correctionUseCase=repositories::archivedRatingCorrections;
+        if(savedInstanceState!=null)recoveryNotice=savedInstanceState.getString("correctionRecovery");
         refresh();
+        if(savedInstanceState!=null){android.widget.ScrollView scroll=findViewById(R.id.band_detail_scroll);scroll.post(()->scroll.scrollTo(0,savedInstanceState.getInt("scroll")));}
     }
 
     private void refresh() {
@@ -131,6 +134,7 @@ public final class ArchivedBandDetailActivity extends Activity {
     private LinearLayout correctionSection() {
         LinearLayout section=detailSection();
         section.addView(sectionTitle("Correction history"));
+        if(recoveryNotice!=null)section.addView(infoLine("Review recovery",recoveryNotice));
         var audit=repositories.ratingCorrectionHistory().findByUserFestivalAndBand(session.userId(),festivalId,new Band(bandName));
         for(var correction:audit) {
             section.addView(infoLine(correction.kind().name(),correction.previousValue()+" → "+correction.newValue()));
@@ -141,6 +145,7 @@ public final class ArchivedBandDetailActivity extends Activity {
         if(audit.isEmpty())section.addView(infoLine("History","No cached corrections"));
         boolean archived=repositories.festivals().findAll().stream().anyMatch(f->f.id().equals(festivalId)&&f.isArchived());
         Button edit=WackenTheme.actionButton(this,"Correct my archived rating",WackenTheme.ButtonStyle.SECONDARY,v->{
+            recoveryNotice=null;
             correctionDialog=new ArchivedRatingCorrectionDialog(this,correctionUseCase.get(),session.userId(),festivalId,new Band(bandName),kind->
                 kind==be.wacken.planner.domain.ArchivedRatingKind.AFTER
                     ?repositories.afterRatings().findByUserFestivalAndBand(session.userId(),festivalId,new Band(bandName)).map(r->r.rating().value()).orElse(0)
@@ -149,6 +154,12 @@ public final class ArchivedBandDetailActivity extends Activity {
             correctionDialog.show();
         });
         edit.setEnabled(archived);section.addView(edit);return section;
+    }
+
+    @Override protected void onSaveInstanceState(Bundle state){
+        state.putString("correctionRecovery",correctionDialog==null?recoveryNotice:correctionDialog.recoveryMessage());
+        android.widget.ScrollView scroll=findViewById(R.id.band_detail_scroll);if(scroll!=null)state.putInt("scroll",scroll.getScrollY());
+        super.onSaveInstanceState(state);
     }
 
     @Override protected void onDestroy(){

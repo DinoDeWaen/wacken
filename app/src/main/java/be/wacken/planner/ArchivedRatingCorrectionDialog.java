@@ -36,13 +36,14 @@ final class ArchivedRatingCorrectionDialog {
     void show(){
         LinearLayout panel=new LinearLayout(activity);panel.setOrientation(LinearLayout.VERTICAL);panel.setPadding(24,16,24,16);
         type=new Spinner(activity);
-        type.setAdapter(new ArrayAdapter<>(activity,android.R.layout.simple_spinner_dropdown_item,new String[]{"After-rating","Planning rating"}));
+        WackenTheme.reviewOptions(type,java.util.List.of("After-rating","Planning rating"));
         type.setContentDescription("Archived rating kind");panel.addView(type);
         proposed=new EditText(activity);proposed.setInputType(InputType.TYPE_CLASS_NUMBER);
-        proposed.setHint("Corrected rating");proposed.setContentDescription("Corrected archived rating");panel.addView(proposed);
-        status=new TextView(activity);status.setText("Load the current rating before confirming a correction.");panel.addView(status);
-        reload=new Button(activity);reload.setText("Reload current rating");reload.setOnClickListener(v->load());panel.addView(reload);
-        dialog=new AlertDialog.Builder(activity).setTitle("Correct my archived rating").setView(panel)
+        WackenTheme.reviewInput(proposed);proposed.setHint("Corrected rating");proposed.setContentDescription("Corrected archived rating");panel.addView(proposed);
+        status=new TextView(activity);status.setTextSize(16);WackenTheme.textColor(status,WackenTheme.TEXT);status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);status.setText("Load the current rating before confirming a correction.");panel.addView(status);
+        reload=WackenTheme.actionButton(activity,"Reload current rating",WackenTheme.ButtonStyle.SECONDARY,v->load());panel.addView(reload);
+        ScrollView scroll=new ScrollView(activity);scroll.addView(panel);
+        dialog=new AlertDialog.Builder(activity).setTitle("Correct my archived rating").setView(scroll)
                 .setNegativeButton("Cancel",null).setPositiveButton("Save correction",null).create();
         dialog.setOnShowListener(v->{
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
@@ -58,7 +59,7 @@ final class ArchivedRatingCorrectionDialog {
                 proposed.setText(String.valueOf(localValue.applyAsInt(kind)));load();
             }
         });
-        dialog.show();
+        dialog.show();WackenTheme.dialog(dialog);
         proposed.setText(String.valueOf(localValue.applyAsInt(kind)));load();
     }
     private void load(){
@@ -92,6 +93,13 @@ final class ArchivedRatingCorrectionDialog {
         confirmation=new AlertDialog.Builder(activity).setTitle("Confirm archived correction")
                 .setMessage("Change your "+kind.name().toLowerCase(java.util.Locale.ROOT)+" rating from "+expected.value()+" to "+value+"? The original recorded date and change history are retained.")
                 .setNegativeButton("Cancel",null).setPositiveButton("Confirm correction",(d,w)->save(expected,value)).show();
+        WackenTheme.dialog(confirmation);
+    }
+    String recoveryMessage(){
+        if(dialog==null||!dialog.isShowing())return null;
+        return saving?"A correction may have completed during screen recreation. Reload the current rating and history before confirming again.":
+                "Correction review was closed during screen recreation. Staged "+kind.name().toLowerCase(java.util.Locale.ROOT)
+                +" value: "+proposed.getText()+". Reload the current rating before confirming again; no correction was submitted by restoring this screen.";
     }
     void dismiss(){
         if(confirmation!=null)confirmation.dismiss();

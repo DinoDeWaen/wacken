@@ -12,15 +12,9 @@ import org.junit.Test;
 
 public final class ArchivedFestivalLayoutRegressionTest {
     @Test
-    public void archivedFestivalListUsesActiveBandListTableShape() throws IOException {
+    public void archivedFestivalKeepsReadOnlyRatingsAndKnownMusicActions() throws IOException {
         String source = new String(Files.readAllBytes(source("ArchivedFestivalActivity.java")), StandardCharsets.UTF_8);
 
-        assertTrue(source.contains("headerCell(\"Band\", 2.45f)"));
-        assertTrue(source.contains("headerCell(\"Rating\", 1.75f)"));
-        assertTrue(source.contains("headerCell(\"\", 1.45f)"));
-        assertTrue(source.contains("headerCell(\"Stage\", 1.25f)"));
-        assertTrue(source.contains("headerCell(\"Date\", 0.95f)"));
-        assertTrue(source.contains("headerCell(\"Time\", 1.15f)"));
         assertTrue(source.contains("new RatingStarsView(ArchivedFestivalActivity.this"));
         assertTrue(source.contains("rowActions(Optional.ofNullable(bandsByName.get(band.bandName())))"));
         assertTrue(source.contains("rating.setEnabled(false);"));

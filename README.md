@@ -79,6 +79,17 @@ its search/result/checked proposals across recreation and offers cancellation an
 retry without applying proposals. Explicit approval and existing missing-field,
 identity and no-overwrite rules remain authoritative.
 
+TASK-211 makes sign-in/import and archived lists readable at large fonts, with
+wrapping native confirmation actions in both appearances. Sign-in retains one
+active request and a memory-only password draft. Rename retains its captured
+festival/name draft; CSV selection and local review retain their existing memory
+state, with explicit reselection after process loss. Archive now confirms the
+festival and group-wide scope before the existing atomic save. Interrupted
+requests/correction reviews show check-current-state recovery and never resubmit
+on restoration. Archived rows remain read-only with full planning/performance
+facts and stored music actions. Local/pending/acknowledged/error feedback uses
+words and live announcements; native dialogs dismiss with their Activity.
+
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.

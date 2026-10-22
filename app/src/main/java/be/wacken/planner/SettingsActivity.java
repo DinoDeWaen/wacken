@@ -45,6 +45,11 @@ public final class SettingsActivity extends Activity {
     private TextView syncIndicator;
     private Button syncButton;
     private ValueAnimator syncAnimator;
+    private AlertDialog renameDialog;
+    private EditText renameInput;
+    private Festival renameFestival;
+    private String renameDraft;
+    private boolean syncing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,12 +64,26 @@ public final class SettingsActivity extends Activity {
         if(savedInstanceState!=null){
             ScrollView scroll=findViewById(R.id.destination_content);
             scroll.post(()->scroll.scrollTo(0,savedInstanceState.getInt("settingsScroll")));
+            String feedback=savedInstanceState.getString("feedback");
+            if(savedInstanceState.getBoolean("syncPending"))showStatus("Previous sync could not be confirmed after screen recreation. Cached work and pending changes are kept. Retry sync when ready.",COLOR_AMBER);
+            else if(feedback!=null)showStatus(feedback,COLOR_MUTED);
+            if(savedInstanceState.getBoolean("renameOpen")){
+                String id=savedInstanceState.getString("renameFestival");
+                activeFestival().filter(festival->festival.id().equals(id)).ifPresentOrElse(festival->{
+                    renameDraft=savedInstanceState.getString("renameDraft",festival.name());renameActiveFestival(festival);
+                },()->showStatus("Festival context changed. Reopen rename for the current active festival; no rename was submitted by restoring this screen.",COLOR_AMBER));
+            }
         }
     }
 
     @Override protected void onSaveInstanceState(Bundle state) {
         ScrollView scroll=findViewById(R.id.destination_content);
         if(scroll!=null)state.putInt("settingsScroll",scroll.getScrollY());
+        if(status!=null)state.putString("feedback",status.getText().toString());state.putBoolean("syncPending",syncing);
+        if(renameDialog!=null&&renameDialog.isShowing()){
+            state.putBoolean("renameOpen",true);state.putString("renameFestival",renameFestival.id());
+            state.putString("renameDraft",renameInput.getText().toString());
+        }
         super.onSaveInstanceState(state);
     }
 
@@ -180,6 +199,7 @@ public final class SettingsActivity extends Activity {
     @Override
     protected void onDestroy() {
         stopSyncAnimation();
+        if(renameDialog!=null)renameDialog.dismiss();
         super.onDestroy();
     }
 
@@ -244,10 +264,12 @@ public final class SettingsActivity extends Activity {
         share.setType("text/plain");
         share.putExtra(Intent.EXTRA_SUBJECT, InviteShareText.subject());
         share.putExtra(Intent.EXTRA_TEXT, InviteShareText.message(currentSession.email()));
-        startActivity(Intent.createChooser(share, "Share Wacken Planner invite"));
+        try{startActivity(Intent.createChooser(share,"Share Wacken Planner invite"));showStatus("Invite ready. Choose a sharing app; cancelling keeps data unchanged.",COLOR_MUTED);}
+        catch(android.content.ActivityNotFoundException error){showStatus("No sharing app is available. Group and account data are unchanged.",COLOR_AMBER);}
     }
 
     private void syncFromSupabase() {
+        if(syncing)return;syncing=true;
         syncButton.setEnabled(false);
         startSyncAnimation();
         refreshSyncStatus("Syncing", COLOR_AMBER);
@@ -258,7 +280,8 @@ public final class SettingsActivity extends Activity {
                 repositories.syncRatings();
                 repositories.syncScheduleLocks();
                 runOnUiThread(() -> {
-                    syncButton.setEnabled(true);
+                    if(isFinishing()||isDestroyed())return;
+                    syncing=false;syncButton.setEnabled(true);
                     stopSyncAnimation();
                     showStatus(SettingsFeedback.syncSuccess(
                             LocalTime.now().format(SYNC_TIME),
@@ -268,7 +291,8 @@ public final class SettingsActivity extends Activity {
                 });
             } catch (Exception error) {
                 runOnUiThread(() -> {
-                    syncButton.setEnabled(true);
+                    if(isFinishing()||isDestroyed())return;
+                    syncing=false;syncButton.setEnabled(true);
                     stopSyncAnimation();
                     if (!loadCurrentSession()) {
                         redirectToLogin();
@@ -350,12 +374,14 @@ public final class SettingsActivity extends Activity {
 
     private void renameActiveFestival(Festival festival) {
         EditText input = new EditText(this);
-        input.setText(festival.name());
+        input.setText(renameDraft==null?festival.name():renameDraft);renameDraft=null;
+        renameInput=input;renameFestival=festival;
+        input.setContentDescription("Festival name");
         input.setSingleLine(true);
         input.setSelectAllOnFocus(true);
         input.setHint("Festival name");
         WackenTheme.textColor(input, WackenTheme.TEXT);
-        input.setHintTextColor(WackenTheme.MUTED);
+        WackenTheme.reviewInput(input);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Rename active festival")
@@ -382,7 +408,9 @@ public final class SettingsActivity extends Activity {
                 input.setError("Festival name must not be blank.");
             }
         }));
-        dialog.show();
+        renameDialog=dialog;
+        dialog.setOnDismissListener(ignored->{if(renameDialog==dialog){renameDialog=null;renameInput=null;renameFestival=null;}});
+        dialog.show();WackenTheme.dialog(dialog);
     }
 
     private void fetchBandMetadata() {

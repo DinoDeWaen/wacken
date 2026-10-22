@@ -89,6 +89,9 @@ public final class MainActivity extends Activity {
     private Button allFilter;
     private Button unratedFilter;
     private Button retrySync;
+    private boolean archiving;
+    private android.app.AlertDialog archiveDialog;
+    private String supportRecovery;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +101,8 @@ public final class MainActivity extends Activity {
             pendingScrollBandName = savedInstanceState.getString(STATE_PENDING_SCROLL_BAND_NAME);
             query=savedInstanceState.getString("lineup_query","");
             unratedOnly=savedInstanceState.getBoolean("lineup_unrated");
+            supportRecovery=savedInstanceState.getString("supportRecovery");
+            if(savedInstanceState.getBoolean("operationUnconfirmed"))supportRecovery="A previous sync or archive could not be confirmed after screen recreation. Check the current festival and history before retrying. Cached work and pending changes are kept.";
         }
         sessionStore = new AuthSessionStore(this);
         if (!loadCurrentSession()) {
@@ -116,7 +121,8 @@ public final class MainActivity extends Activity {
         footer.addView(actionRow());
         syncStatus = new TextView(this);
         WackenTheme.textColor(syncStatus, COLOR_MUTED);
-        syncStatus.setTextSize(13);
+        syncStatus.setTextSize(14);
+        syncStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         syncStatus.setGravity(Gravity.CENTER_HORIZONTAL);
         syncStatus.setPadding(0, 0, 0, dp(10));
         footer.addView(syncStatus);
@@ -125,7 +131,7 @@ public final class MainActivity extends Activity {
 
         status = new TextView(this);
         WackenTheme.textColor(status, COLOR_MUTED);
-        status.setGravity(Gravity.CENTER_HORIZONTAL);
+        status.setGravity(Gravity.START);status.setTextSize(16);
         status.setPadding(0, dp(20), 0, dp(20));
         status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         footer.addView(status);
@@ -188,6 +194,7 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean("operationUnconfirmed",archiving||syncInProgress);outState.putString("supportRecovery",AppearanceController.hasOpenDialogs(this)?"A previous confirmation or request closed during screen recreation. Check current festival, pending data and history before repeating an action; restoring this screen submits nothing.":supportRecovery);
         super.onSaveInstanceState(outState);
         outState.putString(STATE_PENDING_SCROLL_BAND_NAME, pendingScrollBandName);
         if(pendingScrollBandName==null&&adapter!=null) {
@@ -258,6 +265,7 @@ public final class MainActivity extends Activity {
         reloadNeeded = false;
         status.setVisibility(cachedBands.isEmpty() ? View.VISIBLE : View.GONE);
         status.setText(cachedBands.isEmpty() ? getString(R.string.empty_band_list) : "");
+        if(supportRecovery!=null){status.setText(supportRecovery);status.setVisibility(View.VISIBLE);}
         refreshSyncStatus(repositories, "Cached data", COLOR_MUTED);
     }
 
@@ -266,6 +274,7 @@ public final class MainActivity extends Activity {
         title.setText(content.title());
         subtitle.setText(content.subtitle());
         status.setText(content.statusText());
+        if(supportRecovery!=null){status.setText(supportRecovery);status.setVisibility(View.VISIBLE);}
         if (archiveButton != null) {
             archiveButton.setVisibility(content.showArchiveAction() ? View.VISIBLE : View.GONE);
         }
@@ -298,7 +307,7 @@ public final class MainActivity extends Activity {
                     view -> openArchivedFestival(festival.id())
             );
             archive.setContentDescription("Open archived festival " + festival.name());
-            archive.setTextSize(13);
+            archive.setTextSize(16);
             LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
@@ -309,6 +318,7 @@ public final class MainActivity extends Activity {
     }
 
     private void openArchivedFestival(String festivalId) {
+        reloadNeeded=true;
         Intent intent = new Intent(this, ArchivedFestivalActivity.class);
         intent.putExtra(ArchivedFestivalActivity.EXTRA_FESTIVAL_ID, festivalId);
         startActivity(intent);
@@ -354,16 +364,16 @@ public final class MainActivity extends Activity {
 
     private LinearLayout actionRow() {
         LinearLayout actions = new LinearLayout(this);
-        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setOrientation(LinearLayout.VERTICAL);
         actions.setGravity(Gravity.CENTER_VERTICAL);
         actions.setPadding(0, 0, 0, dp(14));
-        archiveButton = topActionButton("Archive", "Archive active festival", WackenTheme.ButtonStyle.DANGER,
+        archiveButton = topActionButton("Archive active festival", "Archive active festival", WackenTheme.ButtonStyle.DANGER,
                 view -> archiveActiveFestival());
-        archiveButton.setTextSize(13);
+        archiveButton.setTextSize(16);
         actions.addView(archiveButton);
         deleteFestivalButton = topActionButton("Delete", "Delete active festival and schedule", WackenTheme.ButtonStyle.DANGER,
                 view -> deleteActiveFestival());
-        deleteFestivalButton.setTextSize(13);
+        deleteFestivalButton.setTextSize(16);
         actions.addView(deleteFestivalButton);
         addFestivalButton = topActionButton("Add festival", "Add festival", WackenTheme.ButtonStyle.SECONDARY,
                 view -> {
@@ -380,6 +390,16 @@ public final class MainActivity extends Activity {
     }
 
     private void archiveActiveFestival() {
+        if(archiving)return;
+        new ShowFestivalStartUseCase(new AppRepositories(this).festivals()).show().activeFestival().ifPresent(festival->
+            archiveDialog=WackenTheme.dialog(new android.app.AlertDialog.Builder(this).setTitle("Archive "+festival.name()+"?")
+                .setMessage("Archive this festival for everyone in the group? Pending ratings must sync first. Nonempty after-ratings become each member's established band rating; planning and history keep their festival context. Completion requires a confirmed shared save.")
+                .setNegativeButton("Cancel",null).setPositiveButton("Archive festival",(dialog,which)->performArchive())
+                .show(),WackenTheme.ButtonStyle.DANGER));
+    }
+
+    private void performArchive() {
+        if(archiving)return;archiving=true;
         archiveButton.setEnabled(false);
         status.setVisibility(View.VISIBLE);
         status.setText("Archiving festival...");
@@ -388,6 +408,7 @@ public final class MainActivity extends Activity {
                 this::runOnUiThread,
                 () -> new AppRepositories(this).archiveFestivalUseCase()
         ).execute(state -> {
+            if(isFinishing()||isDestroyed())return;archiving=false;
             AppRepositories repositories = new AppRepositories(this);
             renderFestivalStartState(state);
             cachedBands = List.of();
@@ -397,9 +418,11 @@ public final class MainActivity extends Activity {
             loading = false;
             reloadNeeded = false;
             status.setVisibility(View.VISIBLE);
-            refreshSyncStatus(repositories, "Cached data", COLOR_MUTED);
+            refreshSyncStatus(repositories,"Festival archived for the group",WackenTheme.SUCCESS_GREEN);
+            status.setText("Festival archived for the group. Planning/history were kept; nonempty after-ratings supplied established band ratings.");
             archiveButton.setEnabled(true);
         }, error -> {
+            if(isFinishing()||isDestroyed())return;archiving=false;
             status.setVisibility(View.VISIBLE);
             status.setText("Archive failed: " + error);
             archiveButton.setEnabled(true);
@@ -421,14 +444,13 @@ public final class MainActivity extends Activity {
 
     private Button topActionButton(String icon, String description, WackenTheme.ButtonStyle style, View.OnClickListener listener) {
         Button button = WackenTheme.actionButton(this, icon, style, listener);
-        button.setTextSize(14);
+        button.setTextSize(16);
         button.setContentDescription(description);
         LinearLayout.LayoutParams layout = new LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        layout.setMargins(dp(3), 0, dp(3), 0);
+        layout.setMargins(0,dp(4),0,dp(4));
         button.setLayoutParams(layout);
         if ("Sync and exit".equals(description)) {
             closeButton = button;
@@ -461,6 +483,7 @@ public final class MainActivity extends Activity {
                 repositories.syncRatings();
                 repositories.syncScheduleLocks();
                 runOnUiThread(() -> {
+                    if(isFinishing()||isDestroyed())return;
                     syncInProgress = false;
                     setSyncActionsEnabled(true);
                     reloadNeeded = true;
@@ -478,6 +501,7 @@ public final class MainActivity extends Activity {
                 });
             } catch (Exception error) {
                 runOnUiThread(() -> {
+                    if(isFinishing()||isDestroyed())return;
                     syncInProgress = false;
                     setSyncActionsEnabled(true);
                     if (showOverlay) {
@@ -575,8 +599,7 @@ public final class MainActivity extends Activity {
         syncOverlayMessage.setTextSize(14);
         syncOverlayMessage.setTypeface(Typeface.DEFAULT_BOLD);
         syncOverlayMessage.setGravity(Gravity.CENTER_VERTICAL);
-        syncOverlayMessage.setMaxLines(2);
-        syncOverlayMessage.setEllipsize(TextUtils.TruncateAt.END);
+        syncOverlayMessage.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         panel.addView(syncOverlayMessage, new LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,

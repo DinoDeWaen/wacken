@@ -38,13 +38,13 @@ final class FestivalBandReviewDialog {
         int padding=(int)(16*activity.getResources().getDisplayMetrics().density);form.setPadding(padding,padding,padding,padding);
         TextView explanation=new TextView(activity);
         explanation.setText("Choose a catalog band or create a separate band. Suggestions are not selected automatically.");
-        form.addView(explanation);
+        explanation.setTextSize(16);WackenTheme.textColor(explanation,WackenTheme.TEXT);form.addView(explanation);
         List<String> labels=new ArrayList<>(List.of("Choose a match…","Create new band: "+row.uploadedName()));
         row.suggestions().forEach(b->labels.add(b.band().name()));
         selection=new Spinner(activity);
         selection.setContentDescription("Band identity for "+row.uploadedName());
-        selection.setAdapter(new ArrayAdapter<>(activity,android.R.layout.simple_spinner_dropdown_item,labels));form.addView(selection);
-        remember=new CheckBox(activity);remember.setText("Remember this spelling as an alias");remember.setEnabled(false);form.addView(remember);
+        WackenTheme.reviewOptions(selection,labels);form.addView(selection);
+        remember=new CheckBox(activity);remember.setText("Remember this spelling as an alias");remember.setEnabled(false);WackenTheme.reviewChoice(remember);form.addView(remember);
         selection.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             public void onNothingSelected(android.widget.AdapterView<?> parent) {}
             public void onItemSelected(android.widget.AdapterView<?> parent,android.view.View view,int index,long id) {
@@ -53,8 +53,9 @@ final class FestivalBandReviewDialog {
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(index>0);
             }
         });
+        ScrollView reviewScroll=new ScrollView(activity);reviewScroll.addView(form);
         dialog=new AlertDialog.Builder(activity).setTitle("Review "+(position+1)+"/"+proposals.size()+": "+row.uploadedName())
-            .setView(form).setNegativeButton("Cancel",(d,w)->cancelled.run()).setPositiveButton("Confirm choice",null)
+            .setView(reviewScroll).setNegativeButton("Cancel",(d,w)->cancelled.run()).setPositiveButton("Confirm choice",null)
             .setOnCancelListener(d->cancelled.run()).create();
         dialog.setOnShowListener(d->{
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
@@ -64,16 +65,17 @@ final class FestivalBandReviewDialog {
                 position++;dialog.dismiss();next();
             });
         });
-        dialog.show();
+        dialog.show();WackenTheme.dialog(dialog);
     }
     private void summary() {
         StringBuilder text=new StringBuilder("Create the festival using these reviewed choices?\n\n");
         for(var row:choices)text.append(row.uploadedName()).append(" → ")
             .append(row.selected().map(b->b.band().name()).orElse("New band")).append(row.rememberAlias()?" (remember alias)":"").append('\n');
-        TextView summary=new TextView(activity);summary.setText(text);summary.setPadding(24,16,24,16);
+        TextView summary=new TextView(activity);summary.setText(text);summary.setTextSize(16);WackenTheme.textColor(summary,WackenTheme.TEXT);summary.setPadding(24,16,24,16);
         ScrollView scroll=new ScrollView(activity);scroll.addView(summary);
         dialog=new AlertDialog.Builder(activity).setTitle("Confirm festival bands").setView(scroll)
             .setNegativeButton("Cancel",(d,w)->cancelled.run()).setOnCancelListener(d->cancelled.run())
             .setPositiveButton("Create festival",(d,w)->confirmed.accept(List.copyOf(choices))).show();
+        WackenTheme.dialog(dialog);
     }
 }
