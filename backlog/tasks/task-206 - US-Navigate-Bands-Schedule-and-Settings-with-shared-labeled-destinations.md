@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-22 04:18'
+updated_date: '2026-10-22 04:19'
 labels:
   - ux
   - release-3.0
@@ -35,6 +35,7 @@ modified_files:
   - README.md
   - backlog/docs/business-requirements.md
   - scripts/architecture/verify-groma.mjs
+  - .github/workflows/ci.yml
 priority: medium
 type: enhancement
 ---
@@ -70,4 +71,6 @@ Cross-cutting architecture approved2026-10-17: follow ADR-0016 and the implement
 Added the shared Bands/Schedule/Settings bar with visible/accessibility current state, no-op current destination and REORDER_TO_FRONT Activity reuse. Preserved existing detail/review Back and made Back to bands actually select Bands from either primary screen. Added stable root/list IDs for hierarchy restoration and changed detail Home wording to Back to match its initiating-context behavior. Red native scenario failed before implementation; after implementation the destination reuse scenario passed and app unit suite passed. Critical native run15/16 passed; launcher-return scenario is being rerun from a real launcher intent to distinguish task setup from production behavior. Groma CLI created/described an independent stateless primary-navigation responsibility and authored its three caller, three destination and theme-helper collaborations; source/role/baseline review remains pending.
 
 Final local full native suite passed80/80 on API36 with no failures/skips. The launcher-return failure was traced to the test initial root using an explicit non-launcher intent; using the real package launcher intent passes Settings Back/recreation/scroll/Home-return without a production task workaround. Shared destination reuse, actual Back to original row and reachable sync/festival controls pass. Added bounded wait for the restored ScrollView layout to avoid asserting before the framework layout phase on older APIs. Reviewed rendered new navigation component, exact source/seven collaborations and baseline:96 components/297 sources/13 flows, same88 identities/reviews/pins/exceptions; only expected Android missing-type/unresolved-call facts and added source coverage changed. Updated README/requirements development status. Final clean signed build, normal Groma gate and CI remain before Done.
+
+CI setup failure diagnosed: generic Groma plugin install restored a newer npm scanner and modified groma/config.json before the clean-checkout gate. Changed CI restoration to the exact reviewed @groma/scanner-java@0.2.2 source through Groma CLI. Pin/baseline remain unchanged; gate now reports dirty paths and all27 positive/negative fixtures pass.
 <!-- SECTION:NOTES:END -->
