@@ -122,8 +122,9 @@ rating choices with scoped meaning/selected state, explicit0/Unrated clearing,
 separate established/source/history context and an independent After the show
 disclosure whose expansion survives recreation without replaying an event.
 Archived values and group planning summaries remain read-only; known metadata,
-images and performance context are preserved and discovery stays in active
-context. Neither appearance nor the new controls change ADR0016 rating roles,
+images and performance context are preserved. Canonical-band discovery retains
+its existing no-festival entry and is absent in captured archived context.
+Neither appearance nor the new controls change ADR0016 rating roles,
 member/festival ownership, history/correction semantics or schedule decisions.
 TASK-209–213 still own remaining screens, integrated accessibility/device review
 and actual3.0 publication.

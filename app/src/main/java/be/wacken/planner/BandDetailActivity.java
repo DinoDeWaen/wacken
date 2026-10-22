@@ -356,7 +356,8 @@ public final class BandDetailActivity extends Activity {
     private LinearLayout linksSection(BandDetailItem detail) {
         LinearLayout section = presentation.links(detail, homeButton());
         musicLinksSection = section;
-        if(selectedFestivalActive())section.addView(WackenTheme.actionButton(this, "Find music links", WackenTheme.ButtonStyle.SECONDARY,
+        // Canonical band lookup does not require a festival; captured archive context stays read-only.
+        if(selectedFestivalId.isEmpty()||selectedFestivalActive())section.addView(WackenTheme.actionButton(this, "Find music links", WackenTheme.ButtonStyle.SECONDARY,
                 view -> startActivity(new Intent(this, MusicLinksReviewActivity.class)
                         .putExtra(MusicLinksReviewActivity.EXTRA_BAND_NAME, detail.bandName()))));
         return section;

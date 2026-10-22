@@ -54,8 +54,9 @@ Active detail puts selected-festival planning first; **After the show** expands
 the independent post-show editor and retains its expansion across recreation.
 Clear actions keep0 explicitly Unrated. Established/source/history context and
 read-only group planning remain separate. Archived controls reject accessibility
-clicks and show read-only context; verified music discovery stays in active
-context. Shared theme changes preserve state and never replay rating events.
+clicks and show read-only context. Canonical-band music discovery remains available
+without a festival; it is absent in captured archived context. Shared theme
+changes preserve state and never replay rating events.
 Native actions/geometry are automated checks; TASK-212 still owns the integrated
 human TalkBack, visual and physical-device review.
 

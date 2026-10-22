@@ -805,6 +805,7 @@ public final class CriticalFlowsAndroidTest {
         });
         onUi(()->{
             assertNotNull(findContaining(root(),"Festival: Renamed opened festival ["+FESTIVAL+"]"));
+            assertNull(findText(root(),"Find music links"));
             ViewGroup section=(ViewGroup)findText(root(),"Festival planning rating").getParent();
             assertFalse(findDescription(section,"Clear planning rating").isEnabled());
             findDescription(section,"Clear planning rating").performClick();
