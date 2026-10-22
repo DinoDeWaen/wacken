@@ -3739,7 +3739,7 @@
       "code": "JAVA_MISSING_EXTERNAL_TYPES",
       "severity": "info",
       "count": 1,
-      "facts": 4267
+      "facts": 4268
     },
     {
       "scanner": "java",
@@ -3758,7 +3758,7 @@
   "coverage": {
     "operations": 2360,
     "tokenized": 1471,
-    "invocations": 11903
+    "invocations": 11902
   },
   "duplicates": [
     "02da146b79ab30eea25ec378d01ca56c0ef5ed829b8e2fce1258497f210f9842",

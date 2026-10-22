@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-22 06:24'
+updated_date: '2026-10-22 06:25'
 labels:
   - ux
   - release-3.0
@@ -60,4 +60,6 @@ Standard treatment within existing Views/ADR0024 presentation boundary. 1. Chara
 
 <!-- SECTION:NOTES:BEGIN -->
 Cross-cutting architecture approved2026-10-17: follow ADR-0016 and the implemented2.34 lifecycle from TASK-216–220. The3.0 appearance/navigation redesign must preserve canonical band metadata, member-specific current band ratings, separate festival planning/after-ratings, one-time creation snapshots, archive-only promotion and source-aware corrections. No theme/layout change may reintroduce latest-event-as-band-rating or cross-festival fallback.
+
+Implemented wrapping actual lineup with planning meaning, known-only music buttons, retained local query/Unrated filter and scrollable header. Unit suite passed; red native scenario failed for missing search, then exposed adapter replacement detaching controls; stable adapter updates fixed it. Critical19/19 and full84/84 native suites pass locally including200% long names, query/filter recreation, intercepted known-link handoff and scoped rating/filter updates. Groma helper combined into home via CLI;81 existing duplicate identities unchanged,7 obsolete table pairs removed, exact diagnostics/coverage reviewed. Clean signed build at6b7cb13 passed; final fresh build with archive-entry wrapping-height correction and CI/gate remain before Done.
 <!-- SECTION:NOTES:END -->
