@@ -409,6 +409,7 @@ public final class CriticalFlowsAndroidTest {
             onUi(()->{
                 var search=(android.widget.EditText)findDescription(root(),"Search own bands for "+BAND);
                 assertNotNull("Link review search must identify its imported band",search);
+                assertTrue("Search needs the full row width",search.getWidth()>root().getWidth()*0.7f);
                 search.setText("task-174");
                 var matches=(android.widget.Spinner)findDescription(root(),"Match for "+BAND);
                 assertNotNull(matches);assertTrue(matches.getMinimumHeight()>=WackenTheme.dp(activity,48));matches.setSelection(0);

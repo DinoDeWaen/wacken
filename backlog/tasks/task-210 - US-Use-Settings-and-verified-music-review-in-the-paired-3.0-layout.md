@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-22 15:20'
+updated_date: '2026-10-22 15:26'
 labels:
   - ux
   - release-3.0
@@ -37,6 +37,8 @@ modified_files:
     groma/systems/wacken/containers/android-application/components/musiclinksreviewactivity.md
   - README.md
   - backlog/docs/business-requirements.md
+  - >-
+    app/src/test/java/be/wacken/planner/BandLinkReviewActivityRegressionTest.java
 priority: medium
 type: enhancement
 ---

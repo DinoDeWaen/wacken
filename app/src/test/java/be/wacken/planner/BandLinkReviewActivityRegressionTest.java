@@ -15,7 +15,6 @@ public final class BandLinkReviewActivityRegressionTest {
     public void keepsReviewedLinkingControlsVisibleInSource() throws IOException {
         String source = new String(Files.readAllBytes(activitySource()), StandardCharsets.UTF_8);
 
-        assertTrue("Review screen must lay each candidate out as a row.", source.contains("row.setOrientation(LinearLayout.HORIZONTAL)"));
         assertTrue("Review screen must show imported names.", source.contains("candidate.uploadedDisplayName()"));
         assertTrue("Review screen must provide editable search.", source.contains("Search own band database"));
         assertTrue("Review screen must use a dropdown for candidate matches.", source.contains("new Spinner(this)"));
