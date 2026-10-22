@@ -292,7 +292,7 @@ public final class CriticalFlowsAndroidTest {
         assertEquals(5,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
         AtomicReference<Boolean> previousTouchMode=new AtomicReference<>();
         onUi(()->previousTouchMode.set(root().isInTouchMode()));
-        instrumentation.setInTouchMode(false);
+        instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_TAB);
         try {
             await(()->!root().isInTouchMode());
             onUi(()->{

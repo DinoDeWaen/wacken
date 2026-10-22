@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-22 09:03'
+updated_date: '2026-10-22 09:10'
 labels:
   - ux
   - release-3.0
@@ -76,4 +76,6 @@ Standard presentation slice in approved Views/ADR0024 boundary. 1. Characterize 
 Cross-cutting architecture approved2026-10-17: follow ADR-0016 and the implemented2.34 lifecycle from TASK-216–220. The3.0 appearance/navigation redesign must preserve canonical band metadata, member-specific current band ratings, separate festival planning/after-ratings, one-time creation snapshots, archive-only promotion and source-aware corrections. No theme/layout change may reintroduce latest-event-as-band-rating or cross-festival fallback.
 
 Red native test proved old star children exposed TextView instead of actionable Button. Added native scoped choices/selected semantics, explicit clear/Unrated, wrapping48dp controls, theme-safe selected/focus styling and planning-first retained After the show disclosure. Shared plain meaning text extracted under existing detail responsibility; archived child clicks disabled, selected festival read-only guard/discovery restrictions retained. App unit suite passed; focused accessibility/keyboard test passes after awaiting actual input-mode transition and framework-posted native clicks in characterization. Full87-case native suite running; Groma CLI combines meaning helper and authors5 supported shared-control/style collaborators. Source/map/baseline/signed/CI validation remains before Done.
+
+Final local full87/87 native suite passed, fresh signed production build and normal Groma two-scan gate passed; API36 CI87/87 passes. API23 CI stops only on test awaiting input mode: Instrumentation.setInTouchMode(false) does not transition that window. Replaced this with real Tab key injection before keyboard selection; preserves full value/meaning/focus/clear assertions and exercises actual keyboard entry. Production source unchanged; both native CI APIs rerunning before closure.
 <!-- SECTION:NOTES:END -->
