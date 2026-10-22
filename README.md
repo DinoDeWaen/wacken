@@ -364,7 +364,7 @@ The [TASK207 lineup review](backlog/docs/groma-lineup-review-2026-10-22.md)
 accounts for seven obsolete table-helper pairs removed with the wrapping lineup.
 The [TASK208 rating-control review](backlog/docs/groma-rating-controls-review-2026-10-22.md)
 keeps the shared meaning/control source under band details and authors five
-actual presentation/style collaborations. The current baseline has96 components,
+actual presentation/style collaborations. That increment had96 components,
 299 owned sources,13 flows and81 individually reviewed duplicate identities,
 including two explicitly reviewed replacements; pins/exceptions remain unchanged.
 
