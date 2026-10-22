@@ -436,6 +436,8 @@ public final class CriticalFlowsAndroidTest {
 
     @Test public void archiveRequiresScopedConfirmationAndCancelPreservesPendingWork() throws Exception {
         open(MainActivity.class);await(()->!booleanField(activity,"syncInProgress"));
+        onUi(()->{android.widget.ListView list=root().findViewById(R.id.band_lineup);list.setSelection(list.getCount()-1);});
+        await(()->findDescription(root(),"Archive active festival")!=null);
         onUi(()->{
             findDescription(root(),"Archive active festival").performClick();
             var dialog=(android.app.AlertDialog)objectField(activity,"archiveDialog");assertNotNull(dialog);

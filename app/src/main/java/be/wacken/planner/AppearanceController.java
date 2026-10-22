@@ -117,9 +117,15 @@ final class AppearanceController implements Application.ActivityLifecycleCallbac
         if(closed)return;
         AppearancePreference.Palette palette=preference(activity).palette(deviceDark);
         activity.setTheme(palette.dark()?R.style.AppThemeDark:R.style.AppThemeLight);
-        for(var entry:new ArrayList<>(bindings.entrySet()))
-            for(var update:new ArrayList<>(entry.getValue().values()))update.accept(entry.getKey(),palette);
-        for(var entry:new ArrayList<>(panels.entrySet()))entry.getValue().apply(entry.getKey(),palette,activity);
+        // Copy keys strongly for this refresh. A copied WeakHashMap entry still
+        // has a weak key that GC can clear between snapshot and callback.
+        for(View target:new ArrayList<>(bindings.keySet())) {
+            Map<String,BiConsumer<View,AppearancePreference.Palette>> updates=bindings.get(target);
+            if(target!=null&&updates!=null)for(var update:new ArrayList<>(updates.values()))update.accept(target,palette);
+        }
+        for(GradientDrawable target:new ArrayList<>(panels.keySet())) {
+            Panel panel=panels.get(target);if(target!=null&&panel!=null)panel.apply(target,palette,activity);
+        }
         activity.getWindow().setStatusBarColor(palette.background());
         activity.getWindow().setNavigationBarColor(palette.background());
         View decor=activity.getWindow().getDecorView();
