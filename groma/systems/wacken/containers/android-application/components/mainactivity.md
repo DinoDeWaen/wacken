@@ -23,11 +23,14 @@ groma:
     - scanner: java
       file: app/src/main/java/be/wacken/planner/SyncVisualPolicy.java
       symbol: SyncVisualPolicy
+    - scanner: java
+      file: app/src/main/java/be/wacken/planner/LineupPresentation.java
+      symbol: LineupPresentation
   group: Android screens
 description: Show active lineup and archived start state
 ---
 
-Presents the active festival band table and rating entry, launches related workflows, and preserves the selected row when returning from detail.
+Presents the actual alphabetically scoped active lineup with wrapping band, planning-rating meaning and performance context, local name search and an Unrated filter. Its presentation helper filters existing display items without owning rating or festival policy. Keeps query, filter and selected-row context through detail return and recreation, opens only stored music links, and exposes cached/offline retry and archive/add-next entry states. Planning saves and festival lifecycle actions use the existing application use cases; primary destinations use shared stateless navigation.
 
 ## Relationships
 

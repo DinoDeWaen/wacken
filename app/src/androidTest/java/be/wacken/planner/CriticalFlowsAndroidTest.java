@@ -433,10 +433,169 @@ public final class CriticalFlowsAndroidTest {
         onUi(()->{
             assertSame(bands,activity);assertNavigation("Bands");
             assertNotNull(findText(root(),BAND));
+            android.widget.ListView list=root().findViewById(R.id.band_lineup);
+            list.setSelection(list.getCount()-1);
+        });
+        await(()->findDescription(root(),"Sync and exit")!=null);
+        onUi(()->{
             assertTrue(findDescription(root(),"Sync and exit").isShown());
             assertTrue(findDescription(root(),"Archive active festival").isShown());
         });
     }
+    @Test public void lineupSearchFilterAndDetailReturnRetainContextInBothAppearances() throws Exception {
+        open(MainActivity.class);
+        await(()->findText(root(),BAND)!=null&&!booleanField(activity,"syncInProgress"));
+        Activity bands=activity;
+        Object previous=AppearanceController.store(activity).getAll().get(AppearanceController.MODE);
+        try {
+            onUi(()->{
+                TextView search=findDescription(root(),"Find a band")==null?null:(TextView)findDescription(root(),"Find a band");
+                assertNotNull("Lineup needs an accessible name search",search);
+                search.setText("smoke");
+                findText(root(),"Unrated").performClick();
+            });
+            await(()->findText(root(),"No bands found")!=null);
+            onUi(()->{
+                assertNull(findText(root(),BAND));
+                findText(root(),"All bands").performClick();
+            });
+            await(()->findText(root(),BAND)!=null);
+            onUi(()->{
+                assertNotNull(findContaining(root(),"Planning: 4"));
+                assertNotNull(findText(root(),"Music links not available"));
+                AppearanceController.choose(activity,AppearancePreference.LIGHT);
+                assertEquals("smoke",((TextView)findDescription(root(),"Find a band")).getText().toString());
+                View row=findText(root(),BAND);
+                while(!row.isClickable()&&row.getParent() instanceof View parent)row=parent;
+                row.performClick();
+            });
+            awaitActivity(BandDetailActivity.class);
+            onUi(()->findDescription(root(),"Back").performClick());
+            awaitActivity(MainActivity.class);
+            await(()->findText(root(),BAND)!=null&&!booleanField(activity,"syncInProgress"));
+            onUi(()->((android.widget.ListView)root().findViewById(R.id.band_lineup)).setSelection(0));
+            await(()->findDescription(root(),"Find a band")!=null);
+            onUi(()->{
+                assertSame(bands,activity);
+                assertEquals("smoke",((TextView)findDescription(root(),"Find a band")).getText().toString());
+                AppearanceController.choose(activity,AppearancePreference.DARK);
+                ((TextView)findDescription(root(),"Find a band")).setText("no matching act 207");
+            });
+            await(()->findText(root(),"No bands found")!=null);
+            onUi(()->findText(root(),"Clear search and filters").performClick());
+            await(()->findText(root(),BAND)!=null);
+            onUi(()->{
+                ((TextView)findDescription(root(),"Find a band")).setText("smoke");
+                findText(root(),"Unrated").performClick();
+            });
+            Activity previousActivity=activity;
+            onUi(previousActivity::recreate);
+            await(()->{
+                for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                        .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
+                    if(candidate instanceof MainActivity&&candidate!=previousActivity){activity=candidate;return true;}
+                return false;
+            });
+            await(()->findText(root(),"No bands found")!=null&&!booleanField(activity,"syncInProgress"));
+            onUi(()->((android.widget.ListView)root().findViewById(R.id.band_lineup)).setSelection(0));
+            await(()->findDescription(root(),"Find a band")!=null);
+            onUi(()->{
+                assertEquals("smoke",((TextView)findDescription(root(),"Find a band")).getText().toString());
+                assertTrue(findText(root(),"Unrated").isSelected());
+                findText(root(),"All bands").performClick();
+            });
+            await(()->findText(root(),BAND)!=null);
+        } finally {
+            onUi(()->{
+                var editor=AppearanceController.store(instrumentation.getTargetContext()).edit();
+                if(previous instanceof String mode)editor.putString(AppearanceController.MODE,mode);
+                else editor.remove(AppearanceController.MODE);
+                editor.commit();
+            });
+        }
+        assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+    }
+
+    @Test public void lineupLongNameAndControlsReflowAtDoubleFontSize() throws Exception {
+        String longName="A very long canonical festival band name with a readable final word";
+        assertTrue(new RoomBandRepository(database).findByName(longName).isEmpty());
+        new RoomBandRepository(database).save(new Band(longName));
+        database.festivalLineups().saveAll(List.of(new RoomFestivalLineupEntry(FESTIVAL,longName,longName)));
+        try {
+            activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),MainActivity.class)
+                    .putExtra(NativeUiTestRunner.FONT_SCALE,2f).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            instrumentation.waitForIdleSync();
+            await(()->root().findViewById(R.id.band_lineup)!=null);
+            onUi(()->((android.widget.ListView)root().findViewById(R.id.band_lineup)).setSelection(1));
+            await(()->findText(root(),longName)!=null);
+            onUi(()->{
+                TextView name=findText(root(),longName);
+                assertTrue(activity.getResources().getConfiguration().fontScale>=1.99f);
+                assertTrue("Essential name must wrap",name.getLineCount()>1);
+                assertNotNull(name.getLayout());
+                for(int line=0;line<name.getLineCount();line++)assertEquals(0,name.getLayout().getEllipsisCount(line));
+                assertTrue(name.getHeight()>=name.getLayout().getHeight());
+                RatingStarsView stars=findStars((View)name.getParent());
+                assertTrue(stars.getHeight()>=WackenTheme.dp(activity,48));
+                assertNotNull(findContaining(root(),"TBA"));
+                assertNavigation("Bands");
+                android.widget.ListView list=root().findViewById(R.id.band_lineup);
+                list.setSelection(list.getCount()-1);
+            });
+            await(()->findDescription(root(),"Sync and exit")!=null);
+            onUi(()->{
+                View sync=findDescription(root(),"Sync and exit");
+                assertTrue(sync.isShown());
+                assertTrue(sync.getHeight()>=WackenTheme.dp(activity,48));
+                assertTrue(sync.getWidth()>=WackenTheme.dp(activity,48));
+            });
+            await(()->!booleanField(activity,"syncInProgress"));
+        } finally {
+            if(activity!=null)onUi(activity::finish);
+            database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM festival_lineup_entries WHERE festivalId = ? AND bandName = ?",new Object[]{FESTIVAL,longName});
+            database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM bands WHERE name = ?",new Object[]{longName});
+        }
+    }
+
+    @Test public void lineupKnownMusicLinkHandsOffWithoutInventingTheMissingPlatform() throws Exception {
+        new RoomBandRepository(database).save(new Band(BAND,Optional.empty(),Optional.empty(),
+                Optional.of("https://www.youtube.com/channel/UC207canonical"),Optional.empty()));
+        open(MainActivity.class);
+        await(()->findText(root(),BAND)!=null&&!booleanField(activity,"syncInProgress"));
+        android.content.IntentFilter filter=new android.content.IntentFilter(Intent.ACTION_VIEW);
+        filter.addDataScheme("https");
+        Instrumentation.ActivityMonitor monitor=instrumentation.addMonitor(filter,
+                new Instrumentation.ActivityResult(Activity.RESULT_CANCELED,null),true);
+        try {
+            onUi(()->{
+                assertNotNull(findDescription(root(),"Open YouTube"));
+                assertNull(findDescription(root(),"Open Spotify"));
+                findDescription(root(),"Open YouTube").performClick();
+            });
+            assertEquals(1,monitor.getHits());
+            onUi(()->{assertNavigation("Bands");assertNotNull(findText(root(),BAND));});
+        } finally {instrumentation.removeMonitor(monitor);}
+    }
+
+    @Test public void ratingAnUnratedOverviewRowUpdatesItsScopedValueAndFilter() throws Exception {
+        database.festivalPlanningRatings().save(new RoomFestivalPlanningRating(GROUP,USER,FESTIVAL,BAND,0,"PENDING"));
+        open(MainActivity.class);
+        await(()->findText(root(),BAND)!=null&&!booleanField(activity,"syncInProgress"));
+        onUi(()->findText(root(),"Unrated").performClick());
+        await(()->findText(root(),BAND)!=null);
+        onUi(()->{
+            RatingStarsView stars=findStars(root());assertNotNull(stars);
+            long now=SystemClock.uptimeMillis();
+            MotionEvent down=MotionEvent.obtain(now,now,MotionEvent.ACTION_DOWN,stars.getWidth()*0.7f,stars.getHeight()/2f,0);
+            MotionEvent up=MotionEvent.obtain(now,now+10,MotionEvent.ACTION_UP,stars.getWidth()*0.7f,stars.getHeight()/2f,0);
+            stars.dispatchTouchEvent(down);stars.dispatchTouchEvent(up);down.recycle();up.recycle();
+        });
+        await(()->findText(root(),"No bands found")!=null);
+        assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+        onUi(()->findText(root(),"All bands").performClick());
+        await(()->findContaining(root(),"Planning: 4")!=null);
+    }
+
     private TextView navigationButton(String label) {
         ViewGroup navigation=root().findViewWithTag("main-navigation");
         assertNotNull(navigation);

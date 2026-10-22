@@ -623,11 +623,12 @@
         "parent": "android-application",
         "title": "Festival home screen",
         "description": "Show active lineup and archived start state",
-        "overview": "Presents the active festival band table and rating entry, launches related workflows, and preserves the selected row when returning from detail.",
+        "overview": "Presents the actual alphabetically scoped active lineup with wrapping band, planning-rating meaning and performance context, local name search and an Unrated filter. Its presentation helper filters existing display items without owning rating or festival policy. Keeps query, filter and selected-row context through detail return and recreation, opens only stored music links, and exposes cached/offline retry and archive/add-next entry states. Planning saves and festival lifecycle actions use the existing application use cases; primary destinations use shared stateless navigation.",
         "group": "Android screens",
         "technology": "",
         "code": [
           "app/src/main/java/be/wacken/planner/FestivalStartScreenContent.java",
+          "app/src/main/java/be/wacken/planner/LineupPresentation.java",
           "app/src/main/java/be/wacken/planner/MainActivity.java",
           "app/src/main/java/be/wacken/planner/RatingAllocationSummary.java",
           "app/src/main/java/be/wacken/planner/SelectedBandScrollTarget.java",
@@ -3712,7 +3713,7 @@
       "scanner": "java",
       "code": "compiler.err.method.does.not.override.superclass",
       "severity": "warning",
-      "count": 235
+      "count": 238
     },
     {
       "scanner": "java",
@@ -3738,7 +3739,7 @@
       "code": "JAVA_MISSING_EXTERNAL_TYPES",
       "severity": "info",
       "count": 1,
-      "facts": 4274
+      "facts": 4270
     },
     {
       "scanner": "java",
@@ -3751,13 +3752,13 @@
       "code": "JAVA_UNRESOLVED_CALLS",
       "severity": "info",
       "count": 4,
-      "facts": 9066
+      "facts": 9095
     }
   ],
   "coverage": {
-    "operations": 2351,
-    "tokenized": 1470,
-    "invocations": 11862
+    "operations": 2360,
+    "tokenized": 1471,
+    "invocations": 11905
   },
   "duplicates": [
     "02da146b79ab30eea25ec378d01ca56c0ef5ed829b8e2fce1258497f210f9842",
@@ -3776,7 +3777,6 @@
     "2a921d94bd82895471a6ab94e75b3e8698a0b2cabe10a99b9b74110885ef70c0",
     "2b0b8b3bb360c7eb74414bf2b17db433fb1ce39d495a8b46c3010e9cda2c38f2",
     "2cda0bed1950a58fe0a338e6ffa3cde3ea09d59fcd396daf21989ff76f8bd087",
-    "2dfc1fb5d6ea45de6f0f5fc88d7bd06de385181a129445c1c0cfd5172cab7828",
     "2f9bf54dfcefb766f8bc53a2443cfefc3a14f608a7480be6aa14d26744631c52",
     "3563defa3cbc9b78ebe460c90b67ea8b7e13a1df292a6d5a992ece48d030cf89",
     "35d83e11d7c48900e0df9ace8494c2ee2a8dce78ade64db83e16bd895ba54315",
@@ -3793,7 +3793,6 @@
     "5f8a97a9a25ddcd95dc7f0b911968622fb557034daae765e122ede09b0a371d7",
     "5fe11b84c65f6652afd192b25b9c87049565cc8cb3ad2d56d6d0e3d40ed01223",
     "61eef75cf750ad4e5fbce212b117d8223fc5ad193d7046669681676e7c1b1729",
-    "65f540cb3122fa54ea89223ba04c26f35b16096676245014a970618dcd5e7e0b",
     "6885b3afc32734bbf63200e7b3714281aa74d0a086919fd21bf69c7ebce2c93e",
     "6923c78021de9e74c206eb74e8efbcce2d34fd841fff2dccde8854fa8e705784",
     "69826a5647c5b08d7807ebf69059caa65ea5a636b29b01c9c74f69c7186b15d4",
@@ -3816,17 +3815,14 @@
     "8965c2b4171d043d7129178055a6f4ed893632ec90923318b51113a425d8cef0",
     "8a91d449dc951dba98ef01fc4b3a4740050d7b842d57e24cd74f24f8bfc1eaf4",
     "8d86a49cfadba485e227605fb131020676b31bbc7a124a7172f064271760c2a1",
-    "944243ce1eb7726c381fd923dfec3c29dcacd5ace7398945dca79a85933355db",
     "94903af450e8d45796fe9bd68f17a8e41db95eaf63d0b49f2f439f75a44eff62",
     "9653780fa46f26741644cdc76ae8ab25433ef8d368a0543b809ec24bab2675e1",
     "99a17d3d6a9498bea67c85c616c63801082865aac49b67385ab2268e7752a852",
     "9dcadb69957b11b262cd31cc41fb2433375de44bd349cd489de1671b082f5f3d",
     "a297b87c8a93347da8050bc0758a6d261924d9e9973674c565998f16b966176f",
-    "a3efb60a885f733358653f6392ddb57fce83343e03352684cd82677807cd6587",
     "a425264c4f05ccd6f7e637fb97cd57e5e73721edb95063cb95e07a50a3968ddd",
     "a62e67e76c4cb449bf864b5bf738affa2230b3f6b87f018bdcbab8eceef7b827",
     "aafa2801b25ef3782a2f13f24db11babcbc573415c3838fbab41bb292bc68685",
-    "aecc1b31d0cc7f4692ef9d4db5908530f1e8d057fd78fdb28ccddee218b9df6b",
     "b196546b482382d678e87de2a0e3280826907cccb45b3ee4f5610bfabe058a74",
     "b1bb15d1cf481e2ff253f1b45d97dc8f99bb0a1816a46a4cfab57ff416b3ff4c",
     "b9f6b2c13d3261bb46311e270db8633fa472a9163fbb5a9ce92a457bfa6cc8a5",
@@ -3842,9 +3838,7 @@
     "dfb144df15c9c023b81987236d584a6bce926e8efb124c0e4ff902119aed1e0d",
     "e99e04f1af04da88173eddad46bca13860ba0a02c4e0281fe33e0a4b2e8f72a1",
     "ea0e01d12ec5acff64cc5f2e496c219cafa31129b6dd65a6005c0133f0c041fd",
-    "f05e8cff569cd5a7c75179755ad6d5cf2b1f37881691795a77c090a279ae19f7",
     "f8ff81537cb84c933945726e34a0cba7db0a44150eee2d3f8cb2f6ba3443ef38",
-    "f91943fb91e1656740cd4ff09ca0543fb3fe212014873c9e6f5d4eef1b1049aa",
     "fba54f48d5caeacc6c78e157cd4edce73f14e2433e11c4839f0280a752b2fac4",
     "fd30a9337c8f62cf32ec1d34b29ca4b7648671173b835611c92207e368cbc5ca",
     "ff04f82d7ad63d6310913de7ed7ce0602025de983d6a6ae2bf80edf1edb6931d"
@@ -3917,104 +3911,6 @@
         {
           "file": "app/src/main/java/be/wacken/planner/BandDetailActivity.java",
           "name": "be.wacken.planner.BandDetailActivity#valueExtra(java.lang.String)"
-        }
-      ]
-    },
-    "2dfc1fb5d6ea45de6f0f5fc88d7bd06de385181a129445c1c0cfd5172cab7828": {
-      "rationale": "Header presentation belongs to approved 3.0 lineup work TASK207/211.",
-      "evidence": "backlog/docs/groma-helper-dispositions-2026-10-21.md; backlog/docs/groma-gate-review-2026-10-21.md",
-      "members": [
-        {
-          "file": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
-          "name": "be.wacken.planner.ArchivedFestivalActivity#headerRow()"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/MainActivity.java",
-          "name": "be.wacken.planner.MainActivity#tableHeader()"
-        }
-      ]
-    },
-    "a3efb60a885f733358653f6392ddb57fce83343e03352684cd82677807cd6587": {
-      "rationale": "Active ListView and archived row geometry differ; explicit shared surface binding does not duplicate lifecycle policy.",
-      "evidence": "backlog/docs/groma-appearance-review-2026-10-21.md",
-      "members": [
-        {
-          "file": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
-          "name": "be.wacken.planner.ArchivedFestivalActivity#row(int,int)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/MainActivity.java",
-          "name": "be.wacken.planner.MainActivity#tableRow(int,int)"
-        }
-      ]
-    },
-    "944243ce1eb7726c381fd923dfec3c29dcacd5ace7398945dca79a85933355db": {
-      "rationale": "Active/archive text cells share semantic style while callers retain editable/read-only scope.",
-      "evidence": "backlog/docs/groma-appearance-review-2026-10-21.md",
-      "members": [
-        {
-          "file": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
-          "name": "be.wacken.planner.ArchivedFestivalActivity#cell(java.lang.String,float,Typeface)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/MainActivity.java",
-          "name": "be.wacken.planner.MainActivity#cell(java.lang.String,Typeface,float)"
-        }
-      ]
-    },
-    "f05e8cff569cd5a7c75179755ad6d5cf2b1f37881691795a77c090a279ae19f7": {
-      "rationale": "Active/archive headers intentionally share typography and dynamic panel style with different local cell factory contracts.",
-      "evidence": "backlog/docs/groma-appearance-review-2026-10-21.md",
-      "members": [
-        {
-          "file": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
-          "name": "be.wacken.planner.ArchivedFestivalActivity#headerCell(java.lang.String,float)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/MainActivity.java",
-          "name": "be.wacken.planner.MainActivity#headerCell(java.lang.String,float)"
-        }
-      ]
-    },
-    "f91943fb91e1656740cd4ff09ca0543fb3fe212014873c9e6f5d4eef1b1049aa": {
-      "rationale": "Same band-name-cell visual motif, separate active/archive ownership; future reflow stays in TASK207/211.",
-      "evidence": "backlog/docs/groma-appearance-review-2026-10-21.md",
-      "members": [
-        {
-          "file": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
-          "name": "be.wacken.planner.ArchivedFestivalActivity#bandNameCell(TextView)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/MainActivity.java",
-          "name": "be.wacken.planner.MainActivity#bandNameCell(TextView)"
-        }
-      ]
-    },
-    "aecc1b31d0cc7f4692ef9d4db5908530f1e8d057fd78fdb28ccddee218b9df6b": {
-      "rationale": "Active/archive action availability and routing must remain distinct until TASK207/211.",
-      "evidence": "backlog/docs/groma-helper-dispositions-2026-10-21.md; backlog/docs/groma-gate-review-2026-10-21.md",
-      "members": [
-        {
-          "file": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
-          "name": "be.wacken.planner.ArchivedFestivalActivity#rowActions(java.util.Optional<Band>)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/MainActivity.java",
-          "name": "be.wacken.planner.MainActivity#rowActions(java.util.Optional<Band>)"
-        }
-      ]
-    },
-    "65f540cb3122fa54ea89223ba04c26f35b16096676245014a970618dcd5e7e0b": {
-      "rationale": "Icon styling belongs to TASK207/211 without sharing lifecycle actions.",
-      "evidence": "backlog/docs/groma-helper-dispositions-2026-10-21.md; backlog/docs/groma-gate-review-2026-10-21.md",
-      "members": [
-        {
-          "file": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
-          "name": "be.wacken.planner.ArchivedFestivalActivity#iconButton(java.lang.String,java.lang.String,int,java.lang.String,int)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/MainActivity.java",
-          "name": "be.wacken.planner.MainActivity#iconButton(java.lang.String,java.lang.String,int,java.lang.String,int)"
         }
       ]
     },
@@ -5429,7 +5325,7 @@
     "islands": []
   },
   "review": {
-    "task": "TASK-206",
-    "decision": "Reviewed stateless primary-navigation source, rendered component/source/relationships, unchanged88 duplicate identities and exact Android scanner evidence deltas; see backlog/docs/groma-navigation-review-2026-10-21.md. Existing approved Views/controller boundaries retained."
+    "task": "TASK-207",
+    "decision": "Reviewed home presentation helper ownership, rendered role/source, seven deleted table-helper duplicate pairs and exact Android TextWatcher/scanner evidence changes; see backlog/docs/groma-lineup-review-2026-10-22.md. Existing81 identities/reviews, pins, rows, flows and exceptions retained."
   }
 }

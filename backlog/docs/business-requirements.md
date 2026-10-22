@@ -104,6 +104,18 @@ the initiating context; sync/close and festival actions remain reachable.
 Recreation/launcher-return and offline navigation are covered by native tests.
 This is development-branch behavior, not a claim that3.0 is already published.
 
+Development increment TASK-207 adds readable wrapping lineup rows, explicit
+selected-festival planning meaning and actual performance context in both
+appearances. Name search plus All bands/Unrated display filters preserve scoped
+alphabetical data, canonical identities and rating rules. Query/filter and row
+context survive detail return and recreation; theme changes retain the views.
+Known music actions retain stored URLs; unknown links remain unavailable.
+No-result clearing, scrollable large-font controls and cached/offline Retry sync
+retain useful recovery. This changes presentation only; established opinions,
+planning snapshots, after-ratings and archive promotion remain ADR0016-owned.
+Remaining detail/control, schedule, administration/support and integrated
+accessibility/release work stays TASK-208–213.
+
 The user validated the paired Ironline dark / Field Notes light proposal on
 17 October2026. [The design and flow contract](release-3.0-design-contract.md)
 defines the palettes, shared layout, state wording and complete screen/dialog
