@@ -399,6 +399,43 @@ public final class CriticalFlowsAndroidTest {
         });
     }
 
+    @Test public void linkReviewRetainsEditedSearchAndNoMatchAcrossBothThemesAndRecreation() throws Exception {
+        String known=BAND.toLowerCase(java.util.Locale.ROOT);
+        assertTrue(new RoomBandRepository(database).findByName(known).isEmpty());additionalBand=known;
+        new RoomBandRepository(database).save(new Band(known));
+        Object previous=AppearanceController.store(instrumentation.getTargetContext()).getAll().get(AppearanceController.MODE);
+        open(BandLinkReviewActivity.class);
+        try {
+            onUi(()->{
+                var search=(android.widget.EditText)findDescription(root(),"Search own bands for "+BAND);
+                assertNotNull("Link review search must identify its imported band",search);
+                search.setText("task-174");
+                var matches=(android.widget.Spinner)findDescription(root(),"Match for "+BAND);
+                assertNotNull(matches);assertTrue(matches.getMinimumHeight()>=WackenTheme.dp(activity,48));matches.setSelection(0);
+                AppearanceController.choose(activity,AppearancePreference.LIGHT);
+                assertEquals("task-174",search.getText().toString());
+            });
+            Activity old=activity;onUi(old::recreate);
+            await(()->{
+                for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                        .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
+                    if(candidate instanceof BandLinkReviewActivity&&candidate!=old){activity=candidate;return true;}
+                return false;
+            });
+            onUi(()->{
+                assertEquals("task-174",((android.widget.EditText)findDescription(root(),"Search own bands for "+BAND)).getText().toString());
+                assertEquals("No match",((android.widget.Spinner)findDescription(root(),"Match for "+BAND)).getSelectedItem());
+                AppearanceController.choose(activity,AppearancePreference.DARK);
+                assertNotNull(findText(root(),"Link selected match"));
+            });
+            assertEquals(BAND,database.festivalLineups().findByFestival(FESTIVAL).get(0).bandName);
+            assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+        } finally {onUi(()->{
+            var editor=AppearanceController.store(instrumentation.getTargetContext()).edit();
+            if(previous instanceof String mode)editor.putString(AppearanceController.MODE,mode);else editor.remove(AppearanceController.MODE);editor.commit();
+        });}
+    }
+
     @Test public void scheduleFiltersAndViewportSurviveThemeEmptyResultsAndRecreation() throws Exception {
         open(ScheduleActivity.class);
         await(()->booleanField(activity,"scheduleLocksLoaded"));

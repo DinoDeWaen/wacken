@@ -1,10 +1,11 @@
 ---
 id: TASK-210
 title: 'US: Use Settings and verified music review in the paired 3.0 layout'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-17 13:21'
+updated_date: '2026-10-22 15:20'
 labels:
   - ux
   - release-3.0
@@ -13,6 +14,29 @@ dependencies:
   - TASK-205
   - TASK-206
   - TASK-202
+references:
+  - settingsactivity
+  - musiclinksreviewactivity
+  - bandlinkreviewactivity
+  - bandmetadatareviewactivity
+modified_files:
+  - app/src/androidTest/java/be/wacken/planner/MusicLinksReviewAndroidTest.java
+  - app/src/androidTest/java/be/wacken/planner/CriticalFlowsAndroidTest.java
+  - app/src/main/java/be/wacken/planner/WackenTheme.java
+  - app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java
+  - app/src/main/java/be/wacken/planner/SettingsActivity.java
+  - app/src/main/java/be/wacken/planner/BandLinkReviewActivity.java
+  - app/src/main/java/be/wacken/planner/BandMetadataReviewActivity.java
+  - >-
+    groma/systems/wacken/containers/android-application/components/settingsactivity.md
+  - >-
+    groma/systems/wacken/containers/android-application/components/bandlinkreviewactivity.md
+  - >-
+    groma/systems/wacken/containers/android-application/components/bandmetadatareviewactivity.md
+  - >-
+    groma/systems/wacken/containers/android-application/components/musiclinksreviewactivity.md
+  - README.md
+  - backlog/docs/business-requirements.md
 priority: medium
 type: enhancement
 ---
@@ -34,6 +58,12 @@ Validated baseline: TASK-201, design/release-2.34/themes.html; user approved 202
 - [ ] #5 Native tests cover both entry points, evidence and approval gates, ongoing work across theme/recreation, no overwrite and provider failure states.
 - [ ] #6 README and business requirements impacts use canonical delivery-governance wording; approved behavior is documented, diagrams updated only where affected, and the full validation package is recorded before merge.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Standard presentation slice within existing Views/ADR0024 and approved retained-review pattern. 1. Characterize explicit verification/missing-field/identity approval gates and provider failures using existing application/native suites; add red native checks for theme/recreation approval retention,200% wrapping and editable link-review state. 2. Group Settings festival administration together with adjacent link/music actions; use shared headings, readable14/16sp wrapping text, live status and retained scroll. 3. Restyle music evidence/search/check controls with paired tint/focus, full canonical source labels, retained scope/search/progress/choices; preserve the existing retained worker and explicit approval-only writes. 4. Keep own-database linking search/match selection/scroll across recreation with vertical48dp controls and contextual native adapters. 5. Retain metadata search/result/checked proposals through recreation without repeating active search; guard destroyed callbacks and show accurate error/retry while retaining existing missing-field use cases/providers. 6. Verify both entry points, proof/no-overwrite/failure states, native large-font/theme/recreation and full JVM/QA/ArchUnit/lint/API/database/Groma gates; update README/BR/map only for actual presentation meaning, fresh stable-key signed checkpoint before closure. No new production dependencies,ports,DB/API,domain policy or architecture-significant boundary; Standard/ADR0024 already approved. Risks: async search callbacks, stale proposal acknowledgement after edited terms, controls rebuilt during keyboard input and native hierarchy restoration. Integrated human/device/TalkBack/contrast review remains212.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

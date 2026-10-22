@@ -70,6 +70,15 @@ ratings, generated ties, cutoff and walking rules are unchanged. Native89-test
 coverage includes200% decision actions and restored filters/viewport; integrated
 accessibility and device review remains TASK-212.
 
+TASK-210 groups festival administration in Settings with adjacent band-link and
+music-discovery actions. Review screens use readable wrapping text,48dp native
+choices and paired focus/tint styling. Music evidence exposes real source URLs;
+edited terms immediately clear stale approval controls. Own-catalog linking
+retains edited search and match choices across recreation. Metadata review retains
+its search/result/checked proposals across recreation and offers cancellation and
+retry without applying proposals. Explicit approval and existing missing-field,
+identity and no-overwrite rules remain authoritative.
+
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.
