@@ -3739,7 +3739,7 @@
       "code": "JAVA_MISSING_EXTERNAL_TYPES",
       "severity": "info",
       "count": 1,
-      "facts": 4268
+      "facts": 4270
     },
     {
       "scanner": "java",
@@ -3752,13 +3752,13 @@
       "code": "JAVA_UNRESOLVED_CALLS",
       "severity": "info",
       "count": 4,
-      "facts": 9092
+      "facts": 9095
     }
   ],
   "coverage": {
     "operations": 2360,
     "tokenized": 1471,
-    "invocations": 11902
+    "invocations": 11905
   },
   "duplicates": [
     "02da146b79ab30eea25ec378d01ca56c0ef5ed829b8e2fce1258497f210f9842",

@@ -41,12 +41,15 @@ and source ownership change; all authored rows and flows compare equal.
 The override warning category grows235→238 for the three TextWatcher callbacks:
 the scanner has no Android framework types. Actual Android compilation, unit,
 native and lint gates pass. Other warning categories/counts stay unchanged.
-Missing external-type facts decrease4274→4268; unresolved-call facts grow
-9066→9092 with Android input/list binding. Deferred references remain224.
+Missing external-type facts decrease4274→4270; unresolved-call facts grow
+9066→9095 with Android input/list binding. Deferred references remain224.
 Coverage grows2351→2360 operations,1470→1471 tokenized bodies and
-11862→11902 invocations. The final archive entry uses wrapping height instead
+11862→11905 invocations. The final archive entry uses wrapping height instead
 of its old42dp override, accounting for one fewer dp-helper invocation and one
-additional unresolved Android constant. Removed helpers are accounted for above; no source
+additional unresolved Android constant. The small-screen correction moves
+secondary actions/sync feedback below the lineup and adds the footer creation,
+orientation and ListView binding calls (three invocations, two external-type
+facts and three unresolved calls). Removed helpers are accounted for above; no source
 or operation evidence is silently discarded. All298 sources are uniquely owned.
 
 The candidate was generated outside the repository and reviewed against source,
