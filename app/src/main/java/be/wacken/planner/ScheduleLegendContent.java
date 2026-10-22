@@ -13,9 +13,9 @@ final class ScheduleLegendContent {
     }
 
     static String description() {
-        return "Gold border: 5-star must see\n"
-                + "Red border: 4-star strong choice\n"
-                + "Grey border: 2-3-star optional\n"
+        return "5-star must see: priority outline\n"
+                + "4-star strong choice: strong outline\n"
+                + "2-3-star optional: muted outline\n"
                 + "Scratched: lower-rated visible overlap to skip\n"
                 + "Lock: locked group choice\n"
                 + "Tie: shown first in alternatives\n"

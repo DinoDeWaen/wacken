@@ -42,6 +42,7 @@ public final class CriticalFlowsAndroidTest {
     private int previousMarker;
     private Activity activity;
     private boolean seeded;
+    private String additionalBand,additionalStage;
 
     @Before public void seedOfflineFixture() throws Exception {
         instrumentation=InstrumentationRegistry.getInstrumentation();
@@ -75,6 +76,7 @@ public final class CriticalFlowsAndroidTest {
             database.festivalLineups().deleteByFestival(FESTIVAL);
             database.performances().deleteByFestival(FESTIVAL);
             database.festivalPlanningRatings().deleteByFestival(FESTIVAL);
+            database.scheduleLocks().deleteByFestival(FESTIVAL);
             database.ratingStates().deleteAfterFestival(FESTIVAL);
             database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM personal_band_ratings WHERE userName = ? AND bandName = ?",new Object[]{USER,BAND});
             database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM personal_band_rating_events WHERE userName = ? AND bandName = ?",new Object[]{USER,BAND});
@@ -84,6 +86,8 @@ public final class CriticalFlowsAndroidTest {
             else database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM bands WHERE name = ?",new Object[]{BAND});
             if(previousStage!=null)database.stages().save(previousStage);
             else database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM stages WHERE name = ?",new Object[]{STAGE});
+            if(additionalBand!=null)database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM bands WHERE name = ?",new Object[]{additionalBand});
+            if(additionalStage!=null)database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM stages WHERE name = ?",new Object[]{additionalStage});
             if(previousMarker==0)database.getOpenHelper().getWritableDatabase().execSQL("DELETE FROM festival_cache_marker");
         });
         new AuthSessionStore(instrumentation.getTargetContext()).save(previousSession);
@@ -393,6 +397,160 @@ public final class CriticalFlowsAndroidTest {
             assertNull(findContaining(root(),"Could not generate"));
             assertNotNull(findText(root(),"Back to bands"));
         });
+    }
+
+    @Test public void scheduleFiltersAndViewportSurviveThemeEmptyResultsAndRecreation() throws Exception {
+        open(ScheduleActivity.class);
+        await(()->booleanField(activity,"scheduleLocksLoaded"));
+        AtomicReference<Integer> horizontalPosition=new AtomicReference<>();
+        Object previousMode=AppearanceController.store(activity).getAll().get(AppearanceController.MODE);
+        try {
+            onUi(()->{
+                View day=findDescription(root(),"Festival day");
+                assertNotNull("Day choice needs a labeled native selector",day);
+                assertTrue(day instanceof android.widget.Spinner);
+                assertTrue(day.getHeight()>=WackenTheme.dp(activity,48));
+                var threshold=(android.widget.Spinner)findDescription(root(),"Hide ratings at or below");
+                assertNotNull(threshold);assertTrue(threshold.getHeight()>=WackenTheme.dp(activity,48));
+                var calendar=(android.widget.HorizontalScrollView)root().findViewWithTag("schedule-calendar");
+                assertNotNull(calendar);calendar.scrollTo(120,0);
+                horizontalPosition.set(calendar.getScrollX());assertTrue(horizontalPosition.get()>0);
+                AppearanceController.choose(activity,AppearancePreference.LIGHT);
+                assertSame(calendar,root().findViewWithTag("schedule-calendar"));
+                assertEquals(horizontalPosition.get().intValue(),calendar.getScrollX());
+                threshold.setSelection(4);
+            });
+            await(()->findText(root(),"No acts match the active filters.")!=null);
+            onUi(()->((android.widget.Spinner)findDescription(root(),"Hide ratings at or below")).setSelection(0));
+            await(()->root().findViewWithTag("schedule-calendar")!=null);
+            await(()->((android.widget.HorizontalScrollView)root().findViewWithTag("schedule-calendar")).getScrollX()==horizontalPosition.get());
+            onUi(()->{
+                ((android.widget.CheckBox)findDescription(root(),"Hide barred overlaps")).setChecked(true);
+            });
+            await(()->((android.widget.CheckBox)findDescription(root(),"Hide barred overlaps")).isChecked());
+            onUi(()->findText(root(),"Show schedule key").performClick());
+            Activity old=activity;onUi(old::recreate);
+            await(()->{
+                for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                        .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
+                    if(candidate instanceof ScheduleActivity&&candidate!=old){activity=candidate;return true;}
+                return false;
+            });
+            await(()->booleanField(activity,"scheduleLocksLoaded")&&root().findViewWithTag("schedule-calendar")!=null);
+            await(()->((android.widget.HorizontalScrollView)root().findViewWithTag("schedule-calendar")).getScrollX()==horizontalPosition.get());
+            onUi(()->{
+                assertTrue(((android.widget.CheckBox)findDescription(root(),"Hide barred overlaps")).isChecked());
+                assertEquals(0,((android.widget.Spinner)findDescription(root(),"Hide ratings at or below")).getSelectedItemPosition());
+                assertNotNull(findText(root(),"Legend"));
+                AppearanceController.choose(activity,AppearancePreference.DARK);
+                assertNotNull(findContaining(root(),BAND));
+            });
+            assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+        } finally {
+            onUi(()->{
+                var editor=AppearanceController.store(instrumentation.getTargetContext()).edit();
+                if(previousMode instanceof String mode)editor.putString(AppearanceController.MODE,mode);
+                else editor.remove(AppearanceController.MODE);
+                editor.commit();
+            });
+        }
+    }
+
+    @Test public void doubleFontScheduleDecisionKeepsTheChosenAlternativeAndIndependentRatings() throws Exception {
+        String alternative="TASK-209 Alternative with a very long canonical festival band name";
+        String stage="TASK-209 Alternative Stage";
+        assertTrue(new RoomBandRepository(database).findByName(alternative).isEmpty());
+        assertNull(database.stages().findByName(stage));
+        additionalBand=alternative;additionalStage=stage;
+        new RoomBandRepository(database).save(new Band(alternative));
+        database.stages().save(new RoomStage(stage));
+        database.festivalLineups().saveAll(List.of(new RoomFestivalLineupEntry(FESTIVAL,alternative,alternative)));
+        database.performances().save(new RoomPerformance(FESTIVAL,alternative,stage,"2027-08-19T18:15:00","2027-08-19T19:15:00"));
+        database.festivalPlanningRatings().save(new RoomFestivalPlanningRating(GROUP,USER,FESTIVAL,alternative,3,"PENDING"));
+        activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),ScheduleActivity.class)
+                .putExtra(NativeUiTestRunner.FONT_SCALE,2f).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        instrumentation.waitForIdleSync();
+        await(()->booleanField(activity,"scheduleLocksLoaded"));
+        Object previousMode=AppearanceController.store(activity).getAll().get(AppearanceController.MODE);
+        try {
+            onUi(()->{
+                assertTrue(activity.getResources().getConfiguration().fontScale>=1.99f);
+                View slot=findContaining(root(),BAND);
+                while(!slot.isClickable()&&slot.getParent() instanceof View parent)slot=parent;
+                assertTrue(slot.isFocusable());
+                assertEquals("android.widget.Button",slot.createAccessibilityNodeInfo().getClassName().toString());
+                assertTrue(slot.getContentDescription().toString().contains("2027-08-19"));
+                assertTrue(slot.getContentDescription().toString().contains(STAGE));
+                slot.requestRectangleOnScreen(new android.graphics.Rect(0,0,slot.getWidth(),slot.getHeight()),true);
+                assertTrue(slot.performAccessibilityAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK,null));
+            });
+            await(()->decisionRoot()!=null&&findText(decisionRoot(),"Select as act")!=null);
+            AtomicReference<android.app.AlertDialog> dialog=new AtomicReference<>();
+            onUi(()->{
+                dialog.set((android.app.AlertDialog)objectField(activity,"decisionDialog"));
+                View content=decisionRoot();
+                assertNotNull(findText(content,"Chosen act"));assertNotNull(findText(content,"Alternatives"));
+                assertNotNull(findContaining(content,alternative));
+                TextView name=findContaining(content,alternative);
+                assertTrue(name.getLineCount()>1);
+                for(int line=0;line<name.getLineCount();line++)assertEquals(0,name.getLayout().getEllipsisCount(line));
+                assertNotNull(findContaining(content,"Walk:"));
+                AppearanceController.choose(activity,AppearancePreference.LIGHT);
+                assertSame(dialog.get(),objectField(activity,"decisionDialog"));
+                TextView select=findText(content,"Select as act");
+                select.requestRectangleOnScreen(new android.graphics.Rect(0,0,select.getWidth(),select.getHeight()),true);
+            });
+            await(()->findText(decisionRoot(),"Select as act").getHeight()>=WackenTheme.dp(activity,48));
+            onUi(()->{
+                TextView select=findText(decisionRoot(),"Select as act");
+                assertTrue(select.getWidth()>=WackenTheme.dp(activity,48));
+                assertTrue(select.performAccessibilityAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK,null));
+            });
+            await(()->objectField(activity,"decisionDialog")==null&&findContaining(root(),alternative)!=null);
+            assertEquals(1,database.scheduleLocks().findPendingSelections(GROUP,FESTIVAL).size());
+            assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+            assertEquals(3,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,alternative).value);
+            onUi(()->{
+                View slot=findContaining(root(),alternative);
+                while(!slot.isClickable()&&slot.getParent() instanceof View parent)slot=parent;
+                slot.performAccessibilityAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK,null);
+            });
+            await(()->decisionRoot()!=null&&findText(decisionRoot(),alternative)!=null);
+            Activity old=activity;onUi(old::recreate);
+            await(()->{
+                for(Activity candidate:androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                        .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED))
+                    if(candidate instanceof ScheduleActivity&&candidate!=old){activity=candidate;return true;}
+                return false;
+            });
+            await(()->decisionRoot()!=null&&findText(decisionRoot(),alternative)!=null);
+            onUi(()->{
+                assertNotNull(findText(decisionRoot(),"Unlock generated choice"));
+                AppearanceController.choose(activity,AppearancePreference.DARK);
+                assertNotNull(findText(decisionRoot(),alternative));
+                findText(decisionRoot(),"Close").performClick();
+            });
+            assertEquals(1,database.scheduleLocks().findPendingSelections(GROUP,FESTIVAL).size());
+            assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+            assertNull(database.ratingStates().after(USER,FESTIVAL,BAND));
+        } finally {
+            onUi(()->{
+                var editor=AppearanceController.store(instrumentation.getTargetContext()).edit();
+                if(previousMode instanceof String mode)editor.putString(AppearanceController.MODE,mode);
+                else editor.remove(AppearanceController.MODE);
+                editor.commit();
+            });
+        }
+    }
+
+    private View decisionRoot() {
+        android.app.AlertDialog dialog=(android.app.AlertDialog)objectField(activity,"decisionDialog");
+        return dialog==null||!dialog.isShowing()?null:dialog.getWindow().getDecorView();
+    }
+
+    private static Object objectField(Object target,String name) {
+        try{var field=target.getClass().getDeclaredField(name);field.setAccessible(true);return field.get(target);}
+        catch(Exception error){throw new AssertionError(error);}
     }
 
     @Test public void afterRatingTouchAndResetStayAtFestivalLevelWithoutPromotingBandOpinion() throws Exception {

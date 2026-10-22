@@ -39,7 +39,7 @@ groma:
 description: Present and adjust the group timeline
 ---
 
-Renders the day-filtered stage/time calendar, applies local visibility filters, opens alternatives, and sends manual winner selections.
+Renders the day-filtered stage/time calendar and its existing generated decisions. Labeled native day and threshold selectors, a wrapping barred-overlap control and a readable key retain local filters, focus and calendar position across rerenders, appearance changes and recreation, including empty results. Calendar geometry scales with text while essential horizontal scrolling stays inside the timeline; full date, stage, time, rank, scratch and lock meanings remain available through native accessibility and the wrapping decision dialog. Both palettes restyle the existing grid, rank outlines, scratch marks and walking context. Restored dialogs wait for cached group locks and retain the actual chosen act. Alternative selection still uses the existing local manual-selection and pending group-lock paths without changing personal ratings, generated evidence, ties, day cutoff or walking rules.
 
 ## Relationships
 
@@ -47,3 +47,4 @@ Renders the day-filtered stage/time calendar, applies local visibility filters, 
 | --- | --- | --- | --- |
 | [app/src/main/java/be/wacken/planner/ScheduleActivity.java](../../../../../../app/src/main/java/be/wacken/planner/ScheduleActivity.java) | [application/src/main/java/be/wacken/planner/application/GenerateSharedScheduleUseCase.java](../../../../../../application/src/main/java/be/wacken/planner/application/GenerateSharedScheduleUseCase.java) | Generates calendar slots | Java call |
 | [app/src/main/java/be/wacken/planner/ScheduleActivity.java](../../../../../../app/src/main/java/be/wacken/planner/ScheduleActivity.java) | [app/src/main/java/be/wacken/planner/MainNavigation.java](../../../../../../app/src/main/java/be/wacken/planner/MainNavigation.java) | Renders primary destinations | Android Views |
+| [app/src/main/java/be/wacken/planner/ScheduleActivity.java](../../../../../../app/src/main/java/be/wacken/planner/ScheduleActivity.java) | [app/src/main/java/be/wacken/planner/WackenTheme.java](../../../../../../app/src/main/java/be/wacken/planner/WackenTheme.java) | Styles calendar controls | Android Views |

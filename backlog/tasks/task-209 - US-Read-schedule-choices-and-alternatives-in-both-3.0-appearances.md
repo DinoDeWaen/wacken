@@ -1,16 +1,33 @@
 ---
 id: TASK-209
 title: 'US: Read schedule choices and alternatives in both 3.0 appearances'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@codex'
 created_date: '2026-10-17 09:21'
-updated_date: '2026-10-17 13:21'
+updated_date: '2026-10-22 12:49'
 labels:
   - ux
   - release-3.0
 milestone: m-2
 dependencies:
   - TASK-206
+references:
+  - scheduleactivity
+  - wackentheme
+modified_files:
+  - app/src/androidTest/java/be/wacken/planner/CriticalFlowsAndroidTest.java
+  - app/src/test/java/be/wacken/planner/ScheduleBlockStyleTest.java
+  - app/src/main/java/be/wacken/planner/ScheduleBlockStyle.java
+  - app/src/main/res/values/ids.xml
+  - app/src/main/java/be/wacken/planner/WackenTheme.java
+  - app/src/main/java/be/wacken/planner/ScheduleActivity.java
+  - app/src/main/java/be/wacken/planner/ScheduleLegendContent.java
+  - app/src/test/java/be/wacken/planner/ScheduleLegendContentTest.java
+  - >-
+    groma/systems/wacken/containers/android-application/components/scheduleactivity.md
+  - >-
+    groma/systems/wacken/containers/android-application/components/wackentheme.md
 priority: medium
 type: enhancement
 ---
@@ -32,6 +49,12 @@ Validated baseline: TASK-201, design/release-2.34/themes.html; user approved 202
 - [ ] #5 Characterization/domain/native tests cover ties, skipped overlap, locks, filters and both appearances.
 - [ ] #6 README and business requirements impacts use canonical delivery-governance wording; approved behavior is documented, diagrams updated only where affected, and the full validation package is recorded before merge.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Standard presentation slice inside approved Views/ADR0024 boundary. 1. Preserve existing schedule/scratch/tie/lock characterization and add red native filter/viewport/recreation/large-font decision tests using actual cached data. 2. Replace horizontally squeezed day/threshold strips with labeled native selectors and wrapping48dp controls; keep horizontal scrolling only inside calendar, readable legend toggle and color-independent status. 3. Save day/threshold/barred/legend/outer/calendar positions across rerenders, theme and recreation; retain existing application generation and durable manual-lock behavior, guard stale Activity callbacks. 4. Bind custom calendar grid/block/scratch surfaces to paired semantic palette while retaining original rank/style/scratch classifications and exact walking/timecutoff/tie rules; scale calendar geometry for fonts and preserve full stage/date/time/value/context in accessible block labels and wrapping decision dialog. 5. Preserve chosen/alternative selection/lock semantics and personal ratings with native regression, including200% reachability; no new scheduling/business configuration or domain-rule movement. 6. Run unit/BDD/domain/application/native API23/API36, ArchUnit/lint/database/Groma gates, review actual source/map/duplicate/scanner changes, update README/requirements and fresh stable-key signed checkpoint before closure. No new framework/module/dependency/persistence/API or significant architecture decision; approval Standard/ADR0024 retained. Risks: async lock rerender racing view restoration, filtered-empty viewport, native selector callback loops, calendar custom-drawable contrast/large-font geometry and dialog actions. Integrated human/device/TalkBack/contrast matrix remains212.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
