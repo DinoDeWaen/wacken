@@ -48,6 +48,18 @@ list at large fonts. Stored music links open their existing targets; missing
 links are explained without fabricated actions. Empty search offers Clear search
 and filters; a failed refresh retains cached work and offers Retry sync.
 
+TASK-208 adds native rating-choice buttons with scoped value/meaning and selected
+state, keyboard focus outlines and48dp targets. Large fonts stack the choices.
+Active detail puts selected-festival planning first; **After the show** expands
+the independent post-show editor and retains its expansion across recreation.
+Clear actions keep0 explicitly Unrated. Established/source/history context and
+read-only group planning remain separate. Archived controls reject accessibility
+clicks and show read-only context. Canonical-band music discovery remains available
+without a festival; it is absent in captured archived context. Shared theme
+changes preserve state and never replay rating events.
+Native actions/geometry are automated checks; TASK-212 still owns the integrated
+human TalkBack, visual and physical-device review.
+
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.
 - Respects shared ratings, veto rules, overlapping performances, walking-time context, and manual group choices when proposing timelines.
@@ -311,7 +323,7 @@ framework/generated-reference warnings are scanner limitations, not compiler
 errors. Existing Android lint/compiler/test gates remain separate.
 
 The [reviewed baseline](tools/groma/architecture-baseline.json) and
-[per-group dispositions](backlog/docs/groma-gate-review-2026-10-21.md) retain88
+[per-group dispositions](backlog/docs/groma-gate-review-2026-10-21.md) track
 reviewed duplicate identities rather than allowing a total finding count or
 ignoring lint exit1. Two exact TASK228 stale rows are reported as accepted stale
 claims; no other dangling endpoints, deleted-file ownership or flow use are
@@ -325,9 +337,17 @@ and accepted stale-row exceptions are unchanged.
 
 The [TASK206 navigation review](backlog/docs/groma-navigation-review-2026-10-21.md)
 adds the independently meaningful primary-navigation responsibility and its seven
-reviewed UI collaborations. The current baseline has96 components,297 owned
+reviewed UI collaborations. That increment had96 components,297 owned
 Java sources,13 flows and the same88 reviewed duplicate identities. Scanner
 evidence growth is reviewed explicitly; no new exception or pin change.
+
+The [TASK207 lineup review](backlog/docs/groma-lineup-review-2026-10-22.md)
+accounts for seven obsolete table-helper pairs removed with the wrapping lineup.
+The [TASK208 rating-control review](backlog/docs/groma-rating-controls-review-2026-10-22.md)
+keeps the shared meaning/control source under band details and authors five
+actual presentation/style collaborations. The current baseline has96 components,
+299 owned sources,13 flows and81 individually reviewed duplicate identities,
+including two explicitly reviewed replacements; pins/exceptions remain unchanged.
 
 For intentional architecture changes, generate an external review candidate:
 

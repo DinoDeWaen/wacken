@@ -3,6 +3,7 @@ package be.wacken.planner;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.StateListDrawable;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -35,13 +36,34 @@ final class WackenTheme {
             Button target=(Button)view;
             boolean primary=style==ButtonStyle.PRIMARY||style==ButtonStyle.PREMIUM;
             target.setTextColor(primary?palette.onAccent():style==ButtonStyle.DANGER?palette.error():palette.text());
-            GradientDrawable background=new GradientDrawable();
-            background.setColor(primary?palette.accent():palette.panel());
-            background.setStroke(dp(context,1),style==ButtonStyle.DANGER?palette.error():palette.line());
-            background.setCornerRadius(dp(context,6));target.setBackground(background);
+            target.setBackground(focusBackground(target.getContext(),primary?palette.accent():palette.panel(),
+                    style==ButtonStyle.DANGER?palette.error():palette.line(),
+                    primary?palette.accent():palette.raised(),primary?palette.onAccent():palette.text()));
         });
         button.setOnClickListener(listener);
         return button;
+    }
+
+    static void ratingChoice(TextView choice) {
+        AppearanceController.bind(choice,"buttonStyle",(view,palette)->{
+            TextView target=(TextView)view;
+            target.setTextColor(palette.accent());
+            target.setBackground(focusBackground(target.getContext(),target.isSelected()?palette.raised():palette.panel(),
+                    target.isSelected()?palette.accent():palette.line(),palette.raised(),palette.text()));
+        });
+    }
+
+    private static StateListDrawable focusBackground(Context context,int fill,int border,int focusFill,int focusBorder) {
+        StateListDrawable states=new StateListDrawable();
+        states.addState(new int[]{android.R.attr.state_focused},buttonPanel(context,focusFill,focusBorder,3));
+        states.addState(new int[]{},buttonPanel(context,fill,border,1));
+        return states;
+    }
+
+    private static GradientDrawable buttonPanel(Context context,int fill,int border,int width) {
+        GradientDrawable panel=new GradientDrawable();
+        panel.setColor(fill);panel.setStroke(dp(context,width),border);panel.setCornerRadius(dp(context,6));
+        return panel;
     }
 
     static Button iconButton(

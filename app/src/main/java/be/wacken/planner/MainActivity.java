@@ -889,8 +889,7 @@ public final class MainActivity extends Activity {
             TextView meaning=lineupText("",14,false);
             TextView performance=lineupText("",14,false);
             RatingStarsView rating=new RatingStarsView(MainActivity.this,0,false,COLOR_ACCENT);
-            int height=dp(Math.max(48,(int)Math.ceil(36*getResources().getConfiguration().fontScale)));
-            rating.setLayoutParams(new LinearLayout.LayoutParams(-1,height));
+            rating.setLayoutParams(new LinearLayout.LayoutParams(-1,LinearLayout.LayoutParams.WRAP_CONTENT));
             LinearLayout actions=new LinearLayout(MainActivity.this);
             actions.setOrientation(LinearLayout.VERTICAL);
             row.addView(name);row.addView(meaning);row.addView(rating);row.addView(performance);row.addView(actions);
@@ -905,6 +904,7 @@ public final class MainActivity extends Activity {
             holder.name.setText(band.bandName());
             holder.meaning.setText(LineupPresentation.planningLabel(band.rating()));
             holder.rating.bind(band.rating(),band.explicitRating());
+            holder.rating.setScope("Festival planning rating for "+title.getText());
             holder.rating.setOnRatingSelected(value->saveRating(band,value));
             holder.performance.setText(band.stageName()+" · "+band.displayDate()+" · "+band.displayTime());
             holder.actions.removeAllViews();

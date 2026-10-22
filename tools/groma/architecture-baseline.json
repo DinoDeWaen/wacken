@@ -178,7 +178,7 @@
         "parent": "android-application",
         "title": "Band detail screens",
         "description": "Present band information and personal ratings",
-        "overview": "Shows active or archived band details, group star summaries, music links, and the separate post-show rating control where editing is allowed.",
+        "overview": "Presents active and archived band information with the captured member/festival scope, established source/history context and read-only group planning summaries. Active editing puts planning first and keeps the independent post-show value behind a retained After the show disclosure. Owns the reusable native rating choices and shared meaning vocabulary used by detail and lineup: touch, keyboard and accessibility actions use the existing callbacks/use cases, while archived children remain disabled. Restyling and recreation retain views/state without replaying rating events; actual biography, images, performance context and stored music links are preserved. Canonical-band discovery retains its existing no-festival entry but is absent in captured archive context; archived corrections keep their explicit reviewed workflow.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -187,7 +187,8 @@
           "app/src/main/java/be/wacken/planner/BandDetailLayoutPolicy.java",
           "app/src/main/java/be/wacken/planner/BandDetailPresentation.java",
           "app/src/main/java/be/wacken/planner/ExternalLinks.java",
-          "app/src/main/java/be/wacken/planner/RatingStarsView.java"
+          "app/src/main/java/be/wacken/planner/RatingStarsView.java",
+          "app/src/main/java/be/wacken/planner/RatingValueText.java"
         ]
       },
       {
@@ -1514,7 +1515,7 @@
         "parent": "android-application",
         "title": "Android visual theme",
         "description": "Apply shared native appearance without replaying work",
-        "overview": "Provides the Wacken-inspired shared styling and semantic component helpers for Android screens. Resolves the device-local System, Ironline dark or Field Notes light preference and updates explicitly bound views, panels and system bars in place. Activity lifecycle and preference listeners refresh current appearance and detach on destruction; screen-owned drafts, retained sessions and pending business operations are not reconstructed or executed by restyling. Uses existing private Android SharedPreferences without backend synchronization. Pure palette policy and the controller implement this one presentation responsibility; ADR0024 records the approved design.",
+        "overview": "Provides shared semantic styling for Android screens, including native focused-button outlines and selected rating-choice surfaces that remain visible in both appearances. Resolves the device-local System, Ironline dark or Field Notes light preference and updates explicitly bound views, panels and system bars in place. Activity lifecycle and preference listeners refresh current appearance and detach on destruction; screen-owned drafts, retained sessions and pending business operations are not reconstructed or executed by restyling. Uses existing private Android SharedPreferences without backend synchronization. Pure palette policy and the controller implement this one presentation responsibility; ADR0024 records the approved design.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -1795,6 +1796,13 @@
       },
       {
         "source": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/RatingStarsView.java",
+        "status": "stable",
+        "description": "Renders read-only ratings",
+        "technology": "Android Views"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/ArchivedFestivalActivity.java",
         "target": "application/src/main/java/be/wacken/planner/application/FestivalAfterRatingView.java",
         "status": "stable",
         "description": "Reads archived after-state",
@@ -1882,6 +1890,13 @@
         "target": "application/src/main/java/be/wacken/planner/application/ViewBandRatingContextUseCase.java",
         "status": "stable",
         "description": "Shows own rating context",
+        "technology": "Java call"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/BandDetailPresentation.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles band information",
         "technology": "Java call"
       },
       {
@@ -1983,6 +1998,13 @@
         "technology": "Java call"
       },
       {
+        "source": "app/src/main/java/be/wacken/planner/LineupPresentation.java",
+        "target": "app/src/main/java/be/wacken/planner/RatingValueText.java",
+        "status": "stable",
+        "description": "Formats planning meaning",
+        "technology": "Java call"
+      },
+      {
         "source": "app/src/main/java/be/wacken/planner/LocalCsvImportReviewDialog.java",
         "target": "application/src/main/java/be/wacken/planner/application/ReviewFestivalCsvUseCase.java",
         "status": "stable",
@@ -2051,6 +2073,13 @@
         "status": "stable",
         "description": "Reviews blocked pending work",
         "technology": "Java call"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/MainActivity.java",
+        "target": "app/src/main/java/be/wacken/planner/RatingStarsView.java",
+        "status": "stable",
+        "description": "Renders planning choices",
+        "technology": "Android Views"
       },
       {
         "source": "app/src/main/java/be/wacken/planner/MainActivity.java",
@@ -2226,6 +2255,13 @@
         "status": "stable",
         "description": "Exposes generated queries",
         "technology": "Room generated implementation"
+      },
+      {
+        "source": "app/src/main/java/be/wacken/planner/RatingStarsView.java",
+        "target": "app/src/main/java/be/wacken/planner/WackenTheme.java",
+        "status": "stable",
+        "description": "Styles native rating choices",
+        "technology": "Java call"
       },
       {
         "source": "app/src/main/java/be/wacken/planner/RatingStateSync.java",
@@ -3732,14 +3768,14 @@
       "code": "JAVA_METHOD_REFERENCES",
       "severity": "info",
       "count": 4,
-      "facts": 224
+      "facts": 225
     },
     {
       "scanner": "java",
       "code": "JAVA_MISSING_EXTERNAL_TYPES",
       "severity": "info",
       "count": 1,
-      "facts": 4270
+      "facts": 4306
     },
     {
       "scanner": "java",
@@ -3752,13 +3788,13 @@
       "code": "JAVA_UNRESOLVED_CALLS",
       "severity": "info",
       "count": 4,
-      "facts": 9095
+      "facts": 9186
     }
   ],
   "coverage": {
-    "operations": 2360,
-    "tokenized": 1471,
-    "invocations": 11905
+    "operations": 2376,
+    "tokenized": 1483,
+    "invocations": 12037
   },
   "duplicates": [
     "02da146b79ab30eea25ec378d01ca56c0ef5ed829b8e2fce1258497f210f9842",
@@ -3777,6 +3813,7 @@
     "2a921d94bd82895471a6ab94e75b3e8698a0b2cabe10a99b9b74110885ef70c0",
     "2b0b8b3bb360c7eb74414bf2b17db433fb1ce39d495a8b46c3010e9cda2c38f2",
     "2cda0bed1950a58fe0a338e6ffa3cde3ea09d59fcd396daf21989ff76f8bd087",
+    "2da5b48aef12ee99d7d71b5a7d4bf46f1d4be73f2bf4654eca43da8328e39dab",
     "2f9bf54dfcefb766f8bc53a2443cfefc3a14f608a7480be6aa14d26744631c52",
     "3563defa3cbc9b78ebe460c90b67ea8b7e13a1df292a6d5a992ece48d030cf89",
     "35d83e11d7c48900e0df9ace8494c2ee2a8dce78ade64db83e16bd895ba54315",
@@ -3785,7 +3822,6 @@
     "3bc9e1d32bb5fdbe0bde12fbcc93879471239d24cb2d0f7106dd8124c4d3dd02",
     "4743fa3dafaf55553489651607d9754a62888fdf49e9ff40fd7c1f4d1e2af515",
     "47cf427889ab765a19bff9f39ddc85a7ae220fd12b9c1e96023f0d3abd08b215",
-    "480b98ef6296446aa8a36b7bfaf8718b1f81708ab2b5052f2b332e6678589202",
     "4c340a0bfaf166dddc4c4b720babf764a20db5ca066465b37bf826b4942c76f8",
     "56f2abd12e559d7cbe235c4407060e9c50561ff65c1865b2b0a5e03c837502d3",
     "57d3984a0394d8cb6b2fe0757831ff860728d4d0ffa548aa811c71ba4577b2e3",
@@ -3812,6 +3848,7 @@
     "843140cf061025a71e64b5d6c818a78961e00b86d9b7cdf600495b21d2cab524",
     "85071f1981a70d06627ab93eebe4fb681a09dc619ed8fc93922cb9cb46498877",
     "859e80e0e6e4001d1ba0cd3f383e76c4884bd8ee75db15d0c297c693fcd5d0a2",
+    "89412423aac9d7d64f3080629c6d5fdb9218328404f000f267f948e8633c3a60",
     "8965c2b4171d043d7129178055a6f4ed893632ec90923318b51113a425d8cef0",
     "8a91d449dc951dba98ef01fc4b3a4740050d7b842d57e24cd74f24f8bfc1eaf4",
     "8d86a49cfadba485e227605fb131020676b31bbc7a124a7172f064271760c2a1",
@@ -3824,7 +3861,6 @@
     "a62e67e76c4cb449bf864b5bf738affa2230b3f6b87f018bdcbab8eceef7b827",
     "aafa2801b25ef3782a2f13f24db11babcbc573415c3838fbab41bb292bc68685",
     "b196546b482382d678e87de2a0e3280826907cccb45b3ee4f5610bfabe058a74",
-    "b1bb15d1cf481e2ff253f1b45d97dc8f99bb0a1816a46a4cfab57ff416b3ff4c",
     "b9f6b2c13d3261bb46311e270db8633fa472a9163fbb5a9ce92a457bfa6cc8a5",
     "bd5feb881d6b2a2775f4d1035ad2d135bf633e067d23a9e565efe95519e40f4c",
     "c20b3500ef9cf997bbfa5b7e2b68c34ac7b997813525449f0c0fd41d0e170b06",
@@ -3858,9 +3894,9 @@
         }
       ]
     },
-    "480b98ef6296446aa8a36b7bfaf8718b1f81708ab2b5052f2b332e6678589202": {
-      "rationale": "Planning and after-rating display differ in meaning, reset behavior and colour.",
-      "evidence": "backlog/docs/groma-helper-dispositions-2026-10-21.md; backlog/docs/groma-gate-review-2026-10-21.md",
+    "2da5b48aef12ee99d7d71b5a7d4bf46f1d4be73f2bf4654eca43da8328e39dab": {
+      "rationale": "Reviewed replacement of480b98ef6296: archived planning/after section constructors add distinct explicit scope labels and wrapping control dimensions. Shared disabled native control/section primitives reused; preserve short distinct role/value assemblies and group-planning context.",
+      "evidence": "backlog/docs/groma-rating-controls-review-2026-10-22.md",
       "members": [
         {
           "file": "app/src/main/java/be/wacken/planner/ArchivedBandDetailActivity.java",
@@ -3996,17 +4032,13 @@
         }
       ]
     },
-    "b1bb15d1cf481e2ff253f1b45d97dc8f99bb0a1816a46a4cfab57ff416b3ff4c": {
-      "rationale": "Context-specific label/status/heading assembly shares the already centralized semantic text binding; data/spacing/wording/approval policies remain distinct.",
-      "evidence": "backlog/docs/groma-appearance-review-2026-10-21.md",
+    "89412423aac9d7d64f3080629c6d5fdb9218328404f000f267f948e8633c3a60": {
+      "rationale": "Reviewed replacement of b1bb15d1cf48:12 screen-specific TextView builders; groupRatings drops out with explicit read-only planning accessibility semantics, sectionTitle adopts shared contextual heading/left alignment. Shared styling already centralized; retain intentional role-specific widget construction and209-211 screen work.",
+      "evidence": "backlog/docs/groma-rating-controls-review-2026-10-22.md",
       "members": [
         {
           "file": "app/src/main/java/be/wacken/planner/BandDetailPresentation.java",
           "name": "be.wacken.planner.BandDetailPresentation#infoLine(java.lang.String,java.lang.String)"
-        },
-        {
-          "file": "app/src/main/java/be/wacken/planner/BandDetailPresentation.java",
-          "name": "be.wacken.planner.BandDetailPresentation#groupRatings(BandDetailItem)"
         },
         {
           "file": "app/src/main/java/be/wacken/planner/BandDetailPresentation.java",
@@ -5325,7 +5357,7 @@
     "islands": []
   },
   "review": {
-    "task": "TASK-207",
-    "decision": "Reviewed home presentation helper ownership, rendered role/source, seven deleted table-helper duplicate pairs and exact Android TextWatcher/scanner evidence changes; see backlog/docs/groma-lineup-review-2026-10-22.md. Existing81 identities/reviews, pins, rows, flows and exceptions retained."
+    "task": "TASK-208",
+    "decision": "Reviewed shared rating vocabulary ownership, native role/readonly/scoped callbacks, rendered7-source detail and5 collaborations, two exact replacement duplicate dispositions and Android scanner evidence deltas; see backlog/docs/groma-rating-controls-review-2026-10-22.md. Existing boundaries/pins/exceptions retained."
   }
 }

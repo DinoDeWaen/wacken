@@ -23,11 +23,14 @@ groma:
     - scanner: java
       file: app/src/main/java/be/wacken/planner/BandDetailPresentation.java
       symbol: BandDetailPresentation
+    - scanner: java
+      file: app/src/main/java/be/wacken/planner/RatingValueText.java
+      symbol: RatingValueText
   group: Android screens
 description: Present band information and personal ratings
 ---
 
-Shows active or archived band details, group star summaries, music links, and the separate post-show rating control where editing is allowed.
+Presents active and archived band information with the captured member/festival scope, established source/history context and read-only group planning summaries. Active editing puts planning first and keeps the independent post-show value behind a retained After the show disclosure. Owns the reusable native rating choices and shared meaning vocabulary used by detail and lineup: touch, keyboard and accessibility actions use the existing callbacks/use cases, while archived children remain disabled. Restyling and recreation retain views/state without replaying rating events; actual biography, images, performance context and stored music links are preserved. Canonical-band discovery retains its existing no-festival entry but is absent in captured archive context; archived corrections keep their explicit reviewed workflow.
 
 ## Relationships
 
@@ -46,3 +49,5 @@ Shows active or archived band details, group star summaries, music links, and th
 | [app/src/main/java/be/wacken/planner/ArchivedBandDetailActivity.java](../../../../../../app/src/main/java/be/wacken/planner/ArchivedBandDetailActivity.java) | [domain/src/main/java/be/wacken/planner/domain/RatingCorrectionRepository.java](../../../../../../domain/src/main/java/be/wacken/planner/domain/RatingCorrectionRepository.java) | Shows own correction history | Java call |
 | [app/src/main/java/be/wacken/planner/BandDetailActivity.java](../../../../../../app/src/main/java/be/wacken/planner/BandDetailActivity.java) | [application/src/main/java/be/wacken/planner/application/RateBandUseCase.java](../../../../../../application/src/main/java/be/wacken/planner/application/RateBandUseCase.java) | Saves planning choice | Java call |
 | [app/src/main/java/be/wacken/planner/BandDetailActivity.java](../../../../../../app/src/main/java/be/wacken/planner/BandDetailActivity.java) | [app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java](../../../../../../app/src/main/java/be/wacken/planner/MusicLinksReviewActivity.java) | Opens one band lookup | Android Intent |
+| [app/src/main/java/be/wacken/planner/RatingStarsView.java](../../../../../../app/src/main/java/be/wacken/planner/RatingStarsView.java) | [app/src/main/java/be/wacken/planner/WackenTheme.java](../../../../../../app/src/main/java/be/wacken/planner/WackenTheme.java) | Styles native rating choices | Java call |
+| [app/src/main/java/be/wacken/planner/BandDetailPresentation.java](../../../../../../app/src/main/java/be/wacken/planner/BandDetailPresentation.java) | [app/src/main/java/be/wacken/planner/WackenTheme.java](../../../../../../app/src/main/java/be/wacken/planner/WackenTheme.java) | Styles band information | Java call |

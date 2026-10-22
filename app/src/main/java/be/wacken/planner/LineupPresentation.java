@@ -15,13 +15,6 @@ final class LineupPresentation {
     }
 
     static String planningLabel(int rating) {
-        return "Planning: "+switch(rating) {
-            case 1 -> "1 · Veto";
-            case 2 -> "2 · Low interest";
-            case 3 -> "3 · Optional";
-            case 4 -> "4 · Strong choice";
-            case 5 -> "5 · Must see";
-            default -> "Unrated";
-        };
+        return "Planning: "+RatingValueText.describe(rating);
     }
 }
