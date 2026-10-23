@@ -643,7 +643,7 @@
         "parent": "android-application",
         "title": "Primary destination navigation",
         "description": "Reuses named primary screens",
-        "overview": "Builds the same labeled Bands, Schedule and Settings destination bar around each primary screen, exposing the current destination visually and to accessibility services. Selecting the current Activity is a no-op; another destination is opened with Android Intent REORDER_TO_FRONT so an existing Activity retains its screen context rather than creating duplicate navigation instances. Detail and review subflows keep their initiating Activity and normal Back behavior. Shared appearance helpers style the controls; this component owns no rating, schedule, session or persistence policy.",
+        "overview": "Builds the same labeled Bands, Schedule and Settings destinations around each primary screen, exposing the current destination visually and to accessibility services. On screens narrower than360dp with fontScale at least1.5, full-width actions stack vertically to keep destination labels intact; other configurations retain the horizontal bar. Selecting the current Activity is a no-op; another destination is opened with Android Intent REORDER_TO_FRONT so an existing Activity retains its screen context rather than creating duplicate navigation instances. Detail and review subflows keep their initiating Activity and normal Back behavior. Shared appearance helpers style the controls; this component owns no rating, schedule, session or persistence policy.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -1515,7 +1515,7 @@
         "parent": "android-application",
         "title": "Android visual theme",
         "description": "Apply shared native appearance without replaying work",
-        "overview": "Provides shared semantic styling for Android screens, including native focused-button outlines, selected rating-choice surfaces and focused selector panels that remain visible in both appearances. Resolves the device-local System, Ironline dark or Field Notes light preference and updates explicitly bound views, panels and system bars in place. Activity lifecycle and preference listeners refresh current appearance and detach on destruction; screen-owned drafts, retained sessions and pending business operations are not reconstructed or executed by restyling. Uses existing private Android SharedPreferences without backend synchronization. Pure palette policy and the controller implement this one presentation responsibility; ADR0024 records the approved design.\n\nAlso styles owned native dialog text/surfaces and wrapping vertically arranged48dp actions without replacing business listeners or overriding explicitly styled custom content. Shared native input/choice/selector helpers use semantic palette bindings. The existing Activity controller weakly tracks owned dialogs and dismisses their windows at destruction; it exposes open-dialog presence only for screen-owned safe-recovery wording.",
+        "overview": "Provides shared semantic styling for Android screens, including native focused-button outlines, selected rating-choice surfaces and focused selector panels that remain visible in both appearances. Resolves the device-local System, Ironline dark or Field Notes light preference and updates explicitly bound views, panels and system bars in place. Activity lifecycle and preference listeners refresh current appearance and detach on destruction; screen-owned drafts, retained sessions and pending business operations are not reconstructed or executed by restyling. Uses existing private Android SharedPreferences without backend synchronization. Pure palette policy and the controller implement this one presentation responsibility; ADR0024 records the approved design.\n\nAlso styles owned native dialog text/surfaces and wrapping vertically arranged48dp actions without replacing business listeners or overriding explicitly styled custom content. Shared native input/choice/selector helpers use semantic palette bindings. The existing Activity controller weakly tracks owned dialogs and dismisses their windows at destruction; it exposes open-dialog presence only for screen-owned safe-recovery wording.\n\nOn Android15 and later, the controller pads the native content host by current system-bar, cutout and keyboard insets so scrolling controls stay outside those areas. The exposed safe-area background follows the same selected palette. Older Android versions retain their platform window fitting.",
         "group": "Android screens",
         "technology": "",
         "code": [
@@ -3879,7 +3879,7 @@
       "code": "JAVA_MISSING_EXTERNAL_TYPES",
       "severity": "info",
       "count": 1,
-      "facts": 4468
+      "facts": 4470
     },
     {
       "scanner": "java",
@@ -3892,13 +3892,13 @@
       "code": "JAVA_UNRESOLVED_CALLS",
       "severity": "info",
       "count": 4,
-      "facts": 9617
+      "facts": 9620
     }
   ],
   "coverage": {
     "operations": 2457,
     "tokenized": 1515,
-    "invocations": 12577
+    "invocations": 12580
   },
   "duplicates": [
     "02da146b79ab30eea25ec378d01ca56c0ef5ed829b8e2fce1258497f210f9842",
@@ -5500,6 +5500,6 @@
   },
   "review": {
     "task": "TASK-212",
-    "decision": "Reviewed shared native safe-area padding and palette background within existing theme ownership; exact ownership, 83 duplicate identities/dispositions, pins and exceptions unchanged. One native insets listener adds one operation and eleven native API calls; seven external-type and eleven unresolved facts are missing-Android scanner evidence, with no warning increase. Actual Android compilation and paired TalkBack audit pass. See backlog/docs/release-3.0-native-validation-2026-10-23.md."
+    "decision": "Reviewed native safe-area/palette fitting and narrow large-font destination stacking within existing theme/navigation ownership; only those two authored overviews change. Exact source ownership, relationships/flows, 83 duplicate identities/dispositions, pins and exceptions unchanged. Coverage2457/1515/12580: one inset listener and fourteen native calls added versus TASK211; nine external-type and fourteen unresolved facts correspond to absent Android APIs, with no warning increase. Actual Android compilation and paired narrow TalkBack regressions pass. See backlog/docs/release-3.0-native-validation-2026-10-23.md."
   }
 }
