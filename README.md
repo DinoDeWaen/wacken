@@ -2,12 +2,12 @@
 
 ## Validated design for release 3.0
 
-Validated direction: [paired Ironline dark / Field Notes light flow](design/release-2.34/themes.html), with a header toggle and System / Dark / Light preference in Settings. The user approved this flow; implementation is planned in the release 3.0 milestone (TASK-204–213), separately from 2.34.
+Validated direction: [paired Ironline dark / Field Notes light flow](design/release-2.34/themes.html), with a header toggle and System / Dark / Light preference in Settings. The user approved this flow; the native implementation is on the development branch under TASK-204–213. Published2.35.1 remains the current release until TASK-213 completes.
 
 The [3.0 native design contract](backlog/docs/release-3.0-design-contract.md)
 specifies exact paired tokens, shared layout/navigation/state retention and the
 screen/dialog coverage assigned to TASK-205–212. It preserves the implemented
-ADR0016 rating lifecycle. This is planned native scope; the released2.35.1 app
+ADR0016 rating lifecycle. This is implemented development scope; the released2.35.1 app
 does not yet implement it. TASK-212 owns actual Android accessibility/device
 evidence before publication; qualitative prototype approval is not a native pass.
 
@@ -20,9 +20,9 @@ System follows device appearance, explicit choices persist locally, and the
 header action selects the opposite explicit mode. Shared semantic bindings
 update existing views/panels and system bars without replaying business writes.
 Activity recreation uses screen-owned saved/retained state; login passwords are
-retained for configuration changes in memory only. TASK-206–211 still own the
-remaining navigation, layout, control accessibility and screen-specific recovery
-work; this foundation does not establish completed3.0 usability or publication.
+retained for configuration changes in memory only. TASK-206–211 implement the
+remaining navigation, layouts, controls and screen-specific recovery. TASK-212
+validates the integrated native matrix; TASK-213 owns publication.
 
 Focused checks: `./gradlew :app:testDebugUnitTest --tests '*AppearancePreferenceTest'`
 and, on an isolated booted emulator,
@@ -57,8 +57,8 @@ read-only group planning remain separate. Archived controls reject accessibility
 clicks and show read-only context. Canonical-band music discovery remains available
 without a festival; it is absent in captured archived context. Shared theme
 changes preserve state and never replay rating events.
-Native actions/geometry are automated checks; TASK-212 still owns the integrated
-human TalkBack, visual and physical-device review.
+Native actions/geometry are automated checks. The integrated evidence below
+distinguishes actual TalkBack automation and image inspection from human/physical review.
 
 TASK-209 makes schedule day/threshold selectors native and labeled, with48dp
 controls and retained filters, calendar position and decision context across
@@ -89,6 +89,35 @@ requests/correction reviews show check-current-state recovery and never resubmit
 on restoration. Archived rows remain read-only with full planning/performance
 facts and stored music actions. Local/pending/acknowledged/error feedback uses
 words and live announcements; native dialogs dismiss with their Activity.
+
+## Native accessibility evidence for 3.0
+
+The [native validation record](backlog/docs/release-3.0-native-validation-2026-10-23.md)
+and [44 actual Android captures with hashes](design/release-3.0/native/evidence.json)
+cover both appearances at 200% text, normal 411dp and narrow 320×480dp layouts.
+On Android 15+, shared content insets keep controls outside system bars, cutouts
+and the keyboard; the exposed background follows the selected palette. Below
+360dp with fontScale1.5+, the three primary destinations stack vertically to
+keep their labels intact.
+
+With only an owned disposable emulator connected, run:
+
+```sh
+python3 scripts/verify-android-accessibility.py emulator-5554 /tmp/wacken-native-normal --talkback
+python3 scripts/verify-android-accessibility.py emulator-5554 /tmp/wacken-native-narrow --talkback --narrow
+./gradlew :app:testDebugUnitTest --tests '*AppearanceContrastTest'
+env 'ORG_GRADLE_PROJECT_android.testInstrumentationRunnerArguments.initialAppearance=dark' sh scripts/verify-android-smoke.sh emulator-5554 all
+env 'ORG_GRADLE_PROJECT_android.testInstrumentationRunnerArguments.initialAppearance=light' sh scripts/verify-android-smoke.sh emulator-5554 all
+```
+
+Use a new report directory each time. The optional real-service audit needs
+installed TalkBack on API 24+; ordinary native tests support API 23. The wrapper
+restores display size/density and accessibility-service settings even on failure,
+checks the actual foreground app before capture, and records device/source/APK
+identifiers. It can decline the observed Accessibility Suite notification prompt
+on the owned emulator. It does not operate a physical phone. Read the report for
+human spoken-feedback, Switch Access, outdoor, glove and one-handed limitations;
+automated accessibility focus is not a human usability study.
 
 ## Context
 - Android app for Wacken Open Air 2026 helping friends rate bands and build a shared, conflict-aware schedule.

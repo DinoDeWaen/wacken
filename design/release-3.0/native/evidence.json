@@ -1,0 +1,268 @@
+{
+  "productionCommit": "5cc6a8c",
+  "fontScale": 2.0,
+  "runs": {
+    "normal": {
+      "serial": "emulator-5554",
+      "fingerprint": "google/sdk_gphone64_arm64/emu64a:16/BE2A.250530.026.D1/13818094:user/release-keys",
+      "originalSize": "Physical size: 1080x2400",
+      "originalDensity": "Physical density: 420",
+      "originalAccessibility": {
+        "enabled_accessibility_services": "null",
+        "accessibility_enabled": "0",
+        "touch_exploration_enabled": "0"
+      },
+      "narrow": false,
+      "talkbackRequired": true,
+      "deviceDirectory": "/sdcard/Download/wacken-3.0-wacken-212-nav-final-normal",
+      "source": "6ffd0d78443b93151e8b5fd52a59c2ce5162e51a",
+      "auditSize": "Physical size: 1080x2400",
+      "auditDensity": "Physical density: 420",
+      "app-debug.apk.sha256": "f8ad7ddb7864372f65e71b5e7a16f16ef7a0457961f294a4fa4a305aca08e440",
+      "app/src/androidTest/java/be/wacken/planner/NativeAccessibilityEvidence.java.sha256": "a30d389e424b7d944d816991e7832c94c1b5de8ae7b549d69ae60ca104e46790",
+      "app/src/androidTest/java/be/wacken/planner/CriticalFlowsAndroidTest.java.sha256": "374efcea52f9967322171b45197d99be41c61065037bdca500b6dad1520c5346",
+      "app/src/androidTest/java/be/wacken/planner/NativeUiTestRunner.java.sha256": "73b0bbf2963f27c2c835f1dac78e241ea9cd73d1857f3fab0dc5b51d20266a21",
+      "app/src/main/java/be/wacken/planner/AppearanceController.java.sha256": "738a8bcbf17539755e57f9ca06564c26b4bc7ca73f96ebde513fa2b42d9c8c1e",
+      "exitCode": 0,
+      "restored": true,
+      "nativeEvidence": [
+        "TALKBACK_ACTIVE 16.0.0.738667889",
+        "NATIVE_BUILD google/sdk_gphone64_arm64/emu64a:16/BE2A.250530.026.D1/13818094:user/release-keys; evidence=/sdcard/Download/wacken-3.0-wacken-212-nav-final-normal; TalkBack=true",
+        "NATIVE_TARGET android.widget.Button; \u2605; Festival planning rating for Native smoke festival, 4 \u00b7 Strong choice, selected; selected=true",
+        "NATIVE_TARGET android.widget.Button; After the show; After the show, collapsed; selected=false",
+        "NATIVE_TARGET android.widget.Spinner; null; Festival day; selected=false",
+        "NATIVE_TARGET android.widget.Button; null; Open schedule decision for TASK-174 Smoke Band, 2027-08-19, 18:00-19:00, TASK-174 Smoke Stage, 4 \u00b7 Strong choice, CHOSEN; selected=false",
+        "NATIVE_TARGET android.widget.Button; Close; null; selected=false",
+        "NATIVE_TARGET android.widget.EditText; Unsubmitted native QA festival; Festival name; selected=false",
+        "NATIVE_TARGET android.widget.EditText; TASK-174 Smoke Band; Search term for TASK-174 Smoke Band; selected=false",
+        "NATIVE_TARGET android.widget.Button; \u2605; Festival planning rating for Native smoke festival, 4 \u00b7 Strong choice, selected; selected=true",
+        "NATIVE_TARGET android.widget.Button; After the show; After the show, collapsed; selected=false",
+        "NATIVE_TARGET android.widget.Spinner; null; Festival day; selected=false",
+        "NATIVE_TARGET android.widget.Button; null; Open schedule decision for TASK-174 Smoke Band, 2027-08-19, 18:00-19:00, TASK-174 Smoke Stage, 4 \u00b7 Strong choice, CHOSEN; selected=false",
+        "NATIVE_TARGET android.widget.Button; Close; null; selected=false",
+        "NATIVE_TARGET android.widget.EditText; Unsubmitted native QA festival; Festival name; selected=false",
+        "NATIVE_TARGET android.widget.EditText; TASK-174 Smoke Band; Search term for TASK-174 Smoke Band; selected=false"
+      ]
+    },
+    "narrow": {
+      "serial": "emulator-5554",
+      "fingerprint": "google/sdk_gphone64_arm64/emu64a:16/BE2A.250530.026.D1/13818094:user/release-keys",
+      "originalSize": "Physical size: 1080x2400",
+      "originalDensity": "Physical density: 420",
+      "originalAccessibility": {
+        "enabled_accessibility_services": "null",
+        "accessibility_enabled": "0",
+        "touch_exploration_enabled": "0"
+      },
+      "narrow": true,
+      "talkbackRequired": true,
+      "deviceDirectory": "/sdcard/Download/wacken-3.0-wacken-212-nav-final-narrow",
+      "source": "5cc6a8cacb31b7233e28691c5b5af906c14185b9",
+      "auditSize": "Physical size: 1080x2400\nOverride size: 640x960",
+      "auditDensity": "Physical density: 420\nOverride density: 320",
+      "app-debug.apk.sha256": "f8ad7ddb7864372f65e71b5e7a16f16ef7a0457961f294a4fa4a305aca08e440",
+      "app/src/androidTest/java/be/wacken/planner/NativeAccessibilityEvidence.java.sha256": "a30d389e424b7d944d816991e7832c94c1b5de8ae7b549d69ae60ca104e46790",
+      "app/src/androidTest/java/be/wacken/planner/CriticalFlowsAndroidTest.java.sha256": "374efcea52f9967322171b45197d99be41c61065037bdca500b6dad1520c5346",
+      "app/src/androidTest/java/be/wacken/planner/NativeUiTestRunner.java.sha256": "73b0bbf2963f27c2c835f1dac78e241ea9cd73d1857f3fab0dc5b51d20266a21",
+      "app/src/main/java/be/wacken/planner/AppearanceController.java.sha256": "738a8bcbf17539755e57f9ca06564c26b4bc7ca73f96ebde513fa2b42d9c8c1e",
+      "exitCode": 0,
+      "restored": true,
+      "nativeEvidence": [
+        "TALKBACK_ACTIVE 16.0.0.738667889",
+        "NATIVE_BUILD google/sdk_gphone64_arm64/emu64a:16/BE2A.250530.026.D1/13818094:user/release-keys; evidence=/sdcard/Download/wacken-3.0-wacken-212-nav-final-narrow; TalkBack=true",
+        "NATIVE_TARGET android.widget.Button; \u2605; Festival planning rating for Native smoke festival, 4 \u00b7 Strong choice, selected; selected=true",
+        "NATIVE_TARGET android.widget.Button; After the show; After the show, collapsed; selected=false",
+        "NATIVE_TARGET android.widget.Spinner; null; Festival day; selected=false",
+        "NATIVE_TARGET android.widget.Button; null; Open schedule decision for TASK-174 Smoke Band, 2027-08-19, 18:00-19:00, TASK-174 Smoke Stage, 4 \u00b7 Strong choice, CHOSEN; selected=false",
+        "NATIVE_TARGET android.widget.Button; Close; null; selected=false",
+        "NATIVE_TARGET android.widget.EditText; Unsubmitted native QA festival; Festival name; selected=false",
+        "NATIVE_TARGET android.widget.EditText; TASK-174 Smoke Band; Search term for TASK-174 Smoke Band; selected=false",
+        "NATIVE_TARGET android.widget.Button; \u2605; Festival planning rating for Native smoke festival, 4 \u00b7 Strong choice, selected; selected=true",
+        "NATIVE_TARGET android.widget.Button; After the show; After the show, collapsed; selected=false",
+        "NATIVE_TARGET android.widget.Spinner; null; Festival day; selected=false",
+        "NATIVE_TARGET android.widget.Button; null; Open schedule decision for TASK-174 Smoke Band, 2027-08-19, 18:00-19:00, TASK-174 Smoke Stage, 4 \u00b7 Strong choice, CHOSEN; selected=false",
+        "NATIVE_TARGET android.widget.Button; Close; null; selected=false",
+        "NATIVE_TARGET android.widget.EditText; Unsubmitted native QA festival; Festival name; selected=false",
+        "NATIVE_TARGET android.widget.EditText; TASK-174 Smoke Band; Search term for TASK-174 Smoke Band; selected=false"
+      ]
+    }
+  },
+  "files": {
+    "normal/dark-add-festival-200.png": {
+      "sha256": "974662ba82c8b1005edddabe42e3303f7406097709316644888f341697b58ee6",
+      "bytes": 176075
+    },
+    "normal/dark-after-disclosure-200.png": {
+      "sha256": "70e01db396fc4dad868468f5d233b7436f9f60444a24ed6b5b99450e05f2e0d9",
+      "bytes": 179989
+    },
+    "normal/dark-archived-200.png": {
+      "sha256": "fd8000f8be809a2cef595881fb64aca5772611e941ec7a54cb98456301a53f12",
+      "bytes": 215266
+    },
+    "normal/dark-bands-200.png": {
+      "sha256": "fd4fb1d404d6dfd1d082883f1f82850b8e870377cff66bd21a15e52a5c255a0a",
+      "bytes": 156158
+    },
+    "normal/dark-calendar-200.png": {
+      "sha256": "333087d594a4897e7043b526966b179a1402e2db3de3e560e6ded674e8b883bb",
+      "bytes": 209014
+    },
+    "normal/dark-decision-200.png": {
+      "sha256": "1062acc23e070ab66bc521f0c2a32cbacc39c23aa3f37dbd1211ed2425994362",
+      "bytes": 203544
+    },
+    "normal/dark-decision-actions-200.png": {
+      "sha256": "3284c0269af5524739b4c1abe8075f3d714f7a6ba508acfa3958d6a2a9eff711",
+      "bytes": 203312
+    },
+    "normal/dark-music-review-200.png": {
+      "sha256": "f0da6cb2cb8cf9f88324735c57ae534ef8f0e272889355f20fc8303397f2d342",
+      "bytes": 232842
+    },
+    "normal/dark-planning-focus-200.png": {
+      "sha256": "e7919f7fdf62822890edb5c837902a1f808726696ddc2e2ebf9b63da58744259",
+      "bytes": 153186
+    },
+    "normal/dark-schedule-filters-200.png": {
+      "sha256": "d9bcde73d6db8bb7e2e01178ae15da35e44cf645117564d3e448828e3c770b91",
+      "bytes": 209453
+    },
+    "normal/dark-settings-200.png": {
+      "sha256": "0c0bf4eba730ede76a8614f70248e1f451976e7ac3d6de0affd06b5d503104d4",
+      "bytes": 218926
+    },
+    "normal/light-add-festival-200.png": {
+      "sha256": "0240319b0b2c106b689d11e675b83863b59afe35c75e192d7b14057ad27f5540",
+      "bytes": 178852
+    },
+    "normal/light-after-disclosure-200.png": {
+      "sha256": "74a3c5eebaa3a7c0af8f8ebcc322d240cff5e2e2cb369340dd41eae3cbcccb2d",
+      "bytes": 181651
+    },
+    "normal/light-archived-200.png": {
+      "sha256": "9787332ab920fc5ca3bd909ae322992b4510dffdae131120b52486c02213a798",
+      "bytes": 217873
+    },
+    "normal/light-bands-200.png": {
+      "sha256": "83f14898e667dd3e951518b6c92e40bd5ef8960b19eba63f520b4696c315eb13",
+      "bytes": 160264
+    },
+    "normal/light-calendar-200.png": {
+      "sha256": "ee726162a117383fd388a5d55d2d188fdac24a93179882d9d99b5eb8aa0af0ef",
+      "bytes": 217690
+    },
+    "normal/light-decision-200.png": {
+      "sha256": "204736c85d817bb35399394d18eaec8d21a6a53c0a9e9d72bec7a753bfb88bfc",
+      "bytes": 215572
+    },
+    "normal/light-decision-actions-200.png": {
+      "sha256": "f2042967e656cdf89a89a30fc3eefabeed426b98fc356deeb2f3db8383e217a4",
+      "bytes": 215489
+    },
+    "normal/light-music-review-200.png": {
+      "sha256": "1b5906a3fe70ed175c63b64d44e8e34f5088eae342393501d4c6e6905de1b51d",
+      "bytes": 242440
+    },
+    "normal/light-planning-focus-200.png": {
+      "sha256": "401e2ee05bd5e1c7a6096c8d3b298655c8603c735b84f7e7fd17994e0f328447",
+      "bytes": 159507
+    },
+    "normal/light-schedule-filters-200.png": {
+      "sha256": "6687093fbc885f36480c8028d8905df561e62d74c6a5263f2764702184dedfcb",
+      "bytes": 218245
+    },
+    "normal/light-settings-200.png": {
+      "sha256": "5accc0f628e06f941bdf2c10586b7ee9f42a69f3e5f6ce6e974fbe5b2c6c275f",
+      "bytes": 230414
+    },
+    "narrow/dark-add-festival-200.png": {
+      "sha256": "d8e163220ce6c39139a8e94d0c25a4dd5bfa06f8f89853e6d602a249fa43782f",
+      "bytes": 89282
+    },
+    "narrow/dark-after-disclosure-200.png": {
+      "sha256": "310b7e1a4fb7769c81fd2de8b4bf3f393edd0ff07e14d62ba94aaa54d559ce5c",
+      "bytes": 86327
+    },
+    "narrow/dark-archived-200.png": {
+      "sha256": "3a771183a4f364e074524954c1296ef6cd40d5b356442aaca845e8491f88d030",
+      "bytes": 88785
+    },
+    "narrow/dark-bands-200.png": {
+      "sha256": "48255e29caa3f66c73cfa2f732b4b2d52b74083236f5de83e8d1a31d377bc09b",
+      "bytes": 53334
+    },
+    "narrow/dark-calendar-200.png": {
+      "sha256": "8515c3066b7d2059695b0a5dbea53938dad502c425c317aad9f5e86c23f76243",
+      "bytes": 55308
+    },
+    "narrow/dark-decision-200.png": {
+      "sha256": "7cb077ee9cd5e21964b309d27a47608e019202907e9fb1118038e3bda71d430e",
+      "bytes": 76104
+    },
+    "narrow/dark-decision-actions-200.png": {
+      "sha256": "9e7c4798590ba44fc9d25265c2204c337a8374342f3b79d1b498fdd904311bd4",
+      "bytes": 70761
+    },
+    "narrow/dark-music-review-200.png": {
+      "sha256": "0357af182a2b80e36e6cc5bc731645f28631d37f56ea3222019af68d19b98788",
+      "bytes": 71894
+    },
+    "narrow/dark-planning-focus-200.png": {
+      "sha256": "77ee8b12abc7c17e11e7388af3fc3b1de1352c02c7f713b744c4455b88b3a640",
+      "bytes": 46879
+    },
+    "narrow/dark-schedule-filters-200.png": {
+      "sha256": "bf8447c3162aa11fe2f2c130093f223d371cbd53eda2cb3a338b9c48a45d643a",
+      "bytes": 64238
+    },
+    "narrow/dark-settings-200.png": {
+      "sha256": "9157c6b224b8e10b7f87e1a7e5bd5e8f13733b16d9a33c004bc921f844606fc3",
+      "bytes": 72636
+    },
+    "narrow/light-add-festival-200.png": {
+      "sha256": "d1d2213c2eb705b85c39d92786efeacfa46acb57726ad14342c441561b0ea6e3",
+      "bytes": 90767
+    },
+    "narrow/light-after-disclosure-200.png": {
+      "sha256": "021c21f389b5cc08f4837fd8258d0417c3a8917b71bec1eaac7752bafd7285d1",
+      "bytes": 85814
+    },
+    "narrow/light-archived-200.png": {
+      "sha256": "8f0ffaa725593c7bb5401a783637aae10e14e5b508900f94c29365ac0c16c799",
+      "bytes": 90964
+    },
+    "narrow/light-bands-200.png": {
+      "sha256": "1bf1d2409ca5ad21a1753ad877d3bb06c05848ad4cfda42d7702a51703c6254e",
+      "bytes": 54514
+    },
+    "narrow/light-calendar-200.png": {
+      "sha256": "60a9bb4d6bb34b826434eeb79be9274a5ce231ea0b0c990e15ba054a8c374ba2",
+      "bytes": 55713
+    },
+    "narrow/light-decision-200.png": {
+      "sha256": "fe1d5a4075c0d762fb3ffc2c640e358416b5d6d7320ad313691b7be32f292b24",
+      "bytes": 82511
+    },
+    "narrow/light-decision-actions-200.png": {
+      "sha256": "a786c4f82d1766836d3ad461a7ec932f39f7bb477f0e5d01ff304513e9a0bcb8",
+      "bytes": 72637
+    },
+    "narrow/light-music-review-200.png": {
+      "sha256": "05b3631e0b01977f89932ddaafd3f4c206362f15a7f5e3f36ff850e29aa9f250",
+      "bytes": 74713
+    },
+    "narrow/light-planning-focus-200.png": {
+      "sha256": "19ced7b143525c5505cba04f34223302e2ebdb28f3a52f5f11fb165d284ad793",
+      "bytes": 49260
+    },
+    "narrow/light-schedule-filters-200.png": {
+      "sha256": "ebec789da6c610e7f368955051e462b2e64b4e8af7eb4455f3b27724a383ce71",
+      "bytes": 64546
+    },
+    "narrow/light-settings-200.png": {
+      "sha256": "93f0153a1fe79b858d42c6a3954f9d86a49cfefb9053663731fcc035381d6359",
+      "bytes": 75869
+    }
+  }
+}

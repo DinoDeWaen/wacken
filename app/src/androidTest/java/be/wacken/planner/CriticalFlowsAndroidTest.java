@@ -399,6 +399,116 @@ public final class CriticalFlowsAndroidTest {
         });
     }
 
+    @Test public void pairedReleaseAuditAtDoubleFontPreservesStateAndExposesReachableControls() throws Exception {
+        Object previous=AppearanceController.store(instrumentation.getTargetContext()).getAll().get(AppearanceController.MODE);
+        AtomicReference<Boolean> touchMode=new AtomicReference<>();
+        try(NativeAccessibilityEvidence audit=new NativeAccessibilityEvidence(instrumentation)){
+            for(AppearancePreference mode:new AppearancePreference[]{AppearancePreference.DARK,AppearancePreference.LIGHT}){
+                String label=mode.storedValue();
+                database.festivals().save(new RoomFestival(FESTIVAL,"Native smoke festival","ACTIVE"));
+                onUi(()->AppearanceController.choose(instrumentation.getTargetContext(),mode));
+                auditOpen(MainActivity.class);
+                if(touchMode.get()==null)onUi(()->touchMode.set(root().isInTouchMode()));
+                await(()->!booleanField(activity,"syncInProgress"));
+                onUi(()->{android.widget.ListView list=root().findViewById(R.id.band_lineup);list.setSelection(1);});
+                await(()->findText(root(),BAND)!=null);
+                audit.capture(label+"-bands-200");
+
+                auditOpen(BandDetailActivity.class);
+                AtomicReference<View> choice=new AtomicReference<>();onUi(()->choice.set(findStars(root()).getChildAt(3)));
+                auditTarget(choice.get(),audit);
+                onUi(()->assertTrue("Selected planning value exposed",choice.get().createAccessibilityNodeInfo().isSelected()));
+                instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_TAB);await(()->!root().isInTouchMode());
+                onUi(()->{assertTrue(choice.get().requestFocus());assertTrue(choice.get().isFocused());assertTrue(choice.get().getBackground().isStateful());});
+                audit.capture(label+"-planning-focus-200");
+                AtomicReference<View> disclosure=new AtomicReference<>();onUi(()->disclosure.set(findText(root(),"After the show")));
+                auditTarget(disclosure.get(),audit);onUi(()->assertTrue(disclosure.get().requestFocus()));
+                instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ENTER);await(()->findText(root(),"Festival after-rating").isShown());
+                assertNull(database.ratingStates().after(USER,FESTIVAL,BAND));audit.capture(label+"-after-disclosure-200");
+                onUi(()->assertTrue(disclosure.get().requestFocus()));instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_ENTER);
+                await(()->!findText(root(),"Festival after-rating").isShown());
+                auditOpen(SettingsActivity.class);onUi(()->assertTrue(activity.getResources().getConfiguration().fontScale>=1.99f));
+                audit.capture(label+"-settings-200");
+
+                auditOpen(ScheduleActivity.class);await(()->booleanField(activity,"scheduleLocksLoaded"));
+                AtomicReference<View> day=new AtomicReference<>();onUi(()->day.set(findDescription(root(),"Festival day")));
+                auditTarget(day.get(),audit);audit.capture(label+"-schedule-filters-200");
+                AtomicReference<View> slot=new AtomicReference<>();onUi(()->{
+                    View found=findContaining(root(),BAND);assertNotNull(found);
+                    while(!found.isClickable()&&found.getParent() instanceof View parent)found=parent;slot.set(found);
+                });
+                auditTarget(slot.get(),audit);audit.capture(label+"-calendar-200");
+                onUi(()->assertTrue(slot.get().performAccessibilityAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK,null)));
+                audit.capture(label+"-decision-200");
+                AtomicReference<View> close=new AtomicReference<>();onUi(()->{
+                    View dialog=decisionRoot();assertNotNull(findContaining(dialog,STAGE));assertNotNull(findContaining(dialog,"2027-08-19"));
+                    close.set(findText(dialog,"Close"));
+                });
+                auditTarget(close.get(),audit);audit.capture(label+"-decision-actions-200");onUi(()->close.get().performClick());
+
+                auditOpen(ImportCsvActivity.class);
+                AtomicReference<android.widget.EditText> name=new AtomicReference<>();onUi(()->{
+                    name.set((android.widget.EditText)findDescription(root(),"Festival name"));assertNotNull(name.get());
+                    name.get().setText("Unsubmitted native QA festival");
+                    AppearanceController.choose(activity,mode==AppearancePreference.DARK?AppearancePreference.LIGHT:AppearancePreference.DARK);
+                    AppearanceController.choose(activity,mode);assertEquals("Unsubmitted native QA festival",name.get().getText().toString());
+                });
+                auditTarget(name.get(),audit);audit.capture(label+"-add-festival-200");
+
+                auditOpen(MusicLinksReviewActivity.class);
+                AtomicReference<View> term=new AtomicReference<>();onUi(()->term.set(findDescription(root(),"Search term for "+BAND)));
+                auditTarget(term.get(),audit);audit.capture(label+"-music-review-200");
+
+                database.festivals().save(new RoomFestival(FESTIVAL,"Native smoke festival","ARCHIVED"));
+                auditOpen(ArchivedFestivalActivity.class);
+                audit.capture(label+"-archived-200");
+                assertEquals(4,database.festivalPlanningRatings().findExact(GROUP,USER,FESTIVAL,BAND).value);
+                assertNull(database.ratingStates().after(USER,FESTIVAL,BAND));
+                assertEquals(1,database.festivalPlanningRatings().findPending(GROUP,USER).size());
+                assertEquals(0,database.scheduleLocks().findPendingSelections(GROUP,FESTIVAL).size());
+            }
+        } finally {
+            if(touchMode.get()!=null)instrumentation.setInTouchMode(touchMode.get());
+            onUi(()->{
+                var editor=AppearanceController.store(instrumentation.getTargetContext()).edit();
+                if(previous instanceof String mode)editor.putString(AppearanceController.MODE,mode);else editor.remove(AppearanceController.MODE);editor.commit();
+            });
+        }
+    }
+    private void auditOpen(Class<? extends Activity> type){
+        if(activity!=null){onUi(activity::finish);instrumentation.waitForIdleSync();}
+        Intent intent=new Intent(instrumentation.getTargetContext(),type).putExtra(NativeUiTestRunner.FONT_SCALE,2f).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if(type==BandDetailActivity.class)intent.putExtra(BandDetailActivity.EXTRA_BAND_NAME,BAND);
+        if(type==ImportCsvActivity.class)intent.putExtra(ImportCsvActivity.EXTRA_ADD_FESTIVAL_MODE,true);
+        if(type==MusicLinksReviewActivity.class)intent.putExtra(MusicLinksReviewActivity.EXTRA_BAND_NAME,BAND);
+        if(type==ArchivedFestivalActivity.class)intent.putExtra(ArchivedFestivalActivity.EXTRA_FESTIVAL_ID,FESTIVAL);
+        activity=instrumentation.startActivitySync(intent);instrumentation.waitForIdleSync();
+        onUi(()->{
+            android.view.ViewGroup navigation=root().findViewWithTag("main-navigation");
+            if(navigation!=null)for(int index=0;index<navigation.getChildCount();index++){
+                android.widget.TextView destination=(android.widget.TextView)navigation.getChildAt(index);
+                assertEquals("Destination label must remain intact: "+destination.getText(),1,destination.getLineCount());
+            }
+        });
+        if(android.os.Build.VERSION.SDK_INT>=35)onUi(()->{
+            View decor=activity.getWindow().getDecorView();
+            var bars=decor.getRootWindowInsets().getInsets(android.view.WindowInsets.Type.systemBars()|android.view.WindowInsets.Type.displayCutout());
+            android.view.ViewGroup content=activity.findViewById(android.R.id.content);
+            assertEquals("Safe area uses the selected palette",AppearanceController.palette(activity).background(),
+                    ((android.graphics.drawable.ColorDrawable)content.getBackground()).getColor());
+            View screen=content.getChildAt(0);int[] position=new int[2];screen.getLocationOnScreen(position);
+            assertTrue("Screen must start below the status bar",position[1]>=bars.top);
+            assertTrue("Screen must end above navigation",position[1]+screen.getHeight()<=decor.getHeight()-bars.bottom);
+        });
+    }
+    private void auditTarget(View target,NativeAccessibilityEvidence audit) throws Exception {
+        assertNotNull(target);
+        onUi(()->target.requestRectangleOnScreen(new android.graphics.Rect(0,0,target.getWidth(),target.getHeight()),true));
+        await(()->{android.graphics.Rect visible=new android.graphics.Rect();return target.getGlobalVisibleRect(visible)
+                &&visible.width()>=WackenTheme.dp(activity,48)&&visible.height()>=WackenTheme.dp(activity,48);});
+        onUi(()->audit.target(target));
+    }
+
     @Test public void renameDraftAndNativeDialogActionsSurviveThemeAndRecreationWithoutWriting() throws Exception {
         Object previous=AppearanceController.store(instrumentation.getTargetContext()).getAll().get(AppearanceController.MODE);
         activity=instrumentation.startActivitySync(new Intent(instrumentation.getTargetContext(),SettingsActivity.class)

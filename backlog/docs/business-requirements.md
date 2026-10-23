@@ -88,6 +88,16 @@ Rotation retains decisions; no shared-source import API is introduced.
 
 ### Approved release 3.0 scope — planned, not yet shipped
 
+TASK-212 records actual native paired200% TalkBack/keyboard/target and contrast
+validation, including normal and320×480dp emulator captures. Android15+ screen
+content now respects system-bar/cutout/keyboard insets and paints their exposed
+safe area in the chosen palette. These presentation fixes do not change rating,
+archive, identity, sync or snapshot rules. The [native validation record](release-3.0-native-validation-2026-10-23.md)
+separates automated/agent visual evidence from human spoken-feedback, physical
+Switch Access, bright-sun, glove and one-handed checks not performed. Those
+limits must remain visible in release evidence; no outdoor suitability claim is
+introduced. TASK-213 still owns supported upgrade verification and publication.
+
 Development increment TASK-205 adds the approved presentation-only appearance
 foundation: System/Dark/Light device-local preference, shared semantic palette
 bindings and non-rebuilding theme updates. The latest published release remains

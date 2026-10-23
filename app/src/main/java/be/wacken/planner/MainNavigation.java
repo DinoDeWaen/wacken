@@ -31,7 +31,9 @@ final class MainNavigation {
 
         LinearLayout destinations=new LinearLayout(activity);
         destinations.setTag("main-navigation");
-        destinations.setOrientation(LinearLayout.HORIZONTAL);
+        var configuration=activity.getResources().getConfiguration();
+        boolean stacked=configuration.screenWidthDp<360&&configuration.fontScale>=1.5f;
+        destinations.setOrientation(stacked?LinearLayout.VERTICAL:LinearLayout.HORIZONTAL);
         destinations.setPadding(WackenTheme.dp(activity,4),WackenTheme.dp(activity,4),WackenTheme.dp(activity,4),WackenTheme.dp(activity,4));
         destinations.setBackground(WackenTheme.panelBackground(activity,WackenTheme.PANEL,WackenTheme.GRID,0));
         for(Destination destination:Destination.values()) {
@@ -43,7 +45,9 @@ final class MainNavigation {
             button.setContentDescription(destination.label+(selected?", current destination":""));
             button.setTextSize(14);
             button.setMaxLines(2);
-            LinearLayout.LayoutParams layout=new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1);
+            LinearLayout.LayoutParams layout=stacked
+                    ?new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT)
+                    :new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,1);
             layout.setMargins(WackenTheme.dp(activity,2),0,WackenTheme.dp(activity,2),0);
             destinations.addView(button,layout);
         }
