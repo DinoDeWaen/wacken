@@ -12,7 +12,7 @@ groma:
 description: Reuses named primary screens
 ---
 
-Builds the same labeled Bands, Schedule and Settings destination bar around each primary screen, exposing the current destination visually and to accessibility services. Selecting the current Activity is a no-op; another destination is opened with Android Intent REORDER_TO_FRONT so an existing Activity retains its screen context rather than creating duplicate navigation instances. Detail and review subflows keep their initiating Activity and normal Back behavior. Shared appearance helpers style the controls; this component owns no rating, schedule, session or persistence policy.
+Builds the same labeled Bands, Schedule and Settings destinations around each primary screen, exposing the current destination visually and to accessibility services. On screens narrower than360dp with fontScale at least1.5, full-width actions stack vertically to keep destination labels intact; other configurations retain the horizontal bar. Selecting the current Activity is a no-op; another destination is opened with Android Intent REORDER_TO_FRONT so an existing Activity retains its screen context rather than creating duplicate navigation instances. Detail and review subflows keep their initiating Activity and normal Back behavior. Shared appearance helpers style the controls; this component owns no rating, schedule, session or persistence policy.
 
 ## Relationships
 
