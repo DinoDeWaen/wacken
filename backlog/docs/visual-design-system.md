@@ -1,12 +1,25 @@
 # Wacken Visual Design System
 
-Release3.0 update: [the approved paired design contract](release-3.0-design-contract.md)
-supersedes conflicting dark-only/icon-only, smaller-target and essential-text
-truncation guidance below for TASK-205–213. The remainder records the earlier
-implemented design. The paired contract is planned until native implementation;
-it does not claim that the current2.35.1 release already uses these changes.
+## Current3.0 authority
 
-## Purpose
+The [implemented paired design contract](release-3.0-design-contract.md) is the
+current visual specification. It defines System/Ironline dark/Field Notes light,
+shared native hierarchy, labeled Bands/Schedule/Settings navigation, meaningful
+48dp targets, wrapping essential text and retained context. Missing preferences
+follow System; explicit modes stay device-local. Narrow large-text navigation
+stacks, and Android 15+ screen hosts fit system bars/cutouts/keyboard.
+[Native validation](release-3.0-native-validation-2026-10-23.md) records actual
+contrast, TalkBack/keyboard/target,200% and normal/narrow evidence with honest
+physical/outdoor/human-study limits. No physical festival usability is inferred.
+
+## Historical pre-3.0 design and audit
+
+The remainder preserves the earlier dark-only system and its contemporary audit.
+Conflicting dark-only, icon-only, smaller-target and essential-text truncation
+instructions below are superseded by the paired contract. These are historical
+findings and proposals, not current 3.0 requirements or evidence of current defects.
+
+## Earlier purpose
 
 This document is the visual source of truth for Wacken Planner 2026. It
 standardizes the app's dark, metal, festival-ready presentation across band
@@ -17,7 +30,7 @@ The target feel is professional, uniform, heavy-metal, and practical during
 festival use. The UI should scan quickly on a phone in sunlight, a tent, a dark
 field, or with weak connectivity.
 
-## Current Visual Audit
+## Earlier visual audit
 
 ### Band Overview
 

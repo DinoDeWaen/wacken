@@ -342,6 +342,17 @@ configuration securely rather than copying unrelated work into the release.
 Attach exact source/CI/upgrade provenance and SHA256SUMS alongside the APK, then
 download published assets and verify digest/signature/version and tag target.
 
+## Release 3.0 appearance upgrade check
+
+For 3.0/code45, use exact published 2.35.1/code44 as the current baseline and the
+same `--current-baseline` command above. The opt-in signed probe also verifies
+that absent legacy appearance preferences remain absent, resolve to System and
+paint the normal retained offline screen using the actual device light/dark mode.
+Startup must not silently store an explicit appearance. Existing data/session,
+source-aware provenance, correction dates and pending-work assertions still run.
+Normal native preference tests separately cover explicit modes, invalid settings,
+recreation and System transitions. No app-side preference migration/write is needed.
+
 ## Signing Failure Recovery
 
 If signing credentials are unavailable:

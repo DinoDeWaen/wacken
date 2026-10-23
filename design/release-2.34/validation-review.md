@@ -1,6 +1,13 @@
 # Design validation and handover
 2026-10-17 · TASK-201
 
+23 October 2026 handover: native TASK-204–212 are complete. See the
+[implemented 3.0 contract](../../backlog/docs/release-3.0-design-contract.md),
+[actual native evidence](../../backlog/docs/release-3.0-native-validation-2026-10-23.md)
+and [release notes](../../releases/v3.0.md). The original qualitative review below
+is preserved; its pending native statements are historical. Physical/outdoor and
+human spoken-feedback limits remain explicit in the native record.
+
 ## Actual reviewer feedback
 The user requested a combined Ironline dark / Field Notes light appearance choice, reviewed the paired HTML flow and toggle, and replied **“validated”**, then requested implementation planning in release 3.0.
 

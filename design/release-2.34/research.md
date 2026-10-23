@@ -1,5 +1,9 @@
 # UX audit and research — 2.34
-TASK-201 · 2026-10-17 · Design proposals awaiting review.
+TASK-201 · Historical audit, 17 October 2026. The paired proposal was subsequently
+approved and implemented in 3.0. [The current design contract](../../backlog/docs/release-3.0-design-contract.md)
+and [native evidence](../../backlog/docs/release-3.0-native-validation-2026-10-23.md)
+supersede conflicting guidance here. Findings below refer to their stated old
+source baseline, not current defects.
 
 ## Evidence and scope
 Audit baseline: published **v2.33.5**, commit **1928e82f64fe9724a69e7f33cc72c8fb2b9cb2fa**. Source was inspected in the existing fix-festival-creation worktree because the original checkout contains an older app. Source paths below are relative to that baseline, under app/src/main/java/be/wacken/planner/ unless specified otherwise. Verify a finding against that tag, not against an older branch.

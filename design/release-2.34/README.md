@@ -1,5 +1,13 @@
-# Release 2.34 — five interactive design directions
-TASK-201 · Design validated by the user, 2026-10-17. Implementation is planned in release 3.0 (TASK-204–213). [Validation, limitations and handover](validation-review.md).
+# Historical design study — five interactive directions
+
+TASK-201 · User-approved paired direction, 17 October 2026. Native implementation
+and validation are complete in TASK-204–212; TASK-213 packages 3.0. The
+[current paired contract](../../backlog/docs/release-3.0-design-contract.md) and
+[native evidence](../../backlog/docs/release-3.0-native-validation-2026-10-23.md)
+supersede conflicting research guidance here. The original study record below
+describes its 17 October baseline, simulated data and checks at that time. Old
+references to pending/unapproved work are historical, not current release status.
+[Original validation and handover](validation-review.md).
 
 ## Current review: paired dark and light mode
 

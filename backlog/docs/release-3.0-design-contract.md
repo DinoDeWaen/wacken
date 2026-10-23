@@ -1,8 +1,9 @@
 # Release 3.0 paired appearance and flow contract
 
-TASK-204 · Approved design baseline: 17 October 2026 · Native delivery planned
-in TASK-205–213. This contract specifies intended 3.0 behavior. The released
-2.35.1 app does **not** yet implement this appearance/navigation redesign.
+TASK-204 · Approved design baseline: 17 October 2026 · Native implementation
+and validation completed in TASK-205–212. This contract specifies implemented
+3.0 behavior; TASK-213 binds the signed release and supported upgrade.
+See [native evidence and limits](release-3.0-native-validation-2026-10-23.md).
 
 ## Authority and evidence
 
@@ -16,7 +17,7 @@ search results and provider evidence are examples, never production data.
 
 This contract supersedes conflicting dark-only, icon-only, smaller-target and
 essential-text truncation guidance in the earlier visual design system for 3.0.
-Current runtime behavior remains documented in README until native tasks ship.
+README documents the current implementation. Earlier research is historical.
 Keep Android Views and current domain/application/infrastructure boundaries.
 New architecture-significant changes still require explicit approval and an ADR.
 
@@ -65,6 +66,8 @@ and survives app restart. Settings exposes all three choices. The header action
 is labeled with its next action, “Switch to light” or “Switch to dark”, and
 selects the opposite **explicit** appearance. Return to System through Settings.
 All open screens, dialogs and system-bar styling resolve the same preference.
+A supported2.35.1 update with no preference starts in System without creating an
+explicit override. Android 15+ content fits system-bar/cutout/keyboard insets.
 No backend/account preference synchronization is introduced.
 
 Changing appearance is a presentation action: preserve destination, active or
@@ -79,6 +82,8 @@ operation. Never replay a write merely because its screen is rebuilt.
 
 Main destinations always appear in order **Bands · Schedule · Settings**, with
 visible names and selected/current state exposed to accessibility services.
+Below 360dp at fontScale 1.5+, full-width actions stack to keep names intact; other
+configurations retain the horizontal bar.
 Icons supplement words. Avoid accumulating duplicate destinations on repeated
 selection. Detail/review Back returns to the initiating band row or Settings
 context, retaining query/filter/scroll. Returning from music apps, file picking
