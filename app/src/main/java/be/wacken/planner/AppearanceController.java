@@ -41,6 +41,18 @@ final class AppearanceController implements Application.ActivityLifecycleCallbac
         preferences.registerOnSharedPreferenceChangeListener(listener);
         activity.getApplication().registerActivityLifecycleCallbacks(this);
         activity.getApplication().registerComponentCallbacks(this);
+        if(Build.VERSION.SDK_INT>=35) {
+            // Target 35+ windows extend behind system bars. Keep every screen's
+            // controls inside the current safe area, including a shown keyboard.
+            View content=activity.findViewById(android.R.id.content);
+            content.setOnApplyWindowInsetsListener((view,insets)->{
+                var safe=insets.getInsets(android.view.WindowInsets.Type.systemBars()
+                        |android.view.WindowInsets.Type.displayCutout()|android.view.WindowInsets.Type.ime());
+                view.setPadding(safe.left,safe.top,safe.right,safe.bottom);
+                return android.view.WindowInsets.CONSUMED;
+            });
+            content.requestApplyInsets();
+        }
         refresh();
     }
 
@@ -128,6 +140,7 @@ final class AppearanceController implements Application.ActivityLifecycleCallbac
         }
         activity.getWindow().setStatusBarColor(palette.background());
         activity.getWindow().setNavigationBarColor(palette.background());
+        activity.findViewById(android.R.id.content).setBackgroundColor(palette.background());
         View decor=activity.getWindow().getDecorView();
         int flags=decor.getSystemUiVisibility();
         flags=palette.dark()?flags&~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR:flags|View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
