@@ -14,12 +14,19 @@ The validated post-MVP3 direction keeps the product for one friend group and ext
 
 ### Current Implemented Capabilities
 
+Release 3.0 implements the approved System/Ironline dark/Field Notes light native
+presentation, labeled primary destinations and readable retained screen/review
+flows. It preserves the 2.34 canonical rating lifecycle and 2.35 reliability work.
+The current signed GitHub APK distribution, package and signing key are unchanged.
+See the 3.0 scope and native validation below; outdoor/human usability remains
+unmeasured where explicitly recorded.
+
 Release2.35 is maintenance of the implemented2.34 lifecycle: bounded rating/schedule
 and image networking, consistent errors, canonical identity/scoped projection
 reuse and reviewed detail presentation. It removes an unused full CSV importer
 while preserving the active reviewed workflow. Versioned architecture evidence
 and its development gate add no product capability or rating-policy change.
-The paired appearance/navigation redesign remains3.0.
+The paired appearance/navigation implementation is described in the 3.0 section.
 
 Release2.34 implements TASK-216–220 and aligned TASK-156/169/172: shared canonical band metadata plus each member's established
 band rating; independent festival planning and after-ratings; copy established
@@ -86,125 +93,55 @@ Rotation retains decisions; no shared-source import API is introduced.
 - Business logic in Android UI, Activities, or Fragments.
 - Android instrumentation tests beyond critical persistence and UI regression flows unless a future task makes them meaningful.
 
-### Approved release 3.0 scope — planned, not yet shipped
+### Release 3.0 paired appearance and retained flows
 
-TASK-212 records actual native paired200% TalkBack/keyboard/target and contrast
-validation, including normal and320×480dp emulator captures. Android15+ screen
-content now respects system-bar/cutout/keyboard insets and paints their exposed
-safe area in the chosen palette. These presentation fixes do not change rating,
-archive, identity, sync or snapshot rules. The [native validation record](release-3.0-native-validation-2026-10-23.md)
-separates automated/agent visual evidence from human spoken-feedback, physical
-Switch Access, bright-sun, glove and one-handed checks not performed. Those
-limits must remain visible in release evidence; no outdoor suitability claim is
-introduced. TASK-213 still owns supported upgrade verification and publication.
+The user approved Ironline dark / Field Notes light on 17 October 2026. The
+[implemented design contract](release-3.0-design-contract.md) supersedes earlier
+conflicting dark-only/icon-only/small-target guidance. TASK-204–212 implement and
+validate native screens; TASK-213 owns the exact signed release and supported
+upgrade. [Native validation](release-3.0-native-validation-2026-10-23.md) records
+normal/narrow 200% TalkBack, keyboard, target, contrast and regression evidence.
+Prototype approval does not establish physical festival usability.
 
-Development increment TASK-205 adds the approved presentation-only appearance
-foundation: System/Dark/Light device-local preference, shared semantic palette
-bindings and non-rebuilding theme updates. The latest published release remains
-2.35.1. Remaining3.0 navigation/layout/accessibility and screen-specific recovery
-tasks are not implied complete; TASK-212 still owns integrated native validation.
-ADR0024 records explicit standard-approach approval. No rating, ownership,
-provider, authentication or backend data contract changes.
+Default System follows device appearance when no valid preference exists,
+including supported updates from 2.35.1. Explicit Dark/Light stays device-local;
+the header toggle selects the opposite explicit appearance. Both palettes share
+proportional body type, geometry and 48dp interactive targets; light uses selective
+serif headings. No account/backend appearance synchronization is introduced.
 
-Development increment TASK-206 implements the planned BR-061 navigation override
-on the three main destinations: visible Bands, Schedule and Settings in fixed
-order with current-state semantics. Selecting the current destination does
-nothing; an existing destination is brought forward. Detail/review Back keeps
-the initiating context; sync/close and festival actions remain reachable.
-Recreation/launcher-return and offline navigation are covered by native tests.
-This is development-branch behavior, not a claim that3.0 is already published.
+Bands, Schedule and Settings are labeled in that order with accessible selected
+state. Current selection is a no-op; existing destinations retain context. Below
+360dp at fontScale 1.5+, actions stack to keep labels intact. Detail/review Back and
+external returns retain their initiating context. Sync/close and management stay
+reachable; no-active festival and archived states explain available actions.
 
-Development increment TASK-207 adds readable wrapping lineup rows, explicit
-selected-festival planning meaning and actual performance context in both
-appearances. Name search plus All bands/Unrated display filters preserve scoped
-alphabetical data, canonical identities and rating rules. Query/filter and row
-context survive detail return and recreation; theme changes retain the views.
-Known music actions retain stored URLs; unknown links remain unavailable.
-No-result clearing, scrollable large-font controls and cached/offline Retry sync
-retain useful recovery. This changes presentation only; established opinions,
-planning snapshots, after-ratings and archive promotion remain ADR0016-owned.
-Remaining detail/control, schedule, administration/support and integrated
-accessibility/release work stays TASK-208–213.
+Wrapping lineup facts, search/filter and row context survive detail return and
+recreation. Festival planning is primary; After the show is an independent
+retained disclosure. Established opinion/history and group planning remain distinct.
+Schedule filters/viewport/decision context retain actual stage/time/rating/lock,
+tie, scratched and walking meaning; necessary calendar horizontal scrolling stays.
+Settings groups administration beside band/music review. Reviewed identity,
+source evidence and selected proposals survive recreation; term changes clear
+stale approval. Only explicit existing approval applies missing-field changes.
 
-Development increment TASK-208 supplies native touch/keyboard/accessibility
-rating choices with scoped meaning/selected state, explicit0/Unrated clearing,
-48dp targets and large-font stacking. Active detail presents planning first,
-separate established/source/history context and an independent After the show
-disclosure whose expansion survives recreation without replaying an event.
-Archived values and group planning summaries remain read-only; known metadata,
-images and performance context are preserved. Canonical-band discovery retains
-its existing no-festival entry and is absent in captured archived context.
-Neither appearance nor the new controls change ADR0016 rating roles,
-member/festival ownership, history/correction semantics or schedule decisions.
-TASK-209–213 still own remaining screens, integrated accessibility/device review
-and actual3.0 publication.
+Login/form/rename/import drafts and CSV/local reviews retain their safe existing
+state; process loss requests reselection where needed. Archive confirms captured
+festival and group-wide scope before atomic acknowledgement. Interrupted requests
+and corrections require current-state checking/fresh review; recreation/restyling
+never resubmits a write. Local/pending/shared/error outcomes use words and live
+feedback. Android 15+ screen hosts fit system bars/cutouts/keyboard and paint their
+exposed safe area using the selected palette.
 
-Development increment TASK-209 adds labeled native day/threshold selectors,
-wrapping48dp schedule controls and retained filters/calendar viewport across
-empty results, theme changes and recreation. Actual stage/time/rating, scratched
-overlap, lock and walking meanings remain available in both palettes and through
-native accessibility. Calendar geometry scales with text; horizontal scrolling
-stays inside the timeline. Wrapping decision details retain the chosen act and
-review context across recreation; explicit alternative/lock actions preserve
-personal ratings and original generated decision evidence. BR-063–076 scheduling,
-cutoff, walking and tie rules are unchanged. TASK-210–213 own remaining screens,
-integrated native accessibility/device validation and publication.
+ADR0016 remains authoritative: canonical metadata, member-specific established
+opinion, separate selected-festival planning/after values, atomic one-time creation
+snapshots, nonempty archive promotion and source-aware audited corrections.
+No latest-event fallback, cross-member/festival overwrite, new provider,
+auth/security contract or scheduling/rating policy is introduced.
 
-Development increment TASK-210 groups festival administration in Settings and
-keeps link-band and festival music discovery adjacent. Both review entry points
-retain existing canonical identity scope. Wrapping native evidence displays full
-source URLs, rationale and verified/unverified status in both appearances;
-changing a term immediately clears stale approval controls. Own-catalog search
-and selected match survive recreation. Metadata search/results/checked proposals
-are retained through recreation; cancellation/retry preserves saved data. Search,
-appearance and recreation never apply proposals: explicit existing approval gates
-and missing-field/no-overwrite rules remain unchanged. TASK-211–213 own support
-flows, integrated accessibility/device review and publication.
-
-Development increment TASK-211 applies paired readable presentation to sign-in,
-archive/history, import and owned confirmation/recovery dialogs. Active sign-in
-and its password draft retain in memory; credentials are never serialized into
-saved state. Rename captures festival identity and restores the unsent name.
-CSV contents/local review retain in memory and process loss requests reselection.
-Archive explicitly confirms the festival and group-wide scope before the existing
-atomic acknowledged operation. Interrupted lifecycle requests and corrections
-require checking current state/history and fresh review; restoration never
-resubmits a write. Archived rows retain read-only planning meaning, performance
-facts and known music links. Live status distinguishes local/pending/shared/error
-outcomes. Auth/security, atomic carry-over/promotion, source-aware corrections and
-pending-data recovery policies remain unchanged. TASK-212–213 own integrated
-accessibility/device validation and publication.
-
-The user validated the paired Ironline dark / Field Notes light proposal on
-17 October2026. [The design and flow contract](release-3.0-design-contract.md)
-defines the palettes, shared layout, state wording and complete screen/dialog
-inventory for TASK-204–213. Release2.35.1 remains the implemented baseline.
-
-For3.0, the approved appearance choice supersedes the dark-only intent of
-BR-047/BR-047a: default System follows device appearance; explicit Dark/Light
-is stored on the device, and the header toggle selects the opposite explicit
-appearance. Both use the same proportional body type, hierarchy, geometry and
-48dp minimum interactive targets; light uses selective serif headings. Appearance
-changes/recreation preserve screen, selected context, drafts, scroll, expanded
-sections and pending work without replaying writes.
-
-For3.0, the approved main navigation supersedes BR-061 compact icon-only intent:
-visible labeled Bands, Schedule and Settings destinations in that order, with
-accessible current state and correct detail/review Back behavior. Icons supplement
-labels; sync/close, festival management and external-app return remain reachable.
-Loading, empty, cached/offline, locally saved/pending, acknowledged shared save
-and error/retry states must be distinguishable in words in both appearances.
-
-This is a presentation change. ADR0016 remains authoritative: canonical metadata,
-member-specific established opinion, selected-festival planning and after-ratings,
-atomic one-time creation snapshots, archive-only nonempty promotion and audited
-source-aware corrections. No latest-history fallback, cross-member/festival
-overwrite, new provider, backend theme synchronization or business-policy change.
-TASK-212 must verify native contrast, 200% text, focus/TalkBack, physical targets,
-state retention and critical flows before TASK-213 release; prototype approval
-and CSS contrast results do not establish native accessibility or measured
-festival usability. The current BR-047/047a/061 rows below still describe shipped
-behavior until their native implementation tasks are completed.
+Native automated real-service focus and agent image review are not a human
+spoken-feedback study. No physical Switch Access, sunlight/glove/wet-screen or
+one-handed observation was performed. These limits remain in release evidence;
+there is no outdoor suitability or full accessibility-certification claim.
 
 ### Business Rules Index
 
@@ -718,8 +655,8 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-044 | Ratings are user/group preference data, not festival master data. | Updating lineup CSVs must not clear or overwrite rating records. | Must |
 | BR-045 | Band-only imports must be visible in the band overview before performance times are available. | A Wacken lineup CSV without stages/times still shows bands for rating. | Must |
 | BR-046 | Bands without performance data must be clearly marked as not scheduled yet. | A band imported without a performance shows `Not scheduled yet` and `TBA`. | Must |
-| BR-047 | The band overview must use a Wacken-inspired visual style with dark presentation and amber/yellow emphasis where practical. | Band cards look festival-themed rather than like raw form controls. | Should |
-| BR-047a | The app should follow one professional dark metal visual design system across daily-use and admin screens. | Overview, band detail, schedule, schedule decision detail, settings, sync feedback, login, and import/admin flows use consistent colors, typography, spacing, buttons, panels, icons, and status states while remaining readable in festival conditions. | Should |
+| BR-047 | Native screens offer System, Ironline dark and Field Notes light using the approved paired design. | Missing/invalid preference follows device appearance; explicit Dark/Light persists locally and the header selects the opposite explicit mode. | Should |
+| BR-047a | Daily-use/admin screens follow the paired design contract with shared hierarchy, readable native controls and retained state. | Both appearances provide wrapping essential text, accessible 48dp targets/focus/status and safe screen insets; restyling/recreation never replays business writes. Physical festival usability is not inferred from emulator validation. | Should |
 | BR-048 | The Wacken-themed band overview must keep the rating workflow reachable. | Tapping a band card opens the band detail/rating screen. | Must |
 | BR-049 | The band overview must feel responsive and must not leave the user staring at a blank or frozen screen. | If loading or rendering is not immediate, a loading indication appears quickly. | Must |
 | BR-050 | The band overview must sort bands alphabetically by band name unless the user explicitly chooses another sort later. | 5th Avenue appears before Airbourne regardless of import order or performance time. | Must |
@@ -738,7 +675,7 @@ Scenario: Rate the same band after seeing it at different festivals
 | BR-058 | The app must provide a close action that attempts Supabase sync before closing. | Tapping close pushes local pending ratings and pulls group ratings before the app exits; if sync fails, local ratings remain available and the app stays open with a clear failure message. | Must |
 | BR-059 | Sync operations must show clear Wacken/metal-themed feedback and prevent conflicting sync/close actions while in progress. | Startup, reactivation, manual sync, and close sync show visible progress instead of a blank or frozen screen. | Must |
 | BR-060 | Band detail and schedule decision detail should show available per-person group ratings as compact read-only detail under the user's or candidate's main rating. | Detail screens can show each available person rating as small stars without changing the main editable rating workflow, while the band overview stays clean. | Should |
-| BR-061 | Primary app navigation must use compact icon actions for high-frequency destinations. | The overview shows a cog for settings, a calendar icon for the group schedule, and an exit action for sync-and-exit. | Must |
+| BR-061 | Primary navigation exposes labeled Bands, Schedule and Settings destinations with accessible current state. | Existing destinations retain context; detail/review Back returns to its caller; narrow large-text actions reflow without shrinking targets. Sync/close and festival management remain reachable. | Must |
 | BR-062 | Secondary and admin-style actions must live on the settings page. | Group/invite actions, lineup import, and manual sync are moved out of the primary overview action area and into settings. | Must |
 | BR-063 | The group schedule must be shown as a day-filtered calendar. | The user chooses one festival day, and that view shows only that day's fixed stage rows, horizontally scrollable time axis, and performance blocks. | Must |
 | BR-063a | The calendar schedule must use stage rows so overlapping or near-overlapping selected acts remain readable. Louder and Harder must be adjacent and shown before other stage rows when present. | If Louder, Harder, Faster, and Wackinger acts overlap, each act appears in its stage lane instead of being drawn on top of the others. | Must |

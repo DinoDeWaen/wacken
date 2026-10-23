@@ -100,6 +100,10 @@ public final class SignedUpgradeInstrumentation extends Instrumentation {
     }
     private void verify(Context context,SupportSQLiteDatabase db,boolean current)throws Exception {
         require(number(db,"PRAGMA user_version")==12,"Candidate migrated to Room12");
+        require(!context.getSharedPreferences("appearance",0).contains("mode"),"Missing legacy appearance preference remains unset");
+        Class<?> controller=context.getClassLoader().loadClass("be.wacken.planner.AppearanceController");
+        var preference=controller.getDeclaredMethod("preference",Context.class);preference.setAccessible(true);
+        require("SYSTEM".equals(preference.invoke(null,context).toString()),"Missing legacy appearance resolves to System");
         var preferences=context.getSharedPreferences("supabase-session",0);
         require(USER.equals(preferences.getString("userId",""))&&GROUP.equals(preferences.getString("groupId",""))
             &&"offline-upgrade-fixture".equals(preferences.getString("accessToken",""))
@@ -143,6 +147,13 @@ public final class SignedUpgradeInstrumentation extends Instrumentation {
             if(!visible.get())SystemClock.sleep(25);
         }
         require(visible.get(),"Normal signed app startup renders retained cached lineup offline");
+        runOnMainSync(()->{
+            boolean dark=(screen.getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+                    ==android.content.res.Configuration.UI_MODE_NIGHT_YES;
+            var background=(android.graphics.drawable.ColorDrawable)screen.findViewById(android.R.id.content).getBackground();
+            require(background!=null&&background.getColor()==(dark?0xff101418:0xfff4efe3),"Default System appearance follows device mode after update");
+        });
+        require(!context.getSharedPreferences("appearance",0).contains("mode"),"Startup does not force an explicit appearance");
         // Startup/failed offline sync must preserve the same pending operations.
         require(number(db,"SELECT count(*) FROM festival_planning_ratings WHERE userName='upgrade-member' AND syncStatus='PENDING'")==1,"Startup did not discard pending planning");
         require(number(db,"SELECT count(*) FROM personal_band_rating_events WHERE userName='upgrade-member' AND syncStatus='PENDING'")==1,"Startup did not discard pending history");

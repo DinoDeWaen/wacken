@@ -1,28 +1,28 @@
 # Wacken Planner 2026
 
-## Validated design for release 3.0
+## Release 3.0 paired appearance
 
-Validated direction: [paired Ironline dark / Field Notes light flow](design/release-2.34/themes.html), with a header toggle and System / Dark / Light preference in Settings. The user approved this flow; the native implementation is on the development branch under TASK-204–213. Published2.35.1 remains the current release until TASK-213 completes.
+3.0 implements the user-approved Ironline dark / Field Notes light design across
+the native app. See [release notes and installation guidance](releases/v3.0.md).
+The [native design contract](backlog/docs/release-3.0-design-contract.md) defines
+its tokens, navigation, screen/dialog coverage and state retention while preserving
+ADR0016. [Native validation](backlog/docs/release-3.0-native-validation-2026-10-23.md)
+records actual Android evidence and remaining physical/human-feedback limits.
+TASK-213 binds the final signed artifact, source tag, CI and supported upgrade.
 
-The [3.0 native design contract](backlog/docs/release-3.0-design-contract.md)
-specifies exact paired tokens, shared layout/navigation/state retention and the
-screen/dialog coverage assigned to TASK-205–212. It preserves the implemented
-ADR0016 rating lifecycle. This is implemented development scope; the released2.35.1 app
-does not yet implement it. TASK-212 owns actual Android accessibility/device
-evidence before publication; qualitative prototype approval is not a native pass.
+The [paired HTML flow](design/release-2.34/themes.html) records the approved design
+proposal; the [five-style study](design/release-2.34/README.md) is historical research.
+Its simulated data and earlier audit findings are not current app behavior. User
+prototype approval and native automation/image review are distinct evidence.
 
-Five interactive HTML design directions are available in the [design study](design/release-2.34/README.md): [open the prototype](design/release-2.34/index.html), [compare the styles](design/release-2.34/compare.html), and follow the [review exercise](design/release-2.34/review-guide.md). They use simulated data and do not change the released Android app. The [validation record](design/release-2.34/validation-review.md) distinguishes user approval from the native accessibility/device checks still needed for 3.0. Run `python3 -m http.server 8234 --bind 127.0.0.1 --directory design/release-2.34` and visit `http://127.0.0.1:8234/index.html` for a local browser preview.
-
-The3.0 development branch now adds the approved
-[shared appearance controller (ADR0024)](backlog/decisions/0024-shared-native-appearance-controller.md).
-Settings → Appearance offers System, Ironline dark and Field Notes light;
-System follows device appearance, explicit choices persist locally, and the
-header action selects the opposite explicit mode. Shared semantic bindings
-update existing views/panels and system bars without replaying business writes.
-Activity recreation uses screen-owned saved/retained state; login passwords are
-retained for configuration changes in memory only. TASK-206–211 implement the
-remaining navigation, layouts, controls and screen-specific recovery. TASK-212
-validates the integrated native matrix; TASK-213 owns publication.
+The approved [shared appearance controller (ADR0024)](backlog/decisions/0024-shared-native-appearance-controller.md)
+keeps Android Views and existing application/domain boundaries. Settings →
+Appearance offers System, Ironline dark and Field Notes light. Missing/invalid
+preferences default to System, including updates from 2.35.1; System follows device
+appearance. Explicit choices persist locally. The header action selects the
+opposite explicit mode; return to System through Settings. Semantic bindings update
+views/panels/system bars without replaying business writes. Screens own retained
+context and recovery; login passwords stay in memory across configuration changes.
 
 Focused checks: `./gradlew :app:testDebugUnitTest --tests '*AppearancePreferenceTest'`
 and, on an isolated booted emulator,
@@ -49,7 +49,7 @@ links are explained without fabricated actions. Empty search offers Clear search
 and filters; a failed refresh retains cached work and offers Retry sync.
 
 TASK-208 adds native rating-choice buttons with scoped value/meaning and selected
-state, keyboard focus outlines and48dp targets. Large fonts stack the choices.
+state, keyboard focus outlines and 48dp targets. Large fonts stack the choices.
 Active detail puts selected-festival planning first; **After the show** expands
 the independent post-show editor and retains its expansion across recreation.
 Clear actions keep0 explicitly Unrated. Established/source/history context and
@@ -68,7 +68,7 @@ horizontal scroll and scales with text. The wrapping decision dialog preserves
 the actual chosen act, alternatives and explicit group-lock actions. Personal
 ratings, generated ties, cutoff and walking rules are unchanged. Native89-test
 coverage includes200% decision actions and restored filters/viewport; integrated
-accessibility and device review remains TASK-212.
+evidence and physical/human review limits are recorded in TASK-212.
 
 TASK-210 groups festival administration in Settings with adjacent band-link and
 music-discovery actions. Review screens use readable wrapping text,48dp native
@@ -97,7 +97,7 @@ and [44 actual Android captures with hashes](design/release-3.0/native/evidence.
 cover both appearances at 200% text, normal 411dp and narrow 320×480dp layouts.
 On Android 15+, shared content insets keep controls outside system bars, cutouts
 and the keyboard; the exposed background follows the selected palette. Below
-360dp with fontScale1.5+, the three primary destinations stack vertically to
+360dp with fontScale 1.5+, the three primary destinations stack vertically to
 keep their labels intact.
 
 With only an owned disposable emulator connected, run:
@@ -133,7 +133,7 @@ automated accessibility focus is not a human usability study.
 > stories implement and validate this model, including reviewed aliases/local CSV,
 > audited archived corrections, contextual detail and lifecycle export. Signed
 > GitHub APK distribution remains the selected release channel; native paired
-> appearance changes remain in3.0.
+> appearance changes remain in 3.0.
 
 - Import festival data (bands, stages, performances, distances, food) from validated CSV files by selecting files in the Android import screen.
 - Show locally cached lineup, planning ratings, real post-show ratings, schedule data, and manual schedule locks first, while Supabase sync refreshes Room in the background.
@@ -251,6 +251,7 @@ hashes over new meaning. See [baseline verification evidence](backlog/docs/groma
 - MVP 1 UAT checklist and sample import files: [`mvp1-android-uat-checklist.md`](backlog/docs/mvp1-android-uat-checklist.md), [`samples/mvp1`](samples/mvp1).
 - MVP 2 UAT checklist: [`mvp2-android-uat-checklist.md`](backlog/docs/mvp2-android-uat-checklist.md).
 - V2.31 UAT overview: [`v2.31-user-acceptance-test-overview.md`](backlog/docs/v2.31-user-acceptance-test-overview.md).
+- V3.0 paired appearance, readable navigation and retained native flows: [`releases/v3.0.md`](releases/v3.0.md).
 - V2.35.1 patch including ArchUnit JVM boundary checks: [`releases/v2.35.1.md`](releases/v2.35.1.md).
 - V2.35 reliability and reviewed architecture maintenance: [`releases/v2.35.md`](releases/v2.35.md).
 - V2.34 canonical ratings, verified music links and reviewed festival imports: [`releases/v2.34.md`](releases/v2.34.md).
@@ -352,7 +353,7 @@ This does not resolve the separately documented stale deleted-source arrows.
 
 The [2.35 integrated validation](backlog/docs/release-2.35-validation.md) maps
 all ten audit findings to repairs/tests, retains all99 helper dispositions and
-records successful API23/API36 native, database and signed migration gates. Final
+records successful API 23/API 36 native, database and signed migration gates. Final
 2.35 signed APK, latest-stable upgrade and published-asset evidence accompany
 [the release notes](releases/v2.35.md).
 
@@ -490,7 +491,7 @@ and after-state tables are denied. The public invoker wrapper delegates to a
 narrowly scoped private-schema function that validates identity, membership,
 active festival and lineup before writing; Android receives no privileged secret.
 
-The tested additive FlywayV014–V018 are deployed before the2.34APK. All feature,
+The tested additive FlywayV014–V018 are deployed before the 2.34APK. All feature,
 lifecycle and signed migration tasks are complete; TASK214 records final-code
 validation/publication evidence. Missing server schema or denied writes retain
 cached/pending data and report a sync failure.
@@ -702,7 +703,7 @@ C4Container
     Rel(csvSource, infra, "Supplies fallback import files", "CSV")
 ```
 
-[TASK-220 validation evidence](backlog/docs/release-2.34-lifecycle-validation.md) records the green integrated lifecycle, API23/API36 suites and signed migration.
+[TASK-220 validation evidence](backlog/docs/release-2.34-lifecycle-validation.md) records the green integrated lifecycle, API 23/API 36 suites and signed migration.
 Signed update validation uses a separate fixture-only test APK and fresh emulator.
 See [the signed upgrade probe](backlog/docs/release-process.md#reproducible-signed-upgrade-probe-task-220)
 for build/sign/run commands and evidence. The probe validates actual published
@@ -1115,7 +1116,7 @@ a total download or bitmap-decoding deadline.
 
 ### Supported Android Java APIs
 
-The app keeps minimum Android API23 support. Its existing Java compatibility
+The app keeps minimum Android API 23 support. Its existing Java compatibility
 runtime uses the pinned **desugar_jdk_libs_nio:2.1.5** variant, which includes the
 NIO file APIs used by local TSV storage and the newer UTF-8 URL-encoding overloads
 used by sync/music providers. The standard variant omits those backports; switching
@@ -1123,7 +1124,7 @@ back can cause startup or lookup failures on older Android versions.
 See the [official NIO support table](https://developer.android.com/studio/write/java11-nio-support-table).
 
 Run `./gradlew :app:lintDebug` to validate API availability. CI requires this full
-lint gate and runs the native suite on API23 and API36; release lint-vital alone
+lint gate and runs the native suite on API 23 and API 36; release lint-vital alone
 does not detect every supported-device compatibility problem. Local native
 validation uses installed emulator images; report the API version actually tested.
 
@@ -1152,7 +1153,7 @@ The CI workflow:
 - Sets up JDK 21 and the Android SDK.
 - Runs `./gradlew test`, including the current JUnit 5 tests and JaCoCo coverage gates.
 - Runs `./gradlew qaTest` for MVP listing/rating scenario coverage.
-- Runs `./gradlew :app:lintDebug` and the native suite on Android API23/API36.
+- Runs `./gradlew :app:lintDebug` and the native suite on Android API 23/API 36.
 - Runs `./gradlew assembleDebug`.
 - Publishes `app/build/outputs/apk/debug/app-debug.apk` as a versioned artifact named `wacken-planner-0.1.<run-number>-debug-apk`.
 
