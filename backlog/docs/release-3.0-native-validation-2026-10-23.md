@@ -71,9 +71,15 @@ and [Android inset guidance](https://developer.android.com/develop/ui/views/layo
 
 ## Regression and delivery gates
 
-Final full native matrix, CI and checkpoint identifiers are recorded in the
-TASK-212 closure package after the last source correction. The ordinary native
-suite also runs on API 23; actual optional TalkBack automation requires API 24+.
+Final local full native suites pass99/99 each with initial Dark and initial Light,
+without failures or skips. Their source record is `229682d`, with the same final
+production files as `5cc6a8c`. CI on implementation/evidence head
+`d3a9ac86f22f0fa378425eabbb069dffb315f760` passes all four jobs, including99 native
+cases each on API23 and API36:
+[final CI run](https://github.com/DinoDeWaen/wacken/actions/runs/39917868083).
+The ordinary native suite supports API23; optional actual TalkBack automation
+requires API24+. The capture manifest and44 committed image hashes were verified
+again; both capture runs have identical debug APK hashes and restored settings.
 
 The existing outcome suites cover find/rate/return; independent established,
 planning and after values; archive read-only/correction review; schedule decisions
