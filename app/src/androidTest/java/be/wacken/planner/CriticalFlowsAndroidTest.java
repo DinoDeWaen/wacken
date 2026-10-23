@@ -483,6 +483,13 @@ public final class CriticalFlowsAndroidTest {
         if(type==MusicLinksReviewActivity.class)intent.putExtra(MusicLinksReviewActivity.EXTRA_BAND_NAME,BAND);
         if(type==ArchivedFestivalActivity.class)intent.putExtra(ArchivedFestivalActivity.EXTRA_FESTIVAL_ID,FESTIVAL);
         activity=instrumentation.startActivitySync(intent);instrumentation.waitForIdleSync();
+        onUi(()->{
+            android.view.ViewGroup navigation=root().findViewWithTag("main-navigation");
+            if(navigation!=null)for(int index=0;index<navigation.getChildCount();index++){
+                android.widget.TextView destination=(android.widget.TextView)navigation.getChildAt(index);
+                assertEquals("Destination label must remain intact: "+destination.getText(),1,destination.getLineCount());
+            }
+        });
         if(android.os.Build.VERSION.SDK_INT>=35)onUi(()->{
             View decor=activity.getWindow().getDecorView();
             var bars=decor.getRootWindowInsets().getInsets(android.view.WindowInsets.Type.systemBars()|android.view.WindowInsets.Type.displayCutout());
